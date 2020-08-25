@@ -1,0 +1,27 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get -y install python3.7 python3-pip
+        sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
+        sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
+        sudo pip install pipenv
+        
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Install python environment
+      run: pipenv install --dev 
+
+    - name: Run CI
+      env:
+        PYTHONPATH: src/main/python
+      run: /bin/sh scripts/ci.sh
