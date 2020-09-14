@@ -25,15 +25,20 @@
 
 '''Data model'''
 
+from __future__ import annotations
+import typing
 from enum import Enum
+from fractions import Fraction
 
 #
 # Types
 #
 
 class LengthType:
+  '''Length type as defined in TTML2'''
 
   class Units(Enum):
+    '''Units of length'''
     em = "em"
     pct = "%"
     rh = "rh"
@@ -46,11 +51,14 @@ class LengthType:
 # Content Elements
 #
 
+
 class WhiteSpaceHandling(Enum):
+  '''Enumerates the strategy for handling white spaces in text nodes.'''
   PRESERVE = "preserve"
   DEFAULT = "default"
 
 class ContentElement:
+  '''Abstract base class for all content elements in the model.'''
 
   def __init__(self, doc=None):
 
@@ -97,13 +105,17 @@ class ContentElement:
 
   # document
 
-  def is_attached(self):
+  def is_attached(self) -> bool:
+    '''Returns whether the element belongs to a `Document`.'''
     return self.get_doc() is not None
 
-  def get_doc(self):
+  def get_doc(self) -> typing.Optional[Document]:
+    '''Returns the `Document` to which the element belongs, or `None` otherwise.'''
     return self._doc
 
-  def set_doc(self, doc):
+  def set_doc(self, doc: Document):
+    '''Attaches the element to `doc`, or detaches it from its current owning
+    `Document` if `doc` is `None`.'''
 
     if doc is None:
 
@@ -129,10 +141,12 @@ class ContentElement:
 
   # hierarchical structure
 
-  def has_children(self):
+  def has_children(self) -> bool:
+    '''Returns whether the element has children elements.'''
     return self._first_child is not None
 
-  def root(self):
+  def root(self) -> ContentElement:
+    '''Returns the root of the tree to which the element belongs.'''
     root = self
 
     while root.parent() is not None:
@@ -140,16 +154,21 @@ class ContentElement:
 
     return root
 
-  def next_sibling(self):
+  def next_sibling(self) ->  typing.Optional[ContentElement]:
+    '''Returns the next sibling of the element, or None if none exists.'''
     return self._next_sibling
 
-  def previous_sibling(self):
+  def previous_sibling(self) -> typing.Optional[ContentElement]:
+    '''Returns the previous sibling of the element, or None if none exists.'''
     return self._previous_sibling
 
-  def parent(self):
+  def parent(self) -> typing.Optional[ContentElement]:
+    '''Returns the parent of the element, or None if the element is the root of the hierarchy.'''
     return self._parent
 
   def remove(self):
+    '''Removes the element from the list of children of its parent,
+    or does nothing if the element is the root.'''
 
     # skip processing if already a root
 
@@ -178,7 +197,9 @@ class ContentElement:
     self._next_sibling = None
     self._previous_sibling = None
 
-  def push_child(self, child):
+  def push_child(self, child: ContentElement):
+    '''Adds `child` as a child of the element.'''
+
     if child.parent() is not None:
       raise RuntimeError("Element already has a parent")
 
@@ -205,42 +226,57 @@ class ContentElement:
 
     # pylint: enable=W0212
 
-  def __iter__(self):
+  def __iter__(self) -> typing.Iterator[ContentElement]:
+    '''Returns an iterator over the children of the element.'''
     child = self._first_child
     while child is not None:
       yield child
       child = child._next_sibling
 
-  def dfs_iterator(self):
+  def dfs_iterator(self) -> typing.Iterator[ContentElement]:
+    '''Returns an iterator over all elements in the tree rooted at the element,
+    in depth-first search order.'''
     yield self
     for c in self:
       yield from c.dfs_iterator()
 
   # id
 
-  def get_id(self):
+  def get_id(self) -> str:
+    '''Returns the `id` of the element'''
     return self._id
 
-  def set_id(self, element_id):
+  def set_id(self, element_id: str):
+    '''Sets the `id` of the element'''
     self._id = element_id
   
   # style properties
 
-  def get_style(self, style_prop):
+  def get_style(self, style_prop: StyleProperty):
+    '''Returns the value for the style property `style_prop`, or None.'''
     return self._styles.get(style_prop)
 
-  def set_style(self, style_prop, value):
+  def set_style(self, style_prop: StyleProperty, value: typing.Any):
+    '''Sets the value for the style property `style_prop` to `value`.'''
     if style_prop not in StyleProperties.ALL:
       raise ValueError("Invalid style property")
 
-    if not style_prop.validate(value):
-      raise ValueError("Invalid value")
+    if value is None:
 
-    self._styles[style_prop] = value
+      self._styles.pop(style_prop, None)
+
+    else:
+
+      if not style_prop.validate(value):
+        raise ValueError("Invalid value")
+
+      self._styles[style_prop] = value
 
   # layout properties
 
-  def set_region(self, region):
+  def set_region(self, region: typing.Optional[Region]):
+    '''Sets the region associated with the element, or None if the element
+    is not associated with any region.'''
 
     if region is not None:
       if self.get_doc() is None:
@@ -251,34 +287,50 @@ class ContentElement:
 
     self._region = region
 
-  def get_region(self):
+  def get_region(self) -> typing.Optional[Region]:
+    '''Returns the region associated with the element, or None if the element is
+    not associated with any region.'''
     return self._region
 
   # timing properties
 
-  def set_begin(self, time_offset):
+  def set_begin(self, time_offset: typing.Optional[Fraction]):
+    '''Sets the (inclusive) begin time of the element, in seconds.'''
     self._begin = time_offset
 
-  def get_begin(self):
+  def get_begin(self) -> typing.Optional[Fraction]:
+    '''Returns the (inclusive) begin time of the element, in seconds.'''
     return self._begin
+
+  def set_end(self, time_offset: typing.Optional[Fraction]):
+    '''Sets the (exclusive) end time of the element, in seconds.'''
+    self._end = time_offset
+
+  def get_end(self) -> typing.Optional[Fraction]:
+    '''Returns the (exclusive) end time of the element, in seconds.'''
+    return self._end
 
   # white space handling
 
-  def set_space(self, wsh):
+  def set_space(self, wsh: WhiteSpaceHandling):
+    '''Sets the white space handling strategy for text nodes of the element.'''
     if wsh not in WhiteSpaceHandling.__members__.values():
       raise TypeError("Must be a WhiteSpaceHandling value")
 
     self._space = wsh
 
-  def get_space(self):
+  def get_space(self) -> WhiteSpaceHandling:
+    '''Returns the white space handling strategy for text nodes of the element.'''
     return self._space
 
   # language
 
-  def set_lang(self, language):
+  def set_lang(self, language: str):
+    '''Sets the langugage of the element, as an RFC 5646 language tag.'''
     self._lang = str(language)
 
-  def get_lang(self):
+  def get_lang(self) -> str:
+    '''Returns the langugage of the element, as an RFC 5646 language tag.'''
     return self._lang
 
 #
@@ -286,6 +338,7 @@ class ContentElement:
 #
   
 class Body(ContentElement):
+  '''Body element, as specified in TTML2'''
 
   def push_child(self, child):
     if not isinstance(child, Div):
@@ -297,6 +350,7 @@ class Body(ContentElement):
 #
   
 class Div(ContentElement):
+  '''Div element, as specified in TTML2'''
 
   def push_child(self, child):
     if not isinstance(child, P):
@@ -308,6 +362,7 @@ class Div(ContentElement):
 #
   
 class P(ContentElement):
+  '''P element, as specified in TTML2'''
 
   def push_child(self, child):
     if not isinstance(child, P):
@@ -319,6 +374,7 @@ class P(ContentElement):
 #
   
 class Region(ContentElement):
+  '''Out-of-line region element, as specified in TTML2'''
 
   def __init__(self, region_id, doc=None):
     super().__init__(doc)
@@ -345,6 +401,7 @@ class Region(ContentElement):
 #
 
 class Document:
+  '''Base class for TTML documents, including ISDs, as specified in TTML2'''
 
   def __init__(self):
     self._regions = {}
@@ -353,10 +410,12 @@ class Document:
 
   # body
 
-  def get_body(self):
+  def get_body(self) -> typing.Optional[Body]:
+    '''Returns the body element of the document, or None'''
     return self._body
 
-  def set_body(self, body: Body):
+  def set_body(self, body: typing.Optional[Body]):
+    '''Sets the body element of the document, which may be None'''
     if not isinstance(body, Body):
       raise TypeError("Argument must be an instance of Body")
 
@@ -367,10 +426,12 @@ class Document:
 
   # regions
 
-  def has_region(self, region_id):
+  def has_region(self, region_id: str) -> bool:
+    '''Returns whether the document has a region with an id of `region_id`.'''
     return region_id in self._regions
 
-  def put_region(self, region):
+  def put_region(self, region: Region):
+    '''Adds a region to the document, replacing any existing region with the same `id`.'''
     if not isinstance(region, Region):
       raise TypeError("Argument must be an instance of Region")
 
@@ -379,48 +440,80 @@ class Document:
 
     self._regions[region.get_id()] = region
 
-  def remove_region(self, region_id):
+  def remove_region(self, region_id: str):
+    '''Removes the region with `id == region_id` from the document and all content elements.'''
+    region = self.get_region(region_id)
+
+    if region is None:
+      return
+
+    # removes the region from all content elements
+
+    body = self.get_body()
+
+    if body is not None: 
+      map(
+        lambda e: e.get_region() and e.get_region().get_id() == region_id and e.set_region(None),
+        body.dfs_iterator()
+      )
+
     del self._regions[region_id]
 
-  def get_region(self, region_id):
+  def get_region(self, region_id) -> typing.Optional[Region]:
+    '''Returns the region with `id == region_id` or None, if none exists.'''
     return self._regions.get(region_id)
 
-  def iter_regions(self):
+  def iter_regions(self) -> typing.Iterator[Region]:
+    '''Returns an iterator over regions.'''
     return self._regions.values()
 
   # initials
 
-  def get_initial(self, q_name):
-    return self._initials.get(q_name)
+  def get_initial(self, style_prop: StyleProperty) -> typing.Any:
+    '''Returns the initial value for the style property `style_prop`, or None otherwise.'''
+    return self._initials.get(style_prop)
 
-  def put_initial(self, initial):
-    if not isinstance(initial, Initial):
-      raise TypeError("initial must be an instance of Initial")
+  def put_initial(self, style_prop: StyleProperty, initial_value: typing.Any):
+    '''Adds an initial value for the style property `style_prop`,
+    replacing any existing one for the same property.'''
+    if style_prop not in StyleProperties.ALL:
+      raise ValueError("Invalid style property")
 
-    self._initials[initial.qn] = initial
+    if initial_value is None:
 
-  def has_initial(self, q_name):
-    return q_name in self._initials
+      self._initials.pop(style_prop, None)
 
-  def delete_initial(self, q_name):
-    return self._initials.pop(q_name, None)
+    else:
 
-  def iter_initials(self):
-    return self._initials.values()
+      if not style_prop.validate(initial_value):
+        raise ValueError("Invalid value")
 
-class Initial:
-  pass
+      self._initials[style_prop] = initial_value
 
-class Style:
-  pass
+  def has_initial(self, style_prop: StyleProperty) -> typing.Any:
+    '''Returns whether the document has an initial value for the style property `style_prop`.'''
+    return style_prop in self._initials
+
+  def iter_initials(self) -> typing.Iterator[typing.Tuple[StyleProperty, typing.Any]]:
+    '''Returns an iterator over (style property, initial value) pairs.'''
+    return self._initials.items()
 
 #
 # Style properties
 #
 
-class StyleProperties:
+class StyleProperty:
+  '''Abstract base class for all style properties'''
 
-  class LineHeight:
+  @staticmethod
+  def validate(value: typing.Any) -> bool:
+    '''Returns whether the value is valid for the style property.'''
+
+class StyleProperties:
+  '''Container for all style properties'''
+
+  class LineHeight(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
 
     ns = "http://www.w3.org/ns/ttml#styling"
     local_name = "lineHeight"

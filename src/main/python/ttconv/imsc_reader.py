@@ -258,6 +258,7 @@ def _process_content_element(context, inherited_space, inherited_lang, ttml_elem
 #
 
 def to_model(xml_tree):
+  '''Convers an IMSC document to the data model'''
 
   context = _Context()
 
@@ -296,13 +297,24 @@ def _process_region_property(context, ttml_element, element):
       element.set_region(r)
     else:
       LOGGER.warning("Element references unknown region")
+
 #
 # style properties
 #
 
-class StyleProperties:
+class StyleProperty:
+  '''Base class for style properties'''
 
-  class LineHeight:
+  @staticmethod
+  def extract(xml_attrib):
+    '''Converts an IMSC style property to a data model value'''
+
+
+class StyleProperties:
+  '''TTML2 style properties'''
+
+  class LineHeight(StyleProperty):
+    '''tts:lineHeight'''
 
     LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
