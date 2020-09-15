@@ -31,6 +31,7 @@ import getopt
 import xml.etree.ElementTree as et
 import ttconv.model as model
 import ttconv.imsc_reader as imsc_reader
+import ttconv.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,10 +78,13 @@ def process(inputfile, outputfile):
   _model = imsc_reader.to_model(tree)
 
   #
-  # Pass the model to the writer
+  # Construct and configure the writer
   #
-  #imsc_writer.from_model(tree)
-  #imsc_writer.write(outputfile)
+  writer = imsc_writer.writer()
+
+  #writer.from_model(_model)
+  writer.from_xml(inputfile)
+  writer.write(outputfile)
 
 def main(argv):
   '''Main application processing'''
