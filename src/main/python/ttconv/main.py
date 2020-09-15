@@ -25,59 +25,74 @@
 
 '''ttconv main'''
 
-import re
 import logging
+import sys
+import getopt
+import xml.etree.ElementTree as et
 import ttconv.model as model
+import ttconv.imsc_reader as imsc_reader
 
 LOGGER = logging.getLogger(__name__)
 
-import sys, getopt
-
-#
-# Parse input arguments
-#
-
 def parse_args(argv):
-  inputfile = ''
-  outputfile = ''
+  '''Parses command line arguments. Returns inputfile, outputfile.'''
+
+  inputfile = ""
+  outputfile = ""
 
   try:
-    opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+    opts, _args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
   except getopt.GetoptError:
-    print('main.py -i <inputfile> -o <outputfile>')
+    LOGGER.fatal("main.py -i <inputfile> -o <outputfile>")
     sys.exit(2)
   
   for opt, arg in opts:
-    if opt == '-h':
-        print('main.py -i <inputfile> -o <outputfile>')
+    if opt == "-h":
+        LOGGER.info("main.py -i <inputfile> -o <outputfile>")
         sys.exit()
     elif opt in ("-i", "--ifile"):
         inputfile = arg
     elif opt in ("-o", "--ofile"):
         outputfile = arg
   
-  print('Input file is ', inputfile)
-  print('Output file is ', outputfile)
+  print("Input file is ", inputfile)
+  print("Output file is ", outputfile)
 
   return inputfile, outputfile
 
-#
-# Process input and output through the reader, converter, and writer
-#
-
 def process(inputfile, outputfile):
+  '''Process input and output through the reader, converter, and writer'''
 
-  print('Input file is ', inputfile)
-  print('Output file is ', outputfile)
+  LOGGER.info("Input file is %s", inputfile)
+  LOGGER.info("Output file is %s", outputfile)
 
+  # 
+  # Parse the xml input file into an ElementTree
+  #
+  tree = et.parse(inputfile)
+
+  #
+  # Pass the parsed xml to the reader
+  #
+  _model = imsc_reader.to_model(tree)
+
+  #
+  # Pass the model to the writer
+  #
+  #imsc_writer.from_model(tree)
+  #imsc_writer.write(outputfile)
 
 def main(argv):
-  inputfile = ''
-  outputfile = ''
+  '''Main application processing'''
+
+  #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
+  
+  inputfile = ""
+  outputfile = ""
   
   inputfile, outputfile = parse_args(argv)
   
   process(inputfile, outputfile)
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+  main(sys.argv[1:])
