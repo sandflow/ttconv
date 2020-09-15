@@ -32,14 +32,6 @@ import ttconv.model as model
 
 LOGGER = logging.getLogger(__name__)
 
-TTML_NS = "http://www.w3.org/ns/ttml"
-TTP_NS = "http://www.w3.org/ns/ttml#parameter"
-
-BODY_ELEMENT_QNAME = f"{{{TTML_NS}}}body"
-DIV_ELEMENT_QNAME = f"{{{TTML_NS}}}div"
-P_ELEMENT_QNAME = f"{{{TTML_NS}}}p"
-SPAN_ELEMENT_QNAME = f"{{{TTML_NS}}}span"
-
 #
 # imsc writer
 #
