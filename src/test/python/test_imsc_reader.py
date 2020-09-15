@@ -29,13 +29,13 @@
 
 import unittest
 import xml.etree.ElementTree as et
-import ttconv.imsc_reader
+from ttconv.imsc import imsc_reader
 
 class IMSCReaderTest(unittest.TestCase):
 
   def test_body_only(self):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')
-    ttconv.imsc_reader.to_model(tree)
+    imsc_reader.to_model(tree)
 
 if __name__ == '__main__':
   unittest.main()
