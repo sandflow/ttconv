@@ -34,11 +34,6 @@ LOGGER = logging.getLogger(__name__)
 TTML_NS = "http://www.w3.org/ns/ttml"
 TTP_NS = "http://www.w3.org/ns/ttml#parameter"
 
-BODY_ELEMENT_QNAME = f"{{{TTML_NS}}}body"
-DIV_ELEMENT_QNAME = f"{{{TTML_NS}}}div"
-P_ELEMENT_QNAME = f"{{{TTML_NS}}}p"
-SPAN_ELEMENT_QNAME = f"{{{TTML_NS}}}span"
-
 class _Context:
   def __init__(self):
     self.doc = None
@@ -124,6 +119,7 @@ def _process_head_element(context, inherited_space, inherited_lang, ttml_element
   # process children
 
   has_layout = False
+  has_styling = False
   
   for child_element in ttml_element:
 
@@ -144,9 +140,22 @@ def _process_head_element(context, inherited_space, inherited_lang, ttml_element
 
         LOGGER.error("Multiple layout elements")
 
-    else:
+    elif child_element.tag == STYLING_ELEMENT_QNAME:
 
-      LOGGER.warning("Unexpected child of head element")
+      if not has_styling:
+
+        has_styling = True
+
+        _process_styling_element(
+          context,
+          _get_xml_space(ttml_element) or inherited_space,
+          _get_xml_lang(ttml_element) or inherited_lang,
+          child_element
+        )
+
+      else:
+
+        LOGGER.error("Multiple styling elements")
 
 #
 # process layout element
@@ -214,34 +223,62 @@ def _process_region_element(context, inherited_space, inherited_lang, ttml_eleme
 
   return r
 
+#
+# process styling element
+#
+
+STYLING_ELEMENT_QNAME = f"{{{TTML_NS}}}styling"
+
+def _process_styling_element(_context, _inherited_space, _inherited_lang, _ttml_element):
+  pass
+
 # process content elements
 
 def _process_content_element(context, inherited_space, inherited_lang, ttml_element):
 
   if ttml_element.tag == BODY_ELEMENT_QNAME:
-    element = model.Body()
+
+    element = _process_body_element(context, inherited_space, inherited_lang, ttml_element)
+
   elif ttml_element.tag == DIV_ELEMENT_QNAME:
-    element = model.Div()
+
+    element = _process_div_element(context, inherited_space, inherited_lang, ttml_element)
+
   elif ttml_element.tag == P_ELEMENT_QNAME:
-    element = model.P()
+
+    element = _process_p_element(context, inherited_space, inherited_lang, ttml_element)
+
+  elif ttml_element.tag == SPAN_ELEMENT_QNAME:
+
+    element = _process_span_element(context, inherited_space, inherited_lang, ttml_element)
+
+  elif ttml_element.tag == BR_ELEMENT_QNAME:
+
+    element = _process_br_element(context, inherited_space, inherited_lang, ttml_element)
+
   else:
+
     return None
 
-  # set document
+  return element
 
-  element.set_doc(context.doc)
+#
+# process Body
+#
 
-  # process children
+BODY_ELEMENT_QNAME = f"{{{TTML_NS}}}body"
 
-  for ttml_child_element in ttml_element:
-    child_element = _process_content_element(
-      context, inherited_space,
-      inherited_lang,
-      ttml_child_element
-    )
+def _process_body_element(context, inherited_space, inherited_lang, ttml_element):
 
-    if child_element is not None:
-      element.push_child(child_element)
+  element = model.Body(context.doc)
+
+  # process xml:space
+  
+  element.set_space(_get_xml_space(ttml_element) or inherited_space)
+
+  # process xml:lang
+
+  element.set_lang(_get_xml_lang(ttml_element) or inherited_lang)
 
   # process layout
 
@@ -250,6 +287,195 @@ def _process_content_element(context, inherited_space, inherited_lang, ttml_elem
   # process styles
 
   _process_style_properties(context, ttml_element, element)
+
+  # process children
+
+  for ttml_child_element in ttml_element:
+    child_element = _process_content_element(
+      context,
+      element.get_space(),
+      element.get_lang(),
+      ttml_child_element
+    )
+
+    if child_element is not None:
+      if not isinstance(child_element, model.Div):
+        LOGGER.error("Children of body must be div instances")
+      else:
+        element.push_child(child_element)
+
+  return element
+
+#
+# process Div
+#
+
+DIV_ELEMENT_QNAME = f"{{{TTML_NS}}}div"
+
+def _process_div_element(context, inherited_space, inherited_lang, ttml_element):
+
+  element = model.Div(context.doc)
+
+  # process xml:space
+  
+  element.set_space(_get_xml_space(ttml_element) or inherited_space)
+
+  # process xml:lang
+
+  element.set_lang(_get_xml_lang(ttml_element) or inherited_lang)
+
+  # process layout
+
+  _process_region_property(context, ttml_element, element)
+
+  # process styles
+
+  _process_style_properties(context, ttml_element, element)
+
+  # process children
+
+  for ttml_child_element in ttml_element:
+    child_element = _process_content_element(
+      context,
+      element.get_space(),
+      element.get_lang(),
+      ttml_child_element
+    )
+
+    if child_element is not None:
+      if not isinstance(child_element, (model.P, model.Div)):
+        LOGGER.error("Children of div must be div or p instances")
+      else:
+        element.push_child(child_element)
+
+  return element
+
+#
+# process P
+#
+
+P_ELEMENT_QNAME = f"{{{TTML_NS}}}p"
+
+def _process_p_element(context, inherited_space, inherited_lang, ttml_element):
+
+  element = model.P(context.doc)
+
+  # process xml:space
+  
+  element.set_space(_get_xml_space(ttml_element) or inherited_space)
+
+  # process xml:lang
+
+  element.set_lang(_get_xml_lang(ttml_element) or inherited_lang)
+
+  # process layout
+
+  _process_region_property(context, ttml_element, element)
+
+  # process styles
+
+  _process_style_properties(context, ttml_element, element)
+
+  # process children
+
+  for ttml_child_element in ttml_element:
+    child_element = _process_content_element(
+      context,
+      element.get_space(),
+      element.get_lang(),
+      ttml_child_element
+    )
+
+    if child_element is not None:
+      if not isinstance(child_element, (model.Span, model.Br)):
+        LOGGER.error("Children of p must be span or br instances")
+      else:
+        element.push_child(child_element)
+
+  return element
+
+#
+# process Span
+#
+
+SPAN_ELEMENT_QNAME = f"{{{TTML_NS}}}span"
+
+def _process_span_element(context, inherited_space, inherited_lang, ttml_element):
+
+  element = model.Span(context.doc)
+
+  # process xml:space
+  
+  element.set_space(_get_xml_space(ttml_element) or inherited_space)
+
+  # process xml:lang
+
+  element.set_lang(_get_xml_lang(ttml_element) or inherited_lang)
+
+  # process layout
+
+  _process_region_property(context, ttml_element, element)
+
+  # process styles
+
+  _process_style_properties(context, ttml_element, element)
+
+  # process text node
+
+  if ttml_element.text is not None:
+    element.push_child(model.Text(context.doc, ttml_element.text))
+
+  # process children
+
+  for ttml_child_element in ttml_element:
+
+    child_element = _process_content_element(
+      context,
+      element.get_space(),
+      element.get_lang(),
+      ttml_child_element
+    )
+
+    if child_element is not None:
+      if not isinstance(child_element, (model.Span, model.Br)):
+        LOGGER.error("Children of p must be span or br or text instances")
+      else:
+        element.push_child(child_element)
+
+    if ttml_child_element.tail is not None:
+      element.push_child(model.Text(context.doc, ttml_element.text))
+
+  return element
+
+#
+# process Br
+#
+
+BR_ELEMENT_QNAME = f"{{{TTML_NS}}}br"
+
+def _process_br_element(context, inherited_space, inherited_lang, ttml_element):
+
+  element = model.Br(context.doc)
+
+  # process xml:space
+  
+  element.set_space(_get_xml_space(ttml_element) or inherited_space)
+
+  # process xml:lang
+
+  element.set_lang(_get_xml_lang(ttml_element) or inherited_lang)
+
+  # process styles
+
+  _process_style_properties(context, ttml_element, element)
+
+  # process children
+
+  if len(ttml_element) > 0:
+    LOGGER.error("Br cannot contain children elements")
+
+  if ttml_element.text is not None:
+    LOGGER.error("Br cannot contain text nodes")
 
   return element
 
@@ -322,13 +548,21 @@ class StyleProperties:
 
     @staticmethod
     def extract(xml_attrib):
-      m = StyleProperties.LineHeight.LENGTH_RE.match(xml_attrib)
 
-      if m is None:
-        raise Exception("Unsupported length")
+      if xml_attrib == "normal":
+
+        r = xml_attrib
+
+      else:
+        m = StyleProperties.LineHeight.LENGTH_RE.match(xml_attrib)
+
+        if m is None:
+          raise Exception("Unsupported length")
       
-      return model.LengthType(float(m.group(1)), model.LengthType.Units(m.group(2)))
+        r = model.LengthType(float(m.group(1)), model.LengthType.Units(m.group(2)))
       
+      return r
+
   # register all style properties by qualified name
 
   BY_QNAME = {
@@ -361,16 +595,16 @@ def _get_xml_lang(ttml_element):
 XMLSPACE_ATTRIB_QNAME = '{http://www.w3.org/XML/1998/namespace}space'
 
 def _get_xml_space(ttml_element):
-  space = ttml_element.attrib.get(XMLSPACE_ATTRIB_QNAME)
+  value = ttml_element.attrib.get(XMLSPACE_ATTRIB_QNAME)
+  space = None
 
-  if space is not None:
+  if value is not None:
 
-    if space in model.WhiteSpaceHandling.__members__:
-      space = model.WhiteSpaceHandling(space)
-
-    else:
-      LOGGER.error("Bad xml:space value")
-      space = None
+    try: 
+      space = model.WhiteSpaceHandling(value)
+    except ValueError:
+      LOGGER.error("Bad xml:space value (%s)", value)
+      
     
   return space
 

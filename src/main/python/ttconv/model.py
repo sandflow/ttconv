@@ -353,7 +353,7 @@ class Div(ContentElement):
   '''Div element, as specified in TTML2'''
 
   def push_child(self, child):
-    if not isinstance(child, P):
+    if not isinstance(child, (P, Div)):
       raise TypeError("Children of body must be P instances")
     super().push_child(child)
 
@@ -365,9 +365,85 @@ class P(ContentElement):
   '''P element, as specified in TTML2'''
 
   def push_child(self, child):
-    if not isinstance(child, P):
+    if not isinstance(child, (Span, Br)):
       raise TypeError("Children of body must be P instances")
     super().push_child(child)
+
+#
+# Span
+#
+  
+class Span(ContentElement):
+  '''Span element, as specified in TTML2'''
+
+  def push_child(self, child):
+    if not isinstance(child, (Span, Br, Text)):
+      raise TypeError("Children of span must be span or br instances")
+    super().push_child(child)
+
+#
+# Br
+#
+  
+class Br(ContentElement):
+  '''Br element, as specified in TTML2'''
+
+  def push_child(self, child):
+    raise TypeError("Br elements cannot have children")
+
+  def set_begin(self, time_offset):
+    raise Exception("Br elements do not have temporeal properties")
+
+  def set_end(self, time_offset):
+    raise Exception("Br elements do not have temporal properties")
+
+  def set_region(self, region):
+    raise Exception("Br elements are not associated with a region")
+
+#
+# Text
+#
+  
+class Text(ContentElement):
+  '''Text node, as specified in TTML2'''
+
+  def __init__(self, doc=None, text=""):
+    self._text = text
+    super().__init__(doc=doc)
+
+  def push_child(self, child):
+    raise Exception("Text nodes cannot have children")
+
+  def set_style(self, style_prop, value):
+    raise Exception("Text nodes cannot have style properties")
+
+  def set_begin(self, time_offset):
+    raise Exception("Text nodes do not have temporeal properties")
+
+  def set_end(self, time_offset):
+    raise Exception("Text nodes do not have temporal properties")
+
+  def set_id(self, element_id):
+    raise Exception("Text nodes do not have an id")
+
+  def set_region(self, region):
+    raise Exception("Text nodes are not associated with a region")
+
+  def set_lang(self, language):
+    raise Exception("Text nodes are not associated with a language")
+
+  def set_space(self, wsh):
+    raise Exception("Text nodes are not associated with space handling")
+
+  # text contents
+
+  def set_text(self, text: str):
+    '''Set the text contents of the node'''
+    self._text = text
+
+  def get_text(self) -> str:
+    '''Get the text contents of the node'''
+    return self._text
 
 #
 # Region
