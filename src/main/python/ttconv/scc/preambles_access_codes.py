@@ -24,17 +24,18 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """SCC Preamble Access Codes"""
+import typing
 
 
 class SccPreambleAccessCode:
   """SCC PAC definition"""
 
-  def __init__(self, row, description):
+  def __init__(self, row: int, description: str):
     self._row = row
     self._description = description
 
 
-def get_pac_row(byte_1, byte_2):
+def get_pac_row(byte_1: int, byte_2: int) -> typing.Optional[int]:
   """Decodes SCC PAC row number from specified bytes"""
   if byte_1 not in list(range(0x10, 0x20)):
     return None
@@ -75,7 +76,7 @@ def get_pac_row(byte_1, byte_2):
   return None
 
 
-def get_pac_description(byte_2):
+def get_pac_description(byte_2: int) -> typing.Optional[str]:
   """Decodes SCC PAC description from specified bytes"""
   if byte_2 not in list(range(0x40, 0x80)):
     return None
@@ -150,7 +151,7 @@ def get_pac_description(byte_2):
   return None
 
 
-def get_pac(byte_1, byte_2):
+def get_pac(byte_1: int, byte_2: int) -> typing.Optional[SccPreambleAccessCode]:
   """Decodes SCC PAC from specified bytes"""
   row = get_pac_row(byte_1, byte_2)
   description = get_pac_description(byte_2)

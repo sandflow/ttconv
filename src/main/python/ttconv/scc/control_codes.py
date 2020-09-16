@@ -24,21 +24,23 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """SCC Control Codes"""
+import typing
 
 
 class SccControlCode:
   """SCC Control Code definition"""
 
-  def __init__(self, name, description, data_channel_1_value, data_channel_2_value):
+  def __init__(self, name: str, description: str, data_channel_1_value: int,
+               data_channel_2_value: int):
     self._name = name
     self._description = description
     self._data_channel_values = [data_channel_1_value, data_channel_2_value]
 
-  def get_name(self):
+  def get_name(self) -> str:
     """Retrieves Control Code name"""
     return self._name
 
-  def get_description(self):
+  def get_description(self) -> str:
     """Retrieves Control Code description"""
     return self._description
 
@@ -70,7 +72,7 @@ CONTROL_CODES = [
 ]
 
 
-def find_control_code(value):
+def find_control_code(value: int) -> typing.Optional[SccControlCode]:
   """Find the Control Code corresponding to the specified value"""
   for control_code in CONTROL_CODES:
     if control_code.contains_value(value):
