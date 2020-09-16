@@ -25,7 +25,7 @@
 
 """Unit tests for the SCC reader"""
 
-# pylint: disable=R0201,C0115,C0116
+# pylint: disable=R0201,C0115,C0116,W0212
 
 import unittest
 from ttconv.scc import scc_reader
