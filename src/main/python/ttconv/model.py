@@ -29,6 +29,7 @@ from __future__ import annotations
 import typing
 from enum import Enum
 from fractions import Fraction
+import re
 
 #
 # Types
@@ -246,8 +247,16 @@ class ContentElement:
     '''Returns the `id` of the element'''
     return self._id
 
+  _XML_ID_REGEXP = re.compile(r'^[a-zA-Z_][\w.-]*$')
+
   def set_id(self, element_id: str):
     '''Sets the `id` of the element'''
+    if not (
+        (isinstance(element_id, str) and self._XML_ID_REGEXP.match(element_id)) 
+        or element_id is None
+      ):
+      raise TypeError("Element id must be a valid xml:id string")
+
     self._id = element_id
   
   # style properties
@@ -439,6 +448,8 @@ class Text(ContentElement):
 
   def set_text(self, text: str):
     '''Set the text contents of the node'''
+    if not isinstance(text, str):
+      raise TypeError("Text must be a string")
     self._text = text
 
   def get_text(self) -> str:
