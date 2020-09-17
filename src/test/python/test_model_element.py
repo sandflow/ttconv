@@ -212,7 +212,6 @@ class ContentElementTest(unittest.TestCase):
     self.assertIsNone(p.get_id())
 
     # bad id
-
     with self.assertRaises(Exception):
       bad_id = " "
       p.set_id(bad_id)

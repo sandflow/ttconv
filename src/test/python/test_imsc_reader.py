@@ -45,7 +45,7 @@ class IMSCReaderTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name):
             tree = et.parse(os.path.join(root, filename))
-            ttconv.imsc_reader.to_model(tree)
+            self.assertIsNotNone(ttconv.imsc_reader.to_model(tree))
 
 if __name__ == '__main__':
   unittest.main()
