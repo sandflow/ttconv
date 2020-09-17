@@ -48,10 +48,10 @@ class LengthType:
   def __init__(self, value, units: Units):
     self.value = value
     self.units = units
+
 #
 # Content Elements
 #
-
 
 class WhiteSpaceHandling(Enum):
   '''Enumerates the strategy for handling white spaces in text nodes.'''
@@ -241,7 +241,7 @@ class ContentElement:
     for c in self:
       yield from c.dfs_iterator()
 
-  # id
+  # id property
 
   def get_id(self) -> str:
     '''Returns the `id` of the element'''
@@ -342,9 +342,7 @@ class ContentElement:
     '''Returns the langugage of the element, as an RFC 5646 language tag.'''
     return self._lang
 
-#
-# Body
-#
+
   
 class Body(ContentElement):
   '''Body element, as specified in TTML2'''
@@ -354,9 +352,7 @@ class Body(ContentElement):
       raise TypeError("Children of body must be div instances")
     super().push_child(child)
 
-#
-# Div
-#
+
   
 class Div(ContentElement):
   '''Div element, as specified in TTML2'''
@@ -366,9 +362,7 @@ class Div(ContentElement):
       raise TypeError("Children of body must be P instances")
     super().push_child(child)
 
-#
-# P
-#
+
   
 class P(ContentElement):
   '''P element, as specified in TTML2'''
@@ -378,9 +372,7 @@ class P(ContentElement):
       raise TypeError("Children of body must be P instances")
     super().push_child(child)
 
-#
-# Span
-#
+
   
 class Span(ContentElement):
   '''Span element, as specified in TTML2'''
@@ -390,10 +382,8 @@ class Span(ContentElement):
       raise TypeError("Children of span must be span or br instances")
     super().push_child(child)
 
-#
-# Br
-#
-  
+
+
 class Br(ContentElement):
   '''Br element, as specified in TTML2'''
 
@@ -409,10 +399,8 @@ class Br(ContentElement):
   def set_region(self, region):
     raise Exception("Br elements are not associated with a region")
 
-#
-# Text
-#
-  
+
+
 class Text(ContentElement):
   '''Text node, as specified in TTML2'''
 
@@ -456,10 +444,8 @@ class Text(ContentElement):
     '''Get the text contents of the node'''
     return self._text
 
-#
-# Region
-#
-  
+
+
 class Region(ContentElement):
   '''Out-of-line region element, as specified in TTML2'''
 
@@ -554,13 +540,13 @@ class Document:
     '''Returns an iterator over regions.'''
     return self._regions.values()
 
-  # initials
+  # initial value
 
-  def get_initial(self, style_prop: StyleProperty) -> typing.Any:
+  def get_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns the initial value for the style property `style_prop`, or None otherwise.'''
     return self._initials.get(style_prop)
 
-  def put_initial(self, style_prop: StyleProperty, initial_value: typing.Any):
+  def put_initial_value(self, style_prop: StyleProperty, initial_value: typing.Any):
     '''Adds an initial value for the style property `style_prop`,
     replacing any existing one for the same property.'''
     if style_prop not in StyleProperties.ALL:
@@ -573,15 +559,16 @@ class Document:
     else:
 
       if not style_prop.validate(initial_value):
+
         raise ValueError("Invalid value")
 
       self._initials[style_prop] = initial_value
 
-  def has_initial(self, style_prop: StyleProperty) -> typing.Any:
+  def has_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns whether the document has an initial value for the style property `style_prop`.'''
     return style_prop in self._initials
 
-  def iter_initials(self) -> typing.Iterator[typing.Tuple[StyleProperty, typing.Any]]:
+  def iter_initial_values(self) -> typing.Iterator[typing.Tuple[StyleProperty, typing.Any]]:
     '''Returns an iterator over (style property, initial value) pairs.'''
     return self._initials.items()
 
@@ -597,7 +584,12 @@ class StyleProperty:
     '''Returns whether the value is valid for the style property.'''
 
 class StyleProperties:
-  '''Container for all style properties'''
+  '''Container for all style properties
+  
+  Class variables:
+
+  * `ALL`: set of all style properties
+  '''
 
   class LineHeight(StyleProperty):
     '''Corresponds to tts:lineHeight.'''
@@ -612,7 +604,5 @@ class StyleProperties:
     @staticmethod
     def validate(value):
       return value == "normal" or isinstance(value, LengthType)
-
-  # add style lookup class variables
 
   ALL = {v for n, v in list(locals().items()) if callable(v)}
