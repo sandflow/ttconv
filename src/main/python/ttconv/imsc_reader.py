@@ -59,8 +59,8 @@ def to_model(xml_tree):
 class TTMLNamespaces:
   '''Holds XML namespaces defined by TTML
   '''
-  ttml = "http://www.w3.org/ns/ttml"
-  ttp = "http://www.w3.org/ns/ttml#parameter"
+  TTML = "http://www.w3.org/ns/ttml"
+  TTP = "http://www.w3.org/ns/ttml#parameter"
 
 class TTElement:
   '''Processes the TTML <tt> element
