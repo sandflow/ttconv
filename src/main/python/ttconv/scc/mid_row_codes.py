@@ -26,47 +26,44 @@
 """SCC Mid Row Codes"""
 
 import typing
+from enum import Enum
 
 
-class SccMidRowCode:
-  """SCC Mid-Row Code definition"""
-  def __init__(self, name: str, channel_1_value: int, channel_2_value: int):
-    self._name = name
+class SccMidRowCode(Enum):
+  """SCC Mid-Row Code values"""
+  WHITE = (0x1120, 0x1920)
+  WHITE_UNDERLINE = (0x1121, 0x1921)
+  GREEN = (0x1122, 0x1922)
+  GREEN_UNDERLINE = (0x1123, 0x1923)
+  BLUE = (0x1124, 0x1924)
+  BLUE_UNDERLINE = (0x1125, 0x1925)
+  CYAN = (0x1126, 0x1926)
+  CYAN_UNDERLINE = (0x1127, 0x1927)
+  RED = (0x1128, 0x1928)
+  RED_UNDERLINE = (0x1129, 0x1929)
+  YELLOW = (0x112A, 0x192A)
+  YELLOW_UNDERLINE = (0x112B, 0x192B)
+  MAGENTA = (0x112C, 0x192C)
+  MAGENTA_UNDERLINE = (0x112D, 0x192D)
+  ITALICS = (0x112E, 0x192E)
+  ITALICS_UNDERLINE = (0x112F, 0x192F)
+
+  def __init__(self, channel_1_value: int, channel_2_value: int):
     self._channel_1 = channel_1_value
     self._channel_2 = channel_2_value
 
-  def get_name(self):
+  def get_name(self) -> str:
     """Retrieves SCC Mid-Row Code name"""
-    return self._name
+    return self.name
 
   def contains_value(self, value: int) -> bool:
     """Returns whether the specified value is contained into the Mid-Row Code channel values"""
     return value in [self._channel_1, self._channel_2]
 
 
-MID_ROW_CODES = [
-  SccMidRowCode("White", 0x1120, 0x1920),
-  SccMidRowCode("White Underline", 0x1121, 0x1921),
-  SccMidRowCode("Green", 0x1122, 0x1922),
-  SccMidRowCode("Green Underline", 0x1123, 0x1923),
-  SccMidRowCode("Blue", 0x1124, 0x1924),
-  SccMidRowCode("Blue Underline", 0x1125, 0x1925),
-  SccMidRowCode("Cyan", 0x1126, 0x1926),
-  SccMidRowCode("Cyan Underline", 0x1127, 0x1927),
-  SccMidRowCode("Red", 0x1128, 0x1928),
-  SccMidRowCode("Red Underline", 0x1129, 0x1929),
-  SccMidRowCode("Yellow", 0x112A, 0x192A),
-  SccMidRowCode("Yellow Underline", 0x112B, 0x192B),
-  SccMidRowCode("Magenta", 0x112C, 0x192C),
-  SccMidRowCode("Magenta Underline", 0x112D, 0x192D),
-  SccMidRowCode("Italics", 0x112E, 0x192E),
-  SccMidRowCode("Italics Underline", 0x112F, 0x192F)
-]
-
-
 def find_mid_row_code(value: int) -> typing.Optional[SccMidRowCode]:
   """Find the Mid-Row Code corresponding to the specified value"""
-  for mid_row_code in MID_ROW_CODES:
+  for mid_row_code in list(SccMidRowCode):
     if mid_row_code.contains_value(value):
       return mid_row_code
   return None

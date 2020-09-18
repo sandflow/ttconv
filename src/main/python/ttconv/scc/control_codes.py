@@ -25,20 +25,39 @@
 
 """SCC Control Codes"""
 import typing
+from enum import Enum
 
 
-class SccControlCode:
+class SccControlCode(Enum):
   """SCC Control Code definition"""
+  AOF = ("Reserved (formerly Alarm Off)", 0X1422, 0x1C22)
+  AON = ("Reserved (formerly Alarm On)", 0X1423, 0x1C23)
+  BS = ("Backspace", 0X1421, 0x1C21)
+  CR = ("Carriage Return", 0X142D, 0x1C2D)
+  DER = ("Delete to End of Row", 0X1424, 0x1C24)
+  EDM = ("Erase Displayed Memory", 0X142C, 0x1C2C)
+  ENM = ("Erase Non-Displayed Memory", 0X142E, 0x1C2E)
+  EOC = ("End of Caption (Flip Memories)", 0X142F, 0x1C2F)
+  FON = ("Flash On", 0X1428, 0x1C28)
+  RDC = ("Resume Direct Captioning", 0X1429, 0x1C29)
+  RTD = ("Resume Text Display", 0X142B, 0x1C2B)
+  TO1 = ("Tab Offset 1 Column", 0X1721, 0x1F21)
+  TO2 = ("Tab Offset 2 Columns", 0X1722, 0x1F22)
+  TO3 = ("Tab Offset 3 Columns", 0X1723, 0x1F23)
+  TR = ("Text Restart", 0X142A, 0x1C2A)
+  RCL = ("Resume caption loading", 0X1420, 0x1C20)
+  RU2 = ("Roll-Up Captions-2 Rows", 0X1425, 0x1C25)
+  RU3 = ("Roll-Up Captions-3 Rows", 0X1426, 0x1C26)
+  RU4 = ("Roll-Up Captions-4 Rows", 0X1427, 0x1C27)
 
-  def __init__(self, name: str, description: str, data_channel_1_value: int,
+  def __init__(self, description: str, data_channel_1_value: int,
                data_channel_2_value: int):
-    self._name = name
     self._description = description
     self._data_channel_values = [data_channel_1_value, data_channel_2_value]
 
   def get_name(self) -> str:
     """Retrieves Control Code name"""
-    return self._name
+    return self.name
 
   def get_description(self) -> str:
     """Retrieves Control Code description"""
@@ -49,32 +68,10 @@ class SccControlCode:
     return value in self._data_channel_values
 
 
-CONTROL_CODES = [
-  SccControlCode("AOF", "Reserved (formerly Alarm Off)", 0X1422, 0x1C22),
-  SccControlCode("AON", "Reserved (formerly Alarm On)", 0X1423, 0x1C23),
-  SccControlCode("BS", "Backspace", 0X1421, 0x1C21),
-  SccControlCode("CR", "Carriage Return", 0X142D, 0x1C2D),
-  SccControlCode("DER", "Delete to End of Row", 0X1424, 0x1C24),
-  SccControlCode("EDM", "Erase Displayed Memory", 0X142C, 0x1C2C),
-  SccControlCode("ENM", "Erase Non-Displayed Memory", 0X142E, 0x1C2E),
-  SccControlCode("EOC", "End of Caption (Flip Memories)", 0X142F, 0x1C2F),
-  SccControlCode("FON", "Flash On", 0X1428, 0x1C28),
-  SccControlCode("RDC", "Resume Direct Captioning", 0X1429, 0x1C29),
-  SccControlCode("RTD", "Resume Text Display", 0X142B, 0x1C2B),
-  SccControlCode("TO1", "Tab Offset 1 Column", 0X1721, 0x1F21),
-  SccControlCode("TO2", "Tab Offset 2 Columns", 0X1722, 0x1F22),
-  SccControlCode("TO3", "Tab Offset 3 Columns", 0X1723, 0x1F23),
-  SccControlCode("TR", "Text Restart", 0X142A, 0x1C2A),
-  SccControlCode("RCL", "Resume caption loading", 0X1420, 0x1C20),
-  SccControlCode("RU2", "Roll-Up Captions-2 Rows", 0X1425, 0x1C25),
-  SccControlCode("RU3", "Roll-Up Captions-3 Rows", 0X1426, 0x1C26),
-  SccControlCode("RU4", "Roll-Up Captions-4 Rows", 0X1427, 0x1C27),
-]
-
 
 def find_control_code(value: int) -> typing.Optional[SccControlCode]:
   """Find the Control Code corresponding to the specified value"""
-  for control_code in CONTROL_CODES:
+  for control_code in list(SccControlCode):
     if control_code.contains_value(value):
       return control_code
   return None
