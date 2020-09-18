@@ -27,16 +27,16 @@
 
 import re
 import logging
-from fractions import Fraction
 from typing import List
 from ttconv.model import Document, P, Body, Div
+from ttconv.scc import time_codes
 
 LOGGER = logging.getLogger(__name__)
 
-SCC_LINE_PATTERN = '([0-9]{2}:[0-9]{2}:[0-9]{2}:[0-9]{2})\t(([0-9a-f]{4} )*)'
-PARITY_BIT_MASK = 0b01111111
+SCC_LINE_PATTERN = '((' + time_codes.SMPTE_TIME_CODE_NDF_PATTERN \
+                   + ')|(' + time_codes.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
 
-FRAME_RATE = Fraction(30000, 1001)  # default 29.97 fps
+PARITY_BIT_MASK = 0b01111111
 
 
 class _SccContext:
@@ -86,16 +86,6 @@ def _word_to_chars(word_value: int) -> List[chr]:
   return [chr(chars[0]), chr(chars[1])]
 
 
-def _read_time_code(time_code: str) -> Fraction:
-  """Reads the time code string and converts it as a fraction based on the frame rate"""
-  [hours, minutes, seconds, frames] = time_code.split(':')
-
-  return Fraction(int(hours) * 3600 +
-                  int(minutes) * 60 +
-                  int(seconds) +
-                  int(frames), FRAME_RATE)
-
-
 def _read_word(hex_word: str) -> List[chr]:
   """Reads the SCC hexadecimal word content"""
   if hex_word == "":
@@ -125,10 +115,10 @@ def _read_line(context: _SccContext, line: str):
     paragraph.set_id("caption" + str(context.count))
 
     time_code = match.group(1)
-    time_offset = _read_time_code(time_code)
+    time_offset = time_codes.parse(time_code)
     paragraph.set_begin(time_offset)
 
-    hex_words = match.group(2).split(' ')
+    hex_words = line.split('\t')[1].split(' ')
     for hex_word in hex_words:
       chars += _read_word(hex_word)
 
