@@ -29,6 +29,7 @@
 
 import unittest
 import xml.etree.ElementTree as et
+import os
 from ttconv.imsc import imsc_reader
 
 class IMSCReaderTest(unittest.TestCase):
@@ -36,6 +37,15 @@ class IMSCReaderTest(unittest.TestCase):
   def test_body_only(self):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')
     imsc_reader.to_model(tree)
+
+  def test_imsc_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            tree = et.parse(os.path.join(root, filename))
+            self.assertIsNotNone(imsc_reader.to_model(tree))
 
 if __name__ == '__main__':
   unittest.main()
