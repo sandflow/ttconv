@@ -629,18 +629,12 @@ class CellResolutionAttribute:
 
   qn = f"{TTMLNamespaces.TTP}cellResolution"
 
-  class ValueType:
-    '''Value of the ttp:cellResolution attribute'''
-    def __init__(self, rows=15, columns=32):
-      self.rows = rows
-      self.columns = columns
-
   _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
 
   @staticmethod
   def extract(ttml_element):
 
-    r = CellResolutionAttribute.ValueType()
+    r = model.CellResolutionType()
 
     cr = ttml_element.attrib.get(CellResolutionAttribute.qn)
 
@@ -650,7 +644,7 @@ class CellResolutionAttribute:
 
       if m is not None:
 
-        r = CellResolutionAttribute.ValueType(int(m.group(1)), int(m.group(2)))
+        r = model.CellResolutionType(int(m.group(1)), int(m.group(2)))
 
       else:
 

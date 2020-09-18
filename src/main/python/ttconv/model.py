@@ -32,24 +32,6 @@ from fractions import Fraction
 import re
 
 #
-# Types
-#
-
-class LengthType:
-  '''Length type as defined in TTML2'''
-
-  class Units(Enum):
-    '''Units of length'''
-    em = "em"
-    pct = "%"
-    rh = "rh"
-    rw = "rw"
-
-  def __init__(self, value, units: Units):
-    self.value = value
-    self.units = units
-
-#
 # Content Elements
 #
 
@@ -470,6 +452,689 @@ class Region(ContentElement):
     super().set_region(region)
 
 #
+# Types
+#
+
+class LengthType:
+  '''Length type as defined in TTML
+  '''
+
+  class Units(Enum):
+    '''Units of length
+    '''
+    em = "em"
+    pct = "%"
+    rh = "rh"
+    rw = "rw"
+    c = "c"
+
+  def __init__(self, value: float = 0, units: LengthType.Units = LengthType.Units.rh):
+    self.value = value
+    self.units = units
+
+
+
+class CellResolutionType:
+  '''Value of the ttp:cellResolution attribute'''
+
+  def __init__(self, rows=15, columns=32):
+    self.rows = rows
+    self.columns = columns
+
+
+
+class ColorType:
+  '''<color> type as defined in TTML
+  '''
+
+  class Colorimetry(Enum):
+    '''Supported colorimetry systems
+    '''
+    SRGB = "sRGB"
+
+  def __init__(
+      self,
+      ident: ColorType.Colorimetry = ColorType.Colorimetry.SRGB,
+      components: typing.Optional[typing.List[float]] = None,
+      alpha: float = 1.0
+  ):
+    self.ident = ident
+    self.components = components or [1, 1, 1]
+    self.alpha = alpha
+
+
+
+class NamedColors(Enum):
+  '''TTML \\<named-color\\> 
+  '''
+  transparent = ColorType(alpha=0.0)
+  white = ColorType()
+
+
+
+class DirectionType(Enum):
+  '''tts:direction values
+  '''
+  ltr = "ltr"
+  rtl = "rtl"
+
+
+
+class DisplayType(Enum):
+  '''tts:display value
+  '''
+  auto = "auto"
+  none = "none"
+
+
+
+class DisplayAlignType(Enum):
+  '''tts:displayAlign value
+  '''
+  before = "before"
+  center = "center"
+  after = "after"
+
+
+
+class ExtentType:
+  '''tts:extent value
+
+  Instance variables:
+
+  `height`
+
+  `width`
+  '''
+
+  def __init__(self, height: LengthType = None, width: LengthType = None):
+    self.height = height or LengthType()
+    self.width = width or LengthType()
+  
+
+
+class BooleanType(Enum):
+  '''true or false value
+  '''
+  true = "true"
+  false = "false"
+
+
+
+class FontStyleType(Enum):
+  '''tts:fontStyle value
+  '''
+  normal = "normal"
+  italic = "italic"
+  oblique = "oblique"
+
+
+
+class FontWeightType(Enum):
+  '''tts:fontWeight value
+  '''
+  normal = "normal"
+  bold = "bold"
+
+
+
+class MultiRowAlignType(Enum):
+  '''ebutts:multiRowAlign value
+  '''
+  start = "start"
+  center = "center"
+  end = "end"
+  auto = "auto"
+
+
+class OverflowType(Enum):
+  '''tts:overflow value
+  '''
+  visible = "visible"
+  hidden = "hidden"
+
+
+
+class PaddingType:
+  '''tts:padding value
+  '''
+
+  def __init__(
+      self,
+      before: LengthType = None,
+      end: LengthType = None,
+      after: LengthType = None,
+      start: LengthType = None
+    ):
+    self.before = before or LengthType()
+    self.end = end or LengthType()
+    self.after = after or LengthType()
+    self.start = start or LengthType()
+
+
+class PositionType:
+  '''Coordinates in the root container region
+
+  Instance variables:
+
+  `x`: coordinate, measured from the left of the root container region.
+
+  `y` : coordinate, measured from the top of the root container region.
+  '''
+
+  def __init__(self, x: LengthType = None, y: LengthType = None):
+    self.x = x or LengthType()
+    self.y = y or LengthType()
+
+#
+# Style properties
+#
+
+class StyleProperty:
+  '''Abstract base class for all style properties'''
+
+  @staticmethod
+  def validate(value: typing.Any) -> bool:
+    '''Returns whether the value is valid for the style property.'''
+
+class StyleProperties:
+  '''Container for all style properties
+  
+  Class variables:
+
+  * `ALL`: set of all style properties
+  '''
+
+
+  class BackgroundColor(StyleProperty):
+    '''Corresponds to tts:backgroundColor.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "backgroundColor"
+    is_inherited = False
+    is_animatable = True
+    initial = NamedColors.transparent
+    applies_to = [Body, Div, P, Region, Span]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, ColorType)
+
+
+
+  class Color(StyleProperty):
+    '''Corresponds to tts:color.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "color"
+    is_inherited = True
+    is_animatable = True
+    initial = NamedColors.white
+    applies_to = [Span]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, ColorType)
+
+
+
+  class Direction(StyleProperty):
+    '''Corresponds to tts:direction.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "direction"
+    is_inherited = True
+    is_animatable = True
+    initial = DirectionType.ltr
+    applies_to = [P, Span]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, DirectionType)
+
+
+
+  class Display(StyleProperty):
+    '''Corresponds to tts:display.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "display"
+    is_inherited = False
+    is_animatable = True
+    initial = DisplayType.auto
+    applies_to = [Body, Div, P, Region, Span]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, DisplayType)
+
+
+
+  class DisplayAlign(StyleProperty):
+    '''Corresponds to tts:displayAlign.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "displayAlign"
+    is_inherited = False
+    is_animatable = True
+    initial = DisplayAlignType.before
+    applies_to = [Body, Div, P, Region]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, DisplayAlignType)
+
+
+
+  class Extent(StyleProperty):
+    '''Corresponds to tts:extent.
+    '''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "extent"
+    is_inherited = True
+    is_animatable = True
+    initial = LengthType()
+    applies_to = [Region]
+
+    @staticmethod
+    def validate(value: ExtentType):
+      return isinstance(value, ExtentType)
+
+
+
+  class FillLineGap(StyleProperty):
+    '''Corresponds to itts:fillLineGap.'''
+
+    ns = "http://www.w3.org/ns/ttml/profile/imsc1#styling"
+    local_name = "fillLineGap"
+    is_inherited = True
+    is_animatable = True
+    initial = BooleanType.false
+    applies_to = [P]
+
+    @staticmethod
+    def validate(value: BooleanType):
+      return isinstance(BooleanType)
+
+
+  class FontFamily(StyleProperty):
+    '''Corresponds to tts:fontFamily.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "fontFamily"
+    is_inherited = True
+    is_animatable = True
+    initial = ["default"]
+    applies_to = [Span]
+
+    @staticmethod
+    def validate(value: typing.List[str]):
+      return isinstance(value, list) and all(lambda i: isinstance(i, str) for i in value)
+
+
+  class FontSize(StyleProperty):
+    '''Corresponds to tts:fontSize.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "fontSize"
+    is_inherited = True
+    is_animatable = True
+    initial = LengthType(1, LengthType.Units.c)
+    applies_to = [Span]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, LengthType)
+
+
+  class FontStyle(StyleProperty):
+    '''Corresponds to tts:fontStyle.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "fontStyle"
+    is_inherited = True
+    is_animatable = True
+    initial = FontStyleType.normal
+    applies_to = [Span]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, FontStyleType)
+
+
+  class FontWeight(StyleProperty):
+    '''Corresponds to tts:fontWeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "fontWeight"
+    is_inherited = True
+    is_animatable = True
+    initial = FontWeightType.normal
+    applies_to = [Span]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, FontWeightType)
+
+
+  class LineHeight(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class LinePadding(StyleProperty):
+    '''Corresponds to ebutts:linePadding.'''
+
+    ns = "urn:ebu:tt:style"
+    local_name = "linePadding"
+    is_inherited = True
+    is_animatable = True
+    initial = LengthType()
+    applies_to = [P]
+
+    @staticmethod
+    def validate(value: LengthType):
+      return isinstance(value, LengthType) and value.units == LengthType.Units.c
+
+
+  class MultiRowAlign(StyleProperty):
+    '''Corresponds to ebutts:multiRowAlign.'''
+
+    ns = "urn:ebu:tt:style"
+    local_name = "multiRowAlign"
+    is_inherited = True
+    is_animatable = True
+    initial = MultiRowAlignType.auto
+    applies_to = [P]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, MultiRowAlignType)
+
+
+  class Opacity(StyleProperty):
+    '''Corresponds to tts:opacity.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "opacity"
+    is_inherited = False
+    is_animatable = True
+    initial = 1.0
+    applies_to = [Body, Div, P, Region, Span]
+
+    @staticmethod
+    def validate(value: float):
+      return isinstance(value, float)
+
+
+  class Origin(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = False
+    is_animatable = True
+    initial = PositionType()
+    applies_to = [Region]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, PositionType)
+
+
+  class Overflow(StyleProperty):
+    '''Corresponds to tts:overflow.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "overflow"
+    is_inherited = False
+    is_animatable = True
+    initial = OverflowType.hidden
+    applies_to = [Region]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, OverflowType)
+
+
+  class Padding(StyleProperty):
+    '''Corresponds to tts:padding.'''
+    
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "padding"
+    is_inherited = False
+    is_animatable = True
+    initial = PaddingType(0, 0, 0, 0)
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, PaddingType)
+
+
+  class RubyAlign(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class RubyPosition(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class RubyReserve(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class Shear(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class TextAlign(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class TextCombine(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class TextDecoration(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class TextEmphasis(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class TextOutline(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class TextShadow(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class UnicodeBidi(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class Visibility(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class WrapOption(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+
+  class WritingMode(StyleProperty):
+    '''Corresponds to tts:lineHeight.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "lineHeight"
+    is_inherited = True
+    is_animatable = True
+    initial = "normal"
+    applies_to = [Body]
+
+    @staticmethod
+    def validate(value):
+      return value == "normal" or isinstance(value, LengthType)
+
+  ALL = {v for n, v in list(locals().items()) if callable(v)}
+
+#
 # Document
 #
 
@@ -479,8 +1144,22 @@ class Document:
   def __init__(self):
     self._regions = {}
     self._body = None
-    self._initials = {}
+    self._initial_values = {}
+    self._cell_resolution = CellResolutionType()
 
+  # cell resolution
+
+  def get_cell_resolution(self) -> CellResolutionType:
+    '''Returns the cell resolution of the document'''
+    return self._cell_resolution
+
+  def set_cell_resolution(self, cell_resolution: CellResolutionType):
+    '''Sets the cell resolution of the document'''
+    if not isinstance(cell_resolution, CellResolutionType):
+      raise TypeError("Argument must be an instance of CellResolutionType")
+
+    self._cell_resolution = cell_resolution
+  
   # body
 
   def get_body(self) -> typing.Optional[Body]:
@@ -544,7 +1223,7 @@ class Document:
 
   def get_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns the initial value for the style property `style_prop`, or None otherwise.'''
-    return self._initials.get(style_prop)
+    return self._initial_values.get(style_prop)
 
   def put_initial_value(self, style_prop: StyleProperty, initial_value: typing.Any):
     '''Adds an initial value for the style property `style_prop`,
@@ -554,7 +1233,7 @@ class Document:
 
     if initial_value is None:
 
-      self._initials.pop(style_prop, None)
+      self._initial_values.pop(style_prop, None)
 
     else:
 
@@ -562,47 +1241,12 @@ class Document:
 
         raise ValueError("Invalid value")
 
-      self._initials[style_prop] = initial_value
+      self._initial_values[style_prop] = initial_value
 
   def has_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns whether the document has an initial value for the style property `style_prop`.'''
-    return style_prop in self._initials
+    return style_prop in self._initial_values
 
   def iter_initial_values(self) -> typing.Iterator[typing.Tuple[StyleProperty, typing.Any]]:
     '''Returns an iterator over (style property, initial value) pairs.'''
-    return self._initials.items()
-
-#
-# Style properties
-#
-
-class StyleProperty:
-  '''Abstract base class for all style properties'''
-
-  @staticmethod
-  def validate(value: typing.Any) -> bool:
-    '''Returns whether the value is valid for the style property.'''
-
-class StyleProperties:
-  '''Container for all style properties
-  
-  Class variables:
-
-  * `ALL`: set of all style properties
-  '''
-
-  class LineHeight(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
-
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
-    is_inherited = True
-    is_animatable = True
-    initial = "normal"
-    applies_to = [Body]
-
-    @staticmethod
-    def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
-
-  ALL = {v for n, v in list(locals().items()) if callable(v)}
+    return self._initial_values.items()
