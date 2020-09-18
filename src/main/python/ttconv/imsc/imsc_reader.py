@@ -551,7 +551,7 @@ class StyleProperties:
         if m is None:
           raise Exception("Unsupported length")
       
-        r = model.LengthType(float(m.group(1)), model.LengthType.Units(m.group(2)))
+        r = model.LengthType(float(m.group(1)), model.LengthUnits(m.group(2)))
       
       return r
 

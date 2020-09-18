@@ -455,20 +455,22 @@ class Region(ContentElement):
 # Types
 #
 
+class LengthUnits(Enum):
+  '''Units of length
+  '''
+  em = "em"
+  pct = "%"
+  rh = "rh"
+  rw = "rw"
+  c = "c"
+
+
+
 class LengthType:
   '''Length type as defined in TTML
   '''
 
-  class Units(Enum):
-    '''Units of length
-    '''
-    em = "em"
-    pct = "%"
-    rh = "rh"
-    rw = "rw"
-    c = "c"
-
-  def __init__(self, value: float = 0, units: LengthType.Units = LengthType.Units.rh):
+  def __init__(self, value: float = 0, units: LengthUnits = LengthUnits.rh):
     self.value = value
     self.units = units
 
@@ -481,20 +483,18 @@ class CellResolutionType:
     self.rows = rows
     self.columns = columns
 
-
+class Colorimetry(Enum):
+  '''Supported colorimetry systems
+  '''
+  SRGB = "sRGB"
 
 class ColorType:
   '''<color> type as defined in TTML
   '''
 
-  class Colorimetry(Enum):
-    '''Supported colorimetry systems
-    '''
-    SRGB = "sRGB"
-
   def __init__(
       self,
-      ident: ColorType.Colorimetry = ColorType.Colorimetry.SRGB,
+      ident: Colorimetry = Colorimetry.SRGB,
       components: typing.Optional[typing.List[float]] = None,
       alpha: float = 1.0
   ):
@@ -780,7 +780,7 @@ class StyleProperties:
     local_name = "fontSize"
     is_inherited = True
     is_animatable = True
-    initial = LengthType(1, LengthType.Units.c)
+    initial = LengthType(1, LengthUnits.c)
     applies_to = [Span]
 
     @staticmethod
