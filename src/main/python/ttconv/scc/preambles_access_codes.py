@@ -34,6 +34,14 @@ class SccPreambleAccessCode:
     self._row = row
     self._description = description
 
+  def get_row(self) -> int:
+    """Retruns the PAC row"""
+    return self._row
+
+  def get_description(self) -> str:
+    """Returns the PAC description"""
+    return self._description
+
 
 def get_pac_row(byte_1: int, byte_2: int) -> typing.Optional[int]:
   """Decodes SCC PAC row number from specified bytes"""
