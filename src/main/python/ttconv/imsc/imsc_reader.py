@@ -27,8 +27,8 @@
 
 import re
 import logging
-import inspect
 import ttconv.model as model
+from ttconv.imsc.style_properties import StyleProperties
 
 
 LOGGER = logging.getLogger(__name__)
@@ -41,6 +41,12 @@ def to_model(xml_tree):
     def __init__(self):
       self.doc = None
       self.cell_resolution = None
+
+    def get_px_height(self):
+      return 1080
+
+    def get_px_width(self):
+      return 1920
 
   context = _Context()
 
@@ -269,12 +275,12 @@ class ContentElement:
         LOGGER.warning("Element references unknown region")
 
   @staticmethod
-  def process_style_properties(_context, ttml_element, element):
+  def process_style_properties(context, ttml_element, element):
     '''Read TTML style properties into the model'''
     for attr in ttml_element.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
       if prop is not None:
-        element.set_style(prop.model_prop, prop.extract(ttml_element.attrib.get(attr)))
+        element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -511,55 +517,7 @@ class BrElement:
 
     return element
 
-#
-# style properties
-#
 
-class StyleProperty:
-  '''Base class for style properties'''
-
-  @staticmethod
-  def extract(xml_attrib):
-    '''Converts an IMSC style property to a data model value'''
-
-
-class StyleProperties:
-  '''TTML style properties
-
-  Class variables:
-  
-  `BY_QNAME`: mapping of qualified name to StyleProperty class
-  '''
-
-  class LineHeight(StyleProperty):
-    '''tts:lineHeight'''
-
-    LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
-
-    model_prop = model.StyleProperties.LineHeight
-
-    @staticmethod
-    def extract(xml_attrib):
-
-      if xml_attrib == "normal":
-
-        r = xml_attrib
-
-      else:
-        m = StyleProperties.LineHeight.LENGTH_RE.match(xml_attrib)
-
-        if m is None:
-          raise Exception("Unsupported length")
-      
-        r = model.LengthType(float(m.group(1)), model.LengthUnits(m.group(2)))
-      
-      return r
-
-  BY_QNAME = {
-    f"{{{v.model_prop.ns}}}{v.model_prop.local_name}" : v
-    for n, v in list(locals().items()) if inspect.isclass(v)
-    }
-    
 #
 # other attributes
 #
