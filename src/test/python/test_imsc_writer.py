@@ -29,8 +29,8 @@
 
 import unittest
 import xml.etree.ElementTree as et
-import ttconv.imsc_reader as imsc_reader
-import ttconv.imsc_writer as imsc_writer
+import ttconv.imsc.imsc_reader as imsc_reader
+import ttconv.imsc.imsc_writer as imsc_writer
 
 class IMSCWriterTest(unittest.TestCase):
 
@@ -45,7 +45,7 @@ class IMSCWriterTest(unittest.TestCase):
     #
     # Construct and configure the writer
     #
-    writer = imsc_writer.writer()
+    writer = imsc_writer.Writer()
 
     #writer.from_model(_model)
     writer.from_xml('src/test/resources/ttml/body_only.ttml')

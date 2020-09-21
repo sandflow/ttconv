@@ -29,7 +29,7 @@ import logging
 import sys
 import getopt
 import xml.etree.ElementTree as et
-import ttconv.model as model
+#import ttconv.model as model
 import ttconv.imsc.imsc_reader as imsc_reader
 import ttconv.imsc.imsc_writer as imsc_writer
 
@@ -49,12 +49,12 @@ def parse_args(argv):
   
   for opt, arg in opts:
     if opt == "-h":
-        LOGGER.info("main.py -i <inputfile> -o <outputfile>")
-        sys.exit()
+      LOGGER.info("main.py -i <inputfile> -o <outputfile>")
+      sys.exit()
     elif opt in ("-i", "--ifile"):
-        inputfile = arg
+      inputfile = arg
     elif opt in ("-o", "--ofile"):
-        outputfile = arg
+      outputfile = arg
   
   print("Input file is ", inputfile)
   print("Output file is ", outputfile)
@@ -80,7 +80,7 @@ def process(inputfile, outputfile):
   #
   # Construct and configure the writer
   #
-  writer = imsc_writer.writer()
+  writer = imsc_writer.Writer()
 
   #writer.from_model(_model)
   writer.from_xml(inputfile)

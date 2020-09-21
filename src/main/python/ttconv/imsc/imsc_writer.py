@@ -25,10 +25,8 @@
 
 '''IMSC writer'''
 
-import re
 import logging
 import xml.etree.ElementTree as et
-import ttconv.model as model
 
 LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +34,7 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-class writer:
+class Writer:
   '''IMSC Writer'''
 
   def __init__(self):
