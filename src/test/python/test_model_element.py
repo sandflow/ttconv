@@ -30,7 +30,7 @@
 import unittest
 import ttconv.model as model
 
-class ModelElementTest(unittest.TestCase):
+class ContentElementTest(unittest.TestCase):
 
   def test_init(self):
     e = model.ContentElement()
@@ -197,6 +197,99 @@ class ModelElementTest(unittest.TestCase):
 
     self.assertEqual(sum(1 for _ in p), 0)
 
+  def test_id(self):
+    p = model.ContentElement()
+
+    self.assertIsNone(p.get_id())
+
+    # good id
+    good_id = "a"
+    p.set_id(good_id)
+    self.assertEqual(p.get_id(), good_id)
+
+    # None
+    p.set_id(None)
+    self.assertIsNone(p.get_id())
+
+    # bad id
+    with self.assertRaises(Exception):
+      bad_id = " "
+      p.set_id(bad_id)
+
+class BodyTest(unittest.TestCase):
+
+  def test_push_child(self):
+    b = model.Body()
+
+    b.push_child(model.Div())
+
+    with self.assertRaises(Exception):
+      b.push_child(model.P())
+
+class DivTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    d1 = model.Div()
+
+    d1.push_child(model.P())
+
+    d1.push_child(model.Div())
+
+    with self.assertRaises(Exception):
+      d1.push_child(model.Text())
+
+class PTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    p = model.P()
+
+    p.push_child(model.Br())
+
+    p.push_child(model.Span())
+
+    with self.assertRaises(Exception):
+      p.push_child(model.Text())
+
+class SpanTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    s = model.Span()
+
+    s.push_child(model.Br())
+
+    s.push_child(model.Span())
+
+    s.push_child(model.Text())
+
+    with self.assertRaises(Exception):
+      s.push_child(model.P())
+
+class TextTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    t = model.Text()
+
+    with self.assertRaises(Exception):
+      t.push_child(model.Span())
+
+  def test_set_text(self):
+
+    t = model.Text()
+
+    self.assertEqual(t.get_text(), "")
+
+    sample_text = "hello"
+
+    t.set_text(sample_text)
+
+    self.assertEqual(t.get_text(), sample_text)
+
+    with self.assertRaises(TypeError):
+      t.set_text(None)
 
 if __name__ == '__main__':
   unittest.main()
