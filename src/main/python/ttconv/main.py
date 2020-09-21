@@ -30,8 +30,8 @@ import sys
 import getopt
 import xml.etree.ElementTree as et
 import ttconv.model as model
-import ttconv.imsc_reader as imsc_reader
-import ttconv.imsc_writer as imsc_writer
+import ttconv.imsc.imsc_reader as imsc_reader
+import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
