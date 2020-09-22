@@ -58,7 +58,7 @@ class ContentElementTest(unittest.TestCase):
 
     e.set_doc(doc)
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       e.set_doc(doc2)
 
   def test_detach(self):
@@ -82,7 +82,7 @@ class ContentElementTest(unittest.TestCase):
 
     e.push_child(c)
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       c.set_doc(None)
 
   def test_push_child(self):
@@ -116,13 +116,13 @@ class ContentElementTest(unittest.TestCase):
 
     c1.push_child(c3)
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       p.push_child(c3)
 
   def test_push_child_as_self(self):
     p = model.ContentElement()
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       p.push_child(p)
 
   def test_dfs(self):
@@ -212,7 +212,7 @@ class ContentElementTest(unittest.TestCase):
     self.assertIsNone(p.get_id())
 
     # bad id
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       bad_id = " "
       p.set_id(bad_id)
 
@@ -223,7 +223,7 @@ class BodyTest(unittest.TestCase):
 
     b.push_child(model.Div())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       b.push_child(model.P())
 
 class DivTest(unittest.TestCase):
@@ -236,7 +236,7 @@ class DivTest(unittest.TestCase):
 
     d1.push_child(model.Div())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       d1.push_child(model.Text())
 
 class PTest(unittest.TestCase):
@@ -249,7 +249,7 @@ class PTest(unittest.TestCase):
 
     p.push_child(model.Span())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       p.push_child(model.Text())
 
 class SpanTest(unittest.TestCase):
@@ -264,7 +264,7 @@ class SpanTest(unittest.TestCase):
 
     s.push_child(model.Text())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       s.push_child(model.P())
 
 class TextTest(unittest.TestCase):
@@ -273,7 +273,7 @@ class TextTest(unittest.TestCase):
 
     t = model.Text()
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       t.push_child(model.Span())
 
   def test_set_text(self):
@@ -290,6 +290,31 @@ class TextTest(unittest.TestCase):
 
     with self.assertRaises(TypeError):
       t.set_text(None)
+
+class RegionTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    r = model.Region("hello")
+
+    with self.assertRaises(RuntimeError):
+      r.push_child(model.P())
+
+  def test_set_id(self):
+
+    r = model.Region("hello")
+
+    with self.assertRaises(RuntimeError):
+      r.set_id("blah")
+
+  def test_set_region(self):
+
+    r1 = model.Region("hello")
+
+    r2 = model.Region("blah")
+
+    with self.assertRaises(RuntimeError):
+      r1.set_region(r2)
 
 if __name__ == '__main__':
   unittest.main()

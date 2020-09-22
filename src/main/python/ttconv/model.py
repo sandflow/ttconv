@@ -29,6 +29,7 @@ from __future__ import annotations
 import typing
 from enum import Enum
 from fractions import Fraction
+from dataclasses import dataclass
 import re
 from ttconv.style_properties import StyleProperties
 from ttconv.style_properties import StyleProperty
@@ -278,7 +279,7 @@ class ContentElement:
 
     if region is not None:
       if self.get_doc() is None:
-        raise Exception("Not associated with a document")
+        raise ValueError("Not associated with a document")
         
       if not self.get_doc().has_region(region.get_id()):
         raise ValueError("Region is unknown")
@@ -429,13 +430,13 @@ class Br(ContentElement):
     raise TypeError("Br elements cannot have children")
 
   def set_begin(self, time_offset):
-    raise Exception("Br elements do not have temporeal properties")
+    raise RuntimeError("Br elements do not have temporeal properties")
 
   def set_end(self, time_offset):
-    raise Exception("Br elements do not have temporal properties")
+    raise RuntimeError("Br elements do not have temporal properties")
 
   def set_region(self, region):
-    raise Exception("Br elements are not associated with a region")
+    raise RuntimeError("Br elements are not associated with a region")
 
 
 
@@ -447,28 +448,28 @@ class Text(ContentElement):
     super().__init__(doc=doc)
 
   def push_child(self, child):
-    raise Exception("Text nodes cannot have children")
+    raise RuntimeError("Text nodes cannot have children")
 
   def set_style(self, style_prop, value):
-    raise Exception("Text nodes cannot have style properties")
+    raise RuntimeError("Text nodes cannot have style properties")
 
   def set_begin(self, time_offset):
-    raise Exception("Text nodes do not have temporeal properties")
+    raise RuntimeError("Text nodes do not have temporeal properties")
 
   def set_end(self, time_offset):
-    raise Exception("Text nodes do not have temporal properties")
+    raise RuntimeError("Text nodes do not have temporal properties")
 
   def set_id(self, element_id):
-    raise Exception("Text nodes do not have an id")
+    raise RuntimeError("Text nodes do not have an id")
 
   def set_region(self, region):
-    raise Exception("Text nodes are not associated with a region")
+    raise RuntimeError("Text nodes are not associated with a region")
 
   def set_lang(self, language):
-    raise Exception("Text nodes are not associated with a language")
+    raise RuntimeError("Text nodes are not associated with a language")
 
   def set_space(self, wsh):
-    raise Exception("Text nodes are not associated with space handling")
+    raise RuntimeError("Text nodes are not associated with space handling")
 
   # text contents
 
@@ -511,34 +512,41 @@ class Region(ContentElement):
 
   def set_id(self, element_id):
     if element_id != self.get_id():
-      raise Exception("Region id is immutable")
+      raise RuntimeError("Region id is immutable")
 
   def push_child(self, child):
-    raise Exception("Region elements do not have children")
+    raise RuntimeError("Region elements do not have children")
 
   def set_region(self, region):
     if region is not None:
-      raise Exception("Region elements cannot be associated with regions")
+      raise RuntimeError("Region elements cannot be associated with regions")
     super().set_region(region)
 
 #
 # Document
 #
 
+@dataclass(frozen=True)
 class CellResolutionType:
   '''Value of the ttp:cellResolution attribute'''
 
-  def __init__(self, rows=15, columns=32):
-    self.rows = rows
-    self.columns = columns
+  rows: int
+  columns: int
 
+  def __post_init__(self):
+    if self.rows <= 0  or self.columns <= 0:
+      raise ValueError("Rows and columns must be larger than 0")
+
+@dataclass(frozen=True)
 class PixelResolutionType:
   '''Extent of the root container in pixels'''
 
-  def __init__(self, width=1920, height=1080):
-    self.width = width
-    self.height = height
+  width: int
+  height: int
 
+  def __post_init__(self):
+    if self.height <= 0  or self.width <= 0:
+      raise ValueError("Height and width must be larger than 0")
 
 
 class Document:
@@ -548,8 +556,8 @@ class Document:
     self._regions = {}
     self._body = None
     self._initial_values = {}
-    self._cell_resolution = CellResolutionType()
-    self._px_resolution = PixelResolutionType()
+    self._cell_resolution = CellResolutionType(rows=15, columns=32)
+    self._px_resolution = PixelResolutionType(width=1920, height=1080)
 
   # cell resolution
 
@@ -605,7 +613,7 @@ class Document:
       raise TypeError("Argument must be an instance of Region")
 
     if region.get_doc() != self:
-      raise RuntimeError("Region does not belongs to this document")
+      raise ValueError("Region does not belongs to this document")
 
     self._regions[region.get_id()] = region
 
@@ -644,13 +652,14 @@ class Document:
 
   def put_initial_value(self, style_prop: StyleProperty, initial_value: typing.Any):
     '''Adds an initial value for the style property `style_prop`,
-    replacing any existing one for the same property.'''
+    replacing any existing one for the same property. If `initial_value` is `None`,
+    the initial value is removed.'''
     if style_prop not in StyleProperties.ALL:
       raise ValueError("Invalid style property")
 
     if initial_value is None:
 
-      self._initial_values.pop(style_prop, None)
+      self.remove_initial_value(style_prop)
 
     else:
 
@@ -659,6 +668,10 @@ class Document:
         raise ValueError("Invalid value")
 
       self._initial_values[style_prop] = initial_value
+
+  def remove_initial_value(self, style_prop: StyleProperty):
+    '''Removes any initial value for the style property `style_prop`.'''
+    self._initial_values.pop(style_prop, None)
 
   def has_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns whether the document has an initial value for the style property `style_prop`.'''
