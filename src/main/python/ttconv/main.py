@@ -27,7 +27,7 @@
 
 import logging
 import sys
-import getopt
+import argparse
 import xml.etree.ElementTree as et
 #import ttconv.model as model
 import ttconv.imsc.imsc_reader as imsc_reader
@@ -35,31 +35,17 @@ import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
-def parse_args(argv):
+def parse_args():
   '''Parses command line arguments. Returns inputfile, outputfile.'''
 
-  inputfile = ""
-  outputfile = ""
+  parser = argparse.ArgumentParser()
 
-  try:
-    opts, _args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
-  except getopt.GetoptError:
-    LOGGER.fatal("main.py -i <inputfile> -o <outputfile>")
-    sys.exit(2)
-  
-  for opt, arg in opts:
-    if opt == "-h":
-      LOGGER.info("main.py -i <inputfile> -o <outputfile>")
-      sys.exit()
-    elif opt in ("-i", "--ifile"):
-      inputfile = arg
-    elif opt in ("-o", "--ofile"):
-      outputfile = arg
-  
-  print("Input file is ", inputfile)
-  print("Output file is ", outputfile)
+  parser.add_argument("inputfile", help="Input file path")
+  parser.add_argument("outputfile", help="Output file path")
 
-  return inputfile, outputfile
+  args = parser.parse_args()
+
+  return args.inputfile, args.outputfile
 
 def process(inputfile, outputfile):
   '''Process input and output through the reader, converter, and writer'''
@@ -86,7 +72,7 @@ def process(inputfile, outputfile):
   writer.from_xml(inputfile)
   writer.write(outputfile)
 
-def main(argv):
+def main():
   '''Main application processing'''
 
   #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
@@ -94,9 +80,9 @@ def main(argv):
   inputfile = ""
   outputfile = ""
   
-  inputfile, outputfile = parse_args(argv)
+  inputfile, outputfile = parse_args()
   
   process(inputfile, outputfile)
 
 if __name__ == "__main__":
-  main(sys.argv[1:])
+  main()
