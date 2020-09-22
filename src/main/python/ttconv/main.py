@@ -35,7 +35,7 @@ import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
-def parse_args(argv):
+def parse_args():
   '''Parses command line arguments. Returns inputfile, outputfile.'''
 
   parser = argparse.ArgumentParser()
@@ -72,7 +72,7 @@ def process(inputfile, outputfile):
   writer.from_xml(inputfile)
   writer.write(outputfile)
 
-def main(argv):
+def main():
   '''Main application processing'''
 
   #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
@@ -80,9 +80,9 @@ def main(argv):
   inputfile = ""
   outputfile = ""
   
-  inputfile, outputfile = parse_args(argv)
+  inputfile, outputfile = parse_args()
   
   process(inputfile, outputfile)
 
 if __name__ == "__main__":
-  main(sys.argv[1:])
+  main()

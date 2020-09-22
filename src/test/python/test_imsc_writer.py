@@ -27,12 +27,17 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import os
 import unittest
 import xml.etree.ElementTree as et
 import ttconv.imsc.imsc_reader as imsc_reader
 import ttconv.imsc.imsc_writer as imsc_writer
 
 class IMSCWriterTest(unittest.TestCase):
+
+  def setUp(self):
+    if not os.path.exists('build'):
+      os.makedirs('build')
 
   def test_body_only(self):
 
@@ -49,7 +54,8 @@ class IMSCWriterTest(unittest.TestCase):
 
     #writer.from_model(_model)
     writer.from_xml('src/test/resources/ttml/body_only.ttml')
-    writer.write('src/test/resources/ttml/body_only.out.ttml')
+
+    writer.write('build/body_only.out.ttml')
 
 if __name__ == '__main__':
   unittest.main()
