@@ -27,13 +27,22 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import os
 import unittest
 import ttconv.main as main
 
 class IMSCAppTest(unittest.TestCase):
 
+  def setUp(self):
+    if not os.path.exists('build'):
+      os.makedirs('build')
+
   def test_body_only(self):
-    main.main("-i src/test/resources/ttml/body_only.ttml -o src/test/resources/ttml/body_only.out.txt".split())
+    # Note passing in the args using split
+    # This gets processed as 2 args being passed into
+    # the main function
+    #
+    main.main("src/test/resources/ttml/body_only.ttml build/body_only.out.ttml".split())
 
 if __name__ == '__main__':
   unittest.main()

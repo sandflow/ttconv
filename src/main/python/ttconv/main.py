@@ -35,7 +35,7 @@ import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
-def parse_args():
+def parse_args(argv):
   '''Parses command line arguments. Returns inputfile, outputfile.'''
 
   parser = argparse.ArgumentParser()
@@ -43,7 +43,12 @@ def parse_args():
   parser.add_argument("inputfile", help="Input file path")
   parser.add_argument("outputfile", help="Output file path")
 
-  args = parser.parse_args()
+  # Pass in argv such that it is processed based on 
+  # what is passed into parse_args.
+  # This allows the unit tests to pass in args through
+  # the main function
+  #
+  args = parser.parse_args(argv)
 
   return args.inputfile, args.outputfile
 
@@ -72,7 +77,7 @@ def process(inputfile, outputfile):
   writer.from_xml(inputfile)
   writer.write(outputfile)
 
-def main():
+def main(argv):
   '''Main application processing'''
 
   #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
@@ -80,9 +85,9 @@ def main():
   inputfile = ""
   outputfile = ""
   
-  inputfile, outputfile = parse_args()
+  inputfile, outputfile = parse_args(argv)
   
   process(inputfile, outputfile)
 
 if __name__ == "__main__":
-  main()
+  main(sys.argv[1:])
