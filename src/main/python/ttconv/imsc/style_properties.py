@@ -119,8 +119,8 @@ class StyleProperties:
       if xml_attrib == "auto":
 
         return styles.ExtentType(
-          height=styles.LengthType(1, styles.LengthUnits.rh),
-          width=styles.LengthType(1, styles.LengthUnits.rw)
+          height=styles.LengthType(1, styles.LengthType.Units.rh),
+          width=styles.LengthType(1, styles.LengthType.Units.rw)
         )
 
       else:
@@ -130,8 +130,8 @@ class StyleProperties:
           raise ValueError("Bad tts:extent syntax")
 
         return styles.ExtentType(
-          height=StyleProperties.ttml_length_to_model_length(context, s[1]),
-          width=StyleProperties.ttml_length_to_model_length(context, s[0])
+          height=StyleProperties.ttml_vertical_length_to_model(context, s[1]),
+          width=StyleProperties.ttml_horizontal_length_to_model(context, s[0])
         )
 
 
@@ -170,7 +170,7 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      return StyleProperties.ttml_length_to_model_length(context, xml_attrib)
+      return StyleProperties.ttml_vertical_length_to_model(context, xml_attrib)
 
 
   class FontStyle(StyleProperty):
@@ -206,9 +206,9 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      return xml_attrib \
+      return styles.SpecialValues.normal \
         if xml_attrib == "normal" \
-        else StyleProperties.ttml_length_to_model_length(context, xml_attrib)
+        else StyleProperties.ttml_vertical_length_to_model(context, xml_attrib)
 
   class LinePadding(StyleProperty):
     '''Corresponds to ebutts:linePadding.'''
@@ -219,9 +219,9 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      lp = StyleProperties.ttml_length_to_model_length(context, xml_attrib)
+      lp = StyleProperties.ttml_horizontal_length_to_model(context, xml_attrib)
 
-      if lp.units != styles.LengthUnits.c:
+      if lp.units != styles.LengthType.Units.c:
         raise ValueError("ebutts:linePadding must be expressed in 'c'")
 
 
@@ -262,19 +262,19 @@ class StyleProperties:
       if xml_attrib == "auto":
 
         r = styles.PositionType(
-          x=styles.LengthType(0, styles.LengthUnits.rh),
-          y=styles.LengthType(0, styles.LengthUnits.rw)
+          x=styles.LengthType(0, styles.LengthType.Units.pct),
+          y=styles.LengthType(0, styles.LengthType.Units.pct)
         )
 
       else:
         s = xml_attrib.split(" ")
 
         if len(s) != 2:
-          raise ValueError("Bad tts:origin syntax")
+          raise ValueError("tts:origin has not two components")
 
         r = styles.PositionType(
-          x=StyleProperties.ttml_length_to_model_length(context, s[0]),
-          y=StyleProperties.ttml_length_to_model_length(context, s[1])
+          x=StyleProperties.ttml_horizontal_length_to_model(context, s[0]),
+          y=StyleProperties.ttml_vertical_length_to_model(context, s[1])
         )
 
       return r
@@ -304,25 +304,25 @@ class StyleProperties:
 
       if len(s) == 1:
 
-        before = end = after = start = StyleProperties.ttml_length_to_model_length(context, s[0])
+        before = end = after = start = StyleProperties.ttml_horizontal_length_to_model(context, s[0])
 
       elif len(s) == 2:
 
-        before = after = StyleProperties.ttml_length_to_model_length(context, s[0])
-        end = start = StyleProperties.ttml_length_to_model_length(context, s[1])
+        before = after = StyleProperties.ttml_horizontal_length_to_model(context, s[0])
+        end = start = StyleProperties.ttml_horizontal_length_to_model(context, s[1])
 
       elif len(s) == 3:
 
-        before = StyleProperties.ttml_length_to_model_length(context, s[0])
-        end = start = StyleProperties.ttml_length_to_model_length(context, s[1])
-        after = StyleProperties.ttml_length_to_model_length(context, s[2])
+        before = StyleProperties.ttml_horizontal_length_to_model(context, s[0])
+        end = start = StyleProperties.ttml_horizontal_length_to_model(context, s[1])
+        after = StyleProperties.ttml_horizontal_length_to_model(context, s[2])
 
       elif len(s) == 4:
 
-        before = StyleProperties.ttml_length_to_model_length(context, s[0])
-        end = StyleProperties.ttml_length_to_model_length(context, s[1])
-        after = StyleProperties.ttml_length_to_model_length(context, s[2])
-        start = StyleProperties.ttml_length_to_model_length(context, s[3])
+        before = StyleProperties.ttml_horizontal_length_to_model(context, s[0])
+        end = StyleProperties.ttml_horizontal_length_to_model(context, s[1])
+        after = StyleProperties.ttml_horizontal_length_to_model(context, s[2])
+        start = StyleProperties.ttml_horizontal_length_to_model(context, s[3])
 
       else:
 
@@ -379,23 +379,18 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       
       if xml_attrib == "none":
+        return styles.SpecialValues.none
 
-        r = xml_attrib
+      s = xml_attrib.split(" ")
 
-      else:
+      if len(s) == 0 or len(s) > 2:
+        raise ValueError("Bad syntax")
 
-        s = xml_attrib.split(" ")
+      rr_pos = styles.RubyReserveType.Position[s[0]]
 
-        if len(s) == 0 or len(s) > 2:
-          raise ValueError("Bad syntax")
+      rr_length = StyleProperties.ttml_vertical_length_to_model(context, s[1]) if len(s) == 2 else None
 
-        rr_pos = styles.RubeReserveType.Position[s[0]]
-
-        rr_length = StyleProperties.ttml_length_to_model_length(context, s[1]) if len(s) == 2 else None
-
-        r = styles.RubeReserveType(rr_pos, rr_length)
-
-      return r 
+      return styles.RubyReserveType(rr_pos, rr_length)
 
 
   class Shear(StyleProperty):
@@ -412,7 +407,7 @@ class StyleProperties:
 
       return styles.LengthType(
         value if abs(value) <= 100 else math.copysign(100, value),
-        styles.LengthUnits[units]
+        styles.LengthType.Units[units]
         )
 
 
@@ -462,7 +457,7 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       if xml_attrib == "none":
-        return styles.TextDecorationType()
+        return styles.SpecialValues.none
 
       s = xml_attrib.split(" ")
 
@@ -553,14 +548,14 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
       
       if xml_attrib == "none":
-        return xml_attrib
+        return styles.SpecialValues.none
 
       s = xml_attrib.split(" ")
 
       if len(s) == 0 or len(s) > 2:
         raise ValueError("Bad syntax")
 
-      thickness = StyleProperties.ttml_length_to_model_length(context, s[-1])
+      thickness = StyleProperties.ttml_vertical_length_to_model(context, s[-1])
 
       color = utils.parse_color(s[0]) if len(s) == 2 else None
       
@@ -580,7 +575,7 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
       
       if xml_attrib == "none":
-        return xml_attrib
+        return styles.SpecialValues.none
 
       shadows = []
 
@@ -591,9 +586,9 @@ class StyleProperties:
         if len(cs) < 1 or len(cs) > 4:
           raise ValueError("Invalid Syntax")
         
-        x_offset = StyleProperties.ttml_length_to_model_length(context, cs[0])
+        x_offset = StyleProperties.ttml_horizontal_length_to_model(context, cs[0])
 
-        y_offset = StyleProperties.ttml_length_to_model_length(context, cs[1])
+        y_offset = StyleProperties.ttml_vertical_length_to_model(context, cs[1])
 
         blur_radius = None
         color = None
@@ -602,7 +597,7 @@ class StyleProperties:
 
           try:
 
-            blur_radius = StyleProperties.ttml_length_to_model_length(context, cs[2])
+            blur_radius = StyleProperties.ttml_vertical_length_to_model(context, cs[2])
 
           except ValueError:
 
@@ -610,7 +605,7 @@ class StyleProperties:
 
         else: # len(cs) == 4
 
-          blur_radius = StyleProperties.ttml_length_to_model_length(context, cs[2])
+          blur_radius = StyleProperties.ttml_vertical_length_to_model(context, cs[2])
           color = utils.parse_color(cs[3])
 
         shadows.append(
@@ -684,12 +679,22 @@ class StyleProperties:
     }
 
   @classmethod
-  def ttml_length_to_model_length(cls, context: StyleParsingContext, xml_attrib: str):
+  def ttml_horizontal_length_to_model(cls, context: StyleParsingContext, xml_attrib: str):
     (value, units) = utils.parse_length(xml_attrib)
 
     if units == "px":
 
-      return styles.LengthType(value / context.get_px_height(), styles.LengthUnits.rh)
+      return styles.LengthType(value / context.get_px_width(), styles.LengthType.Units.pct)
 
-    return styles.LengthType(value, styles.LengthUnits(units))
+    return styles.LengthType(value, styles.LengthType.Units(units))
+
+  @classmethod
+  def ttml_vertical_length_to_model(cls, context: StyleParsingContext, xml_attrib: str):
+    (value, units) = utils.parse_length(xml_attrib)
+
+    if units == "px":
+
+      return styles.LengthType(value / context.get_px_height(), styles.LengthType.Units.pct)
+
+    return styles.LengthType(value, styles.LengthType.Units(units))
     

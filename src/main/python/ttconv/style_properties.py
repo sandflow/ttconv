@@ -41,44 +41,37 @@ class AnnotationPositionType(Enum):
   after = "after"
   outside = "outside" 
 
-class LengthUnits(Enum):
-  '''Units of length
-  '''
-  em = "em"
-  pct = "%"
-  rh = "rh"
-  rw = "rw"
-  c = "c"
 
+@dataclass(frozen=True)
 class LengthType:
   '''Length type as defined in TTML
   '''
 
-  def __init__(self, value: float = 0, units: LengthUnits = LengthUnits.rh):
-    self.value = value
-    self.units = units
+  class Units(Enum):
+    '''Units of length
+    '''
+    em = "em"
+    pct = "%"
+    rh = "rh"
+    rw = "rw"
+    c = "c"
+
+  value: float = 0
+  units: Units = Units.rh
 
 
-
-class Colorimetry(Enum):
-  '''Supported colorimetry systems
-  '''
-  RGBA8 = "RGBA8"
-
+@dataclass(frozen=True)
 class ColorType:
   '''<color> type as defined in TTML
   '''
 
-  def __init__(
-      self,
-      components: typing.Optional[typing.List[float]] = None,
-      ident: Colorimetry = Colorimetry.RGBA8
-  ):
-    self.ident = ident
-    self.components = components or [255, 255, 255, 255]
+  class Colorimetry(Enum):
+    '''Supported colorimetry systems
+    '''
+    RGBA8 = "RGBA8"
 
-  def __eq__(self, other):
-    return self.ident == other.ident and self.components == other.components
+  components: tuple = (255, 255, 255, 255)
+  ident: Colorimetry = Colorimetry.RGBA8
 
 
 class NamedColors(Enum):
@@ -110,6 +103,8 @@ class DirectionType(Enum):
   '''
   ltr = "ltr"
   rtl = "rtl" 
+
+
 class DisplayType(Enum):
   '''tts:display value
   '''
@@ -124,20 +119,13 @@ class DisplayAlignType(Enum):
   center = "center"
   after = "after" 
 
-
+@dataclass(frozen=True)
 class ExtentType:
   '''tts:extent value
-
-  Instance variables:
-
-  `height`
-
-  `width`
   '''
 
-  def __init__(self, height: LengthType = None, width: LengthType = None):
-    self.height = height or LengthType()
-    self.width = width or LengthType()
+  height: LengthType = LengthType()
+  width: LengthType = LengthType()
 
 
 class FontStyleType(Enum):
@@ -163,29 +151,22 @@ class MultiRowAlignType(Enum):
   end = "end"
   auto = "auto"
 
-
 class OverflowType(Enum):
   '''tts:overflow value
   '''
   visible = "visible"
   hidden = "hidden" 
 
-
+@dataclass(frozen=True)
 class PaddingType:
   '''tts:padding value
   '''
 
-  def __init__(
-      self,
-      before: LengthType = None,
-      end: LengthType = None,
-      after: LengthType = None,
-      start: LengthType = None
-    ):
-    self.before = before or LengthType()
-    self.end = end or LengthType()
-    self.after = after or LengthType()
-    self.start = start or LengthType()
+  before: LengthType = LengthType()
+  end: LengthType = LengthType()
+  after: LengthType = LengthType()
+  start: LengthType = LengthType()
+
 
 class RubyAlignType(Enum):
   '''tts:rubyAlign value
@@ -193,19 +174,33 @@ class RubyAlignType(Enum):
   center = "center"
   spaceAround = "spaceAround" 
 
-class RubeReserveType:
+
+@dataclass(frozen=True)
+class RubyReserveType:
   '''TTML \\<ruby-reserve\\>
   '''
 
   class Position(Enum):
+    '''TTML \\<ruby-reserve\\> position'''
     both = "both"
     before = "before"
     after = "after"
     outside = "outside" 
 
-  def __init__(self, position: RubeReserveType.Position = 0, length: LengthUnits = None):
-    self.position = position
-    self.length = length
+  position: Position = Position.outside
+  length: LengthType = None
+
+class ShowBackgroundType(Enum):
+  '''tts:showBackground values
+  '''
+  always = "always"
+  whenActive = "whenActive"
+
+class SpecialValues(Enum):
+  '''Special style property values
+  '''
+  normal = "normal"
+  none = "none"
 
 class TextAlignType(Enum):
   '''tts:textAlign value
@@ -214,11 +209,13 @@ class TextAlignType(Enum):
   start = "start"
   end = "end"
 
+
 class TextCombineType(Enum):
   '''TTML \\<text-combine\\>
   '''
   none = "none"
   all = "all"
+
 
 @dataclass(frozen=True)
 class TextDecorationType:
@@ -261,6 +258,7 @@ class TextEmphasisType:
   color: ColorType = None
   position: Position = None
 
+
 @dataclass(frozen=True)
 class TextOutlineType:
   '''TTML \\<text-outline\\>
@@ -268,6 +266,7 @@ class TextOutlineType:
 
   color: ColorType = None
   thickness: LengthType = None
+
 
 @dataclass(frozen=True)
 class TextShadowType:
@@ -283,6 +282,7 @@ class TextShadowType:
 
   shadows: typing.List[TextShadowType.Shadow]
 
+
 class UnicodeBidiType(Enum):
   '''tts:unicodeBidi values
   '''
@@ -290,17 +290,20 @@ class UnicodeBidiType(Enum):
   embed = "embed"
   bidiOverride = "bidiOverride"
 
+
 class VisibilityType(Enum):
   '''tts:visibility value
   '''
   visible = "visible"
   hidden = "hidden" 
 
+
 class WrapOptionType(Enum):
   '''tts:wrapOptionType value
   '''
   wrap = "wrap"
   noWrap = "noWrap" 
+
 
 class WritingModeType(Enum):
   '''tts:writingModeType value
@@ -310,19 +313,13 @@ class WritingModeType(Enum):
   tbrl = "tbrl" 
   tblr = "tblr" 
 
+@dataclass(frozen=True)
 class PositionType:
   '''Coordinates in the root container region
-
-  Instance variables:
-
-  `x`: coordinate, measured from the left of the root container region.
-
-  `y` : coordinate, measured from the top of the root container region.
   '''
 
-  def __init__(self, x: LengthType = None, y: LengthType = None):
-    self.x = x or LengthType()
-    self.y = y or LengthType()
+  x: LengthType = None
+  y: LengthType = None
 
 #
 # Style properties
@@ -352,8 +349,6 @@ class StyleProperties:
   class BackgroundColor(StyleProperty):
     '''Corresponds to tts:backgroundColor.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "backgroundColor"
     is_inherited = False
     is_animatable = True
 
@@ -369,8 +364,6 @@ class StyleProperties:
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "color"
     is_inherited = True
     is_animatable = True
 
@@ -386,8 +379,6 @@ class StyleProperties:
   class Direction(StyleProperty):
     '''Corresponds to tts:direction.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "direction"
     is_inherited = True
     is_animatable = True
 
@@ -403,8 +394,6 @@ class StyleProperties:
   class Display(StyleProperty):
     '''Corresponds to tts:display.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "display"
     is_inherited = False
     is_animatable = True
 
@@ -420,8 +409,6 @@ class StyleProperties:
   class DisplayAlign(StyleProperty):
     '''Corresponds to tts:displayAlign.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "displayAlign"
     is_inherited = False
     is_animatable = True
 
@@ -438,9 +425,7 @@ class StyleProperties:
     '''Corresponds to tts:extent.
     '''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "extent"
-    is_inherited = True
+    is_inherited = False
     is_animatable = True
 
     @staticmethod
@@ -455,8 +440,6 @@ class StyleProperties:
   class FillLineGap(StyleProperty):
     '''Corresponds to itts:fillLineGap.'''
 
-    ns = "http://www.w3.org/ns/ttml/profile/imsc1#styling"
-    local_name = "fillLineGap"
     is_inherited = True
     is_animatable = True
 
@@ -472,8 +455,6 @@ class StyleProperties:
   class FontFamily(StyleProperty):
     '''Corresponds to tts:fontFamily.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "fontFamily"
     is_inherited = True
     is_animatable = True
 
@@ -489,14 +470,12 @@ class StyleProperties:
   class FontSize(StyleProperty):
     '''Corresponds to tts:fontSize.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "fontSize"
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return LengthType(1, LengthUnits.c)
+      return LengthType(1, LengthType.Units.c)
 
     @staticmethod
     def validate(value):
@@ -506,8 +485,6 @@ class StyleProperties:
   class FontStyle(StyleProperty):
     '''Corresponds to tts:fontStyle.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "fontStyle"
     is_inherited = True
     is_animatable = True
 
@@ -523,8 +500,6 @@ class StyleProperties:
   class FontWeight(StyleProperty):
     '''Corresponds to tts:fontWeight.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "fontWeight"
     is_inherited = True
     is_animatable = True
 
@@ -534,31 +509,27 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == "normal" or isinstance(value, FontWeightType)
+      return isinstance(value, FontWeightType)
 
 
   class LineHeight(StyleProperty):
     '''Corresponds to tts:lineHeight.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "normal"
+      return SpecialValues.normal
 
     @staticmethod
     def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
+      return value == SpecialValues.normal or isinstance(value, LengthType)
 
 
   class LinePadding(StyleProperty):
     '''Corresponds to ebutts:linePadding.'''
 
-    ns = "urn:ebu:tt:style"
-    local_name = "linePadding"
     is_inherited = True
     is_animatable = True
 
@@ -568,14 +539,12 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: LengthType):
-      return isinstance(value, LengthType) and value.units == LengthUnits.c
+      return isinstance(value, LengthType) and value.units == LengthType.Units.c
 
 
   class MultiRowAlign(StyleProperty):
     '''Corresponds to ebutts:multiRowAlign.'''
 
-    ns = "urn:ebu:tt:style"
-    local_name = "multiRowAlign"
     is_inherited = True
     is_animatable = True
 
@@ -591,8 +560,6 @@ class StyleProperties:
   class Opacity(StyleProperty):
     '''Corresponds to tts:opacity.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "opacity"
     is_inherited = False
     is_animatable = True
 
@@ -606,10 +573,8 @@ class StyleProperties:
 
 
   class Origin(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
+    '''Corresponds to tts:origin.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
     is_inherited = False
     is_animatable = True
 
@@ -618,15 +583,15 @@ class StyleProperties:
       return PositionType()
 
     @staticmethod
-    def validate(value):
-      return isinstance(value, PositionType)
+    def validate(value: PositionType):
+      return isinstance(value, PositionType) \
+        and value.x.units == LengthType.Units.pct \
+        and value.y.units == LengthType.Units.pct
 
 
   class Overflow(StyleProperty):
     '''Corresponds to tts:overflow.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "overflow"
     is_inherited = False
     is_animatable = True
 
@@ -642,8 +607,6 @@ class StyleProperties:
   class Padding(StyleProperty):
     '''Corresponds to tts:padding.'''
     
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "padding"
     is_inherited = False
     is_animatable = True
 
@@ -653,71 +616,77 @@ class StyleProperties:
 
 
   class RubyAlign(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
+    '''Corresponds to tts:rubyAlign.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "normal"
+      return RubyAlignType.center
 
     @staticmethod
     def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
+      return isinstance(value, RubyAlignType)
 
 
   class RubyPosition(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
+    '''Corresponds to tts:rubyPosition.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "normal"
+      return AnnotationPositionType.outside
 
     @staticmethod
     def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
+      return isinstance(value, AnnotationPositionType)
 
 
   class RubyReserve(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
+    '''Corresponds to tts:rubyReserve.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "normal"
+      return SpecialValues.none
 
     @staticmethod
     def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
+      return value == SpecialValues.none or isinstance(value, RubyReserveType)
 
 
   class Shear(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
+    '''Corresponds to tts:shear.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "normal"
+      return 0
 
     @staticmethod
     def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
+      return isinstance(value, float)
+
+  class ShowBackground(StyleProperty):
+    '''Corresponds to tts:showBackground.'''
+
+    is_inherited = False
+    is_animatable = True
+
+    @staticmethod
+    def make_initial_value():
+      return ShowBackgroundType.always
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, ShowBackgroundType)
 
 
   class TextAlign(StyleProperty):
@@ -728,7 +697,7 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return "normal"
+      return TextAlignType.start
 
     @staticmethod
     def validate(value):
@@ -736,7 +705,8 @@ class StyleProperties:
 
 
   class TextCombine(StyleProperty):
-    '''Corresponds to tts:textCombine.'''
+    '''Corresponds to tts:textCombine
+    '''
 
     is_inherited = True
     is_animatable = True
@@ -751,22 +721,24 @@ class StyleProperties:
 
 
   class TextDecoration(StyleProperty):
-    '''Corresponds to tts:textDecoration.'''
+    '''Corresponds to tts:textDecoration
+    '''
 
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "none"
+      return SpecialValues.none
 
     @staticmethod
     def validate(value):
-      return value == "none" or isinstance(value, TextDecorationType)
+      return value == SpecialValues.none or isinstance(value, TextDecorationType)
 
 
   class TextEmphasis(StyleProperty):
-    '''Corresponds to tts:textEmphasis.'''
+    '''Corresponds to tts:textEmphasis
+    '''
 
     is_inherited = True
     is_animatable = True
@@ -781,37 +753,40 @@ class StyleProperties:
 
 
   class TextOutline(StyleProperty):
-    '''Corresponds to tts:textOutline.'''
+    '''Corresponds to tts:textOutline
+    '''
 
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "none"
+      return SpecialValues.none
 
     @staticmethod
     def validate(value):
-      return value == "none" or isinstance(value, TextOutlineType)
+      return value == SpecialValues.none or isinstance(value, TextOutlineType)
 
 
   class TextShadow(StyleProperty):
-    '''Corresponds to tts:textShadow.'''
+    '''Corresponds to tts:textShadow
+    '''
 
     is_inherited = True
     is_animatable = True
 
     @staticmethod
     def make_initial_value():
-      return "none"
+      return SpecialValues.none
 
     @staticmethod
     def validate(value):
-      return value == "none" or isinstance(value, TextShadowType)
+      return value == SpecialValues.none or isinstance(value, TextShadowType)
 
 
   class UnicodeBidi(StyleProperty):
-    '''Corresponds to tts:unicodeBidi.'''
+    '''Corresponds to tts:unicodeBidi
+    '''
 
     is_inherited = False
     is_animatable = True
@@ -826,7 +801,8 @@ class StyleProperties:
 
 
   class Visibility(StyleProperty):
-    '''Corresponds to tts:visibility.'''
+    '''Corresponds to tts:visibility
+    '''
 
     is_inherited = True
     is_animatable = True
@@ -841,7 +817,8 @@ class StyleProperties:
 
 
   class WrapOption(StyleProperty):
-    '''Corresponds to tts:wrapOption.'''
+    '''Corresponds to tts:wrapOption
+    '''
 
     is_inherited = True
     is_animatable = True
@@ -856,7 +833,8 @@ class StyleProperties:
 
 
   class WritingMode(StyleProperty):
-    '''Corresponds to tts:writingMode.'''
+    '''Corresponds to tts:writingMode
+    '''
 
     is_inherited = False
     is_animatable = True

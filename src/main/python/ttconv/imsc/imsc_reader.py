@@ -280,7 +280,10 @@ class ContentElement:
     for attr in ttml_element.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
       if prop is not None:
-        element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+        try:
+          element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+        except ValueError:
+          LOGGER.error("Error reading style property: %s", prop.__name__)
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
