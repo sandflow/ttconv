@@ -961,9 +961,7 @@ class CellResolutionAttribute:
 
         return model.CellResolutionType(int(m.group(1)), int(m.group(2)))
 
-      else:
-
-        LOGGER.error("ttp:cellResolution invalid syntax")
+      LOGGER.error("ttp:cellResolution invalid syntax")
 
     # default value in TTML
 

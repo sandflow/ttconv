@@ -123,16 +123,15 @@ class StyleProperties:
           width=styles.LengthType(1, styles.LengthType.Units.rw)
         )
 
-      else:
-        s = xml_attrib.split(" ")
+      s = xml_attrib.split(" ")
 
-        if len(s) != 2:
-          raise ValueError("Bad tts:extent syntax")
+      if len(s) != 2:
+        raise ValueError("Bad tts:extent syntax")
 
-        return styles.ExtentType(
-          height=StyleProperties.ttml_length_to_model(context, s[1]),
-          width=StyleProperties.ttml_length_to_model(context, s[0])
-        )
+      return styles.ExtentType(
+        height=StyleProperties.ttml_length_to_model(context, s[1]),
+        width=StyleProperties.ttml_length_to_model(context, s[0])
+      )
 
 
   class FillLineGap(StyleProperty):
@@ -144,7 +143,7 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      return True if xml_attrib == "true" else False
+      return xml_attrib == "true"
 
   class FontFamily(StyleProperty):
     '''Corresponds to tts:fontFamily.'''

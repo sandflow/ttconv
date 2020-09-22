@@ -41,48 +41,46 @@ def parse_color(attr_value: str) -> styles.ColorType:
 
     return styles.NamedColors[lower_attr_value].value
 
-  else:
+  m = _HEX_COLOR_RE.match(attr_value)
 
-    m = _HEX_COLOR_RE.match(attr_value)
+  if m:
 
-    if m:
+    return styles.ColorType(
+      [
+        int(m.group(1), 16),
+        int(m.group(2), 16),
+        int(m.group(3), 16),
+        int(m.group(4), 16) if m.group(4) else 255
+      ]
+    )
 
-      return styles.ColorType(
-        [
-          int(m.group(1), 16),
-          int(m.group(2), 16),
-          int(m.group(3), 16),
-          int(m.group(4), 16) if m.group(4) else 255
-        ]
-      )
+  m = _DEC_COLOR_RE.match(attr_value)
 
-    m = _DEC_COLOR_RE.match(attr_value)
+  if m:
 
-    if m:
+    return styles.ColorType(
+      [
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        255
+      ]
+    )
+    
+  m = _DEC_COLORA_RE.match(attr_value)
 
-      return styles.ColorType(
-        [
-          int(m.group(1)),
-          int(m.group(2)),
-          int(m.group(3)),
-          255
-        ]
-      )
-      
-    m = _DEC_COLORA_RE.match(attr_value)
+  if m:
 
-    if m:
+    return styles.ColorType(
+      [
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        int(m.group(4))
+      ]
+    )
 
-      return styles.ColorType(
-        [
-          int(m.group(1)),
-          int(m.group(2)),
-          int(m.group(3)),
-          int(m.group(4))
-        ]
-      )
-
-    raise ValueError("Bad Syntax")
+  raise ValueError("Bad Syntax")
 
 _LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
