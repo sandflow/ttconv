@@ -28,6 +28,7 @@
 import re
 import logging
 import ttconv.model as model
+import ttconv.imsc.utils as utils
 from ttconv.imsc.style_properties import StyleProperties
 
 
@@ -40,13 +41,6 @@ def to_model(xml_tree):
   class _Context:
     def __init__(self):
       self.doc = None
-      self.cell_resolution = None
-
-    def get_px_height(self):
-      return 1080
-
-    def get_px_width(self):
-      return 1920
 
   context = _Context()
 
@@ -67,6 +61,7 @@ class TTMLNamespaces:
   '''
   TTML = "http://www.w3.org/ns/ttml"
   TTP = "http://www.w3.org/ns/ttml#parameter"
+  TTS = "http://www.w3.org/ns/ttml#styling"
 
 class TTElement:
   '''Processes the TTML <tt> element
@@ -89,7 +84,12 @@ class TTElement:
       LOGGER.warning("xml:lang not specified on tt")
       lang = ""
 
-    context.cell_resolution = CellResolutionAttribute.extract(ttml_elem)
+    context.doc.set_cell_resolution(CellResolutionAttribute.extract(ttml_elem))
+
+    px_resolution = ExtentAttribute.extract(ttml_elem)
+
+    if px_resolution is not None:
+      context.doc.set_px_resolution(px_resolution)
 
     # process children elements elements
 
@@ -593,9 +593,7 @@ class CellResolutionAttribute:
   _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
 
   @staticmethod
-  def extract(ttml_element):
-
-    r = model.CellResolutionType()
+  def extract(ttml_element) -> model.CellResolutionType:
 
     cr = ttml_element.attrib.get(CellResolutionAttribute.qn)
 
@@ -605,10 +603,39 @@ class CellResolutionAttribute:
 
       if m is not None:
 
-        r = model.CellResolutionType(int(m.group(1)), int(m.group(2)))
+        return model.CellResolutionType(int(m.group(1)), int(m.group(2)))
 
       else:
 
         LOGGER.error("ttp:cellResolution invalid syntax")
 
-    return r
+    # default value in TTML
+
+    return model.CellResolutionType(rows=15, columns=32)
+
+class ExtentAttribute:
+  '''ttp:extent attribute on \\<tt\\>
+  '''
+
+  qn = f"{{{TTMLNamespaces.TTS}}}extent"
+
+  @staticmethod
+  def extract(ttml_element) -> model.PixelResolutionType:
+
+    extent = ttml_element.attrib.get(ExtentAttribute.qn)
+
+    if extent is not None:
+
+      s = extent.split(" ")
+
+      (w, w_units) = utils.parse_length(s[0])
+
+      (h, h_units) = utils.parse_length(s[1])
+
+      if w_units != "px" or h_units != "px":
+        LOGGER.error("ttp:extent on <tt> does not use px units")
+        return None
+
+      return model.PixelResolutionType(w, h)
+
+    return None

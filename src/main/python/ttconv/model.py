@@ -532,6 +532,14 @@ class CellResolutionType:
     self.rows = rows
     self.columns = columns
 
+class PixelResolutionType:
+  '''Extent of the root container in pixels'''
+
+  def __init__(self, width=1920, height=1080):
+    self.width = width
+    self.height = height
+
+
 
 class Document:
   '''Base class for TTML documents, including ISDs, as specified in TTML2'''
@@ -541,20 +549,34 @@ class Document:
     self._body = None
     self._initial_values = {}
     self._cell_resolution = CellResolutionType()
+    self._px_resolution = PixelResolutionType()
 
   # cell resolution
 
   def get_cell_resolution(self) -> CellResolutionType:
-    '''Returns the cell resolution of the document'''
+    '''Returns the cell resolution of the document, by default 15 rows by 32 columns.'''
     return self._cell_resolution
 
   def set_cell_resolution(self, cell_resolution: CellResolutionType):
-    '''Sets the cell resolution of the document'''
+    '''Sets the cell resolution of the document.'''
     if not isinstance(cell_resolution, CellResolutionType):
       raise TypeError("Argument must be an instance of CellResolutionType")
 
     self._cell_resolution = cell_resolution
-  
+
+  # pixel resolution
+
+  def get_px_resolution(self) -> PixelResolutionType:
+    '''Returns the pixel resolution of the document, by default 1920 by 1080.'''
+    return self._px_resolution
+
+  def set_px_resolution(self, px_resolution: PixelResolutionType):
+    '''Sets the pixel resolution of the document'''
+    if not isinstance(px_resolution, PixelResolutionType):
+      raise TypeError("Argument must be an instance of PixelResolutionType")
+
+    self._px_resolution = px_resolution
+
   # body
 
   def get_body(self) -> typing.Optional[Body]:

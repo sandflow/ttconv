@@ -55,9 +55,10 @@ class LengthType:
     rh = "rh"
     rw = "rw"
     c = "c"
+    px = "px"
 
   value: float = 0
-  units: Units = Units.rh
+  units: Units = Units.pct
 
 
 @dataclass(frozen=True)
@@ -585,8 +586,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
-        and value.x.units == LengthType.Units.pct \
-        and value.y.units == LengthType.Units.pct
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px)
 
 
   class Overflow(StyleProperty):
