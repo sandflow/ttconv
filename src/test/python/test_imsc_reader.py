@@ -47,5 +47,14 @@ class IMSCReaderTest(unittest.TestCase):
             tree = et.parse(os.path.join(root, filename))
             self.assertIsNotNone(imsc_reader.to_model(tree))
 
+  def test_imsc_1_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            tree = et.parse(os.path.join(root, filename))
+            self.assertIsNotNone(imsc_reader.to_model(tree))
+
 if __name__ == '__main__':
   unittest.main()

@@ -155,32 +155,42 @@ class ContentElement:
     '''Removes the element from the list of children of its parent,
     or does nothing if the element is the root.'''
 
-    # skip processing if already a root
-
     if self._parent is None:
       return
 
-    # remove from parent
+    self._parent.remove_child(self)
+
+  def remove_child(self, child: ContentElement):
+    '''Remove `child` from the list of children of the element.'''
+
+    if child not in list(self):
+      raise ValueError("Element is not a child of this element")
 
     # pylint: disable=W0212
 
-    if self._parent._first_child is self:
-      self._parent._first_child = self._next_sibling
+    if self._first_child is child:
+      self._first_child = child._next_sibling
 
-    if self._parent._last_child is self:
-      self._parent._last_child = self._previous_sibling
+    if self._last_child is child:
+      self._last_child = child._previous_sibling
 
-    if self._previous_sibling is not None:
-      self._previous_sibling._next_sibling = self._next_sibling
+    if child._previous_sibling is not None:
+      child._previous_sibling._next_sibling = child._next_sibling
 
-    if self._next_sibling is not None:
-      self._next_sibling._previous_sibling = self._previous_sibling
+    if child._next_sibling is not None:
+      child._next_sibling._previous_sibling = child._previous_sibling
+
+    child._parent = None
+    child._next_sibling = None
+    child._previous_sibling = None
 
     # pylint: enable=W0212
 
-    self._parent = None
-    self._next_sibling = None
-    self._previous_sibling = None
+  def remove_children(self):
+    '''Remove all children of the element.'''
+
+    for c in list(self):
+      self.remove_child(c)
 
   def push_child(self, child: ContentElement):
     '''Adds `child` as a child of the element.'''
@@ -210,6 +220,14 @@ class ContentElement:
     self._last_child = child
 
     # pylint: enable=W0212
+
+  def push_children(self, children: typing.Iterable[ContentElement]):
+    '''Adds `children` as children of the element. Unless overridden, this method simply
+    calls `push_child` repeatedly. Elements that require children to appear in a certain
+    order can override this method.'''
+
+    for c in children:
+      self.push_child(c)
 
   def __iter__(self) -> typing.Iterator[ContentElement]:
     '''Returns an iterator over the children of the element.'''
@@ -387,8 +405,8 @@ class P(ContentElement):
     ])
 
   def push_child(self, child):
-    if not isinstance(child, (Span, Br)):
-      raise TypeError("Children of body must be P instances")
+    if not isinstance(child, (Span, Br, Ruby)):
+      raise TypeError("Children of p must be span, br or ruby instances")
     super().push_child(child)
 
 
@@ -438,6 +456,180 @@ class Br(ContentElement):
   def set_region(self, region):
     raise RuntimeError("Br elements are not associated with a region")
 
+
+class Ruby(ContentElement):
+  '''Ruby element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.RubyAlign,
+    StyleProperties.Visibility,
+    ])
+
+  def push_child(self, child: ContentElement):
+    raise RuntimeError("Ruby children must be added using `push_children`")
+
+  def remove_child(self, child: ContentElement):
+    raise RuntimeError("Ruby children must be removed using `remove_children`")
+
+  def push_children(self, children: typing.Iterable[ContentElement]):
+    if self.has_children():
+      raise RuntimeError("Remove all ruby children before adding more.")
+
+    ts = [type(x) for x in children]
+
+    if ts not in [[Rb, Rt], [Rb, Rp, Rt, Rp], [Rbc, Rtc], [Rbc, Rtc, Rtc]]:
+      raise ValueError("Children of ruby do not conform to requirements")
+
+    for child in children:
+      super().push_child(child)
+
+  def remove_children(self):
+    '''Remove all children of the element.'''
+
+    for child in list(self):
+      super().remove_child(child)
+
+class Rb(ContentElement):
+  '''Rb element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Span):
+      raise TypeError("Children of rb must be span instances")
+    super().push_child(child)
+
+class Rbc(ContentElement):
+  '''Rbc element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.Visibility,
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Rb):
+      raise TypeError("Children of rc must be rb instances")
+    super().push_child(child)
+
+class Rp(ContentElement):
+  '''Rp element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Span):
+      raise TypeError("Children of rp must be span instances")
+    super().push_child(child)
+
+
+class Rt(ContentElement):
+  '''Rt element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.RubyPosition,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Span):
+      raise TypeError("Children of rt must be span instances")
+    super().push_child(child)
+
+
+class Rtc(ContentElement):
+  '''Rtc element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.RubyPosition,
+    StyleProperties.Visibility,
+    ])
+
+  def push_child(self, child):
+    raise RuntimeError("Rtc children must be added using `push_children`")
+
+  def remove_child(self, child: ContentElement):
+    raise RuntimeError("Rtc children must be removed using `remove_children`")
+
+  def push_children(self, children: typing.Iterable[ContentElement]):
+    cs = list(children)
+
+    if len(cs) > 2 and isinstance(cs[0], Rp) and isinstance(cs[-1], Rp):
+      cs = cs[1:-1]
+
+    if not all(isinstance(x, Rt) for x in cs):
+      raise ValueError("Childre of rtc do not conform to requirements")
+
+    for child in children:
+      super().push_child(child)
+
+  def remove_children(self):
+
+    for child in list(self):
+      super().remove_child(child)
 
 
 class Text(ContentElement):
@@ -536,6 +728,7 @@ class CellResolutionType:
   def __post_init__(self):
     if self.rows <= 0  or self.columns <= 0:
       raise ValueError("Rows and columns must be larger than 0")
+
 
 @dataclass(frozen=True)
 class PixelResolutionType:

@@ -35,11 +35,13 @@ _DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*
 
 def parse_color(attr_value: str) -> styles.ColorType:
 
-  try:
+  lower_attr_value = str.lower(attr_value)
 
-    return styles.NamedColors[str.lower(attr_value)].value
+  if lower_attr_value in styles.NamedColors.__members__:
 
-  except KeyError:
+    return styles.NamedColors[lower_attr_value].value
+
+  else:
 
     m = _HEX_COLOR_RE.match(attr_value)
 

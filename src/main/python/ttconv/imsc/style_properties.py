@@ -405,10 +405,10 @@ class StyleProperties:
 
       (value, units) = utils.parse_length(xml_attrib)
 
-      return styles.LengthType(
-        value if abs(value) <= 100 else math.copysign(100, value),
-        styles.LengthType.Units[units]
-        )
+      if units != "%":
+        raise ValueError(r"tts:shear must be expressed in % units")
+
+      return value if abs(value) <= 100 else math.copysign(100, value)
 
 
   class TextAlign(StyleProperty):
@@ -503,13 +503,17 @@ class StyleProperties:
 
       for c in xml_attrib.split(" "):
         
-        if c in styles.TextEmphasisType.Style:
+        if c in styles.TextEmphasisType.Style.__members__:
           
           style = styles.TextEmphasisType.Style[c]
 
-        elif c in styles.TextEmphasisType.Symbol:
+        elif c in styles.TextEmphasisType.Symbol.__members__:
 
           symbol = styles.TextEmphasisType.Symbol[c]
+
+        elif c in styles.TextEmphasisType.Position.__members__:
+
+          position = styles.TextEmphasisType.Position[c]
 
         elif c == "current":
 
