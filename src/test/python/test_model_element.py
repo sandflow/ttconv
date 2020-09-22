@@ -212,7 +212,7 @@ class ContentElementTest(unittest.TestCase):
     self.assertIsNone(p.get_id())
 
     # bad id
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(TypeError):
       bad_id = " "
       p.set_id(bad_id)
 
@@ -223,7 +223,7 @@ class BodyTest(unittest.TestCase):
 
     b.push_child(model.Div())
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(TypeError):
       b.push_child(model.P())
 
 class DivTest(unittest.TestCase):
@@ -236,7 +236,7 @@ class DivTest(unittest.TestCase):
 
     d1.push_child(model.Div())
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(TypeError):
       d1.push_child(model.Text())
 
 class PTest(unittest.TestCase):
@@ -249,7 +249,7 @@ class PTest(unittest.TestCase):
 
     p.push_child(model.Span())
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(TypeError):
       p.push_child(model.Text())
 
 class SpanTest(unittest.TestCase):
@@ -264,7 +264,7 @@ class SpanTest(unittest.TestCase):
 
     s.push_child(model.Text())
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(TypeError):
       s.push_child(model.P())
 
 class TextTest(unittest.TestCase):
