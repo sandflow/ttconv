@@ -35,13 +35,13 @@ import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
-def parse_args(argv):
-  '''Parses command line arguments. Returns inputfile, outputfile.'''
+def convert_parse_args(argv):
+  '''Parses command line arguments for convert. Returns inputfile, outputfile.'''
 
   parser = argparse.ArgumentParser()
 
-  parser.add_argument("inputfile", help="Input file path")
-  parser.add_argument("outputfile", help="Output file path")
+  parser.add_argument("-i", "--input", help="Input file path", required=True)
+  parser.add_argument("-o", "--output", help="Output file path", required=True)
 
   # Pass in argv such that it is processed based on 
   # what is passed into parse_args.
@@ -50,10 +50,15 @@ def parse_args(argv):
   #
   args = parser.parse_args(argv)
 
-  return args.inputfile, args.outputfile
+  return args.input, args.output
 
-def process(inputfile, outputfile):
+def convert(argv):
   '''Process input and output through the reader, converter, and writer'''
+
+  inputfile = ""
+  outputfile = ""
+  
+  inputfile, outputfile = convert_parse_args(argv)
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -77,17 +82,53 @@ def process(inputfile, outputfile):
   writer.from_xml(inputfile)
   writer.write(outputfile)
 
+def validate_parse_args(argv):
+  '''Parses command line arguments for validate. Returns inputfile.'''
+
+  parser = argparse.ArgumentParser()
+
+  parser.add_argument("-i", "--input", help="Input file path", required=True)
+
+  # Pass in argv such that it is processed based on 
+  # what is passed into parse_args.
+  # This allows the unit tests to pass in args through
+  # the main function
+  #
+  args = parser.parse_args(argv)
+
+  return args.inputfile
+
+def validate(argv):
+  '''Process input through the validator'''
+
+  inputfile = ""
+  
+  inputfile = validate_parse_args(argv)
+
+  LOGGER.info("Input file is %s", inputfile)
+
+  # 
+  # Parse the xml input file into an ElementTree
+  #
+  #tree = et.parse(inputfile)
+
+  #
+  # Pass the parsed xml to the validator
+  #
+  #_model = imsc_reader.to_model(tree)
+
 def main(argv):
   '''Main application processing'''
 
   #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
   
-  inputfile = ""
-  outputfile = ""
-  
-  inputfile, outputfile = parse_args(argv)
-  
-  process(inputfile, outputfile)
+  if argv[0] == "convert":
+    convert(argv[1:])
+  elif argv[0] == "validate":
+    validate(argv[1:])
+  else:
+    print("Invalid function - %s", argv[0])
+    print("Valid functions: convert, validate")
 
 if __name__ == "__main__":
   main(sys.argv[1:])
