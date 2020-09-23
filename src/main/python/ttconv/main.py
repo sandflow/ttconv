@@ -96,7 +96,7 @@ def validate_parse_args(argv):
   #
   args = parser.parse_args(argv)
 
-  return args.inputfile
+  return args.input
 
 def validate(argv):
   '''Process input through the validator'''
@@ -127,8 +127,9 @@ def main(argv):
   elif argv[0] == "validate":
     validate(argv[1:])
   else:
-    print("Invalid function - %s", argv[0])
+    print("Invalid function - ", argv[0])
     print("Valid functions: convert, validate")
+    raise RuntimeError('Bad args')
 
 if __name__ == "__main__":
   main(sys.argv[1:])
