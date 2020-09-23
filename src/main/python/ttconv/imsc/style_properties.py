@@ -686,4 +686,3 @@ class StyleProperties:
     (value, units) = utils.parse_length(xml_attrib)
 
     return styles.LengthType(value, styles.LengthType.Units(units))
-    
