@@ -94,7 +94,7 @@ def _read_word(hex_word: str) -> List[chr]:
   (byte_1, _byte_2, word_value) = _decipher_hex_word(hex_word)
 
   if byte_1 < 0x20:
-    # TODO: handle control codes
+    # XXXX: handle control codes
     return []
   else:
     return _word_to_chars(word_value)
