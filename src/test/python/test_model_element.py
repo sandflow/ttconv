@@ -58,7 +58,7 @@ class ContentElementTest(unittest.TestCase):
 
     e.set_doc(doc)
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       e.set_doc(doc2)
 
   def test_detach(self):
@@ -82,7 +82,7 @@ class ContentElementTest(unittest.TestCase):
 
     e.push_child(c)
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       c.set_doc(None)
 
   def test_push_child(self):
@@ -116,13 +116,13 @@ class ContentElementTest(unittest.TestCase):
 
     c1.push_child(c3)
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       p.push_child(c3)
 
   def test_push_child_as_self(self):
     p = model.ContentElement()
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       p.push_child(p)
 
   def test_dfs(self):
@@ -170,7 +170,7 @@ class ContentElementTest(unittest.TestCase):
     for a_child in p:
       self.assertEqual(a_child, c1)
 
-  def test_remove_children(self):
+  def test_remove_child(self):
     p = model.ContentElement()
 
     c1 = model.ContentElement()
@@ -197,6 +197,25 @@ class ContentElementTest(unittest.TestCase):
 
     self.assertEqual(sum(1 for _ in p), 0)
 
+  def test_remove_children(self):
+    p = model.ContentElement()
+
+    c1 = model.ContentElement()
+
+    c2 = model.ContentElement()
+
+    c3 = model.ContentElement()
+
+    p.push_child(c1)
+
+    p.push_child(c2)
+
+    p.push_child(c3)
+
+    p.remove_children()
+
+    self.assertFalse(p.has_children())
+
   def test_id(self):
     p = model.ContentElement()
 
@@ -212,7 +231,7 @@ class ContentElementTest(unittest.TestCase):
     self.assertIsNone(p.get_id())
 
     # bad id
-    with self.assertRaises(Exception):
+    with self.assertRaises(TypeError):
       bad_id = " "
       p.set_id(bad_id)
 
@@ -223,7 +242,7 @@ class BodyTest(unittest.TestCase):
 
     b.push_child(model.Div())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(TypeError):
       b.push_child(model.P())
 
 class DivTest(unittest.TestCase):
@@ -236,7 +255,7 @@ class DivTest(unittest.TestCase):
 
     d1.push_child(model.Div())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(TypeError):
       d1.push_child(model.Text())
 
 class PTest(unittest.TestCase):
@@ -249,8 +268,11 @@ class PTest(unittest.TestCase):
 
     p.push_child(model.Span())
 
-    with self.assertRaises(Exception):
+    p.push_child(model.Ruby())
+
+    with self.assertRaises(TypeError):
       p.push_child(model.Text())
+
 
 class SpanTest(unittest.TestCase):
 
@@ -264,7 +286,7 @@ class SpanTest(unittest.TestCase):
 
     s.push_child(model.Text())
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(TypeError):
       s.push_child(model.P())
 
 class TextTest(unittest.TestCase):
@@ -273,7 +295,7 @@ class TextTest(unittest.TestCase):
 
     t = model.Text()
 
-    with self.assertRaises(Exception):
+    with self.assertRaises(RuntimeError):
       t.push_child(model.Span())
 
   def test_set_text(self):
@@ -290,6 +312,163 @@ class TextTest(unittest.TestCase):
 
     with self.assertRaises(TypeError):
       t.set_text(None)
+
+class RegionTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    r = model.Region("hello")
+
+    with self.assertRaises(RuntimeError):
+      r.push_child(model.P())
+
+  def test_set_id(self):
+
+    r = model.Region("hello")
+
+    with self.assertRaises(RuntimeError):
+      r.set_id("blah")
+
+  def test_set_region(self):
+
+    r1 = model.Region("hello")
+
+    r2 = model.Region("blah")
+
+    with self.assertRaises(RuntimeError):
+      r1.set_region(r2)
+
+class RubyTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    r = model.Ruby()
+
+    with self.assertRaises(RuntimeError):
+      r.push_child(model.P())
+
+  def test_remove_child(self):
+
+    r = model.Ruby()
+
+    c1 = model.Rb()
+
+    c2 = model.Rt()
+
+    r.push_children([c1, c2])
+
+    with self.assertRaises(RuntimeError):
+      c1.remove()
+
+    with self.assertRaises(RuntimeError):
+      r.remove_child(c1)
+
+  def test_push_children(self):
+
+    r = model.Ruby()
+
+    r.push_children([model.Rb(), model.Rt()])
+
+    r.remove_children()
+
+    r.push_children([model.Rb(), model.Rp(), model.Rt(), model.Rp()])
+
+    r.remove_children()
+
+    r.push_children([model.Rbc(), model.Rtc()])
+
+    r.remove_children()
+
+    r.push_children([model.Rbc(), model.Rtc(), model.Rtc()])
+
+    with self.assertRaises(RuntimeError):
+      r.push_children([model.Rb(), model.Rt()])
+
+class RtcTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    r = model.Rtc()
+
+    with self.assertRaises(RuntimeError):
+      r.push_child(model.P())
+
+  def test_remove_child(self):
+
+    r = model.Rtc()
+
+    c1 = model.Rt()
+
+    c2 = model.Rt()
+
+    r.push_children([c1, c2])
+
+    with self.assertRaises(RuntimeError):
+      c1.remove()
+
+    with self.assertRaises(RuntimeError):
+      r.remove_child(c1)
+
+  def test_push_children(self):
+
+    r = model.Rtc()
+
+    r.push_children([model.Rt(), model.Rt()])
+
+    r.remove_children()
+
+    r.push_children([model.Rp(), model.Rt(), model.Rt(), model.Rp()])
+
+    with self.assertRaises(ValueError):
+      r.push_children([model.Rb(), model.Rt()])
+
+class RbTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    s = model.Rb()
+
+    s.push_child(model.Span())
+
+    with self.assertRaises(TypeError):
+      s.push_child(model.P())
+
+
+class RtTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    s = model.Rt()
+
+    s.push_child(model.Span())
+
+    with self.assertRaises(TypeError):
+      s.push_child(model.P())
+
+
+class RpTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    s = model.Rp()
+
+    s.push_child(model.Span())
+
+    with self.assertRaises(TypeError):
+      s.push_child(model.P())
+
+
+class RbcTest(unittest.TestCase):
+
+  def test_push_child(self):
+
+    s = model.Rbc()
+
+    s.push_child(model.Rb())
+
+    with self.assertRaises(TypeError):
+      s.push_child(model.P())
+
 
 if __name__ == '__main__':
   unittest.main()

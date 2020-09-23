@@ -23,38 +23,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Unit tests for the IMSC reader'''
+'''Unit tests for the IMSC color parser'''
 
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-import xml.etree.ElementTree as et
-import os
-from ttconv.imsc import imsc_reader
+from ttconv.imsc.utils import parse_font_families
 
 class IMSCReaderTest(unittest.TestCase):
 
-  def test_body_only(self):
-    tree = et.parse('src/test/resources/ttml/body_only.ttml')
-    imsc_reader.to_model(tree)
+  tests = [
+    ["default", ["default"]],
+    ["foo, 'bar good'", ["foo", "bar good"]],
+    ['foo, "bar good"', ["foo", "bar good"]],
+    [r'foo, "bar \good"', ["foo", "bar good"]],
+    [r'foo, "bar \,good"', ["foo", "bar ,good"]]
+  ]
 
-  def test_imsc_1_test_suite(self):
-    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
-      for filename in files:
-        (name, ext) = os.path.splitext(filename)
-        if ext == ".ttml":
-          with self.subTest(name):
-            tree = et.parse(os.path.join(root, filename))
-            self.assertIsNotNone(imsc_reader.to_model(tree))
-
-  def test_imsc_1_1_test_suite(self):
-    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
-      for filename in files:
-        (name, ext) = os.path.splitext(filename)
-        if ext == ".ttml":
-          with self.subTest(name):
-            tree = et.parse(os.path.join(root, filename))
-            self.assertIsNotNone(imsc_reader.to_model(tree))
+  def test_font_families(self):
+    for test in self.tests:
+      with self.subTest(test[0]):
+        c = parse_font_families(test[0])
+        self.assertEqual(c, test[1])
 
 if __name__ == '__main__':
   unittest.main()

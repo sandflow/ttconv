@@ -27,8 +27,9 @@
 
 import re
 import logging
-import inspect
 import ttconv.model as model
+import ttconv.imsc.utils as utils
+from ttconv.imsc.style_properties import StyleProperties
 
 
 LOGGER = logging.getLogger(__name__)
@@ -40,7 +41,6 @@ def to_model(xml_tree):
   class _Context:
     def __init__(self):
       self.doc = None
-      self.cell_resolution = None
 
   context = _Context()
 
@@ -61,6 +61,7 @@ class TTMLNamespaces:
   '''
   TTML = "http://www.w3.org/ns/ttml"
   TTP = "http://www.w3.org/ns/ttml#parameter"
+  TTS = "http://www.w3.org/ns/ttml#styling"
 
 class TTElement:
   '''Processes the TTML <tt> element
@@ -83,7 +84,12 @@ class TTElement:
       LOGGER.warning("xml:lang not specified on tt")
       lang = ""
 
-    context.cell_resolution = CellResolutionAttribute.extract(ttml_elem)
+    context.doc.set_cell_resolution(CellResolutionAttribute.extract(ttml_elem))
+
+    px_resolution = ExtentAttribute.extract(ttml_elem)
+
+    if px_resolution is not None:
+      context.doc.set_px_resolution(px_resolution)
 
     # process children elements elements
 
@@ -269,12 +275,15 @@ class ContentElement:
         LOGGER.warning("Element references unknown region")
 
   @staticmethod
-  def process_style_properties(_context, ttml_element, element):
+  def process_style_properties(context, ttml_element, element):
     '''Read TTML style properties into the model'''
     for attr in ttml_element.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
       if prop is not None:
-        element.set_style(prop.model_prop, prop.extract(ttml_element.attrib.get(attr)))
+        try:
+          element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+        except ValueError:
+          LOGGER.error("Error reading style property: %s", prop.__name__)
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -293,7 +302,35 @@ class ContentElement:
 
     elif ttml_element.tag == SpanElement.qn:
 
-      element = SpanElement.process(context, inherited_space, inherited_lang, ttml_element)
+      ruby = SpanElement.get_ruby_attr(ttml_element)
+
+      if ruby == RubyElement.ruby:
+
+        element = RubyElement.process(context, inherited_space, inherited_lang, ttml_element)
+
+      elif ruby == RbElement.ruby:
+
+        element = RbElement.process(context, inherited_space, inherited_lang, ttml_element)
+
+      elif ruby == RtElement.ruby:
+
+        element = RtElement.process(context, inherited_space, inherited_lang, ttml_element)
+
+      elif ruby == RpElement.ruby:
+
+        element = RpElement.process(context, inherited_space, inherited_lang, ttml_element)
+
+      elif ruby == RbcElement.ruby:
+
+        element = RbcElement.process(context, inherited_space, inherited_lang, ttml_element)
+
+      elif ruby == RtcElement.ruby:
+
+        element = RtcElement.process(context, inherited_space, inherited_lang, ttml_element)
+
+      else:
+
+        element = SpanElement.process(context, inherited_space, inherited_lang, ttml_element)
 
     elif ttml_element.tag == BrElement.qn:
 
@@ -407,6 +444,9 @@ class PElement:
 
     # process children elements
 
+    if ttml_element.text:
+      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
+
     for ttml_child_element in ttml_element:
       child_element = ContentElement.process(
         context,
@@ -417,23 +457,37 @@ class PElement:
 
       if child_element is not None:
 
-        if not isinstance(child_element, (model.Span, model.Br)):
+        if not isinstance(child_element, (model.Span, model.Br, model.Ruby)):
 
-          LOGGER.error("Children of p must be span or br instances")
+          LOGGER.error("Children of p must be span, br or ruby instances")
 
         else:
 
           element.push_child(child_element)
 
+      if ttml_child_element.tail:
+        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
+
     return element
-
-
 
 class SpanElement:
   '''Process the TTML <span> element
   '''
 
   qn = f"{{{TTMLNamespaces.TTML}}}span"
+
+  @staticmethod
+  def make_anonymous_span(doc, text):
+
+    s = model.Span(doc)
+    t = model.Text(doc, text)
+    s.push_child(t)
+
+    return s
+
+  @staticmethod
+  def get_ruby_attr(ttml_span):
+    return ttml_span.get(f"{{{TTMLNamespaces.TTS}}}ruby")
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -450,7 +504,7 @@ class SpanElement:
 
     ContentElement.process_style_properties(context, ttml_element, element)
 
-    # process text node
+    # process head text node
 
     if ttml_element.text is not None:
       element.push_child(model.Text(context.doc, ttml_element.text))
@@ -476,11 +530,322 @@ class SpanElement:
 
           element.push_child(child_element)
 
-      if ttml_child_element.tail is not None:
+      # process tail text node
 
-        element.push_child(model.Text(context.doc, ttml_element.text))
+      if ttml_child_element.tail:
+        element.push_child(model.Text(context.doc, ttml_child_element.tail))
 
     return element
+
+
+class RubyElement:
+  '''Process the TTML <span tts:ruby="container"> element
+  '''
+
+  ruby = "container"
+
+  @staticmethod
+  def process(context, inherited_space, inherited_lang, ttml_element):
+
+    element = model.Ruby(context.doc)
+
+    # process attributes
+    
+    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+
+    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+
+    ContentElement.process_region_property(context, ttml_element, element)
+
+    ContentElement.process_style_properties(context, ttml_element, element)
+
+    # process children elements
+
+    children = []
+
+    for ttml_child_element in ttml_element:
+      child_element = ContentElement.process(
+        context,
+        element.get_space(),
+        element.get_lang(),
+        ttml_child_element
+      )
+
+      if child_element is not None:
+
+        children.append(child_element)
+
+    try:
+
+      element.push_children(children)
+
+      return element
+
+    except (RuntimeError, TypeError):
+      
+      LOGGER.error("Malformed ruby element")
+
+      return None
+
+
+class RbElement:
+  '''Process the TTML <span tts:ruby="base"> element
+  '''
+
+  ruby = "base"
+
+  @staticmethod
+  def process(context, inherited_space, inherited_lang, ttml_element):
+
+    element = model.Rb(context.doc)
+
+    # process attributes
+    
+    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+
+    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+
+    ContentElement.process_region_property(context, ttml_element, element)
+
+    ContentElement.process_style_properties(context, ttml_element, element)
+
+    # process head text node
+
+    if ttml_element.text is not None:
+      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
+
+    # process children elements
+
+    for ttml_child_element in ttml_element:
+
+      child_element = ContentElement.process(
+        context,
+        element.get_space(),
+        element.get_lang(),
+        ttml_child_element
+      )
+
+      if child_element is not None:
+
+        if not isinstance(child_element, model.Span):
+
+          LOGGER.error("Children of rb must be span instances")
+
+        else:
+
+          element.push_child(child_element)
+
+      # process tail text node
+
+      if ttml_child_element.tail:
+        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
+
+    return element
+
+
+class RtElement:
+  '''Process the TTML <span tts:ruby="text"> element
+  '''
+
+  ruby = "text"
+
+  @staticmethod
+  def process(context, inherited_space, inherited_lang, ttml_element):
+
+    element = model.Rt(context.doc)
+
+    # process attributes
+    
+    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+
+    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+
+    ContentElement.process_region_property(context, ttml_element, element)
+
+    ContentElement.process_style_properties(context, ttml_element, element)
+
+    # process head text node
+
+    if ttml_element.text is not None:
+      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
+
+    # process children elements
+
+    for ttml_child_element in ttml_element:
+
+      child_element = ContentElement.process(
+        context,
+        element.get_space(),
+        element.get_lang(),
+        ttml_child_element
+      )
+
+      if child_element is not None:
+
+        if not isinstance(child_element, model.Span):
+
+          LOGGER.error("Children of rt must be span instances")
+
+        else:
+
+          element.push_child(child_element)
+
+      # process tail text node
+
+      if ttml_child_element.tail:
+        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
+
+    return element
+
+
+class RpElement:
+  '''Process the TTML <span tts:ruby="delimiter"> element
+  '''
+
+  ruby = "delimiter"
+
+  @staticmethod
+  def process(context, inherited_space, inherited_lang, ttml_element):
+
+    element = model.Rp(context.doc)
+
+    # process attributes
+    
+    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+
+    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+
+    ContentElement.process_region_property(context, ttml_element, element)
+
+    ContentElement.process_style_properties(context, ttml_element, element)
+
+    # process head text node
+
+    if ttml_element.text is not None:
+      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
+
+    # process children elements
+
+    for ttml_child_element in ttml_element:
+
+      child_element = ContentElement.process(
+        context,
+        element.get_space(),
+        element.get_lang(),
+        ttml_child_element
+      )
+
+      if child_element is not None:
+
+        if not isinstance(child_element, model.Span):
+
+          LOGGER.error("Children of rp must be span instances")
+
+        else:
+
+          element.push_child(child_element)
+
+      # process tail text node
+
+      if ttml_child_element.tail:
+        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
+
+    return element
+
+class RbcElement:
+  '''Process the TTML <span tts:ruby="baseContainer"> element
+  '''
+
+  ruby = "baseContainer"
+
+  @staticmethod
+  def process(context, inherited_space, inherited_lang, ttml_element):
+
+    element = model.Rbc(context.doc)
+
+    # process attributes
+    
+    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+
+    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+
+    ContentElement.process_region_property(context, ttml_element, element)
+
+    ContentElement.process_style_properties(context, ttml_element, element)
+
+    # process children elements
+
+    for ttml_child_element in ttml_element:
+
+      child_element = ContentElement.process(
+        context,
+        element.get_space(),
+        element.get_lang(),
+        ttml_child_element
+      )
+
+      if child_element is not None:
+
+        if not isinstance(child_element, model.Rb):
+
+          LOGGER.error("Children of rbc must be rb instances")
+
+        else:
+
+          element.push_child(child_element)
+
+    return element
+
+
+class RtcElement:
+  '''Process the TTML <span tts:ruby="textContainer"> element
+  '''
+
+  ruby = "textContainer"
+
+  @staticmethod
+  def process(context, inherited_space, inherited_lang, ttml_element):
+
+    element = model.Rtc(context.doc)
+
+    # process attributes
+    
+    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+
+    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+
+    ContentElement.process_region_property(context, ttml_element, element)
+
+    ContentElement.process_style_properties(context, ttml_element, element)
+
+    # process children elements
+
+    children = []
+
+    for ttml_child_element in ttml_element:
+      child_element = ContentElement.process(
+        context,
+        element.get_space(),
+        element.get_lang(),
+        ttml_child_element
+      )
+
+      if child_element is not None:
+
+        children.append(child_element)
+
+    try:
+
+      element.push_children(children)
+
+      return element
+
+    except (RuntimeError, TypeError):
+      
+      LOGGER.error("Malformed rtc element")
+
+      return None
+
 
 class BrElement:
   '''Process the TTML <br> element
@@ -511,55 +876,7 @@ class BrElement:
 
     return element
 
-#
-# style properties
-#
 
-class StyleProperty:
-  '''Base class for style properties'''
-
-  @staticmethod
-  def extract(xml_attrib):
-    '''Converts an IMSC style property to a data model value'''
-
-
-class StyleProperties:
-  '''TTML style properties
-
-  Class variables:
-  
-  `BY_QNAME`: mapping of qualified name to StyleProperty class
-  '''
-
-  class LineHeight(StyleProperty):
-    '''tts:lineHeight'''
-
-    LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
-
-    model_prop = model.StyleProperties.LineHeight
-
-    @staticmethod
-    def extract(xml_attrib):
-
-      if xml_attrib == "normal":
-
-        r = xml_attrib
-
-      else:
-        m = StyleProperties.LineHeight.LENGTH_RE.match(xml_attrib)
-
-        if m is None:
-          raise Exception("Unsupported length")
-      
-        r = model.LengthType(float(m.group(1)), model.LengthType.Units(m.group(2)))
-      
-      return r
-
-  BY_QNAME = {
-    f"{{{v.model_prop.ns}}}{v.model_prop.local_name}" : v
-    for n, v in list(locals().items()) if inspect.isclass(v)
-    }
-    
 #
 # other attributes
 #
@@ -629,18 +946,10 @@ class CellResolutionAttribute:
 
   qn = f"{TTMLNamespaces.TTP}cellResolution"
 
-  class ValueType:
-    '''Value of the ttp:cellResolution attribute'''
-    def __init__(self, rows=15, columns=32):
-      self.rows = rows
-      self.columns = columns
-
   _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
 
   @staticmethod
-  def extract(ttml_element):
-
-    r = CellResolutionAttribute.ValueType()
+  def extract(ttml_element) -> model.CellResolutionType:
 
     cr = ttml_element.attrib.get(CellResolutionAttribute.qn)
 
@@ -650,10 +959,37 @@ class CellResolutionAttribute:
 
       if m is not None:
 
-        r = CellResolutionAttribute.ValueType(int(m.group(1)), int(m.group(2)))
+        return model.CellResolutionType(int(m.group(1)), int(m.group(2)))
 
-      else:
+      LOGGER.error("ttp:cellResolution invalid syntax")
 
-        LOGGER.error("ttp:cellResolution invalid syntax")
+    # default value in TTML
 
-    return r
+    return model.CellResolutionType(rows=15, columns=32)
+
+class ExtentAttribute:
+  '''ttp:extent attribute on \\<tt\\>
+  '''
+
+  qn = f"{{{TTMLNamespaces.TTS}}}extent"
+
+  @staticmethod
+  def extract(ttml_element) -> model.PixelResolutionType:
+
+    extent = ttml_element.attrib.get(ExtentAttribute.qn)
+
+    if extent is not None:
+
+      s = extent.split(" ")
+
+      (w, w_units) = utils.parse_length(s[0])
+
+      (h, h_units) = utils.parse_length(s[1])
+
+      if w_units != "px" or h_units != "px":
+        LOGGER.error("ttp:extent on <tt> does not use px units")
+        return None
+
+      return model.PixelResolutionType(w, h)
+
+    return None

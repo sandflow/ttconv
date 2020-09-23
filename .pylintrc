@@ -155,7 +155,7 @@ enable=c-extension-no-member
 # which contain the number of messages in each category, as well as 'statement'
 # which is the total number of statements analyzed. This score is used by the
 # global evaluation report (RP0004).
-evaluation=10.0 - ((float(5 * error + warning + refactor) / statement) * 10)
+evaluation=10.0 - ((float(5 * error + warning) / statement) * 10)
 
 # Template used to display messages. This is a python new-style format string
 # used to format the message information. See doc for all details.
@@ -248,6 +248,9 @@ function-naming-style=snake_case
 good-names=i,
            j,
            k,
+           x,
+           y,
+           r,
            ex,
            Run,
            _
@@ -317,10 +320,10 @@ indent-after-paren=2
 indent-string='  '
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=132
 
 # Maximum number of lines in a module.
-max-module-lines=1000
+max-module-lines=3000
 
 # List of optional constructs for which whitespace checking is disabled. `dict-
 # separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
@@ -526,7 +529,7 @@ max-attributes=20
 max-bool-expr=5
 
 # Maximum number of branch for function / method body.
-max-branches=12
+max-branches=20
 
 # Maximum number of locals for function / method body.
 max-locals=15

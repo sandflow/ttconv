@@ -29,26 +29,10 @@ from __future__ import annotations
 import typing
 from enum import Enum
 from fractions import Fraction
+from dataclasses import dataclass
 import re
-
-#
-# Types
-#
-
-class LengthType:
-  '''Length type as defined in TTML2'''
-
-  class Units(Enum):
-    '''Units of length'''
-    em = "em"
-    pct = "%"
-    rh = "rh"
-    rw = "rw"
-
-  def __init__(self, value, units: Units):
-    self.value = value
-    self.units = units
-
+from ttconv.style_properties import StyleProperties
+from ttconv.style_properties import StyleProperty
 #
 # Content Elements
 #
@@ -171,32 +155,42 @@ class ContentElement:
     '''Removes the element from the list of children of its parent,
     or does nothing if the element is the root.'''
 
-    # skip processing if already a root
-
     if self._parent is None:
       return
 
-    # remove from parent
+    self._parent.remove_child(self)
+
+  def remove_child(self, child: ContentElement):
+    '''Remove `child` from the list of children of the element.'''
+
+    if child not in list(self):
+      raise ValueError("Element is not a child of this element")
 
     # pylint: disable=W0212
 
-    if self._parent._first_child is self:
-      self._parent._first_child = self._next_sibling
+    if self._first_child is child:
+      self._first_child = child._next_sibling
 
-    if self._parent._last_child is self:
-      self._parent._last_child = self._previous_sibling
+    if self._last_child is child:
+      self._last_child = child._previous_sibling
 
-    if self._previous_sibling is not None:
-      self._previous_sibling._next_sibling = self._next_sibling
+    if child._previous_sibling is not None:
+      child._previous_sibling._next_sibling = child._next_sibling
 
-    if self._next_sibling is not None:
-      self._next_sibling._previous_sibling = self._previous_sibling
+    if child._next_sibling is not None:
+      child._next_sibling._previous_sibling = child._previous_sibling
+
+    child._parent = None
+    child._next_sibling = None
+    child._previous_sibling = None
 
     # pylint: enable=W0212
 
-    self._parent = None
-    self._next_sibling = None
-    self._previous_sibling = None
+  def remove_children(self):
+    '''Remove all children of the element.'''
+
+    for c in list(self):
+      self.remove_child(c)
 
   def push_child(self, child: ContentElement):
     '''Adds `child` as a child of the element.'''
@@ -226,6 +220,14 @@ class ContentElement:
     self._last_child = child
 
     # pylint: enable=W0212
+
+  def push_children(self, children: typing.Iterable[ContentElement]):
+    '''Adds `children` as children of the element. Unless overridden, this method simply
+    calls `push_child` repeatedly. Elements that require children to appear in a certain
+    order can override this method.'''
+
+    for c in children:
+      self.push_child(c)
 
   def __iter__(self) -> typing.Iterator[ContentElement]:
     '''Returns an iterator over the children of the element.'''
@@ -277,9 +279,15 @@ class ContentElement:
     else:
 
       if not style_prop.validate(value):
-        raise ValueError("Invalid value")
+        raise ValueError(f"Invalid value {value} for style property {style_prop}")
 
       self._styles[style_prop] = value
+
+  _applicableStyles: typing.Set[StyleProperty] = frozenset()
+
+  def is_style_applicable(self, style_prop: StyleProperty) -> bool:
+    '''Whether the style property `style_prop` apply to the element'''
+    return style_prop in self._applicableStyles
 
   # layout properties
 
@@ -289,7 +297,7 @@ class ContentElement:
 
     if region is not None:
       if self.get_doc() is None:
-        raise Exception("Not associated with a document")
+        raise ValueError("Not associated with a document")
         
       if not self.get_doc().has_region(region.get_id()):
         raise ValueError("Region is unknown")
@@ -347,6 +355,12 @@ class ContentElement:
 class Body(ContentElement):
   '''Body element, as specified in TTML2'''
 
+  _applicableStyles = frozenset([
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.Visibility
+    ])
+
   def push_child(self, child):
     if not isinstance(child, Div):
       raise TypeError("Children of body must be div instances")
@@ -356,6 +370,13 @@ class Body(ContentElement):
   
 class Div(ContentElement):
   '''Div element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.Visibility
+    ])
 
   def push_child(self, child):
     if not isinstance(child, (P, Div)):
@@ -367,15 +388,51 @@ class Div(ContentElement):
 class P(ContentElement):
   '''P element, as specified in TTML2'''
 
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FillLineGap,
+    StyleProperties.LineHeight,
+    StyleProperties.LinePadding,
+    StyleProperties.MultiRowAlign,
+    StyleProperties.Opacity,
+    StyleProperties.RubyReserve,
+    StyleProperties.Shear,
+    StyleProperties.TextAlign,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility
+    ])
+
   def push_child(self, child):
-    if not isinstance(child, (Span, Br)):
-      raise TypeError("Children of body must be P instances")
+    if not isinstance(child, (Span, Br, Ruby)):
+      raise TypeError("Children of p must be span, br or ruby instances")
     super().push_child(child)
 
 
   
 class Span(ContentElement):
   '''Span element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
 
   def push_child(self, child):
     if not isinstance(child, (Span, Br, Text)):
@@ -391,14 +448,188 @@ class Br(ContentElement):
     raise TypeError("Br elements cannot have children")
 
   def set_begin(self, time_offset):
-    raise Exception("Br elements do not have temporeal properties")
+    raise RuntimeError("Br elements do not have temporeal properties")
 
   def set_end(self, time_offset):
-    raise Exception("Br elements do not have temporal properties")
+    raise RuntimeError("Br elements do not have temporal properties")
 
   def set_region(self, region):
-    raise Exception("Br elements are not associated with a region")
+    raise RuntimeError("Br elements are not associated with a region")
 
+
+class Ruby(ContentElement):
+  '''Ruby element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.RubyAlign,
+    StyleProperties.Visibility,
+    ])
+
+  def push_child(self, child: ContentElement):
+    raise RuntimeError("Ruby children must be added using `push_children`")
+
+  def remove_child(self, child: ContentElement):
+    raise RuntimeError("Ruby children must be removed using `remove_children`")
+
+  def push_children(self, children: typing.Iterable[ContentElement]):
+    if self.has_children():
+      raise RuntimeError("Remove all ruby children before adding more.")
+
+    ts = [type(x) for x in children]
+
+    if ts not in [[Rb, Rt], [Rb, Rp, Rt, Rp], [Rbc, Rtc], [Rbc, Rtc, Rtc]]:
+      raise ValueError("Children of ruby do not conform to requirements")
+
+    for child in children:
+      super().push_child(child)
+
+  def remove_children(self):
+    '''Remove all children of the element.'''
+
+    for child in list(self):
+      super().remove_child(child)
+
+class Rb(ContentElement):
+  '''Rb element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Span):
+      raise TypeError("Children of rb must be span instances")
+    super().push_child(child)
+
+class Rbc(ContentElement):
+  '''Rbc element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.Visibility,
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Rb):
+      raise TypeError("Children of rc must be rb instances")
+    super().push_child(child)
+
+class Rp(ContentElement):
+  '''Rp element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Span):
+      raise TypeError("Children of rp must be span instances")
+    super().push_child(child)
+
+
+class Rt(ContentElement):
+  '''Rt element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Color,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.FontFamily,
+    StyleProperties.FontSize,
+    StyleProperties.FontStyle,
+    StyleProperties.FontWeight,
+    StyleProperties.Opacity,
+    StyleProperties.RubyPosition,
+    StyleProperties.TextCombine,
+    StyleProperties.TextDecoration,
+    StyleProperties.TextEmphasis,
+    StyleProperties.TextOutline,
+    StyleProperties.TextShadow,
+    StyleProperties.UnicodeBidi,
+    StyleProperties.Visibility,
+    StyleProperties.WrapOption
+    ])
+
+  def push_child(self, child):
+    if not isinstance(child, Span):
+      raise TypeError("Children of rt must be span instances")
+    super().push_child(child)
+
+
+class Rtc(ContentElement):
+  '''Rtc element, as specified in TTML2'''
+
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Direction,
+    StyleProperties.Display,
+    StyleProperties.Opacity,
+    StyleProperties.RubyPosition,
+    StyleProperties.Visibility,
+    ])
+
+  def push_child(self, child):
+    raise RuntimeError("Rtc children must be added using `push_children`")
+
+  def remove_child(self, child: ContentElement):
+    raise RuntimeError("Rtc children must be removed using `remove_children`")
+
+  def push_children(self, children: typing.Iterable[ContentElement]):
+    cs = list(children)
+
+    if len(cs) > 2 and isinstance(cs[0], Rp) and isinstance(cs[-1], Rp):
+      cs = cs[1:-1]
+
+    if not all(isinstance(x, Rt) for x in cs):
+      raise ValueError("Childre of rtc do not conform to requirements")
+
+    for child in children:
+      super().push_child(child)
+
+  def remove_children(self):
+
+    for child in list(self):
+      super().remove_child(child)
 
 
 class Text(ContentElement):
@@ -409,28 +640,28 @@ class Text(ContentElement):
     super().__init__(doc=doc)
 
   def push_child(self, child):
-    raise Exception("Text nodes cannot have children")
+    raise RuntimeError("Text nodes cannot have children")
 
   def set_style(self, style_prop, value):
-    raise Exception("Text nodes cannot have style properties")
+    raise RuntimeError("Text nodes cannot have style properties")
 
   def set_begin(self, time_offset):
-    raise Exception("Text nodes do not have temporeal properties")
+    raise RuntimeError("Text nodes do not have temporeal properties")
 
   def set_end(self, time_offset):
-    raise Exception("Text nodes do not have temporal properties")
+    raise RuntimeError("Text nodes do not have temporal properties")
 
   def set_id(self, element_id):
-    raise Exception("Text nodes do not have an id")
+    raise RuntimeError("Text nodes do not have an id")
 
   def set_region(self, region):
-    raise Exception("Text nodes are not associated with a region")
+    raise RuntimeError("Text nodes are not associated with a region")
 
   def set_lang(self, language):
-    raise Exception("Text nodes are not associated with a language")
+    raise RuntimeError("Text nodes are not associated with a language")
 
   def set_space(self, wsh):
-    raise Exception("Text nodes are not associated with space handling")
+    raise RuntimeError("Text nodes are not associated with space handling")
 
   # text contents
 
@@ -449,6 +680,20 @@ class Text(ContentElement):
 class Region(ContentElement):
   '''Out-of-line region element, as specified in TTML2'''
 
+  _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
+    StyleProperties.Display,
+    StyleProperties.DisplayAlign,
+    StyleProperties.Extent,
+    StyleProperties.Opacity,
+    StyleProperties.Origin,
+    StyleProperties.Overflow,
+    StyleProperties.Padding,
+    StyleProperties.ShowBackground,
+    StyleProperties.Visibility,
+    StyleProperties.WritingMode
+    ])
+
   def __init__(self, region_id, doc=None):
     super().__init__(doc)
     
@@ -459,19 +704,43 @@ class Region(ContentElement):
 
   def set_id(self, element_id):
     if element_id != self.get_id():
-      raise Exception("Region id is immutable")
+      raise RuntimeError("Region id is immutable")
 
   def push_child(self, child):
-    raise Exception("Region elements do not have children")
+    raise RuntimeError("Region elements do not have children")
 
   def set_region(self, region):
     if region is not None:
-      raise Exception("Region elements cannot be associated with regions")
+      raise RuntimeError("Region elements cannot be associated with regions")
     super().set_region(region)
 
 #
 # Document
 #
+
+@dataclass(frozen=True)
+class CellResolutionType:
+  '''Value of the ttp:cellResolution attribute'''
+
+  rows: int
+  columns: int
+
+  def __post_init__(self):
+    if self.rows <= 0  or self.columns <= 0:
+      raise ValueError("Rows and columns must be larger than 0")
+
+
+@dataclass(frozen=True)
+class PixelResolutionType:
+  '''Extent of the root container in pixels'''
+
+  width: int
+  height: int
+
+  def __post_init__(self):
+    if self.height <= 0  or self.width <= 0:
+      raise ValueError("Height and width must be larger than 0")
+
 
 class Document:
   '''Base class for TTML documents, including ISDs, as specified in TTML2'''
@@ -479,7 +748,35 @@ class Document:
   def __init__(self):
     self._regions = {}
     self._body = None
-    self._initials = {}
+    self._initial_values = {}
+    self._cell_resolution = CellResolutionType(rows=15, columns=32)
+    self._px_resolution = PixelResolutionType(width=1920, height=1080)
+
+  # cell resolution
+
+  def get_cell_resolution(self) -> CellResolutionType:
+    '''Returns the cell resolution of the document, by default 15 rows by 32 columns.'''
+    return self._cell_resolution
+
+  def set_cell_resolution(self, cell_resolution: CellResolutionType):
+    '''Sets the cell resolution of the document.'''
+    if not isinstance(cell_resolution, CellResolutionType):
+      raise TypeError("Argument must be an instance of CellResolutionType")
+
+    self._cell_resolution = cell_resolution
+
+  # pixel resolution
+
+  def get_px_resolution(self) -> PixelResolutionType:
+    '''Returns the pixel resolution of the document, by default 1920 by 1080.'''
+    return self._px_resolution
+
+  def set_px_resolution(self, px_resolution: PixelResolutionType):
+    '''Sets the pixel resolution of the document'''
+    if not isinstance(px_resolution, PixelResolutionType):
+      raise TypeError("Argument must be an instance of PixelResolutionType")
+
+    self._px_resolution = px_resolution
 
   # body
 
@@ -509,7 +806,7 @@ class Document:
       raise TypeError("Argument must be an instance of Region")
 
     if region.get_doc() != self:
-      raise RuntimeError("Region does not belongs to this document")
+      raise ValueError("Region does not belongs to this document")
 
     self._regions[region.get_id()] = region
 
@@ -544,17 +841,18 @@ class Document:
 
   def get_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns the initial value for the style property `style_prop`, or None otherwise.'''
-    return self._initials.get(style_prop)
+    return self._initial_values.get(style_prop)
 
   def put_initial_value(self, style_prop: StyleProperty, initial_value: typing.Any):
     '''Adds an initial value for the style property `style_prop`,
-    replacing any existing one for the same property.'''
+    replacing any existing one for the same property. If `initial_value` is `None`,
+    the initial value is removed.'''
     if style_prop not in StyleProperties.ALL:
       raise ValueError("Invalid style property")
 
     if initial_value is None:
 
-      self._initials.pop(style_prop, None)
+      self.remove_initial_value(style_prop)
 
     else:
 
@@ -562,47 +860,16 @@ class Document:
 
         raise ValueError("Invalid value")
 
-      self._initials[style_prop] = initial_value
+      self._initial_values[style_prop] = initial_value
+
+  def remove_initial_value(self, style_prop: StyleProperty):
+    '''Removes any initial value for the style property `style_prop`.'''
+    self._initial_values.pop(style_prop, None)
 
   def has_initial_value(self, style_prop: StyleProperty) -> typing.Any:
     '''Returns whether the document has an initial value for the style property `style_prop`.'''
-    return style_prop in self._initials
+    return style_prop in self._initial_values
 
   def iter_initial_values(self) -> typing.Iterator[typing.Tuple[StyleProperty, typing.Any]]:
     '''Returns an iterator over (style property, initial value) pairs.'''
-    return self._initials.items()
-
-#
-# Style properties
-#
-
-class StyleProperty:
-  '''Abstract base class for all style properties'''
-
-  @staticmethod
-  def validate(value: typing.Any) -> bool:
-    '''Returns whether the value is valid for the style property.'''
-
-class StyleProperties:
-  '''Container for all style properties
-  
-  Class variables:
-
-  * `ALL`: set of all style properties
-  '''
-
-  class LineHeight(StyleProperty):
-    '''Corresponds to tts:lineHeight.'''
-
-    ns = "http://www.w3.org/ns/ttml#styling"
-    local_name = "lineHeight"
-    is_inherited = True
-    is_animatable = True
-    initial = "normal"
-    applies_to = [Body]
-
-    @staticmethod
-    def validate(value):
-      return value == "normal" or isinstance(value, LengthType)
-
-  ALL = {v for n, v in list(locals().items()) if callable(v)}
+    return self._initial_values.items()
