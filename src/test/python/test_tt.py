@@ -29,7 +29,7 @@
 
 import os
 import unittest
-import ttconv.main as main
+import ttconv.tt as tt
 
 class IMSCAppTest(unittest.TestCase):
 
@@ -42,20 +42,20 @@ class IMSCAppTest(unittest.TestCase):
     # This gets processed as 2 args being passed into
     # the main function
     #
-    main.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml".split())
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml".split())
 
   def test_bad_function(self):
     # Note passing a bad function name
     #
     with self.assertRaises(RuntimeError):
-      main.main("covert")
+      tt.main("covert")
 
   def test_validate(self):
     # Note passing in the args using split
     # This gets processed as 2 args being passed into
     # the main function
     #
-    main.main("validate -i src/test/resources/ttml/body_only.ttml".split())
+    tt.main("validate -i src/test/resources/ttml/body_only.ttml".split())
 
 if __name__ == '__main__':
   unittest.main()
