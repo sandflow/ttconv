@@ -29,11 +29,20 @@ import re
 import typing
 import ttconv.style_properties as styles
 
+
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
 _DEC_COLOR_RE = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 _DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 
+_LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
+
+_FAMILIES_SEPARATOR = re.compile(r"(?<=[^\\]),")
+_FAMILIES_ESCAPED_CHAR = re.compile(r"\\(.)")
+
+
 def parse_color(attr_value: str) -> styles.ColorType:
+  '''Parses the TTML \\<color\\> value contained in `attr_value`
+  '''
 
   lower_attr_value = str.lower(attr_value)
 
@@ -82,10 +91,9 @@ def parse_color(attr_value: str) -> styles.ColorType:
 
   raise ValueError("Bad Syntax")
 
-_LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
 def parse_length(attr_value: str) -> typing.Tuple[float, str]:
-  '''Parses a TTML length into a (length, units) tuple'''
+  '''Parses the TTML length in `attr_value` into a (length, units) tuple'''
 
   m = _LENGTH_RE.match(attr_value)
 
@@ -95,11 +103,10 @@ def parse_length(attr_value: str) -> typing.Tuple[float, str]:
 
   raise ValueError("Bad length syntax")
 
-_FAMILIES_SEPARATOR = re.compile(r"(?<=[^\\]),")
-_FAMILIES_ESCAPED_CHAR = re.compile(r"\\(.)")
 
 def parse_font_families(attr_value: str) -> typing.List[str]:
-  '''Parses a TTML font families into a list of font families'''
+  '''Parses th TTML \\<font-family\\> value in `attr_value` into a list of font families'''
+
   rslt = []
 
   for family in map(str.strip, _FAMILIES_SEPARATOR.split(attr_value)):
