@@ -24,6 +24,9 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """SCC Control Codes"""
+
+from __future__ import annotations
+
 import typing
 from enum import Enum
 
@@ -50,8 +53,7 @@ class SccControlCode(Enum):
   RU3 = ("Roll-Up Captions-3 Rows", 0X1426, 0x1C26)
   RU4 = ("Roll-Up Captions-4 Rows", 0X1427, 0x1C27)
 
-  def __init__(self, description: str, data_channel_1_value: int,
-               data_channel_2_value: int):
+  def __init__(self, description: str, data_channel_1_value: int, data_channel_2_value: int):
     self._description = description
     self._data_channel_values = [data_channel_1_value, data_channel_2_value]
 
@@ -67,11 +69,13 @@ class SccControlCode(Enum):
     """Returns whether the specified value is contained into the Control Code channels values"""
     return value in self._data_channel_values
 
+  def get_values(self):
+    return self._data_channel_values
 
-
-def find_control_code(value: int) -> typing.Optional[SccControlCode]:
-  """Find the Control Code corresponding to the specified value"""
-  for control_code in list(SccControlCode):
-    if control_code.contains_value(value):
-      return control_code
-  return None
+  @staticmethod
+  def find(value: int) -> typing.Optional[SccControlCode]:
+    """Find the Control Code corresponding to the specified value"""
+    for control_code in list(SccControlCode):
+      if control_code.contains_value(value):
+        return control_code
+    return None

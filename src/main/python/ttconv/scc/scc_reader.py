@@ -24,20 +24,24 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """SCC reader"""
+
 from __future__ import annotations
 
 import re
 import logging
-from ttconv.scc import time_codes
 from typing import Optional, List
 
 from ttconv.model import Document, P, Body, Div, Text, Span
-from ttconv.scc.time_codes import SccTimeCode
+from ttconv.scc.control_codes import SccControlCode
+from ttconv.scc.mid_row_codes import SccMidRowCode
+from ttconv.scc.preambles_access_codes import SccPreambleAccessCode
+from ttconv.scc.scc_caption_style import SccCaptionStyle
+from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
 
 LOGGER = logging.getLogger(__name__)
 
-SCC_LINE_PATTERN = '((' + time_codes.SMPTE_TIME_CODE_NDF_PATTERN \
-                   + ')|(' + time_codes.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
+SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN \
+                   + ')|(' + SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
 
 PARITY_BIT_MASK = 0b01111111
 
@@ -132,6 +136,25 @@ class SccLine:
     scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if len(hex_word)]
     return SccLine(time_offset, scc_words)
 
+  def get_style(self) -> SccCaptionStyle:
+    """Analyses the line words ordering to get the caption style"""
+    scc_words = self.scc_words
+    if scc_words == "":
+      return SccCaptionStyle.Unknown
+
+    prefix = SccControlCode.find(scc_words[0].value)
+
+    if prefix in [SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4]:
+      return SccCaptionStyle.RollUp
+
+    if prefix is SccControlCode.RDC:
+      return SccCaptionStyle.PaintOn
+
+    if prefix is SccControlCode.RCL:
+      return SccCaptionStyle.PopOn
+
+    return SccCaptionStyle.Unknown
+
   def to_model(self, context: _SccContext) -> P:
     """Converts the SCC line to the data model"""
 
@@ -149,8 +172,10 @@ class SccLine:
 
       if scc_word.byte_1 < 0x20:
         # TODO: handle control codes
-        pass
 
+        _control_code = SccControlCode.find(scc_word.value)
+        _mid_row_code = SccMidRowCode.find(scc_word.value)
+        _pac = SccPreambleAccessCode.from_bytes(scc_word.byte_1, scc_word.byte_2)
       else:
         text += scc_word.to_text()
 

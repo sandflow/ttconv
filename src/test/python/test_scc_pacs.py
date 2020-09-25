@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.scc import preambles_access_codes
+from ttconv.scc.preambles_access_codes import SccPreambleAccessCode
 
 
 class SCCPreambleAccessCodesTest(unittest.TestCase):
@@ -46,7 +46,7 @@ class SCCPreambleAccessCodesTest(unittest.TestCase):
 
     for b1 in channel_1_byte_1:
       for b2 in byte_2_range:
-        pac = preambles_access_codes.get_pac(b1, b2)
+        pac = SccPreambleAccessCode.from_bytes(b1, b2)
 
         if b2 > 0x5F and b1 % 0x08 == 0:  # row 11 case
           self.assertIsNone(pac)
@@ -54,11 +54,11 @@ class SCCPreambleAccessCodesTest(unittest.TestCase):
           self.assertIsNotNone(pac)
 
       for b2 in other_bytes_2:
-        self.assertIsNone(preambles_access_codes.get_pac(b1, b2))
+        self.assertIsNone(SccPreambleAccessCode.from_bytes(b1, b2))
 
     for b1 in channel_2_byte_1:
       for b2 in byte_2_range:
-        pac = preambles_access_codes.get_pac(b1, b2)
+        pac = SccPreambleAccessCode.from_bytes(b1, b2)
 
         if b2 > 0x5F and b1 % 0x08 == 0:  # row 11 case
           self.assertIsNone(pac)
@@ -66,11 +66,11 @@ class SCCPreambleAccessCodesTest(unittest.TestCase):
           self.assertIsNotNone(pac)
 
       for b2 in other_bytes_2:
-        self.assertIsNone(preambles_access_codes.get_pac(b1, b2))
+        self.assertIsNone(SccPreambleAccessCode.from_bytes(b1, b2))
 
     for b1 in other_bytes_1:
       for b2 in range(0x00, 0xFF):
-        self.assertIsNone(preambles_access_codes.get_pac(b1, b2))
+        self.assertIsNone(SccPreambleAccessCode.from_bytes(b1, b2))
 
 
 if __name__ == '__main__':
