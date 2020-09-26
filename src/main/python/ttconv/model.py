@@ -685,6 +685,7 @@ class Region(ContentElement):
     StyleProperties.Display,
     StyleProperties.DisplayAlign,
     StyleProperties.Extent,
+    StyleProperties.LuminanceGain,
     StyleProperties.Opacity,
     StyleProperties.Origin,
     StyleProperties.Overflow,

@@ -28,6 +28,7 @@
 from __future__ import annotations
 import typing
 from dataclasses import dataclass
+import numbers
 from enum import Enum
 
 #
@@ -57,7 +58,7 @@ class LengthType:
     c = "c"
     px = "px"
 
-  value: float = 0
+  value: numbers.Number = 0
   units: Units = Units.pct
 
 
@@ -543,6 +544,21 @@ class StyleProperties:
       return isinstance(value, LengthType) and value.units == LengthType.Units.c
 
 
+  class LuminanceGain(StyleProperty):
+    '''Corresponds to tts:luminanceGain.'''
+
+    is_inherited = False
+    is_animatable = True
+
+    @staticmethod
+    def make_initial_value():
+      return 1.0
+
+    @staticmethod
+    def validate(value: numbers.Number):
+      return isinstance(value, numbers.Number)
+
+
   class MultiRowAlign(StyleProperty):
     '''Corresponds to ebutts:multiRowAlign.'''
 
@@ -569,8 +585,8 @@ class StyleProperties:
       return 1.0
 
     @staticmethod
-    def validate(value: float):
-      return isinstance(value, float)
+    def validate(value: numbers.Number):
+      return isinstance(value, numbers.Number)
 
 
   class Origin(StyleProperty):
@@ -669,11 +685,11 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return 0
+      return 0.0
 
     @staticmethod
-    def validate(value):
-      return isinstance(value, float)
+    def validate(value: numbers.Number):
+      return isinstance(value, numbers.Number)
 
   class ShowBackground(StyleProperty):
     '''Corresponds to tts:showBackground.'''
