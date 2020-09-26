@@ -391,6 +391,19 @@ class StyleProperties:
     def validate(value):
       return isinstance(value, DirectionType) 
 
+  class Disparity(StyleProperty):
+    '''Corresponds to tts:disparity.'''
+
+    is_inherited = False
+    is_animatable = True
+
+    @staticmethod
+    def make_initial_value():
+      return LengthType()
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, LengthType) 
 
   class Display(StyleProperty):
     '''Corresponds to tts:display.'''
@@ -581,7 +594,10 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return PositionType()
+      return PositionType(
+        LengthType(0, LengthType.Units.pct),
+        LengthType(0, LengthType.Units.pct)
+      )
 
     @staticmethod
     def validate(value: PositionType):
@@ -610,6 +626,10 @@ class StyleProperties:
     
     is_inherited = False
     is_animatable = True
+
+    @staticmethod
+    def make_initial_value():
+      return PaddingType()
 
     @staticmethod
     def validate(value):
