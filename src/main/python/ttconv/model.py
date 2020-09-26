@@ -682,6 +682,7 @@ class Region(ContentElement):
 
   _applicableStyles = frozenset([
     StyleProperties.BackgroundColor,
+    StyleProperties.Disparity,
     StyleProperties.Display,
     StyleProperties.DisplayAlign,
     StyleProperties.Extent,
