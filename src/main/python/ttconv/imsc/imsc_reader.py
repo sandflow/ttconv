@@ -62,6 +62,7 @@ class TTMLNamespaces:
   TTML = "http://www.w3.org/ns/ttml"
   TTP = "http://www.w3.org/ns/ttml#parameter"
   TTS = "http://www.w3.org/ns/ttml#styling"
+  ITTP = "http://www.w3.org/ns/ttml/profile/imsc1#parameter"
 
 class TTElement:
   '''Processes the TTML <tt> element
@@ -90,6 +91,11 @@ class TTElement:
 
     if px_resolution is not None:
       context.doc.set_px_resolution(px_resolution)
+
+    active_area = ActiveAreaAttribute.extract(ttml_elem)
+
+    if active_area is not None:
+      context.doc.set_active_area(active_area)
 
     # process children elements elements
 
@@ -991,5 +997,45 @@ class ExtentAttribute:
         return None
 
       return model.PixelResolutionType(w, h)
+
+    return None
+
+class ActiveAreaAttribute:
+  '''ittp:activeArea attribute on \\<tt\\>
+  '''
+
+  qn = f"{{{TTMLNamespaces.ITTP}}}activeArea"
+
+  @staticmethod
+  def extract(ttml_element) -> model.ActiveAreaType:
+
+    aa = ttml_element.attrib.get(ActiveAreaAttribute.qn)
+
+    if aa is not None:
+
+      s = aa.split(" ")
+
+      if len(s) != 4:
+        LOGGER.error("Syntax error in ittp:activeArea on <tt>")
+        return None
+
+      (left_offset, left_offset_units) = utils.parse_length(s[0])
+
+      (top_offset, top_offset_units) = utils.parse_length(s[1])
+
+      (w, w_units) = utils.parse_length(s[2])
+
+      (h, h_units) = utils.parse_length(s[3])
+
+      if w_units != "%" or h_units != "%" or left_offset_units != "%" or top_offset_units != "%":
+        LOGGER.error("ittp:activeArea on <tt> must use % units")
+        return None
+
+      return model.ActiveAreaType(
+        left_offset / 100,
+        top_offset / 100,
+        w / 100,
+        h / 100
+        )
 
     return None

@@ -235,5 +235,62 @@ class DocumentTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       cr = model.PixelResolutionType(height=0, width=640)
 
+
+  def active_area_default(self):
+
+    aa = model.ActiveAreaType()
+
+    self.assertEqual(aa.left_offset, 0)
+
+    self.assertEqual(aa.top_offset, 0)
+
+    self.assertEqual(aa.height, 1)
+
+    self.assertEqual(aa.width, 1)
+
+
+  def active_area(self):
+
+    aa = model.ActiveAreaType(0.1, 0.15, 0.8, 0.7)
+
+    self.assertEqual(aa.left_offset, 0.1)
+
+    self.assertEqual(aa.top_offset, 0.15)
+
+    self.assertEqual(aa.width, 0.8)
+
+    self.assertEqual(aa.height, 0.7)
+
+    with self.assertRaises(ValueError):
+      model.ActiveAreaType(-0.1, 0.15, 0.8, 0.7)
+
+    with self.assertRaises(ValueError):
+      model.ActiveAreaType(0.1, 0.15, -0.8, 0.7)
+
+
+  def document_active_area_default(self):
+
+    d = model.Document()
+
+    self.assertEqual(
+      d.get_active_area(),
+      model.ActiveAreaType(0, 0, 1, 1)
+      )
+
+
+  def document_active_area(self):
+
+    d = model.Document()
+
+    aa = model.ActiveAreaType(0.1, 0.15, 0.8, 0.7)
+
+    d.set_active_area(aa)
+
+    self.assertEqual(
+      d.get_active_area(),
+      aa
+      )
+
+
 if __name__ == '__main__':
   unittest.main()
