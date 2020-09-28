@@ -58,7 +58,7 @@ where:
 
 ## Basic operation
 
-The canonical model allows content elements (instances of `ttconv.model.ContentElement`) to be arranged in a hierarchical structures (using the `ttconv.model.ContentElement.add_child()` and `ttconv.model.ContentElement.add_child()`) that are associated with a single document (using the `ttconv.model.ContentElement.set_doc()` method with an instance of `ttconv.model.Document`).
+The canonical model allows content elements (instances of `ttconv.model.ContentElement`) to be arranged in a hierarchical structures (using the `ttconv.model.ContentElement.push_child()` and `ttconv.model.ContentElement.remove_child()`) that are associated with a single document (using the `ttconv.model.ContentElement.set_doc()` method with an instance of `ttconv.model.Document`).
 
 ## Divergences with the TTML data model
 
