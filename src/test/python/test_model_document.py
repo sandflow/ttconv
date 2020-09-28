@@ -30,6 +30,7 @@
 import unittest
 import ttconv.model as model
 import ttconv.style_properties as styles
+from fractions import Fraction
 
 class DocumentTest(unittest.TestCase):
 
@@ -234,6 +235,25 @@ class DocumentTest(unittest.TestCase):
 
     with self.assertRaises(ValueError):
       cr = model.PixelResolutionType(height=0, width=640)
+
+
+  def display_aspect_ratio(self):
+
+    d = model.Document()
+
+    self.assertIsNone(d.get_display_aspect_ratio())
+
+    d.set_display_aspect_ratio(Fraction(16, 9))
+
+    self.assertEqual(d.get_display_aspect_ratio(), Fraction(16, 9))
+
+    d.set_display_aspect_ratio(None)
+
+    self.assertIsNone(d.get_display_aspect_ratio())
+
+    with self.assertRaises(ValueError):
+      d.set_display_aspect_ratio("hello")
+
 
 if __name__ == '__main__':
   unittest.main()

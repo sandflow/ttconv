@@ -798,6 +798,21 @@ class Document:
     self._initial_values = {}
     self._cell_resolution = CellResolutionType(rows=15, columns=32)
     self._px_resolution = PixelResolutionType(width=1920, height=1080)
+    self._dar = None
+
+  # display aspect ratio
+
+  def get_display_aspect_ratio(self) -> typing.Optional[Fraction]:
+    '''Returns the display aspect ratio of the document, by default `None`'''
+    return self._dar
+
+  def set_display_aspect_ratio(self, dar: typing.Optional[Fraction]):
+    '''Sets the display aspect ratio of the document to `dar`. If `dar` is `None`, the
+    document will fill the root container area.'''
+    if dar is not None or dar is not isinstance(dar, Fraction):
+      raise TypeError("Argument must be an instance of Fraction or None")
+
+    self._dar = dar
 
   # cell resolution
 
