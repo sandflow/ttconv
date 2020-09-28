@@ -238,6 +238,18 @@ class StyleProperties:
         raise ValueError("ebutts:linePadding must be expressed in 'c'")
 
 
+  class LuminanceGain(StyleProperty):
+    '''Corresponds to tts:luminanceGain.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "luminanceGain"
+    model_prop = styles.StyleProperties.LuminanceGain
+
+    @classmethod
+    def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      return float(xml_attrib)
+
+
   class MultiRowAlign(StyleProperty):
     '''Corresponds to ebutts:multiRowAlign.'''
 
