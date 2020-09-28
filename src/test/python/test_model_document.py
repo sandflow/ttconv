@@ -28,6 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
+from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 
@@ -290,6 +291,24 @@ class DocumentTest(unittest.TestCase):
       d.get_active_area(),
       aa
       )
+
+
+  def display_aspect_ratio(self):
+
+    d = model.Document()
+
+    self.assertIsNone(d.get_display_aspect_ratio())
+
+    d.set_display_aspect_ratio(Fraction(16, 9))
+
+    self.assertEqual(d.get_display_aspect_ratio(), Fraction(16, 9))
+
+    d.set_display_aspect_ratio(None)
+
+    self.assertIsNone(d.get_display_aspect_ratio())
+
+    with self.assertRaises(ValueError):
+      d.set_display_aspect_ratio("hello")
 
 
 if __name__ == '__main__':

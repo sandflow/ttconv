@@ -42,6 +42,30 @@ class WhiteSpaceHandling(Enum):
   PRESERVE = "preserve"
   DEFAULT = "default"
 
+@dataclass(frozen=True)
+class DiscreteAnimationStep:
+  '''Represents a discrete change in the value of a style property over time (see TTML `set` element)
+  '''
+  style_property: StyleProperty
+  begin: typing.Optional[Fraction]
+  end: typing.Optional[Fraction]
+  value: typing.Any
+
+  def __post_init__(self):
+    if self.style_property is None:
+      raise ValueError("style_property cannot be None")
+
+    if self.value is None:
+      raise ValueError("value cannot be None")
+
+    if self.style_property not in StyleProperties.ALL:
+      raise ValueError("Invalid style property")
+
+    if not self.style_property.validate(self.value):
+      raise ValueError("Invalid style property value")
+
+    
+
 class ContentElement:
   '''Abstract base class for all content elements in the model.'''
 
@@ -73,7 +97,7 @@ class ContentElement:
 
     # animation
 
-    self._sets = {}
+    self._sets = []
 
     # layout
 
@@ -326,6 +350,27 @@ class ContentElement:
   def get_end(self) -> typing.Optional[Fraction]:
     '''Returns the (exclusive) end time of the element, in seconds.'''
     return self._end
+
+  # discrete animation
+
+  def add_animation_step(self, step: DiscreteAnimationStep):
+    '''Adds an animation step to the element
+    '''
+    if not isinstance(step, DiscreteAnimationStep):
+      raise TypeError("Must be a discrete animation step")
+
+    self._sets.append(step)
+
+  def remove_animation_step(self, step: DiscreteAnimationStep):
+    '''Remove `step` from the discrete animation steps associated with the element
+    '''
+    self._sets.remove(step)
+
+  def iter_animation_steps(self) -> typing.Iterator[DiscreteAnimationStep]:
+    '''Returns an iterator over the discrete animation steps associated with the element
+    '''
+    return iter(self._sets)
+
 
   # white space handling
 
@@ -682,9 +727,11 @@ class Region(ContentElement):
 
   _applicableStyles = frozenset([
     StyleProperties.BackgroundColor,
+    StyleProperties.Disparity,
     StyleProperties.Display,
     StyleProperties.DisplayAlign,
     StyleProperties.Extent,
+    StyleProperties.LuminanceGain,
     StyleProperties.Opacity,
     StyleProperties.Origin,
     StyleProperties.Overflow,
@@ -774,6 +821,7 @@ class Document:
     self._cell_resolution = CellResolutionType(rows=15, columns=32)
     self._px_resolution = PixelResolutionType(width=1920, height=1080)
     self._active_area = ActiveAreaType(0, 0, 1, 1)
+    self._dar = None
 
   # active area
 
@@ -789,6 +837,22 @@ class Document:
       raise TypeError("Argument must be an instance of ActiveAreaType")
 
     self._active_area = active_area
+
+  # display aspect ratio
+
+  def get_display_aspect_ratio(self) -> typing.Optional[Fraction]:
+    '''Returns the display aspect ratio of the document, by default `None`
+    '''
+    return self._dar
+
+  def set_display_aspect_ratio(self, dar: typing.Optional[Fraction]):
+    '''Sets the display aspect ratio of the document to `dar`. If `dar` is `None`, the
+    document will fill the root container area.
+    '''
+    if dar is not None or dar is not isinstance(dar, Fraction):
+      raise TypeError("Argument must be an instance of Fraction or None")
+
+    self._dar = dar
 
   # cell resolution
 
