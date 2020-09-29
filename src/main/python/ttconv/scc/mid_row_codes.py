@@ -30,6 +30,8 @@ from __future__ import annotations
 import typing
 from enum import Enum
 
+from ttconv.style_properties import NamedColors, FontStyleType, TextDecorationType
+
 
 class SccMidRowCode(Enum):
   """SCC Mid-Row Code values"""
@@ -57,6 +59,45 @@ class SccMidRowCode(Enum):
   def get_name(self) -> str:
     """Retrieves SCC Mid-Row Code name"""
     return self.name
+
+  def get_color(self) -> typing.Optional[NamedColors]:
+    """Returns SCC Mid-Row Code color"""
+    style_bits = self._channel_1 & 0x000F
+
+    if style_bits in [0x00, 0x01]:
+      return NamedColors.white
+    if style_bits in [0x02, 0x03]:
+      return NamedColors.green
+    if style_bits in [0x04, 0x05]:
+      return NamedColors.blue
+    if style_bits in [0x06, 0x07]:
+      return NamedColors.cyan
+    if style_bits in [0x08, 0x09]:
+      return NamedColors.red
+    if style_bits in [0x0A, 0x0B]:
+      return NamedColors.yellow
+    if style_bits in [0x0C, 0x0D]:
+      return NamedColors.magenta
+
+    return None
+
+  def get_font_style(self) -> typing.Optional[FontStyleType]:
+    """Returns SCC Mid-Row Code font style"""
+    style_bits = self._channel_1 & 0x000F
+
+    if style_bits in [0x0E, 0x0F]:
+      return FontStyleType.italic
+
+    return None
+
+  def get_text_decoration(self) -> typing.Optional[TextDecorationType]:
+    """Returns SCC Mid-Row Code text decoration"""
+    style_bits = self._channel_1 & 0x000F
+
+    if style_bits % 2 == 1:
+      return TextDecorationType.underline
+
+    return None
 
   def contains_value(self, value: int) -> bool:
     """Returns whether the specified value is contained into the Mid-Row Code channel values"""
