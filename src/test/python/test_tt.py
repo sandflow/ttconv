@@ -47,7 +47,7 @@ class IMSCAppTest(unittest.TestCase):
   def test_bad_function(self):
     # Note passing a bad function name
     #
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(SystemExit):
       tt.main("covert")
 
   def test_validate(self):

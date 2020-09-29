@@ -27,7 +27,7 @@
 
 import logging
 import sys
-import argparse
+from argparse import ArgumentParser
 import xml.etree.ElementTree as et
 #import ttconv.model as model
 import ttconv.imsc.imsc_reader as imsc_reader
@@ -35,30 +35,55 @@ import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
-def convert_parse_args(argv):
-  '''Parses command line arguments for convert. Returns inputfile, outputfile.'''
+# Argument parsing setup
+#
+cli = ArgumentParser()
+subparsers = cli.add_subparsers(dest="subcommand")
 
-  parser = argparse.ArgumentParser()
+def argument(*name_or_flags, **kwargs):
+  """Convenience function to properly format arguments to pass to the
+  subcommand decorator."""
 
-  parser.add_argument("-i", "--input", help="Input file path", required=True)
-  parser.add_argument("-o", "--output", help="Output file path", required=True)
+  return (list(name_or_flags), kwargs)
 
-  # Pass in argv such that it is processed based on 
-  # what is passed into parse_args.
-  # This allows the unit tests to pass in args through
-  # the main function
-  #
-  args = parser.parse_args(argv)
 
-  return args.input, args.output
+def subcommand(args=None, parent=subparsers):
+  """Decorator to define a new subcommand in a sanity-preserving way.
+  The function will be stored in the ``func`` variable when the parser
+  parses arguments so that it can be called directly like so::
 
-def convert(argv):
+      args = cli.parse_args()
+      args.func(args)
+
+  Usage example::
+
+      @subcommand([argument("-d", help="Enable debug mode", action="store_true")])
+      def subcommand(args):
+          print(args)
+
+  Then on the command line::
+
+      $ python cli.py subcommand -d
+
+  """
+  def decorator(func):
+    parser = parent.add_parser(func.__name__, description=func.__doc__)
+    for arg in args:
+      parser.add_argument(*arg[0], **arg[1])
+    parser.set_defaults(func=func)
+
+  if args is None:
+    args = []
+  return decorator
+
+
+@subcommand([argument("-i", "--input", help="Input file path", required=True), 
+  argument("-o", "--output", help="Output file path", required=True)])
+def convert(args):
   '''Process input and output through the reader, converter, and writer'''
 
-  inputfile = ""
-  outputfile = ""
-  
-  inputfile, outputfile = convert_parse_args(argv)
+  inputfile = args.input
+  outputfile = args.output
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -82,54 +107,23 @@ def convert(argv):
   writer.from_xml(inputfile)
   writer.write(outputfile)
 
-def validate_parse_args(argv):
-  '''Parses command line arguments for validate. Returns inputfile.'''
 
-  parser = argparse.ArgumentParser()
-
-  parser.add_argument("-i", "--input", help="Input file path", required=True)
-
-  # Pass in argv such that it is processed based on 
-  # what is passed into parse_args.
-  # This allows the unit tests to pass in args through
-  # the main function
-  #
-  args = parser.parse_args(argv)
-
-  return args.input
-
-def validate(argv):
+@subcommand([argument("-i", "--input", help="Input file path", required=True)])
+def validate(args):
   '''Process input through the validator'''
 
-  inputfile = ""
-  
-  inputfile = validate_parse_args(argv)
+  print(args.input)
+  LOGGER.info("Input file is %s", args.input)
 
-  LOGGER.info("Input file is %s", inputfile)
-
-  # 
-  # Parse the xml input file into an ElementTree
-  #
-  #tree = et.parse(inputfile)
-
-  #
-  # Pass the parsed xml to the validator
-  #
-  #_model = imsc_reader.to_model(tree)
 
 def main(argv):
   '''Main application processing'''
 
-  #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
-  
-  if argv[0] == "convert":
-    convert(argv[1:])
-  elif argv[0] == "validate":
-    validate(argv[1:])
+  args = cli.parse_args(argv)
+  if args.subcommand is None:
+    cli.print_help()
   else:
-    print("Invalid function - ", argv[0])
-    print("Valid functions: convert, validate")
-    raise RuntimeError('Bad args')
+    args.func(args)
 
 if __name__ == "__main__":
   main(sys.argv[1:])
