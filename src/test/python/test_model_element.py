@@ -29,6 +29,7 @@
 
 import unittest
 import ttconv.model as model
+import ttconv.style_properties as styles
 
 class ContentElementTest(unittest.TestCase):
 
@@ -234,6 +235,41 @@ class ContentElementTest(unittest.TestCase):
     with self.assertRaises(TypeError):
       bad_id = " "
       p.set_id(bad_id)
+
+  def test_animation_step_init(self):
+
+    model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, styles.NamedColors.aqua.value)
+
+    with self.assertRaises(ValueError):
+      model.DiscreteAnimationStep(None, 0, 1, styles.NamedColors.aqua.value)
+      
+    with self.assertRaises(ValueError):
+      model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, None)
+
+    with self.assertRaises(ValueError):
+      model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, "hello")
+
+  def test_add_remove_animation_step(self):
+    p = model.ContentElement()
+
+    s1 = model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, styles.NamedColors.aqua.value)
+
+    s2 = model.DiscreteAnimationStep(styles.StyleProperties.Color, 2, None, styles.NamedColors.black.value)
+
+    s3 = model.DiscreteAnimationStep(styles.StyleProperties.TextAlign, 1, None, styles.TextAlignType.center)
+
+    p.add_animation_step(s1)
+
+    p.add_animation_step(s2)
+
+    p.add_animation_step(s3)
+
+    self.assertListEqual([s1, s2, s3], list(p.iter_animation_steps()))
+
+    p.remove_animation_step(s2)
+
+    self.assertListEqual([s1, s3], list(p.iter_animation_steps()))
+
 
 class BodyTest(unittest.TestCase):
 

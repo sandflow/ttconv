@@ -23,28 +23,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Unit tests for the IMSC \\<fontFamily\\> parser'''
+'''Unit tests for the style properties defined in the canonical model'''
 
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.imsc.utils import parse_font_families
+from ttconv.style_properties import StyleProperties
 
-class IMSCReaderTest(unittest.TestCase):
+class TestModelStyleProperties(unittest.TestCase):
 
-  tests = [
-    ["default", ["default"]],
-    ["foo, 'bar good'", ["foo", "bar good"]],
-    ['foo, "bar good"', ["foo", "bar good"]],
-    [r'foo, "bar \good"', ["foo", "bar good"]],
-    [r'foo, "bar \,good"', ["foo", "bar ,good"]]
-  ]
-
-  def test_font_families(self):
-    for test in self.tests:
-      with self.subTest(test[0]):
-        c = parse_font_families(test[0])
-        self.assertEqual(c, test[1])
+  def test_make_initial(self):
+    for style in StyleProperties.ALL:
+      with self.subTest(style.__name__):
+        style.validate(style.make_initial_value())
 
 if __name__ == '__main__':
   unittest.main()

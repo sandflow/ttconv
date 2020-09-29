@@ -84,6 +84,19 @@ class StyleProperties:
       return styles.DirectionType[xml_attrib]
 
 
+  class Disparity(StyleProperty):
+    '''Corresponds to tts:disparity.
+    '''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "disparity"
+    model_prop = styles.StyleProperties.Disparity
+
+    @classmethod
+    def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      return StyleProperties.ttml_length_to_model(context, xml_attrib)
+      
+      
   class Display(StyleProperty):
     '''Corresponds to tts:display.'''
 
@@ -94,6 +107,7 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.DisplayType[xml_attrib]
+
 
   class DisplayAlign(StyleProperty):
     '''Corresponds to tts:displayAlign.'''
@@ -222,6 +236,18 @@ class StyleProperties:
 
       if lp.units != styles.LengthType.Units.c:
         raise ValueError("ebutts:linePadding must be expressed in 'c'")
+
+
+  class LuminanceGain(StyleProperty):
+    '''Corresponds to tts:luminanceGain.'''
+
+    ns = "http://www.w3.org/ns/ttml#styling"
+    local_name = "luminanceGain"
+    model_prop = styles.StyleProperties.LuminanceGain
+
+    @classmethod
+    def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      return float(xml_attrib)
 
 
   class MultiRowAlign(StyleProperty):
