@@ -23,11 +23,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''ttconv main'''
+'''ttconv tt'''
 
 import logging
 import sys
-import argparse
+from argparse import ArgumentParser
 import xml.etree.ElementTree as et
 #import ttconv.model as model
 import ttconv.imsc.imsc_reader as imsc_reader
@@ -35,25 +35,55 @@ import ttconv.imsc.imsc_writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
-def parse_args(argv):
-  '''Parses command line arguments. Returns inputfile, outputfile.'''
+# Argument parsing setup
+#
+cli = ArgumentParser()
+subparsers = cli.add_subparsers(dest="subcommand")
 
-  parser = argparse.ArgumentParser()
+def argument(*name_or_flags, **kwargs):
+  """Convenience function to properly format arguments to pass to the
+  subcommand decorator."""
 
-  parser.add_argument("inputfile", help="Input file path")
-  parser.add_argument("outputfile", help="Output file path")
+  return (list(name_or_flags), kwargs)
 
-  # Pass in argv such that it is processed based on 
-  # what is passed into parse_args.
-  # This allows the unit tests to pass in args through
-  # the main function
-  #
-  args = parser.parse_args(argv)
 
-  return args.inputfile, args.outputfile
+def subcommand(args=None, parent=subparsers):
+  """Decorator to define a new subcommand in a sanity-preserving way.
+  The function will be stored in the ``func`` variable when the parser
+  parses arguments so that it can be called directly like so::
 
-def process(inputfile, outputfile):
+      args = cli.parse_args()
+      args.func(args)
+
+  Usage example::
+
+      @subcommand([argument("-d", help="Enable debug mode", action="store_true")])
+      def subcommand(args):
+          print(args)
+
+  Then on the command line::
+
+      $ python cli.py subcommand -d
+
+  """
+  def decorator(func):
+    parser = parent.add_parser(func.__name__, description=func.__doc__)
+    for arg in args:
+      parser.add_argument(*arg[0], **arg[1])
+    parser.set_defaults(func=func)
+
+  if args is None:
+    args = []
+  return decorator
+
+
+@subcommand([argument("-i", "--input", help="Input file path", required=True), 
+  argument("-o", "--output", help="Output file path", required=True)])
+def convert(args):
   '''Process input and output through the reader, converter, and writer'''
+
+  inputfile = args.input
+  outputfile = args.output
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -77,17 +107,23 @@ def process(inputfile, outputfile):
   writer.from_xml(inputfile)
   writer.write(outputfile)
 
+
+@subcommand([argument("-i", "--input", help="Input file path", required=True)])
+def validate(args):
+  '''Process input through the validator'''
+
+  print(args.input)
+  LOGGER.info("Input file is %s", args.input)
+
+
 def main(argv):
   '''Main application processing'''
 
-  #LOGGER.basicConfig(filename='main.log', level=LOGGER.INFO)
-  
-  inputfile = ""
-  outputfile = ""
-  
-  inputfile, outputfile = parse_args(argv)
-  
-  process(inputfile, outputfile)
+  args = cli.parse_args(argv)
+  if args.subcommand is None:
+    cli.print_help()
+  else:
+    args.func(args)
 
 if __name__ == "__main__":
   main(sys.argv[1:])

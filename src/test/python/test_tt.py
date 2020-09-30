@@ -28,8 +28,11 @@
 # pylint: disable=R0201,C0115,C0116
 
 import os
+import io
 import unittest
-import ttconv.main as main
+from contextlib import redirect_stdout
+from contextlib import redirect_stderr
+import ttconv.tt as tt
 
 class IMSCAppTest(unittest.TestCase):
 
@@ -37,12 +40,29 @@ class IMSCAppTest(unittest.TestCase):
     if not os.path.exists('build'):
       os.makedirs('build')
 
-  def test_body_only(self):
+  def test_convert(self):
     # Note passing in the args using split
     # This gets processed as 2 args being passed into
     # the main function
     #
-    main.main("src/test/resources/ttml/body_only.ttml build/body_only.out.ttml".split())
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml".split())
+
+  def test_bad_function(self):
+
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with redirect_stdout(stdout), redirect_stderr(stderr):
+      # Note passing a bad function name
+      #
+      with self.assertRaises(SystemExit):
+        tt.main("covert")
+
+  def test_validate(self):
+    # Note passing in the args using split
+    # This gets processed as 2 args being passed into
+    # the main function
+    #
+    tt.main("validate -i src/test/resources/ttml/body_only.ttml".split())
 
 if __name__ == '__main__':
   unittest.main()
