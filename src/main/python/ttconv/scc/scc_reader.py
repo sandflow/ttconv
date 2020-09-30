@@ -27,29 +27,32 @@
 
 from __future__ import annotations
 
-import re
 import logging
+import re
 from typing import Optional, List
 
-from ttconv.model import Document, P, Body, Div, Text, Span
-from ttconv.scc.control_codes import SccControlCode
-from ttconv.scc.mid_row_codes import SccMidRowCode
-from ttconv.scc.preambles_access_codes import SccPreambleAccessCode
+from ttconv.model import Document, P, Body, Div, Text, Span, CellResolutionType
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
+from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.mid_row_codes import SccMidRowCode
+from ttconv.scc.codes.preambles_access_codes import SccPreambleAccessCode
 from ttconv.scc.scc_caption_style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
+from ttconv.style_properties import StyleProperties, PositionType, LengthType
 
 LOGGER = logging.getLogger(__name__)
 
-SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN \
-                   + ')|(' + SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
+SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
 
 PARITY_BIT_MASK = 0b01111111
 
 
 class _SccContext:
   def __init__(self):
-    self.div = None
-    self.count = 0
+    self.div: Optional[Div] = None
+    self.count: int = 0
+    self.safe_area_x: int = 0
+    self.safe_area_y: int = 0
 
 
 class SccWord:
@@ -155,34 +158,116 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_model(self, context: _SccContext) -> P:
+  def to_model(self, context: _SccContext) -> Optional[P]:
     """Converts the SCC line to the data model"""
 
     paragraph = P()
-    paragraph.set_doc(context.div.get_doc())
-    context.count += 1
-    paragraph.set_id("caption" + str(context.count))
+    doc = context.div.get_doc()
+    paragraph.set_doc(doc)
     paragraph.set_begin(self.time_code.get_fraction())
 
     text = ""
-    span = Span()
-    span.set_doc(context.div.get_doc())
+    debug = ""
+    span = None
+
+    previous_code = None
+
+    column_offset = context.safe_area_x
 
     for scc_word in self.scc_words:
 
       if scc_word.byte_1 < 0x20:
-        # TODO: handle control codes
 
-        _control_code = SccControlCode.find(scc_word.value)
-        _mid_row_code = SccMidRowCode.find(scc_word.value)
-        _pac = SccPreambleAccessCode.from_bytes(scc_word.byte_1, scc_word.byte_2)
+        attribute_code = SccAttributeCode.find(scc_word.value)
+        control_code = SccControlCode.find(scc_word.value)
+        mid_row_code = SccMidRowCode.find(scc_word.value)
+        pac = SccPreambleAccessCode.find(scc_word.byte_1, scc_word.byte_2)
+
+        if previous_code and previous_code in [code for code in
+                                               (attribute_code, control_code, mid_row_code, pac) if
+                                               code is not None]:
+          continue
+
+        if control_code:
+          if control_code is SccControlCode.TO1:
+            column_offset += 1
+          if control_code is SccControlCode.TO2:
+            column_offset += 2
+          if control_code is SccControlCode.TO3:
+            column_offset += 3
+          previous_code = control_code
+
+        elif mid_row_code:
+          span_color = mid_row_code.get_color()
+          span_font_style = mid_row_code.get_font_style()
+          span_text_decoration = mid_row_code.get_text_decoration()
+
+          if span_color:
+            span.set_style(StyleProperties.Color, span_color.value)
+          if span_font_style:
+            span.set_style(StyleProperties.FontStyle, span_font_style)
+          if span_text_decoration:
+            span.set_style(StyleProperties.TextDecoration, span_text_decoration)
+          previous_code = mid_row_code
+
+        elif pac:
+          if span and isinstance(previous_code, str):
+            text_elem = Text(doc, text)
+            span.push_child(text_elem)
+
+            paragraph.push_child(span)
+
+            text = ""
+
+          column_offset += pac.get_indent()
+          row_offset = pac.get_row() + context.safe_area_y
+
+          # create new span
+          span = Span()
+          span.set_doc(doc)
+
+          x_pct = column_offset / doc.get_cell_resolution().columns
+          y_pct = row_offset / doc.get_cell_resolution().rows
+
+          x_position = LengthType(value=x_pct, units=LengthType.Units.pct)
+          y_position = LengthType(value=y_pct, units=LengthType.Units.pct)
+
+          span.set_style(StyleProperties.Origin, PositionType(x_position, y_position))
+
+          color = pac.get_color()
+          if color:
+            span.set_style(StyleProperties.Color, color.value)
+
+          font_style = pac.get_font_style()
+          if font_style:
+            span.set_style(StyleProperties.FontStyle, font_style)
+
+          text_decoration = pac.get_text_decoration()
+          if text_decoration:
+            span.set_style(StyleProperties.TextDecoration, text_decoration)
+
+          previous_code = pac
+
+        elif attribute_code:
+          # TODO handle attribute code
+          pass
+
       else:
-        text += scc_word.to_text()
+        word = scc_word.to_text()
+        text += word
+        previous_code = word
 
-    text_elem = Text(context.div.get_doc(), text)
+
+    if not span:
+      return None
+
+    text_elem = Text(doc, text)
     span.push_child(text_elem)
 
     paragraph.push_child(span)
+
+    context.count += 1
+    paragraph.set_id("caption" + str(context.count))
 
     return paragraph
 
@@ -196,6 +281,13 @@ def to_model(scc_content: str):
 
   context = _SccContext()
   document = Document()
+
+  # safe area must be a 32x15 grid, that represents 80% of the root area
+  root_cell_resolution = CellResolutionType(rows=19, columns=40)
+  document.set_cell_resolution(root_cell_resolution)
+
+  context.safe_area_x = (root_cell_resolution.columns - 32) / 2
+  context.safe_area_y = (root_cell_resolution.rows - 15) / 2
 
   body = Body()
   body.set_doc(document)
@@ -212,6 +304,7 @@ def to_model(scc_content: str):
 
     paragraph = scc_line.to_model(context)
 
-    context.div.push_child(paragraph)
+    if paragraph:
+      context.div.push_child(paragraph)
 
   return document

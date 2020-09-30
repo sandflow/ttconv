@@ -29,12 +29,32 @@ from __future__ import annotations
 
 from typing import Optional
 
+from ttconv.scc.codes import SCC_COLOR_MAPPING
 from ttconv.style_properties import NamedColors, TextDecorationType, \
   FontStyleType
+
+_ROW_MAPPING = {
+  (0x01, 0x40): 1,
+  (0x01, 0x60): 2,
+  (0x02, 0x40): 3,
+  (0x02, 0x60): 4,
+  (0x05, 0x40): 5,
+  (0x05, 0x60): 6,
+  (0x06, 0x40): 7,
+  (0x06, 0x60): 8,
+  (0x07, 0x40): 9,
+  (0x07, 0x60): 10,
+  (0x00, 0x40): 11,
+  (0x03, 0x40): 12,
+  (0x03, 0x60): 13,
+  (0x04, 0x40): 14,
+  (0x04, 0x60): 15
+}
 
 
 class _SccPacDescriptionBits:
   """Helper class for SCC PAC description bits handling"""
+
   def __init__(self, bits: int):
     self._bits = bits
 
@@ -44,7 +64,7 @@ class _SccPacDescriptionBits:
 
   def get_italic(self) -> bool:
     """Returns whether the PAC description bits sets the italic style"""
-    return self._bits in [0x0E, 0x0F]
+    return self._bits in (0x0E, 0x0F)
 
   def get_color(self) -> Optional[NamedColors]:
     """Returns the color from the PAC description bits"""
@@ -52,59 +72,42 @@ class _SccPacDescriptionBits:
     if self._bits not in list(range(0x00, 0x20)):
       return None
 
-    if self._bits in [0x00, 0x01]:
-      return NamedColors.white
-
-    if self._bits in [0x02, 0x03]:
-      return NamedColors.green
-
-    if self._bits in [0x04, 0x05]:
-      return NamedColors.blue
-
-    if self._bits in [0x06, 0x07]:
-      return NamedColors.cyan
-
-    if self._bits in [0x08, 0x09]:
-      return NamedColors.red
-
-    if self._bits in [0x0A, 0x0B]:
-      return NamedColors.yellow
-
-    if self._bits in [0x0C, 0x0D]:
-      return NamedColors.yellow
-
     if self._bits > 0x0D:
       return NamedColors.white
 
-    return None
+    return SCC_COLOR_MAPPING.get(self._bits, None)
 
-  def get_indent(self) -> Optional[int]:
+  def get_indent(self) -> int:
     """Returns the column offset from the PAC description bits"""
     if self._bits in list(range(0x10, 0x20)):
       return (self._bits - 0x10) - (self._bits % 2) * 4
 
-    return None
+    return 0
 
 
-class SccPreambleAccessCode:
+class SccPreambleAccessCode():
   """SCC PAC definition"""
 
-  def __init__(self, row: int,
-               color: Optional[NamedColors] = None,
-               italic=False,
-               underline=False,
-               indent: Optional[int] = None):
+  def __init__(self, byte_1: int, byte_2: int):
+    row = SccPreambleAccessCode._get_row(byte_1, byte_2)
+    if row is None:
+      raise ValueError("Failed to extract PAC row from specified bytes:", hex(byte_1), hex(byte_2))
+
+    desc_bits = SccPreambleAccessCode._get_description_bits(byte_2)
+    if desc_bits is None:
+      raise ValueError("Failed to extract PAC description from specified bytes:", hex(byte_1), hex(byte_2))
+
     self._row = row
-    self._indent = indent
-    self._color = color
-    self._font_style = FontStyleType.italic if italic else None
-    self._text_decoration = TextDecorationType.underline if underline else None
+    self._color = desc_bits.get_color()
+    self._indent = desc_bits.get_indent()
+    self._font_style = FontStyleType.italic if desc_bits.get_italic() else None
+    self._text_decoration = TextDecorationType.underline if desc_bits.get_underline() else None
 
   def get_row(self) -> int:
     """Returns the PAC row"""
     return self._row
 
-  def get_indent(self) -> Optional[int]:
+  def get_indent(self) -> int:
     """Returns PAC column offset"""
     return self._indent
 
@@ -120,21 +123,22 @@ class SccPreambleAccessCode:
     """Returns PAC text decoration"""
     return self._text_decoration
 
+  def __eq__(self, other) -> bool:
+    """Overrides default implementation"""
+    return isinstance(other, SccPreambleAccessCode) \
+           and self.get_row() == other.get_row() \
+           and self.get_indent() == other.get_indent() \
+           and self.get_color() == other.get_color() \
+           and self.get_font_style() == other.get_font_style() \
+           and self.get_text_decoration() == other.get_text_decoration()
+
   @staticmethod
-  def from_bytes(byte_1: int, byte_2: int) -> Optional[SccPreambleAccessCode]:
-    """Decodes SCC PAC from specified bytes"""
-    row = SccPreambleAccessCode._get_row(byte_1, byte_2)
-    desc_bits = SccPreambleAccessCode._get_description_bits(byte_2)
-
-    if row is None or desc_bits is None:
+  def find(byte_1: int, byte_2: int) -> Optional[SccPreambleAccessCode]:
+    """Find the SCC PAC corresponding to the specified bytes"""
+    try:
+      return SccPreambleAccessCode(byte_1, byte_2)
+    except ValueError as _e:
       return None
-
-    color = desc_bits.get_color()
-    indent = desc_bits.get_indent()
-    underline = desc_bits.get_underline()
-    italic = desc_bits.get_italic()
-
-    return SccPreambleAccessCode(row, color, italic, underline, indent)
 
   @staticmethod
   def _get_row(byte_1: int, byte_2: int) -> Optional[int]:
@@ -144,38 +148,7 @@ class SccPreambleAccessCode:
 
     row_bits = ((byte_1 & 0x0F) % 0X08, byte_2 & 0x60)
 
-    if row_bits == (0x01, 0x40):
-      return 1
-    if row_bits == (0x01, 0x60):
-      return 2
-    if row_bits == (0x02, 0x40):
-      return 3
-    if row_bits == (0x02, 0x60):
-      return 4
-    if row_bits == (0x05, 0x40):
-      return 5
-    if row_bits == (0x05, 0x60):
-      return 6
-    if row_bits == (0x06, 0x40):
-      return 7
-    if row_bits == (0x06, 0x60):
-      return 8
-    if row_bits == (0x07, 0x40):
-      return 9
-    if row_bits == (0x07, 0x60):
-      return 10
-    if row_bits == (0x00, 0x40):
-      return 11
-    if row_bits == (0x03, 0x40):
-      return 12
-    if row_bits == (0x03, 0x60):
-      return 13
-    if row_bits == (0x04, 0x40):
-      return 14
-    if row_bits == (0x04, 0x60):
-      return 15
-
-    return None
+    return _ROW_MAPPING.get(row_bits, None)
 
   @staticmethod
   def _get_description_bits(byte_2: int) -> Optional[_SccPacDescriptionBits]:

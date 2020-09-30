@@ -29,7 +29,7 @@
 
 import unittest
 
-from ttconv.scc.mid_row_codes import SccMidRowCode
+from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.style_properties import NamedColors, FontStyleType, TextDecorationType
 
 MID_ROW_CODE_VALUES = [0x1120, 0x1920, 0x1121, 0x1921, 0x1122, 0x1922, 0x1123, 0x1923, 0x1124,

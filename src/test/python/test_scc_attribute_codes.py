@@ -29,7 +29,7 @@
 
 from unittest import TestCase
 
-from ttconv.scc.attribute_codes import SccAttributeCode, SccAttributeCodes
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
 
 VALID_VALUES = [0x1020, 0x1820, 0x1021, 0x1821, 0x1022, 0x1822, 0x1023, 0x1823, 0x1024, 0x1824, 0x1025, 0x1825,
                 0x1026, 0x1826, 0x1027, 0x1827, 0x1028, 0x1828, 0x1029, 0x1829, 0x102A, 0x182A, 0x102B, 0x182B,
@@ -37,88 +37,88 @@ VALID_VALUES = [0x1020, 0x1820, 0x1021, 0x1821, 0x1022, 0x1822, 0x1023, 0x1823, 
                 0x172F, 0x1F2F]
 
 
-class TestSccAttributeCodes(TestCase):
+class TestSccAttributeCode(TestCase):
 
   def test_scc_attribute_codes(self):
-    self.assertEqual(SccAttributeCodes.BWO,
-                     SccAttributeCodes.find(VALID_VALUES[0]))
-    self.assertEqual(SccAttributeCodes.BWO,
-                     SccAttributeCodes.find(VALID_VALUES[1]))
-    self.assertEqual(SccAttributeCodes.BWS,
-                     SccAttributeCodes.find(VALID_VALUES[2]))
-    self.assertEqual(SccAttributeCodes.BWS,
-                     SccAttributeCodes.find(VALID_VALUES[3]))
-    self.assertEqual(SccAttributeCodes.BGO,
-                     SccAttributeCodes.find(VALID_VALUES[4]))
-    self.assertEqual(SccAttributeCodes.BGO,
-                     SccAttributeCodes.find(VALID_VALUES[5]))
-    self.assertEqual(SccAttributeCodes.BGS,
-                     SccAttributeCodes.find(VALID_VALUES[6]))
-    self.assertEqual(SccAttributeCodes.BGS,
-                     SccAttributeCodes.find(VALID_VALUES[7]))
-    self.assertEqual(SccAttributeCodes.BBO,
-                     SccAttributeCodes.find(VALID_VALUES[8]))
-    self.assertEqual(SccAttributeCodes.BBO,
-                     SccAttributeCodes.find(VALID_VALUES[9]))
-    self.assertEqual(SccAttributeCodes.BBS,
-                     SccAttributeCodes.find(VALID_VALUES[10]))
-    self.assertEqual(SccAttributeCodes.BBS,
-                     SccAttributeCodes.find(VALID_VALUES[11]))
-    self.assertEqual(SccAttributeCodes.BCO,
-                     SccAttributeCodes.find(VALID_VALUES[12]))
-    self.assertEqual(SccAttributeCodes.BCO,
-                     SccAttributeCodes.find(VALID_VALUES[13]))
-    self.assertEqual(SccAttributeCodes.BCS,
-                     SccAttributeCodes.find(VALID_VALUES[14]))
-    self.assertEqual(SccAttributeCodes.BCS,
-                     SccAttributeCodes.find(VALID_VALUES[15]))
-    self.assertEqual(SccAttributeCodes.BRO,
-                     SccAttributeCodes.find(VALID_VALUES[16]))
-    self.assertEqual(SccAttributeCodes.BRO,
-                     SccAttributeCodes.find(VALID_VALUES[17]))
-    self.assertEqual(SccAttributeCodes.BRS,
-                     SccAttributeCodes.find(VALID_VALUES[18]))
-    self.assertEqual(SccAttributeCodes.BRS,
-                     SccAttributeCodes.find(VALID_VALUES[19]))
-    self.assertEqual(SccAttributeCodes.BYO,
-                     SccAttributeCodes.find(VALID_VALUES[20]))
-    self.assertEqual(SccAttributeCodes.BYO,
-                     SccAttributeCodes.find(VALID_VALUES[21]))
-    self.assertEqual(SccAttributeCodes.BYS,
-                     SccAttributeCodes.find(VALID_VALUES[22]))
-    self.assertEqual(SccAttributeCodes.BYS,
-                     SccAttributeCodes.find(VALID_VALUES[23]))
-    self.assertEqual(SccAttributeCodes.BMO,
-                     SccAttributeCodes.find(VALID_VALUES[24]))
-    self.assertEqual(SccAttributeCodes.BMO,
-                     SccAttributeCodes.find(VALID_VALUES[25]))
-    self.assertEqual(SccAttributeCodes.BMS,
-                     SccAttributeCodes.find(VALID_VALUES[26]))
-    self.assertEqual(SccAttributeCodes.BMS,
-                     SccAttributeCodes.find(VALID_VALUES[27]))
-    self.assertEqual(SccAttributeCodes.BAO,
-                     SccAttributeCodes.find(VALID_VALUES[28]))
-    self.assertEqual(SccAttributeCodes.BAO,
-                     SccAttributeCodes.find(VALID_VALUES[29]))
-    self.assertEqual(SccAttributeCodes.BAS,
-                     SccAttributeCodes.find(VALID_VALUES[30]))
-    self.assertEqual(SccAttributeCodes.BAS,
-                     SccAttributeCodes.find(VALID_VALUES[31]))
-    self.assertEqual(SccAttributeCodes.BT,
-                     SccAttributeCodes.find(VALID_VALUES[32]))
-    self.assertEqual(SccAttributeCodes.BT,
-                     SccAttributeCodes.find(VALID_VALUES[33]))
-    self.assertEqual(SccAttributeCodes.FA,
-                     SccAttributeCodes.find(VALID_VALUES[34]))
-    self.assertEqual(SccAttributeCodes.FA,
-                     SccAttributeCodes.find(VALID_VALUES[35]))
-    self.assertEqual(SccAttributeCodes.FAU,
-                     SccAttributeCodes.find(VALID_VALUES[36]))
-    self.assertEqual(SccAttributeCodes.FAU,
-                     SccAttributeCodes.find(VALID_VALUES[37]))
+    self.assertEqual(SccAttributeCode.BWO,
+                     SccAttributeCode.find(VALID_VALUES[0]))
+    self.assertEqual(SccAttributeCode.BWO,
+                     SccAttributeCode.find(VALID_VALUES[1]))
+    self.assertEqual(SccAttributeCode.BWS,
+                     SccAttributeCode.find(VALID_VALUES[2]))
+    self.assertEqual(SccAttributeCode.BWS,
+                     SccAttributeCode.find(VALID_VALUES[3]))
+    self.assertEqual(SccAttributeCode.BGO,
+                     SccAttributeCode.find(VALID_VALUES[4]))
+    self.assertEqual(SccAttributeCode.BGO,
+                     SccAttributeCode.find(VALID_VALUES[5]))
+    self.assertEqual(SccAttributeCode.BGS,
+                     SccAttributeCode.find(VALID_VALUES[6]))
+    self.assertEqual(SccAttributeCode.BGS,
+                     SccAttributeCode.find(VALID_VALUES[7]))
+    self.assertEqual(SccAttributeCode.BBO,
+                     SccAttributeCode.find(VALID_VALUES[8]))
+    self.assertEqual(SccAttributeCode.BBO,
+                     SccAttributeCode.find(VALID_VALUES[9]))
+    self.assertEqual(SccAttributeCode.BBS,
+                     SccAttributeCode.find(VALID_VALUES[10]))
+    self.assertEqual(SccAttributeCode.BBS,
+                     SccAttributeCode.find(VALID_VALUES[11]))
+    self.assertEqual(SccAttributeCode.BCO,
+                     SccAttributeCode.find(VALID_VALUES[12]))
+    self.assertEqual(SccAttributeCode.BCO,
+                     SccAttributeCode.find(VALID_VALUES[13]))
+    self.assertEqual(SccAttributeCode.BCS,
+                     SccAttributeCode.find(VALID_VALUES[14]))
+    self.assertEqual(SccAttributeCode.BCS,
+                     SccAttributeCode.find(VALID_VALUES[15]))
+    self.assertEqual(SccAttributeCode.BRO,
+                     SccAttributeCode.find(VALID_VALUES[16]))
+    self.assertEqual(SccAttributeCode.BRO,
+                     SccAttributeCode.find(VALID_VALUES[17]))
+    self.assertEqual(SccAttributeCode.BRS,
+                     SccAttributeCode.find(VALID_VALUES[18]))
+    self.assertEqual(SccAttributeCode.BRS,
+                     SccAttributeCode.find(VALID_VALUES[19]))
+    self.assertEqual(SccAttributeCode.BYO,
+                     SccAttributeCode.find(VALID_VALUES[20]))
+    self.assertEqual(SccAttributeCode.BYO,
+                     SccAttributeCode.find(VALID_VALUES[21]))
+    self.assertEqual(SccAttributeCode.BYS,
+                     SccAttributeCode.find(VALID_VALUES[22]))
+    self.assertEqual(SccAttributeCode.BYS,
+                     SccAttributeCode.find(VALID_VALUES[23]))
+    self.assertEqual(SccAttributeCode.BMO,
+                     SccAttributeCode.find(VALID_VALUES[24]))
+    self.assertEqual(SccAttributeCode.BMO,
+                     SccAttributeCode.find(VALID_VALUES[25]))
+    self.assertEqual(SccAttributeCode.BMS,
+                     SccAttributeCode.find(VALID_VALUES[26]))
+    self.assertEqual(SccAttributeCode.BMS,
+                     SccAttributeCode.find(VALID_VALUES[27]))
+    self.assertEqual(SccAttributeCode.BAO,
+                     SccAttributeCode.find(VALID_VALUES[28]))
+    self.assertEqual(SccAttributeCode.BAO,
+                     SccAttributeCode.find(VALID_VALUES[29]))
+    self.assertEqual(SccAttributeCode.BAS,
+                     SccAttributeCode.find(VALID_VALUES[30]))
+    self.assertEqual(SccAttributeCode.BAS,
+                     SccAttributeCode.find(VALID_VALUES[31]))
+    self.assertEqual(SccAttributeCode.BT,
+                     SccAttributeCode.find(VALID_VALUES[32]))
+    self.assertEqual(SccAttributeCode.BT,
+                     SccAttributeCode.find(VALID_VALUES[33]))
+    self.assertEqual(SccAttributeCode.FA,
+                     SccAttributeCode.find(VALID_VALUES[34]))
+    self.assertEqual(SccAttributeCode.FA,
+                     SccAttributeCode.find(VALID_VALUES[35]))
+    self.assertEqual(SccAttributeCode.FAU,
+                     SccAttributeCode.find(VALID_VALUES[36]))
+    self.assertEqual(SccAttributeCode.FAU,
+                     SccAttributeCode.find(VALID_VALUES[37]))
 
   def test_scc_attribute_codes_invalid(self):
     other_code_values = [code for code in range(0x0000, 0xFFFF) if code not in VALID_VALUES]
 
     for cc in other_code_values:
-      self.assertIsNone(SccAttributeCodes.find(cc))
+      self.assertIsNone(SccAttributeCode.find(cc))

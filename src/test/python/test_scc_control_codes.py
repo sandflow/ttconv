@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.scc.control_codes import SccControlCode
+from ttconv.scc.codes.control_codes import SccControlCode
 
 CONTROL_CODE_VALUES = [0X1422, 0x1C22, 0X1423, 0x1C23, 0X1421, 0x1C21, 0X142D, 0x1C2D, 0X1424,
                        0x1C24, 0X142C, 0x1C2C, 0X142E, 0x1C2E, 0X142F, 0x1C2F, 0X1428, 0x1C28,

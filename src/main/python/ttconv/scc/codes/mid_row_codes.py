@@ -30,10 +30,11 @@ from __future__ import annotations
 import typing
 from enum import Enum
 
+from ttconv.scc.codes import SccCode, SCC_COLOR_MAPPING
 from ttconv.style_properties import NamedColors, FontStyleType, TextDecorationType
 
 
-class SccMidRowCode(Enum):
+class SccMidRowCode(SccCode, Enum):
   """SCC Mid-Row Code values"""
   WHITE = (0x1120, 0x1920)
   WHITE_UNDERLINE = (0x1121, 0x1921)
@@ -52,10 +53,6 @@ class SccMidRowCode(Enum):
   ITALICS = (0x112E, 0x192E)
   ITALICS_UNDERLINE = (0x112F, 0x192F)
 
-  def __init__(self, channel_1_value: int, channel_2_value: int):
-    self._channel_1 = channel_1_value
-    self._channel_2 = channel_2_value
-
   def get_name(self) -> str:
     """Retrieves SCC Mid-Row Code name"""
     return self.name
@@ -64,28 +61,13 @@ class SccMidRowCode(Enum):
     """Returns SCC Mid-Row Code color"""
     style_bits = self._channel_1 & 0x000F
 
-    if style_bits in [0x00, 0x01]:
-      return NamedColors.white
-    if style_bits in [0x02, 0x03]:
-      return NamedColors.green
-    if style_bits in [0x04, 0x05]:
-      return NamedColors.blue
-    if style_bits in [0x06, 0x07]:
-      return NamedColors.cyan
-    if style_bits in [0x08, 0x09]:
-      return NamedColors.red
-    if style_bits in [0x0A, 0x0B]:
-      return NamedColors.yellow
-    if style_bits in [0x0C, 0x0D]:
-      return NamedColors.magenta
-
-    return None
+    return SCC_COLOR_MAPPING.get(style_bits, None)
 
   def get_font_style(self) -> typing.Optional[FontStyleType]:
     """Returns SCC Mid-Row Code font style"""
     style_bits = self._channel_1 & 0x000F
 
-    if style_bits in [0x0E, 0x0F]:
+    if style_bits in (0x0E, 0x0F):
       return FontStyleType.italic
 
     return None
@@ -98,10 +80,6 @@ class SccMidRowCode(Enum):
       return TextDecorationType.underline
 
     return None
-
-  def contains_value(self, value: int) -> bool:
-    """Returns whether the specified value is contained into the Mid-Row Code channel values"""
-    return value in [self._channel_1, self._channel_2]
 
   @staticmethod
   def find(value: int) -> typing.Optional[SccMidRowCode]:

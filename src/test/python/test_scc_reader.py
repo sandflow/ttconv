@@ -130,7 +130,8 @@ class SCCReaderTest(unittest.TestCase):
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(4, len(p_list))
+    self.assertEqual(3, len(p_list))
+
     count = 1
     for p in div:
       self.assertIsNotNone(p)
