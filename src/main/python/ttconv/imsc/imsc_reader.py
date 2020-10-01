@@ -29,6 +29,7 @@ import re
 import logging
 import ttconv.model as model
 import ttconv.imsc.utils as utils
+import ttconv.imsc.namespaces as ns
 from ttconv.imsc.style_properties import StyleProperties
 
 
@@ -54,21 +55,11 @@ def to_model(xml_tree):
 
   return context.doc
 
-
-
-class TTMLNamespaces:
-  '''Holds XML namespaces defined by TTML
-  '''
-  TTML = "http://www.w3.org/ns/ttml"
-  TTP = "http://www.w3.org/ns/ttml#parameter"
-  TTS = "http://www.w3.org/ns/ttml#styling"
-  ITTP = "http://www.w3.org/ns/ttml/profile/imsc1#parameter"
-
 class TTElement:
   '''Processes the TTML <tt> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}tt"
+  qn = f"{{{ns.TTML}}}tt"
 
   @staticmethod
   def process(context, ttml_elem):
@@ -141,7 +132,7 @@ class HeadElement:
   '''Processes the TTML <head> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}head"
+  qn = f"{{{ns.TTML}}}head"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -193,7 +184,7 @@ class LayoutElement:
   '''Process the TTML <layout> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}layout"
+  qn = f"{{{ns.TTML}}}layout"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -226,7 +217,7 @@ class RegionElement:
   '''Process the TTML <region> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}region"
+  qn = f"{{{ns.TTML}}}region"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -253,7 +244,7 @@ class StylingElement:
   '''Process the TTML <styling> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}styling"
+  qn = f"{{{ns.TTML}}}styling"
 
   @staticmethod
   def process(_context, _inherited_space, _inherited_lang, _ttml_element):
@@ -352,7 +343,7 @@ class BodyElement:
   '''Process TTML body element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}body"
+  qn = f"{{{ns.TTML}}}body"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -392,7 +383,7 @@ class DivElement:
   '''Process TTML <div> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}div"
+  qn = f"{{{ns.TTML}}}div"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -431,7 +422,7 @@ class PElement:
   '''Process TTML <p> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}p"
+  qn = f"{{{ns.TTML}}}p"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -480,7 +471,7 @@ class SpanElement:
   '''Process the TTML <span> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}span"
+  qn = f"{{{ns.TTML}}}span"
 
   @staticmethod
   def make_anonymous_span(doc, text):
@@ -493,7 +484,7 @@ class SpanElement:
 
   @staticmethod
   def get_ruby_attr(ttml_span):
-    return ttml_span.get(f"{{{TTMLNamespaces.TTS}}}ruby")
+    return ttml_span.get(f"{{{ns.TTS}}}ruby")
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -857,7 +848,7 @@ class BrElement:
   '''Process the TTML <br> element
   '''
 
-  qn = f"{{{TTMLNamespaces.TTML}}}br"
+  qn = f"{{{ns.TTML}}}br"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -950,7 +941,7 @@ class CellResolutionAttribute:
   '''ttp:cellResolution attribute
   '''
 
-  qn = f"{TTMLNamespaces.TTP}cellResolution"
+  qn = f"{ns.TTP}cellResolution"
 
   _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
 
@@ -977,7 +968,7 @@ class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
   '''
 
-  qn = f"{{{TTMLNamespaces.TTS}}}extent"
+  qn = f"{{{ns.TTS}}}extent"
 
   @staticmethod
   def extract(ttml_element) -> model.PixelResolutionType:
@@ -1004,7 +995,7 @@ class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
   '''
 
-  qn = f"{{{TTMLNamespaces.ITTP}}}activeArea"
+  qn = f"{{{ns.ITTP}}}activeArea"
 
   @staticmethod
   def extract(ttml_element) -> model.ActiveAreaType:
