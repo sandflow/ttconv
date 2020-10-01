@@ -46,6 +46,8 @@ SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SMPTE_TIME_CODE_
 
 PARITY_BIT_MASK = 0b01111111
 
+DEBUG = False
+
 
 class _SccContext:
   def __init__(self):
@@ -53,6 +55,105 @@ class _SccContext:
     self.count: int = 0
     self.safe_area_x: int = 0
     self.safe_area_y: int = 0
+    self.column_offset = self.safe_area_x
+    self.previous_code = 0
+    self.current_text = ""
+    self.current_paragraph: Optional[P] = None
+    self.current_span: Optional[Span] = None
+
+  def new_paragraph(self, time_code: Optional[SccTimeCode] = None):
+    """Adds the current P reference to the model if present, and re-initializes it"""
+    if self.current_paragraph:
+      self.div.push_child(self.current_paragraph)
+
+    self.column_offset = self.safe_area_x
+    self.current_paragraph = P()
+    self.current_paragraph.set_doc(self.div.get_doc())
+    self.current_paragraph.set_begin(time_code.get_fraction())
+
+  def new_span(self):
+    """Adds the current Span reference to the model if present, and re-initializes it"""
+    if self.current_span and self.current_text:
+      self.current_span.push_child(Text(self.div.get_doc(), self.current_text))
+      self.current_paragraph.push_child(self.current_span)
+
+    self.current_text = ""
+    self.current_span = Span()
+    self.current_span.set_doc(self.div.get_doc())
+
+  def process_preamble_access_code(self, pac: SccPreambleAccessCode):
+    """Processes SCC Preamble Access Code it to the map to model"""
+    self.column_offset += pac.get_indent()
+    row_offset = pac.get_row() + self.safe_area_y
+
+    x_pct = self.column_offset / self.div.get_doc().get_cell_resolution().columns
+    y_pct = row_offset / self.div.get_doc().get_cell_resolution().rows
+
+    x_position = LengthType(value=x_pct, units=LengthType.Units.pct)
+    y_position = LengthType(value=y_pct, units=LengthType.Units.pct)
+
+    self.current_span.set_style(StyleProperties.Origin, PositionType(x_position, y_position))
+
+    color = pac.get_color()
+    if color:
+      self.current_span.set_style(StyleProperties.Color, color.value)
+
+    font_style = pac.get_font_style()
+    if font_style:
+      self.current_span.set_style(StyleProperties.FontStyle, font_style)
+
+    text_decoration = pac.get_text_decoration()
+    if text_decoration:
+      self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
+
+  def process_mid_row_code(self, mid_row_code: SccMidRowCode):
+    """Processes SCC Mid-Row Code to map it to the model"""
+    span_color = mid_row_code.get_color()
+    span_font_style = mid_row_code.get_font_style()
+    span_text_decoration = mid_row_code.get_text_decoration()
+
+    if span_color:
+      self.current_span.set_style(StyleProperties.Color, span_color.value)
+    if span_font_style:
+      self.current_span.set_style(StyleProperties.FontStyle, span_font_style)
+    if span_text_decoration:
+      self.current_span.set_style(StyleProperties.TextDecoration, span_text_decoration)
+
+  def process_attribute_code(self, attribute_code: SccAttributeCode):
+    """Processes SCC Attribute Code to map it to the model"""
+    if attribute_code.is_background():
+      self.current_span.set_style(StyleProperties.BackgroundColor, attribute_code.get_color())
+    else:
+      self.current_span.set_style(StyleProperties.Color, attribute_code.get_color())
+
+    text_decoration = attribute_code.get_text_decoration()
+    if text_decoration:
+      self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
+
+  def process_control_code(self, control_code: SccControlCode, time_code: SccTimeCode) -> bool:
+    """Processes SCC Control Code to map it to the model"""
+    if control_code is SccControlCode.RCL:
+      # Start of Caption (in PopOn mode)
+      self.new_paragraph(time_code)
+
+    if control_code is SccControlCode.TO1:
+      self.column_offset += 1
+    if control_code is SccControlCode.TO2:
+      self.column_offset += 2
+    if control_code is SccControlCode.TO3:
+      self.column_offset += 3
+
+    if control_code is SccControlCode.EOC:
+      # End of Caption
+      self.new_span()
+      self.count += 1
+      self.current_paragraph.set_id("caption" + str(self.count))
+
+      self.div.push_child(self.current_paragraph)
+      self.current_paragraph = None
+      return True
+
+    return False
 
 
 class SccWord:
@@ -161,20 +262,15 @@ class SccLine:
   def to_model(self, context: _SccContext) -> Optional[P]:
     """Converts the SCC line to the data model"""
 
-    paragraph = P()
-    doc = context.div.get_doc()
-    paragraph.set_doc(doc)
-    paragraph.set_begin(self.time_code.get_fraction())
+    if self.get_style() not in (SccCaptionStyle.PopOn, SccCaptionStyle.Unknown):
+      raise ValueError(f"Unsupported caption style: {self.get_style()}")
 
-    text = ""
     debug = ""
-    span = None
-
-    previous_code = None
-
-    column_offset = context.safe_area_x
 
     for scc_word in self.scc_words:
+
+      if context.previous_code == scc_word.value:
+        continue
 
       if scc_word.byte_1 < 0x20:
 
@@ -183,93 +279,45 @@ class SccLine:
         mid_row_code = SccMidRowCode.find(scc_word.value)
         pac = SccPreambleAccessCode.find(scc_word.byte_1, scc_word.byte_2)
 
-        if previous_code and previous_code in [code for code in
-                                               (attribute_code, control_code, mid_row_code, pac) if
-                                               code is not None]:
-          continue
-
-        if control_code:
-          if control_code is SccControlCode.TO1:
-            column_offset += 1
-          if control_code is SccControlCode.TO2:
-            column_offset += 2
-          if control_code is SccControlCode.TO3:
-            column_offset += 3
-          previous_code = control_code
-
-        elif mid_row_code:
-          span_color = mid_row_code.get_color()
-          span_font_style = mid_row_code.get_font_style()
-          span_text_decoration = mid_row_code.get_text_decoration()
-
-          if span_color:
-            span.set_style(StyleProperties.Color, span_color.value)
-          if span_font_style:
-            span.set_style(StyleProperties.FontStyle, span_font_style)
-          if span_text_decoration:
-            span.set_style(StyleProperties.TextDecoration, span_text_decoration)
-          previous_code = mid_row_code
-
-        elif pac:
-          if span and isinstance(previous_code, str):
-            text_elem = Text(doc, text)
-            span.push_child(text_elem)
-
-            paragraph.push_child(span)
-
-            text = ""
-
-          column_offset += pac.get_indent()
-          row_offset = pac.get_row() + context.safe_area_y
-
-          # create new span
-          span = Span()
-          span.set_doc(doc)
-
-          x_pct = column_offset / doc.get_cell_resolution().columns
-          y_pct = row_offset / doc.get_cell_resolution().rows
-
-          x_position = LengthType(value=x_pct, units=LengthType.Units.pct)
-          y_position = LengthType(value=y_pct, units=LengthType.Units.pct)
-
-          span.set_style(StyleProperties.Origin, PositionType(x_position, y_position))
-
-          color = pac.get_color()
-          if color:
-            span.set_style(StyleProperties.Color, color.value)
-
-          font_style = pac.get_font_style()
-          if font_style:
-            span.set_style(StyleProperties.FontStyle, font_style)
-
-          text_decoration = pac.get_text_decoration()
-          if text_decoration:
-            span.set_style(StyleProperties.TextDecoration, text_decoration)
-
-          previous_code = pac
+        if pac:
+          debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_color().name) + "/" + hex(scc_word.value) + "]"
+          context.new_span()
+          context.process_preamble_access_code(pac)
 
         elif attribute_code:
-          # TODO handle attribute code
-          pass
+          debug += "[ATC/" + hex(scc_word.value) + "]"
+          context.process_attribute_code(attribute_code)
+
+        elif mid_row_code:
+          debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
+          context.new_span()
+          context.process_mid_row_code(mid_row_code)
+
+
+        elif control_code:
+          debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
+
+          end_of_caption = context.process_control_code(control_code, self.time_code)
+          context.previous_code = scc_word.value
+
+          if end_of_caption:
+            break
+
+        context.previous_code = scc_word.value
 
       else:
         word = scc_word.to_text()
-        text += word
-        previous_code = word
+        debug += word
+        context.current_text += word
+        context.previous_code = scc_word.value
 
+    if DEBUG:
+      print(debug)
 
-    if not span:
+    if not context.current_span:
       return None
 
-    text_elem = Text(doc, text)
-    span.push_child(text_elem)
-
-    paragraph.push_child(span)
-
-    context.count += 1
-    paragraph.set_id("caption" + str(context.count))
-
-    return paragraph
+    return context.current_paragraph
 
 
 #
@@ -298,13 +346,13 @@ def to_model(scc_content: str):
   body.push_child(context.div)
 
   for line in scc_content.splitlines():
+    if DEBUG:
+      print(line)
     scc_line = SccLine.from_str(line)
     if not scc_line:
       continue
 
-    paragraph = scc_line.to_model(context)
-
-    if paragraph:
-      context.div.push_child(paragraph)
+    scc_line.to_model(context)
 
   return document
+
