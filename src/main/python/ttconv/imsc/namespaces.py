@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+  #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
 # Copyright (c) 2020, Sandflow Consulting LLC
@@ -22,40 +22,13 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ 
+'''Holds XML namespaces defined by TTML'''
 
-'''Unit tests for the IMSC writer'''
-
-# pylint: disable=R0201,C0115,C0116
-
-import os
-import unittest
-import xml.etree.ElementTree as et
-import ttconv.imsc.reader as imsc_reader
-import ttconv.imsc.writer as imsc_writer
-
-class IMSCWriterTest(unittest.TestCase):
-
-  def setUp(self):
-    if not os.path.exists('build'):
-      os.makedirs('build')
-
-  def test_body_only(self):
-
-    # parse the data
-    tree = et.parse('src/test/resources/ttml/body_only.ttml')
-
-    # create the model
-    _model = imsc_reader.to_model(tree)
-
-    #
-    # Construct and configure the writer
-    #
-    writer = imsc_writer.Writer()
-
-    #writer.from_model(_model)
-    writer.from_xml('src/test/resources/ttml/body_only.ttml')
-
-    writer.write('build/body_only.out.ttml')
-
-if __name__ == '__main__':
-  unittest.main()
+TTML = "http://www.w3.org/ns/ttml"
+TTP = "http://www.w3.org/ns/ttml#parameter"
+TTS = "http://www.w3.org/ns/ttml#styling"
+ITTP = "http://www.w3.org/ns/ttml/profile/imsc1#parameter"
+ITTS = "http://www.w3.org/ns/ttml/profile/imsc1#styling"
+EBUTTS = "urn:ebu:tt:style"

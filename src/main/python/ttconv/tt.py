@@ -30,8 +30,8 @@ import sys
 from argparse import ArgumentParser
 import xml.etree.ElementTree as et
 #import ttconv.model as model
-import ttconv.imsc.imsc_reader as imsc_reader
-import ttconv.imsc.imsc_writer as imsc_writer
+import ttconv.imsc.reader as imsc_reader
+import ttconv.imsc.writer as imsc_writer
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,8 +77,10 @@ def subcommand(args=None, parent=subparsers):
   return decorator
 
 
-@subcommand([argument("-i", "--input", help="Input file path", required=True), 
-  argument("-o", "--output", help="Output file path", required=True)])
+@subcommand([
+  argument("-i", "--input", help="Input file path", required=True), 
+  argument("-o", "--output", help="Output file path", required=True)
+  ])
 def convert(args):
   '''Process input and output through the reader, converter, and writer'''
 

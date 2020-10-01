@@ -21,7 +21,7 @@ The overall architecture of the toolkit is as follows:
 
 Processing shared across multiple reader and writer modules is factored out in common modules whenever possible. For example, several output formats require an instance of the canonical data model to be transformed into a sequence of discrete temporal snapshots – a process called ISD generation.
 
-`ttconv.imsc.imsc_reader.to_model()` provides an examples of a reader module.
+`ttconv.imsc.reader.to_model()` provides an examples of a reader module.
 
 ## Dependencies
 

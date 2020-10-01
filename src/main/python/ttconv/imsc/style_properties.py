@@ -28,6 +28,7 @@
 import inspect
 import math
 import typing
+import ttconv.imsc.namespaces as xml_ns
 import ttconv.style_properties as styles
 import ttconv.imsc.utils as utils
 
@@ -52,7 +53,7 @@ class StyleProperties:
   class BackgroundColor(StyleProperty):
     '''Corresponds to tts:backgroundColor.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "backgroundColor"
     model_prop = styles.StyleProperties.BackgroundColor
 
@@ -63,7 +64,7 @@ class StyleProperties:
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "color"
     model_prop = styles.StyleProperties.Color
 
@@ -75,7 +76,7 @@ class StyleProperties:
   class Direction(StyleProperty):
     '''Corresponds to tts:direction.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "direction"
     model_prop = styles.StyleProperties.Direction
 
@@ -88,7 +89,7 @@ class StyleProperties:
     '''Corresponds to tts:disparity.
     '''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "disparity"
     model_prop = styles.StyleProperties.Disparity
 
@@ -100,7 +101,7 @@ class StyleProperties:
   class Display(StyleProperty):
     '''Corresponds to tts:display.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "display"
     model_prop = styles.StyleProperties.Display
 
@@ -112,7 +113,7 @@ class StyleProperties:
   class DisplayAlign(StyleProperty):
     '''Corresponds to tts:displayAlign.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "displayAlign"
     model_prop = styles.StyleProperties.DisplayAlign
 
@@ -124,7 +125,7 @@ class StyleProperties:
     '''Corresponds to tts:extent.
     '''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "extent"
     model_prop = styles.StyleProperties.Extent
 
@@ -151,7 +152,7 @@ class StyleProperties:
   class FillLineGap(StyleProperty):
     '''Corresponds to itts:fillLineGap.'''
 
-    ns = "http://www.w3.org/ns/ttml/profile/imsc1#styling"
+    ns = xml_ns.ITTS
     local_name = "fillLineGap"
     model_prop = styles.StyleProperties.FillLineGap
 
@@ -162,7 +163,7 @@ class StyleProperties:
   class FontFamily(StyleProperty):
     '''Corresponds to tts:fontFamily.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "fontFamily"
     model_prop = styles.StyleProperties.FontFamily
 
@@ -177,7 +178,7 @@ class StyleProperties:
   class FontSize(StyleProperty):
     '''Corresponds to tts:fontSize.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "fontSize"
     model_prop = styles.StyleProperties.FontSize
 
@@ -189,7 +190,7 @@ class StyleProperties:
   class FontStyle(StyleProperty):
     '''Corresponds to tts:fontStyle.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "fontStyle"
     model_prop = styles.StyleProperties.FontStyle
 
@@ -201,7 +202,7 @@ class StyleProperties:
   class FontWeight(StyleProperty):
     '''Corresponds to tts:fontWeight.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "fontWeight"
     model_prop = styles.StyleProperties.FontWeight
 
@@ -213,7 +214,7 @@ class StyleProperties:
   class LineHeight(StyleProperty):
     '''tts:lineHeight'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "lineHeight"
     model_prop = styles.StyleProperties.LineHeight
 
@@ -226,7 +227,7 @@ class StyleProperties:
   class LinePadding(StyleProperty):
     '''Corresponds to ebutts:linePadding.'''
 
-    ns = "urn:ebu:tt:style"
+    ns = xml_ns.EBUTTS
     local_name = "linePadding"
     model_prop = styles.StyleProperties.LinePadding
 
@@ -241,7 +242,7 @@ class StyleProperties:
   class LuminanceGain(StyleProperty):
     '''Corresponds to tts:luminanceGain.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "luminanceGain"
     model_prop = styles.StyleProperties.LuminanceGain
 
@@ -253,7 +254,7 @@ class StyleProperties:
   class MultiRowAlign(StyleProperty):
     '''Corresponds to ebutts:multiRowAlign.'''
 
-    ns = "urn:ebu:tt:style"
+    ns = xml_ns.EBUTTS
     local_name = "multiRowAlign"
     model_prop = styles.StyleProperties.MultiRowAlign
 
@@ -265,7 +266,7 @@ class StyleProperties:
   class Opacity(StyleProperty):
     '''Corresponds to tts:opacity.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "opacity"
     model_prop = styles.StyleProperties.Opacity
 
@@ -277,7 +278,7 @@ class StyleProperties:
   class Origin(StyleProperty):
     '''Corresponds to tts:origin.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "origin"
     model_prop = styles.StyleProperties.Origin
 
@@ -307,7 +308,7 @@ class StyleProperties:
   class Overflow(StyleProperty):
     '''Corresponds to tts:overflow.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "overflow"
     model_prop = styles.StyleProperties.Overflow
 
@@ -319,7 +320,7 @@ class StyleProperties:
   class Padding(StyleProperty):
     '''Corresponds to tts:padding.'''
     
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "padding"
     model_prop = styles.StyleProperties.Padding
 
@@ -358,7 +359,7 @@ class StyleProperties:
   class Position(StyleProperty):
     '''Corresponds to tts:position.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "position"
     model_prop = styles.StyleProperties.Origin
 
@@ -373,7 +374,7 @@ class StyleProperties:
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "rubyAlign"
     model_prop = styles.StyleProperties.RubyAlign
 
@@ -385,7 +386,7 @@ class StyleProperties:
   class RubyPosition(StyleProperty):
     '''Corresponds to tts:rubyPosition.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "rubyPosition"
     model_prop = styles.StyleProperties.RubyPosition
   
@@ -396,7 +397,7 @@ class StyleProperties:
   class RubyReserve(StyleProperty):
     '''Corresponds to tts:rubyReserve.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "rubyReserve"
     model_prop = styles.StyleProperties.RubyReserve
 
@@ -421,7 +422,7 @@ class StyleProperties:
   class Shear(StyleProperty):
     '''Corresponds to tts:shear.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "shear"
     model_prop = styles.StyleProperties.Shear
 
@@ -439,7 +440,7 @@ class StyleProperties:
   class TextAlign(StyleProperty):
     '''Corresponds to tts:textAlign.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "textAlign"
     model_prop = styles.StyleProperties.TextAlign
   
@@ -463,7 +464,7 @@ class StyleProperties:
   class TextCombine(StyleProperty):
     '''Corresponds to tts:textCombine.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "textCombine"
     model_prop = styles.StyleProperties.TextCombine
 
@@ -475,7 +476,7 @@ class StyleProperties:
   class TextDecoration(StyleProperty):
     '''Corresponds to tts:textDecoration.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "textDecoration"
     model_prop = styles.StyleProperties.TextDecoration
 
@@ -514,7 +515,7 @@ class StyleProperties:
   class TextEmphasis(StyleProperty):
     '''Corresponds to tts:textEmphasis.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "textEmphasis"
     model_prop = styles.StyleProperties.TextEmphasis
 
@@ -569,7 +570,7 @@ class StyleProperties:
   class TextOutline(StyleProperty):
     '''Corresponds to tts:textOutline.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "textOutline"
     model_prop = styles.StyleProperties.TextOutline
 
@@ -596,7 +597,7 @@ class StyleProperties:
   class TextShadow(StyleProperty):
     '''Corresponds to tts:textShadow.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "textShadow"
     model_prop = styles.StyleProperties.TextShadow
 
@@ -651,7 +652,7 @@ class StyleProperties:
   class UnicodeBidi(StyleProperty):
     '''Corresponds to tts:unicodeBidi.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "unicodeBidi"
     model_prop = styles.StyleProperties.UnicodeBidi
 
@@ -662,7 +663,7 @@ class StyleProperties:
   class Visibility(StyleProperty):
     '''Corresponds to tts:visibility.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "visibility"
     model_prop = styles.StyleProperties.Visibility
     
@@ -673,7 +674,7 @@ class StyleProperties:
   class WrapOption(StyleProperty):
     '''Corresponds to tts:wrapOption.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "wrapOption"
     model_prop = styles.StyleProperties.WrapOption
 
@@ -684,7 +685,7 @@ class StyleProperties:
   class WritingMode(StyleProperty):
     '''Corresponds to tts:writingMode.'''
 
-    ns = "http://www.w3.org/ns/ttml#styling"
+    ns = xml_ns.TTS
     local_name = "writingMode"
     model_prop = styles.StyleProperties.WritingMode
 

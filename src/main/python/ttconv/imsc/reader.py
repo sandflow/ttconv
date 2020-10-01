@@ -23,39 +23,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Unit tests for the IMSC writer'''
+'''IMSC reader'''
 
-# pylint: disable=R0201,C0115,C0116
+import logging
+import ttconv.imsc.elements as imsc_elements
 
-import os
-import unittest
-import xml.etree.ElementTree as et
-import ttconv.imsc.reader as imsc_reader
-import ttconv.imsc.writer as imsc_writer
 
-class IMSCWriterTest(unittest.TestCase):
+LOGGER = logging.getLogger(__name__)
 
-  def setUp(self):
-    if not os.path.exists('build'):
-      os.makedirs('build')
 
-  def test_body_only(self):
+def to_model(xml_tree):
+  '''Convers an IMSC document to the data model'''
 
-    # parse the data
-    tree = et.parse('src/test/resources/ttml/body_only.ttml')
+  class _Context:
+    def __init__(self):
+      self.doc = None
 
-    # create the model
-    _model = imsc_reader.to_model(tree)
+  context = _Context()
 
-    #
-    # Construct and configure the writer
-    #
-    writer = imsc_writer.Writer()
+  tt_element = xml_tree.getroot()
 
-    #writer.from_model(_model)
-    writer.from_xml('src/test/resources/ttml/body_only.ttml')
+  if tt_element.tag != imsc_elements.TTElement.qn:
+    LOGGER.fatal("A tt element is not the root element")
+    return None
 
-    writer.write('build/body_only.out.ttml')
+  imsc_elements.TTElement.process(context, tt_element)
 
-if __name__ == '__main__':
-  unittest.main()
+  return context.doc
