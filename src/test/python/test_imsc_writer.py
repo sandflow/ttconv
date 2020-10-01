@@ -45,17 +45,13 @@ class IMSCWriterTest(unittest.TestCase):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')
 
     # create the model
-    _model = imsc_reader.to_model(tree)
+    model = imsc_reader.to_model(tree)
 
-    #
-    # Construct and configure the writer
-    #
-    writer = imsc_writer.Writer()
+    # convert from a model to a ttml document
+    tree_from_model = imsc_writer.from_model(model)
 
-    #writer.from_model(_model)
-    writer.from_xml('src/test/resources/ttml/body_only.ttml')
-
-    writer.write('build/body_only.out.ttml')
+    # write the document out to a file
+    tree_from_model.write('build/body_only.out.ttml')
 
 if __name__ == '__main__':
   unittest.main()

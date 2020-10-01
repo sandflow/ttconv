@@ -34,24 +34,16 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-class Writer:
-  '''IMSC Writer'''
+def from_model(_model):
+  '''Converts the data model to an IMSC document'''
 
-  def __init__(self):
-    self.doc = None
-    self.model = None
+  class _Context:
+    def __init__(self):
+      self.imsc_doc = None
 
-  def from_xml(self, ixml):
-    '''Converts the data model to the imsc'''
+  context = _Context()
 
-    self.doc = et.parse(ixml)
+  # generate a proper ElementTree for testing/dev
+  context.imsc_doc = et.parse('src/test/resources/ttml/body_only.ttml')
 
-  def from_model(self, i_model):
-    '''Converts the data model to the imsc'''
-
-    self.model = i_model
-
-  def write(self, output_file):
-    '''Writes the imsc file'''
-    
-    self.doc.write(output_file)
+  return context.imsc_doc
