@@ -23,43 +23,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''IMSC reader'''
+'''Process TTML elements'''
 
-import re
 import logging
 import ttconv.model as model
-import ttconv.imsc.utils as utils
-import ttconv.imsc.namespaces as ns
+import ttconv.imsc.namespaces as xml_ns
+import ttconv.imsc.attributes as imsc_attr
 from ttconv.imsc.style_properties import StyleProperties
 
 
 LOGGER = logging.getLogger(__name__)
 
-
-def to_model(xml_tree):
-  '''Convers an IMSC document to the data model'''
-
-  class _Context:
-    def __init__(self):
-      self.doc = None
-
-  context = _Context()
-
-  tt_element = xml_tree.getroot()
-
-  if tt_element.tag != TTElement.qn:
-    LOGGER.fatal("A tt element is not the root element")
-    return None
-
-  TTElement.process(context, tt_element)
-
-  return context.doc
-
 class TTElement:
   '''Processes the TTML <tt> element
   '''
 
-  qn = f"{{{ns.TTML}}}tt"
+  qn = f"{{{xml_ns.TTML}}}tt"
 
   @staticmethod
   def process(context, ttml_elem):
@@ -68,22 +47,22 @@ class TTElement:
 
     # process attributes
 
-    space = XMLSpaceAttribute.extract(ttml_elem) or model.WhiteSpaceHandling.DEFAULT
+    space = imsc_attr.XMLSpaceAttribute.extract(ttml_elem) or model.WhiteSpaceHandling.DEFAULT
 
-    lang = XMLLangAttribute.extract(ttml_elem)
+    lang = imsc_attr.XMLLangAttribute.extract(ttml_elem)
     
     if lang is None:
       LOGGER.warning("xml:lang not specified on tt")
       lang = ""
 
-    context.doc.set_cell_resolution(CellResolutionAttribute.extract(ttml_elem))
+    context.doc.set_cell_resolution(imsc_attr.CellResolutionAttribute.extract(ttml_elem))
 
-    px_resolution = ExtentAttribute.extract(ttml_elem)
+    px_resolution = imsc_attr.ExtentAttribute.extract(ttml_elem)
 
     if px_resolution is not None:
       context.doc.set_px_resolution(px_resolution)
 
-    active_area = ActiveAreaAttribute.extract(ttml_elem)
+    active_area = imsc_attr.ActiveAreaAttribute.extract(ttml_elem)
 
     if active_area is not None:
       context.doc.set_active_area(active_area)
@@ -132,7 +111,7 @@ class HeadElement:
   '''Processes the TTML <head> element
   '''
 
-  qn = f"{{{ns.TTML}}}head"
+  qn = f"{{{xml_ns.TTML}}}head"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -152,8 +131,8 @@ class HeadElement:
 
           LayoutElement.process(
             context,
-            XMLSpaceAttribute.extract(ttml_element) or inherited_space,
-            XMLLangAttribute.extract(ttml_element) or inherited_lang,
+            imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space,
+            imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang,
             child_element
           )
 
@@ -169,8 +148,8 @@ class HeadElement:
 
           StylingElement.process(
             context,
-            XMLSpaceAttribute.extract(ttml_element) or inherited_space,
-            XMLLangAttribute.extract(ttml_element) or inherited_lang,
+            imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space,
+            imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang,
             child_element
           )
 
@@ -184,7 +163,7 @@ class LayoutElement:
   '''Process the TTML <layout> element
   '''
 
-  qn = f"{{{ns.TTML}}}layout"
+  qn = f"{{{xml_ns.TTML}}}layout"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -195,8 +174,8 @@ class LayoutElement:
 
         r = RegionElement.process(
           context,
-          XMLSpaceAttribute.extract(ttml_element) or inherited_space,
-          XMLLangAttribute.extract(ttml_element) or inherited_lang,
+          imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space,
+          imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang,
           child_element
         )
 
@@ -217,12 +196,12 @@ class RegionElement:
   '''Process the TTML <region> element
   '''
 
-  qn = f"{{{ns.TTML}}}region"
+  qn = f"{{{xml_ns.TTML}}}region"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
 
-    rid = XMLIDAttribute.extract(ttml_element)
+    rid = imsc_attr.XMLIDAttribute.extract(ttml_element)
 
     if rid is None:
       LOGGER.error("All regions must have an id")
@@ -232,9 +211,9 @@ class RegionElement:
 
     # process attributes
     
-    r.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    r.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    r.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    r.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
     
     ContentElement.process_style_properties(context, ttml_element, r)
 
@@ -244,7 +223,7 @@ class StylingElement:
   '''Process the TTML <styling> element
   '''
 
-  qn = f"{{{ns.TTML}}}styling"
+  qn = f"{{{xml_ns.TTML}}}styling"
 
   @staticmethod
   def process(_context, _inherited_space, _inherited_lang, _ttml_element):
@@ -343,7 +322,7 @@ class BodyElement:
   '''Process TTML body element
   '''
 
-  qn = f"{{{ns.TTML}}}body"
+  qn = f"{{{xml_ns.TTML}}}body"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -352,9 +331,9 @@ class BodyElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -383,7 +362,7 @@ class DivElement:
   '''Process TTML <div> element
   '''
 
-  qn = f"{{{ns.TTML}}}div"
+  qn = f"{{{xml_ns.TTML}}}div"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -392,9 +371,9 @@ class DivElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -422,7 +401,7 @@ class PElement:
   '''Process TTML <p> element
   '''
 
-  qn = f"{{{ns.TTML}}}p"
+  qn = f"{{{xml_ns.TTML}}}p"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -431,9 +410,9 @@ class PElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -471,7 +450,7 @@ class SpanElement:
   '''Process the TTML <span> element
   '''
 
-  qn = f"{{{ns.TTML}}}span"
+  qn = f"{{{xml_ns.TTML}}}span"
 
   @staticmethod
   def make_anonymous_span(doc, text):
@@ -484,7 +463,7 @@ class SpanElement:
 
   @staticmethod
   def get_ruby_attr(ttml_span):
-    return ttml_span.get(f"{{{ns.TTS}}}ruby")
+    return ttml_span.get(f"{{{xml_ns.TTS}}}ruby")
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -493,9 +472,9 @@ class SpanElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -548,9 +527,9 @@ class RubyElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -598,9 +577,9 @@ class RbElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -653,9 +632,9 @@ class RtElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -708,9 +687,9 @@ class RpElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -762,9 +741,9 @@ class RbcElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -807,9 +786,9 @@ class RtcElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_region_property(context, ttml_element, element)
 
@@ -848,7 +827,7 @@ class BrElement:
   '''Process the TTML <br> element
   '''
 
-  qn = f"{{{ns.TTML}}}br"
+  qn = f"{{{xml_ns.TTML}}}br"
 
   @staticmethod
   def process(context, inherited_space, inherited_lang, ttml_element):
@@ -857,9 +836,9 @@ class BrElement:
 
     # process attributes
     
-    element.set_space(XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
 
-    element.set_lang(XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
 
     ContentElement.process_style_properties(context, ttml_element, element)
 
@@ -872,161 +851,3 @@ class BrElement:
       LOGGER.error("Br cannot contain text nodes")
 
     return element
-
-
-#
-# other attributes
-#
-
-class XMLIDAttribute:
-  '''xml:id attribute
-  '''
-
-  qn = '{http://www.w3.org/XML/1998/namespace}id'
-
-  @staticmethod
-  def extract(ttml_element):
-    return ttml_element.attrib.get(XMLIDAttribute.qn)
-
-
-
-class XMLLangAttribute:
-  '''xml:lang attribute
-  '''
-
-  qn = '{http://www.w3.org/XML/1998/namespace}lang'
-
-  @staticmethod
-  def extract(ttml_element):
-    return ttml_element.attrib.get(XMLLangAttribute.qn)
-
-
-
-class XMLSpaceAttribute:
-  '''xml:space attribute
-  '''
-
-  qn = '{http://www.w3.org/XML/1998/namespace}space'
-
-  @staticmethod
-  def extract(ttml_element):
-
-    value = ttml_element.attrib.get(XMLSpaceAttribute.qn)
-
-    r = None
-
-    if value is not None:
-
-      try: 
-        r = model.WhiteSpaceHandling(value)
-      except ValueError:
-        LOGGER.error("Bad xml:space value (%s)", value)
-    
-    return r
-
-
-
-class RegionAttribute:
-  '''TTML region attribute'''
-
-  qn = "region"
-
-  @staticmethod
-  def extract(ttml_element):
-    return ttml_element.attrib.get(RegionAttribute.qn)
-
-
-
-class CellResolutionAttribute:
-  '''ttp:cellResolution attribute
-  '''
-
-  qn = f"{ns.TTP}cellResolution"
-
-  _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
-
-  @staticmethod
-  def extract(ttml_element) -> model.CellResolutionType:
-
-    cr = ttml_element.attrib.get(CellResolutionAttribute.qn)
-
-    if cr is not None:
-
-      m = CellResolutionAttribute._CELL_RESOLUTION_RE.match(cr)
-
-      if m is not None:
-
-        return model.CellResolutionType(int(m.group(1)), int(m.group(2)))
-
-      LOGGER.error("ttp:cellResolution invalid syntax")
-
-    # default value in TTML
-
-    return model.CellResolutionType(rows=15, columns=32)
-
-class ExtentAttribute:
-  '''ttp:extent attribute on \\<tt\\>
-  '''
-
-  qn = f"{{{ns.TTS}}}extent"
-
-  @staticmethod
-  def extract(ttml_element) -> model.PixelResolutionType:
-
-    extent = ttml_element.attrib.get(ExtentAttribute.qn)
-
-    if extent is not None:
-
-      s = extent.split(" ")
-
-      (w, w_units) = utils.parse_length(s[0])
-
-      (h, h_units) = utils.parse_length(s[1])
-
-      if w_units != "px" or h_units != "px":
-        LOGGER.error("ttp:extent on <tt> does not use px units")
-        return None
-
-      return model.PixelResolutionType(w, h)
-
-    return None
-
-class ActiveAreaAttribute:
-  '''ittp:activeArea attribute on \\<tt\\>
-  '''
-
-  qn = f"{{{ns.ITTP}}}activeArea"
-
-  @staticmethod
-  def extract(ttml_element) -> model.ActiveAreaType:
-
-    aa = ttml_element.attrib.get(ActiveAreaAttribute.qn)
-
-    if aa is not None:
-
-      s = aa.split(" ")
-
-      if len(s) != 4:
-        LOGGER.error("Syntax error in ittp:activeArea on <tt>")
-        return None
-
-      (left_offset, left_offset_units) = utils.parse_length(s[0])
-
-      (top_offset, top_offset_units) = utils.parse_length(s[1])
-
-      (w, w_units) = utils.parse_length(s[2])
-
-      (h, h_units) = utils.parse_length(s[3])
-
-      if w_units != "%" or h_units != "%" or left_offset_units != "%" or top_offset_units != "%":
-        LOGGER.error("ittp:activeArea on <tt> must use % units")
-        return None
-
-      return model.ActiveAreaType(
-        left_offset / 100,
-        top_offset / 100,
-        w / 100,
-        h / 100
-        )
-
-    return None

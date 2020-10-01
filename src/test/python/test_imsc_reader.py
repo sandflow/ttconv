@@ -30,7 +30,7 @@
 import unittest
 import xml.etree.ElementTree as et
 import os
-from ttconv.imsc import imsc_reader
+import ttconv.imsc.reader as imsc_reader
 
 class IMSCReaderTest(unittest.TestCase):
 
