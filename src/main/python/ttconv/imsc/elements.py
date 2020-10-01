@@ -30,6 +30,7 @@ import ttconv.model as model
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.attributes as imsc_attr
 from ttconv.imsc.style_properties import StyleProperties
+import xml.etree.ElementTree as et
 
 
 LOGGER = logging.getLogger(__name__)
@@ -106,6 +107,11 @@ class TTElement:
 
         else:
           LOGGER.error("More than one head element present")
+
+  @staticmethod
+  def from_model(context, _i_model):
+
+    context.imsc_doc = et
 
 class HeadElement:
   '''Processes the TTML <head> element

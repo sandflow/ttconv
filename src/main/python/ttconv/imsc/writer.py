@@ -26,6 +26,7 @@
 '''IMSC writer'''
 
 import logging
+import ttconv.imsc.elements as imsc_elements
 import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-def from_model(_model):
+def from_model(model):
   '''Converts the data model to an IMSC document'''
 
   class _Context:
@@ -43,7 +44,9 @@ def from_model(_model):
 
   context = _Context()
 
+  imsc_elements.TTElement.from_model(context, model)
+
   # generate a proper ElementTree for testing/dev
-  context.imsc_doc = et.parse('src/test/resources/ttml/body_only.ttml')
+  #context.imsc_doc = et.parse('src/test/resources/ttml/body_only.ttml')
 
   return context.imsc_doc
