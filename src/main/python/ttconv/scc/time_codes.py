@@ -25,6 +25,8 @@
 
 """SCC Time Codes"""
 
+from __future__ import annotations
+
 import typing
 import re
 from fractions import Fraction
@@ -52,6 +54,27 @@ class SccTimeCode:
     self._seconds = seconds
     self._frames = frames
     self._drop_frame = drop_frame
+
+  @staticmethod
+  def parse(time_code: str) -> SccTimeCode:
+    """Reads the time code string and converts to a SccTimeCode instance"""
+    non_drop_frame_tc_regex = re.compile(SMPTE_TIME_CODE_NDF_PATTERN)
+    match = non_drop_frame_tc_regex.match(time_code)
+
+    if match:
+      return SccTimeCode(int(match.group('ndf_h')),
+                         int(match.group('ndf_m')),
+                         int(match.group('ndf_s')),
+                         int(match.group('ndf_f')))
+
+    drop_frame_tc_regex = re.compile(SMPTE_TIME_CODE_DF_PATTERN)
+    match = drop_frame_tc_regex.match(time_code)
+
+    return SccTimeCode(int(match.group('df_h')),
+                       int(match.group('df_m')),
+                       int(match.group('df_s')),
+                       int(match.group('df_f')),
+                       True)
 
   def get_hours(self) -> int:
     """Returns time code hours"""
@@ -94,23 +117,3 @@ class SccTimeCode:
 
     return Fraction(self._get_frames(frame_rate), base_frame_rate)
 
-
-def parse(time_code: str) -> SccTimeCode:
-  """Reads the time code string and converts to a SccTimeCode instance"""
-  non_drop_frame_tc_regex = re.compile(SMPTE_TIME_CODE_NDF_PATTERN)
-  match = non_drop_frame_tc_regex.match(time_code)
-
-  if match:
-    return SccTimeCode(int(match.group('ndf_h')),
-                       int(match.group('ndf_m')),
-                       int(match.group('ndf_s')),
-                       int(match.group('ndf_f')))
-
-  drop_frame_tc_regex = re.compile(SMPTE_TIME_CODE_DF_PATTERN)
-  match = drop_frame_tc_regex.match(time_code)
-
-  return SccTimeCode(int(match.group('df_h')),
-                     int(match.group('df_m')),
-                     int(match.group('df_s')),
-                     int(match.group('df_f')),
-                     True)

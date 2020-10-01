@@ -25,105 +25,299 @@
 
 """SCC reader"""
 
-import re
+from __future__ import annotations
+
 import logging
-from typing import List
-from ttconv.model import Document, P, Body, Div
-from ttconv.scc import time_codes
+import re
+from typing import Optional, List
+
+from ttconv.model import Document, P, Body, Div, Text, Span, CellResolutionType
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
+from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.mid_row_codes import SccMidRowCode
+from ttconv.scc.codes.preambles_access_codes import SccPreambleAccessCode
+from ttconv.scc.scc_caption_style import SccCaptionStyle
+from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
+from ttconv.style_properties import StyleProperties, PositionType, LengthType
 
 LOGGER = logging.getLogger(__name__)
 
-SCC_LINE_PATTERN = '((' + time_codes.SMPTE_TIME_CODE_NDF_PATTERN \
-                   + ')|(' + time_codes.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
+SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
 
 PARITY_BIT_MASK = 0b01111111
+
+DEBUG = False
 
 
 class _SccContext:
   def __init__(self):
-    self.div = None
-    self.count = 0
+    self.div: Optional[Div] = None
+    self.count: int = 0
+    self.safe_area_x: int = 0
+    self.safe_area_y: int = 0
+    self.column_offset = self.safe_area_x
+    self.previous_code = 0
+    self.current_text = ""
+    self.current_paragraph: Optional[P] = None
+    self.current_span: Optional[Span] = None
 
+  def new_paragraph(self, time_code: Optional[SccTimeCode] = None):
+    """Adds the current P reference to the model if present, and re-initializes it"""
+    if self.current_paragraph:
+      self.div.push_child(self.current_paragraph)
 
-def _is_hex_word(word: str) -> bool:
-  """Checks whether the specified word is a 2-bytes hexadecimal word"""
-  if len(word) != 4:
+    self.column_offset = self.safe_area_x
+    self.current_paragraph = P()
+    self.current_paragraph.set_doc(self.div.get_doc())
+    self.current_paragraph.set_begin(time_code.get_fraction())
+
+  def new_span(self):
+    """Adds the current Span reference to the model if present, and re-initializes it"""
+    if self.current_span and self.current_text:
+      self.current_span.push_child(Text(self.div.get_doc(), self.current_text))
+      self.current_paragraph.push_child(self.current_span)
+
+    self.current_text = ""
+    self.current_span = Span()
+    self.current_span.set_doc(self.div.get_doc())
+
+  def process_preamble_access_code(self, pac: SccPreambleAccessCode):
+    """Processes SCC Preamble Access Code it to the map to model"""
+    self.column_offset += pac.get_indent()
+    row_offset = pac.get_row() + self.safe_area_y
+
+    x_pct = self.column_offset / self.div.get_doc().get_cell_resolution().columns
+    y_pct = row_offset / self.div.get_doc().get_cell_resolution().rows
+
+    x_position = LengthType(value=x_pct, units=LengthType.Units.pct)
+    y_position = LengthType(value=y_pct, units=LengthType.Units.pct)
+
+    self.current_span.set_style(StyleProperties.Origin, PositionType(x_position, y_position))
+
+    color = pac.get_color()
+    if color:
+      self.current_span.set_style(StyleProperties.Color, color.value)
+
+    font_style = pac.get_font_style()
+    if font_style:
+      self.current_span.set_style(StyleProperties.FontStyle, font_style)
+
+    text_decoration = pac.get_text_decoration()
+    if text_decoration:
+      self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
+
+  def process_mid_row_code(self, mid_row_code: SccMidRowCode):
+    """Processes SCC Mid-Row Code to map it to the model"""
+    span_color = mid_row_code.get_color()
+    span_font_style = mid_row_code.get_font_style()
+    span_text_decoration = mid_row_code.get_text_decoration()
+
+    if span_color:
+      self.current_span.set_style(StyleProperties.Color, span_color.value)
+    if span_font_style:
+      self.current_span.set_style(StyleProperties.FontStyle, span_font_style)
+    if span_text_decoration:
+      self.current_span.set_style(StyleProperties.TextDecoration, span_text_decoration)
+
+  def process_attribute_code(self, attribute_code: SccAttributeCode):
+    """Processes SCC Attribute Code to map it to the model"""
+    if attribute_code.is_background():
+      self.current_span.set_style(StyleProperties.BackgroundColor, attribute_code.get_color())
+    else:
+      self.current_span.set_style(StyleProperties.Color, attribute_code.get_color())
+
+    text_decoration = attribute_code.get_text_decoration()
+    if text_decoration:
+      self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
+
+  def process_control_code(self, control_code: SccControlCode, time_code: SccTimeCode) -> bool:
+    """Processes SCC Control Code to map it to the model"""
+    if control_code is SccControlCode.RCL:
+      # Start of Caption (in PopOn mode)
+      self.new_paragraph(time_code)
+
+    if control_code is SccControlCode.TO1:
+      self.column_offset += 1
+    if control_code is SccControlCode.TO2:
+      self.column_offset += 2
+    if control_code is SccControlCode.TO3:
+      self.column_offset += 3
+
+    if control_code is SccControlCode.EOC:
+      # End of Caption
+      self.new_span()
+      self.count += 1
+      self.current_paragraph.set_id("caption" + str(self.count))
+
+      self.div.push_child(self.current_paragraph)
+      self.current_paragraph = None
+      return True
+
     return False
-  try:
-    int(word, 16)
-  except ValueError:
-    return False
-  return True
 
 
-def _decipher_parity_bit(byte: int):
-  """Extracts the byte value removing the odd parity bit"""
-  return byte & PARITY_BIT_MASK
+class SccWord:
+  """SCC hexadecimal word definition"""
+
+  def __init__(self):
+    self.value = None
+    self.byte_1 = None
+    self.byte_2 = None
+
+  @staticmethod
+  def _is_hex_word(word: str) -> bool:
+    """Checks whether the specified word is a 2-bytes hexadecimal word"""
+    if len(word) != 4:
+      return False
+    try:
+      int(word, 16)
+    except ValueError:
+      return False
+    return True
+
+  @staticmethod
+  def _decipher_parity_bit(byte: int):
+    """Extracts the byte value removing the odd parity bit"""
+    return byte & PARITY_BIT_MASK
+
+  @staticmethod
+  def from_value(value: int) -> SccWord:
+    """Creates a SCC word from the specified integer value"""
+    if value > 0xFFFF:
+      raise ValueError("Expected a 2-bytes int value, instead got ", hex(value))
+    data = value.to_bytes(2, byteorder='big')
+    return SccWord.from_bytes(data[0], data[1])
+
+  @staticmethod
+  def from_bytes(byte_1: int, byte_2: int) -> SccWord:
+    """Creates a SCC word from the specified bytes"""
+    if byte_1 > 0xFF or byte_2 > 0xFF:
+      raise ValueError(f"Expected two 1-byte int values, instead got {hex(byte_1)} and {hex(byte_2)}")
+    scc_word = SccWord()
+    scc_word.byte_1 = SccWord._decipher_parity_bit(byte_1)
+    scc_word.byte_2 = SccWord._decipher_parity_bit(byte_2)
+    scc_word.value = scc_word.byte_1 * 0x100 + scc_word.byte_2
+
+    return scc_word
+
+  @staticmethod
+  def from_str(hex_word: str) -> SccWord:
+    """Extracts hexadecimal word bytes to create a SCC word"""
+    if not SccWord._is_hex_word(hex_word):
+      raise ValueError("Expected a 2-bytes hexadecimal word, instead got ", hex_word)
+
+    data = bytes.fromhex(hex_word)
+    return SccWord.from_bytes(data[0], data[1])
+
+  def to_text(self) -> str:
+    """Converts SCC word to text"""
+    return ''.join([chr(self.byte_1), chr(self.byte_2)])
 
 
-def _decipher_hex_word(hex_word) -> (int, int, int):
-  """
-  Extracts hexadecimal word bytes and returns the value of each byte
-  and the value of the whole word as a tuple
-  """
-  if not _is_hex_word(hex_word):
-    raise ValueError("Expected a 2-bytes hexadecimal word, instead got ", hex_word)
+class SccLine:
+  """SCC line definition"""
 
-  data = bytes.fromhex(hex_word)
-  byte_1 = _decipher_parity_bit(data[0])
-  byte_2 = _decipher_parity_bit(data[1])
-  word_value = byte_1 * 0x100 + byte_2
+  def __init__(self, time_code: SccTimeCode, scc_words: List[SccWord]):
+    self.time_code = time_code
+    self.scc_words = scc_words
 
-  return byte_1, byte_2, word_value
+  @staticmethod
+  def from_str(line: str) -> Optional[SccLine]:
+    """Creates a SCC line instance from the specified string"""
+    if line == "":
+      return None
 
+    regex = re.compile(SCC_LINE_PATTERN)
+    match = regex.match(line)
 
-def _word_to_chars(word_value: int) -> List[chr]:
-  """Converts a word value to a char array"""
-  if word_value > 0xFFFF:
-    raise ValueError("Expected a 2-bytes integer value, instead got ", word_value)
-
-  chars = word_value.to_bytes(2, byteorder='big')
-  return [chr(chars[0]), chr(chars[1])]
-
-
-def _read_word(hex_word: str) -> List[chr]:
-  """Reads the SCC hexadecimal word content"""
-  if hex_word == "":
-    return []
-
-  (byte_1, _byte_2, word_value) = _decipher_hex_word(hex_word)
-
-  if byte_1 < 0x20:
-    # XXXX: handle control codes
-    return []
-  else:
-    return _word_to_chars(word_value)
-
-
-def _read_line(context: _SccContext, line: str):
-  """Reads the SCC line content"""
-  if line == '':
-    return
-  chars = []
-
-  regex = re.compile(SCC_LINE_PATTERN)
-  match = regex.match(line)
-
-  if match:
-    paragraph = P()
-    context.count += 1
-    paragraph.set_id("caption" + str(context.count))
+    if not match:
+      return None
 
     time_code = match.group(1)
-    time_offset = time_codes.parse(time_code)
-    paragraph.set_begin(time_offset)
+    time_offset = SccTimeCode.parse(time_code)
 
     hex_words = line.split('\t')[1].split(' ')
-    for hex_word in hex_words:
-      chars += _read_word(hex_word)
+    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if len(hex_word)]
+    return SccLine(time_offset, scc_words)
 
-    paragraph.set_doc(context.div.get_doc())
-    context.div.push_child(paragraph)
+  def get_style(self) -> SccCaptionStyle:
+    """Analyses the line words ordering to get the caption style"""
+    scc_words = self.scc_words
+    if scc_words == "":
+      return SccCaptionStyle.Unknown
+
+    prefix = SccControlCode.find(scc_words[0].value)
+
+    if prefix in [SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4]:
+      return SccCaptionStyle.RollUp
+
+    if prefix is SccControlCode.RDC:
+      return SccCaptionStyle.PaintOn
+
+    if prefix is SccControlCode.RCL:
+      return SccCaptionStyle.PopOn
+
+    return SccCaptionStyle.Unknown
+
+  def to_model(self, context: _SccContext) -> Optional[P]:
+    """Converts the SCC line to the data model"""
+
+    if self.get_style() not in (SccCaptionStyle.PopOn, SccCaptionStyle.Unknown):
+      raise ValueError(f"Unsupported caption style: {self.get_style()}")
+
+    debug = ""
+
+    for scc_word in self.scc_words:
+
+      if context.previous_code == scc_word.value:
+        continue
+
+      if scc_word.byte_1 < 0x20:
+
+        attribute_code = SccAttributeCode.find(scc_word.value)
+        control_code = SccControlCode.find(scc_word.value)
+        mid_row_code = SccMidRowCode.find(scc_word.value)
+        pac = SccPreambleAccessCode.find(scc_word.byte_1, scc_word.byte_2)
+
+        if pac:
+          debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_color().name) + "/" + hex(scc_word.value) + "]"
+          context.new_span()
+          context.process_preamble_access_code(pac)
+
+        elif attribute_code:
+          debug += "[ATC/" + hex(scc_word.value) + "]"
+          context.process_attribute_code(attribute_code)
+
+        elif mid_row_code:
+          debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
+          context.new_span()
+          context.process_mid_row_code(mid_row_code)
+
+
+        elif control_code:
+          debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
+
+          end_of_caption = context.process_control_code(control_code, self.time_code)
+          context.previous_code = scc_word.value
+
+          if end_of_caption:
+            break
+
+        context.previous_code = scc_word.value
+
+      else:
+        word = scc_word.to_text()
+        debug += word
+        context.current_text += word
+        context.previous_code = scc_word.value
+
+    if DEBUG:
+      print(debug)
+
+    if not context.current_span:
+      return None
+
+    return context.current_paragraph
 
 
 #
@@ -136,6 +330,13 @@ def to_model(scc_content: str):
   context = _SccContext()
   document = Document()
 
+  # safe area must be a 32x15 grid, that represents 80% of the root area
+  root_cell_resolution = CellResolutionType(rows=19, columns=40)
+  document.set_cell_resolution(root_cell_resolution)
+
+  context.safe_area_x = (root_cell_resolution.columns - 32) / 2
+  context.safe_area_y = (root_cell_resolution.rows - 15) / 2
+
   body = Body()
   body.set_doc(document)
   document.set_body(body)
@@ -145,6 +346,13 @@ def to_model(scc_content: str):
   body.push_child(context.div)
 
   for line in scc_content.splitlines():
-    _read_line(context, line)
+    if DEBUG:
+      print(line)
+    scc_line = SccLine.from_str(line)
+    if not scc_line:
+      continue
+
+    scc_line.to_model(context)
 
   return document
+

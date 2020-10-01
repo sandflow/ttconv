@@ -29,13 +29,13 @@
 
 from unittest import TestCase
 
-from ttconv.scc import time_codes
+from ttconv.scc.time_codes import SccTimeCode
 
 
 class SccTimeCodesTest(TestCase):
 
   def test_parse_non_drop_frame_time_code(self):
-    time_code = time_codes.parse("01:02:03:04")
+    time_code = SccTimeCode.parse("01:02:03:04")
     self.assertEqual(1, time_code.get_hours())
     self.assertEqual(2, time_code.get_minutes())
     self.assertEqual(3, time_code.get_seconds())
@@ -45,7 +45,7 @@ class SccTimeCodesTest(TestCase):
     self.assertAlmostEqual(3723.133, float(time_code.get_fraction()), delta=0.001)
 
   def test_parse_drop_frame_time_code(self):
-    time_code = time_codes.parse("01:02:03;04")
+    time_code = SccTimeCode.parse("01:02:03;04")
     self.assertEqual(1, time_code.get_hours())
     self.assertEqual(2, time_code.get_minutes())
     self.assertEqual(3, time_code.get_seconds())
@@ -54,7 +54,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
 
-    time_code = time_codes.parse("01;02;03;04")
+    time_code = SccTimeCode.parse("01;02;03;04")
     self.assertEqual(1, time_code.get_hours())
     self.assertEqual(2, time_code.get_minutes())
     self.assertEqual(3, time_code.get_seconds())
@@ -63,7 +63,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
 
-    time_code = time_codes.parse("01:02:03.04")
+    time_code = SccTimeCode.parse("01:02:03.04")
     self.assertEqual(1, time_code.get_hours())
     self.assertEqual(2, time_code.get_minutes())
     self.assertEqual(3, time_code.get_seconds())
@@ -72,7 +72,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
 
-    time_code = time_codes.parse("01.02.03.04")
+    time_code = SccTimeCode.parse("01.02.03.04")
     self.assertEqual(1, time_code.get_hours())
     self.assertEqual(2, time_code.get_minutes())
     self.assertEqual(3, time_code.get_seconds())
