@@ -57,27 +57,28 @@ class _SccContext:
     self.safe_area_y: int = 0
     self.column_offset = self.safe_area_x
     self.previous_code = 0
+    self.previous_paragraph = None
     self.current_text = ""
     self.current_paragraph: Optional[P] = None
     self.current_span: Optional[Span] = None
 
-  def new_paragraph(self, time_code: Optional[SccTimeCode] = None):
+  def new_paragraph(self):
     """Adds the current P reference to the model if present, and re-initializes it"""
-    if self.current_paragraph:
-      self.div.push_child(self.current_paragraph)
-
     self.column_offset = self.safe_area_x
     self.current_paragraph = P()
     self.current_paragraph.set_doc(self.div.get_doc())
-    self.current_paragraph.set_begin(time_code.get_fraction())
 
-  def new_span(self):
-    """Adds the current Span reference to the model if present, and re-initializes it"""
+  def push_span(self):
+    """Adds the current Span reference to the model if present, and drop it"""
     if self.current_span and self.current_text:
       self.current_span.push_child(Text(self.div.get_doc(), self.current_text))
       self.current_paragraph.push_child(self.current_span)
 
-    self.current_text = ""
+      self.current_text = ""
+      self.current_span = None
+
+  def new_span(self):
+    """Set current Span with a new instance"""
     self.current_span = Span()
     self.current_span.set_doc(self.div.get_doc())
 
@@ -130,11 +131,28 @@ class _SccContext:
     if text_decoration:
       self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
 
-  def process_control_code(self, control_code: SccControlCode, time_code: SccTimeCode) -> bool:
+  def process_control_code(self, control_code: SccControlCode, time_code: SccTimeCode):
     """Processes SCC Control Code to map it to the model"""
     if control_code is SccControlCode.RCL:
-      # Start of Caption (in PopOn mode)
-      self.new_paragraph(time_code)
+      # Start a new Pop-On caption
+      self.new_paragraph()
+
+    if control_code is SccControlCode.EOC:
+      # Display caption
+      self.push_span()
+      self.previous_paragraph = self.current_paragraph
+      self.new_span()
+
+      self.count += 1
+      self.current_paragraph.set_id("caption" + str(self.count))
+      self.current_paragraph.set_begin(time_code.get_fraction())
+
+    if control_code is SccControlCode.EDM:
+      # Erase displayed caption
+      if self.previous_paragraph:
+        self.previous_paragraph.set_end(time_code.get_fraction())
+        self.div.push_child(self.previous_paragraph)
+        self.previous_paragraph = None
 
     if control_code is SccControlCode.TO1:
       self.column_offset += 1
@@ -142,18 +160,6 @@ class _SccContext:
       self.column_offset += 2
     if control_code is SccControlCode.TO3:
       self.column_offset += 3
-
-    if control_code is SccControlCode.EOC:
-      # End of Caption
-      self.new_span()
-      self.count += 1
-      self.current_paragraph.set_id("caption" + str(self.count))
-
-      self.div.push_child(self.current_paragraph)
-      self.current_paragraph = None
-      return True
-
-    return False
 
 
 class SccWord:
@@ -265,11 +271,16 @@ class SccLine:
     if self.get_style() not in (SccCaptionStyle.PopOn, SccCaptionStyle.Unknown):
       raise ValueError(f"Unsupported caption style: {self.get_style()}")
 
-    debug = ""
+    debug = str(self.time_code) + "\t"
 
     for scc_word in self.scc_words:
 
       if context.previous_code == scc_word.value:
+        continue
+
+      self.time_code.add_frames()
+
+      if scc_word.value == 0x0000:
         continue
 
       if scc_word.byte_1 < 0x20:
@@ -281,6 +292,7 @@ class SccLine:
 
         if pac:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_color().name) + "/" + hex(scc_word.value) + "]"
+          context.push_span()
           context.new_span()
           context.process_preamble_access_code(pac)
 
@@ -290,6 +302,7 @@ class SccLine:
 
         elif mid_row_code:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
+          context.push_span()
           context.new_span()
           context.process_mid_row_code(mid_row_code)
 
@@ -297,11 +310,10 @@ class SccLine:
         elif control_code:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
 
-          end_of_caption = context.process_control_code(control_code, self.time_code)
+          context.process_control_code(control_code, self.time_code)
           context.previous_code = scc_word.value
-
-          if end_of_caption:
-            break
+        else:
+          debug += "[??/" + hex(scc_word.value) + "]"
 
         context.previous_code = scc_word.value
 
@@ -355,4 +367,3 @@ def to_model(scc_content: str):
     scc_line.to_model(context)
 
   return document
-
