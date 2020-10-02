@@ -618,8 +618,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
-        and value.x.units in (LengthType.Units.pct, LengthType.Units.px)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px)
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c)
 
 
   class Overflow(StyleProperty):

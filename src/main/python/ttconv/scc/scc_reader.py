@@ -87,11 +87,11 @@ class _SccContext:
     self.column_offset += pac.get_indent()
     row_offset = pac.get_row() + self.safe_area_y
 
-    x_pct = self.column_offset / self.div.get_doc().get_cell_resolution().columns
-    y_pct = row_offset / self.div.get_doc().get_cell_resolution().rows
+    x_cell_offset = self.column_offset
+    y_cell_offset = row_offset
 
-    x_position = LengthType(value=x_pct, units=LengthType.Units.pct)
-    y_position = LengthType(value=y_pct, units=LengthType.Units.pct)
+    x_position = LengthType(value=x_cell_offset, units=LengthType.Units.c)
+    y_position = LengthType(value=y_cell_offset, units=LengthType.Units.c)
 
     self.current_span.set_style(StyleProperties.Origin, PositionType(x_position, y_position))
 
