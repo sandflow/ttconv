@@ -27,9 +27,10 @@
 
 from __future__ import annotations
 
-import typing
 import re
+import typing
 from fractions import Fraction
+from math import floor, ceil
 
 DEFAULT_DF_FRAME_RATE = Fraction(30000, 1001)  # default 29.97 fps
 DEFAULT_NDF_FRAME_RATE = Fraction(30, 1)  # default 30 fps
@@ -76,6 +77,22 @@ class SccTimeCode:
                        int(match.group('df_f')),
                        True)
 
+  @staticmethod
+  def _from_frames(nb_frames: int, frame_rate: typing.Optional[Fraction] = None, drop_frame=False) -> (int, int, int, int, bool):
+    frame_rate = frame_rate if frame_rate else DEFAULT_DF_FRAME_RATE if drop_frame else DEFAULT_NDF_FRAME_RATE
+
+    h = floor(nb_frames / (60 * 60 * frame_rate))
+    m = floor(nb_frames / (60 * frame_rate)) % 60
+    s = floor(nb_frames / frame_rate) % 60
+    f = ceil(nb_frames % frame_rate)
+
+    return h, m, s, f, drop_frame
+
+  @staticmethod
+  def from_frames(nb_frames: int, frame_rate: typing.Optional[Fraction] = None, drop_frame=False) -> SccTimeCode:
+    (h, m, s, f, drop_frame) = SccTimeCode._from_frames(nb_frames, frame_rate, drop_frame)
+    return SccTimeCode(h, m, s, f, drop_frame)
+
   def get_hours(self) -> int:
     """Returns time code hours"""
     return self._hours
@@ -91,6 +108,14 @@ class SccTimeCode:
   def get_frames(self) -> int:
     """Returns time code frames"""
     return self._frames
+
+  def add_frames(self, nb_frames=1):
+    frames = self._get_frames() + nb_frames
+    (h, m, s, f, _drop_frame) = SccTimeCode._from_frames(frames, drop_frame=self._drop_frame)
+    self._hours = h
+    self._minutes = m
+    self._seconds = s
+    self._frames = f
 
   def is_drop_frame(self) -> bool:
     """Returns whether the time code is drop-frame or not"""
@@ -117,3 +142,7 @@ class SccTimeCode:
 
     return Fraction(self._get_frames(frame_rate), base_frame_rate)
 
+  def __repr__(self):
+    if self.is_drop_frame():
+      return ":".join(f'{item:02}' for item in [self._hours, self._minutes, self._seconds]) + ";" + f'{self._frames:02}'
+    return ":".join(f'{item:02}' for item in [self._hours, self._minutes, self._seconds, self._frames])

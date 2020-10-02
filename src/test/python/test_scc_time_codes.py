@@ -43,6 +43,7 @@ class SccTimeCodesTest(TestCase):
     self.assertFalse(time_code.is_drop_frame())
     self.assertEqual(111694, int(time_code._get_frames()))
     self.assertAlmostEqual(3723.133, float(time_code.get_fraction()), delta=0.001)
+    self.assertEqual("01:02:03:04", str(time_code))
 
   def test_parse_drop_frame_time_code(self):
     time_code = SccTimeCode.parse("01:02:03;04")
@@ -53,6 +54,7 @@ class SccTimeCodesTest(TestCase):
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
+    self.assertEqual("01:02:03;04", str(time_code))
 
     time_code = SccTimeCode.parse("01;02;03;04")
     self.assertEqual(1, time_code.get_hours())
@@ -62,6 +64,7 @@ class SccTimeCodesTest(TestCase):
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
+    self.assertEqual("01:02:03;04", str(time_code))
 
     time_code = SccTimeCode.parse("01:02:03.04")
     self.assertEqual(1, time_code.get_hours())
@@ -71,6 +74,7 @@ class SccTimeCodesTest(TestCase):
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
+    self.assertEqual("01:02:03;04", str(time_code))
 
     time_code = SccTimeCode.parse("01.02.03.04")
     self.assertEqual(1, time_code.get_hours())
@@ -80,3 +84,35 @@ class SccTimeCodesTest(TestCase):
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, int(time_code._get_frames()))
     self.assertAlmostEqual(3719.414, float(time_code.get_fraction()), delta=0.001)
+    self.assertEqual("01:02:03;04", str(time_code))
+
+  def test_from_frames(self):
+    time_code = SccTimeCode.from_frames(111694)
+    self.assertEqual(1, time_code.get_hours())
+    self.assertEqual(2, time_code.get_minutes())
+    self.assertEqual(3, time_code.get_seconds())
+    self.assertEqual(4, time_code.get_frames())
+    self.assertFalse(time_code.is_drop_frame())
+    self.assertEqual(111694, int(time_code._get_frames()))
+    self.assertEqual("01:02:03:04", str(time_code))
+
+    time_code = SccTimeCode.from_frames(111582, drop_frame=True)
+    self.assertEqual(1, time_code.get_hours())
+    self.assertEqual(2, time_code.get_minutes())
+    self.assertEqual(3, time_code.get_seconds())
+    self.assertEqual(4, time_code.get_frames())
+    self.assertTrue(time_code.is_drop_frame())
+    self.assertEqual(111582, int(time_code._get_frames()))
+    self.assertEqual("01:02:03;04", str(time_code))
+
+  def test_add_frames(self):
+    time_code = SccTimeCode.parse("01:02:03:04")
+    time_code.add_frames(30)
+    self.assertEqual(1, time_code.get_hours())
+    self.assertEqual(2, time_code.get_minutes())
+    self.assertEqual(4, time_code.get_seconds())
+    self.assertEqual(4, time_code.get_frames())
+    self.assertFalse(time_code.is_drop_frame())
+    self.assertEqual(111724, int(time_code._get_frames()))
+    self.assertAlmostEqual(3724.133, float(time_code.get_fraction()), delta=0.001)
+    self.assertEqual("01:02:04:04", str(time_code))
