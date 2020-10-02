@@ -90,6 +90,7 @@ class SccTimeCode:
 
   @staticmethod
   def from_frames(nb_frames: int, frame_rate: typing.Optional[Fraction] = None, drop_frame=False) -> SccTimeCode:
+    """Creates a SCC time code instance from the specified number of frames"""
     (h, m, s, f, drop_frame) = SccTimeCode._from_frames(nb_frames, frame_rate, drop_frame)
     return SccTimeCode(h, m, s, f, drop_frame)
 
@@ -110,6 +111,7 @@ class SccTimeCode:
     return self._frames
 
   def add_frames(self, nb_frames=1):
+    """Add frames to the current time code"""
     frames = self._get_frames() + nb_frames
     (h, m, s, f, _drop_frame) = SccTimeCode._from_frames(frames, drop_frame=self._drop_frame)
     self._hours = h
