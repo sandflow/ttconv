@@ -217,7 +217,7 @@ class SccWord:
 
   def to_text(self) -> str:
     """Converts SCC word to text"""
-    return ''.join([chr(self.byte_1), chr(self.byte_2)])
+    return ''.join(chr(byte) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
 
 
 class SccLine:

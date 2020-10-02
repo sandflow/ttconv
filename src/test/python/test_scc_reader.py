@@ -99,9 +99,9 @@ class SccWordTest(unittest.TestCase):
     scc_word = SccWord.from_value(0x1234)
     self.assertEqual('\x12\x34', scc_word.to_text())
     scc_word = SccWord.from_value(0xFF00)
-    self.assertEqual('\x7f\x00', scc_word.to_text())
+    self.assertEqual('\x7f', scc_word.to_text())
     scc_word = SccWord.from_value(0x01)
-    self.assertEqual('\x00\x01', scc_word.to_text())
+    self.assertEqual('\x01', scc_word.to_text())
 
     self.assertRaises(ValueError, SccWord.from_value, 0x01020304)
 
@@ -148,11 +148,38 @@ class SCCReaderTest(unittest.TestCase):
     p_list = list(div)
     self.assertEqual(3, len(p_list))
 
-    count = 1
-    for p in div:
-      self.assertIsNotNone(p)
-      self.assertEqual("caption" + str(count), p.get_id())
-      count += 1
+    caption1 = p_list[0]
+    self.assertEqual("caption1", caption1.get_id())
+    self.assertEqual(SccTimeCode.parse("01:02:54:00").get_fraction(), caption1.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:02:55:15").get_fraction(), caption1.get_end())
+    spans = list(caption1)
+    self.assertEqual(1, len(spans))
+    texts = list(spans[0])
+    self.assertEqual("( horn honking )", texts[0].get_text())
+
+    caption2 = p_list[1]
+    self.assertEqual("caption2", caption2.get_id())
+    self.assertEqual(SccTimeCode.parse("01:03:28:12").get_fraction(), caption2.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:11:31:26").get_fraction(), caption2.get_end())
+    spans = list(caption2)
+    self.assertEqual(1, len(spans))
+    texts = list(spans[0])
+    self.assertEqual("HEY, THERE.", texts[0].get_text())
+
+    caption3 = p_list[2]
+    self.assertEqual("caption3", caption3.get_id())
+    self.assertEqual(SccTimeCode.parse("01:11:31:27").get_fraction(), caption3.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:11:33:15").get_fraction(), caption3.get_end())
+    spans = list(caption3)
+    self.assertEqual(4, len(spans))
+    texts = list(spans[0])
+    self.assertEqual("Test Caption ", texts[0].get_text())
+    texts = list(spans[1])
+    self.assertEqual("Test ", texts[0].get_text())
+    texts = list(spans[2])
+    self.assertEqual("test", texts[0].get_text())
+    texts = list(spans[3])
+    self.assertEqual(" Captions", texts[0].get_text())
 
 
 if __name__ == '__main__':
