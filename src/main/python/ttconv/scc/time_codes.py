@@ -163,8 +163,7 @@ class SccTimeCode:
   def get_fraction(self, frame_rate: typing.Optional[Fraction] = None) -> Fraction:
     """Converts the time code in a second-based fraction"""
 
-    # Do not consider drop frame in the conversion
-    base_frame_rate = frame_rate if frame_rate else DEFAULT_NDF_FRAME_RATE
+    base_frame_rate = frame_rate if frame_rate else DEFAULT_DF_FRAME_RATE if self.is_drop_frame() else DEFAULT_NDF_FRAME_RATE
 
     return Fraction(self.get_nb_frames(frame_rate), base_frame_rate)
 
