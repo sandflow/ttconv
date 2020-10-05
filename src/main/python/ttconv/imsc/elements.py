@@ -66,7 +66,7 @@ class TTElement:
     active_area = imsc_attr.ActiveAreaAttribute.extract(ttml_elem)
 
     if active_area is not None:
-      context.doc.set_active_area(active_area)
+      context.doc.set_active_area(active_area)  
 
     # process children elements elements
 
@@ -109,9 +109,38 @@ class TTElement:
           LOGGER.error("More than one head element present")
 
   @staticmethod
-  def from_model(context, _i_model):
+  def from_model(context, i_model):
 
-    context.imsc_doc = et
+    body = i_model.get_body()
+    
+    if body is not None:
+      lang = body.get_lang()
+      if lang is not None:
+        imsc_attr.XMLLangAttribute.set(context.imsc_doc, lang)
+
+    imsc_attr.CellResolutionAttribute.set(context.imsc_doc, i_model.get_px_resolution())
+    imsc_attr.ActiveAreaAttribute.set(context.imsc_doc, i_model.get_active_area())
+
+    space = model.WhiteSpaceHandling.DEFAULT
+
+    #body = i_model.get_body()
+    #if body is not None:
+    #  ContentElement.from_model(
+    #    context,
+    #    body
+    #  )
+
+    for region in i_model.iter_regions():
+      HeadElement.from_model(
+        context,
+        region
+      )
+
+    #for style in i_model.iter_styles():
+    #  HeadElement.from_model(
+    #    context,
+    #    region
+    #  )
 
 class HeadElement:
   '''Processes the TTML <head> element
@@ -163,6 +192,12 @@ class HeadElement:
 
           LOGGER.error("Multiple styling elements")
 
+  @staticmethod
+  def from_model(context, body):
+    pass
+    # layout
+
+    # styling
 
 
 class LayoutElement:
@@ -196,7 +231,11 @@ class LayoutElement:
 
         LOGGER.warning("Unexpected child of layout element")
 
-
+  @staticmethod
+  def from_model(context, body, element):
+    
+    # regions
+    body.get_region
 
 class RegionElement:
   '''Process the TTML <region> element
@@ -324,6 +363,18 @@ class ContentElement:
 
     return element
 
+  @staticmethod
+  def from_model(context, body):
+    
+    if body is None:
+      return
+
+    BodyElement.from_model(context, body)
+
+
+
+
+
 class BodyElement:
   '''Process TTML body element
   '''
@@ -363,6 +414,13 @@ class BodyElement:
 
     return element
 
+  @staticmethod
+  def from_model(context, body):
+    
+    if body is None:
+      return
+    
+    DivElement.from_model(context, body)
 
 class DivElement:
   '''Process TTML <div> element
@@ -402,6 +460,14 @@ class DivElement:
           element.push_child(child_element)
 
     return element
+
+  @staticmethod
+  def from_model(context, body):
+    
+    if body is None:
+      return
+
+    BodyElement.from_model(context, body)
 
 class PElement:
   '''Process TTML <p> element

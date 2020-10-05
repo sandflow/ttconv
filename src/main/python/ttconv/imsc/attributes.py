@@ -30,6 +30,7 @@ import logging
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
+#import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +56,9 @@ class XMLLangAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(XMLLangAttribute.qn)
 
-
+  @staticmethod
+  def set(ttml_element, lang):
+    ttml_element.set(XMLLangAttribute.qn, lang)
 
 class XMLSpaceAttribute:
   '''xml:space attribute
@@ -96,7 +99,7 @@ class CellResolutionAttribute:
   '''ttp:cellResolution attribute
   '''
 
-  qn = f"{ns.TTP}cellResolution"
+  qn = f"{{{ns.TTP}}}cellResolution"
 
   _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
 
@@ -118,6 +121,10 @@ class CellResolutionAttribute:
     # default value in TTML
 
     return model.CellResolutionType(rows=15, columns=32)
+
+  @staticmethod
+  def set(ttml_element, res):
+    ttml_element.set(CellResolutionAttribute.qn, str(res.width) + " " + str(res.height))
 
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
@@ -145,6 +152,10 @@ class ExtentAttribute:
       return model.PixelResolutionType(w, h)
 
     return None
+
+  @staticmethod
+  def set(ttml_element, res):
+    ttml_element.set(ExtentAttribute.qn, str(res.width) + " " + str(res.height))
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
@@ -185,3 +196,12 @@ class ActiveAreaAttribute:
         )
 
     return None
+
+  @staticmethod
+  def set(ttml_element, activeArea):
+    ttml_element.set(ActiveAreaAttribute.qn, 
+      "{0}% {1}% {2}% {3}%".format(
+        activeArea.left_offset, 
+        activeArea.top_offset, 
+        activeArea.width, 
+        activeArea.height))

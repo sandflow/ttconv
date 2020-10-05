@@ -44,9 +44,8 @@ def from_model(model):
 
   context = _Context()
 
+  context.imsc_doc = et.Element("tt")
+
   imsc_elements.TTElement.from_model(context, model)
 
-  # generate a proper ElementTree for testing/dev
-  #context.imsc_doc = et.parse('src/test/resources/ttml/body_only.ttml')
-
-  return context.imsc_doc
+  return et.ElementTree(context.imsc_doc)

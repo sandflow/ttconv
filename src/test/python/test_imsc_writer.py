@@ -51,7 +51,7 @@ class IMSCWriterTest(unittest.TestCase):
     tree_from_model = imsc_writer.from_model(model)
 
     # write the document out to a file
-    tree_from_model.write('build/body_only.out.ttml')
+    tree_from_model.write('build/body_only.out.ttml', encoding='utf-8', xml_declaration=True)
 
 if __name__ == '__main__':
   unittest.main()
