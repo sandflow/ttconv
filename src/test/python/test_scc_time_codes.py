@@ -53,7 +53,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(4, time_code.get_frames())
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration())
     self.assertEqual("01:02:03;04", str(time_code))
 
     time_code = SccTimeCode.parse("01;02;03;04")
@@ -63,7 +63,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(4, time_code.get_frames())
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration())
     self.assertEqual("01:02:03;04", str(time_code))
 
     time_code = SccTimeCode.parse("01:02:03.04")
@@ -73,7 +73,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(4, time_code.get_frames())
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration())
     self.assertEqual("01:02:03;04", str(time_code))
 
     time_code = SccTimeCode.parse("01.02.03.04")
@@ -83,7 +83,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(4, time_code.get_frames())
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(111582, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(111582, Fraction(30000, 1001)), time_code.as_duration())
     self.assertEqual("01:02:03;04", str(time_code))
 
   def test_time_code_frames_conversion(self):
@@ -252,7 +252,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(4, time_code.get_frames())
     self.assertFalse(time_code.is_drop_frame())
     self.assertEqual(111724, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(111724, 30), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(111724, 30), time_code.as_duration())
     self.assertEqual("01:02:04:04", str(time_code))
 
     time_code = SccTimeCode.parse("00:00:59;29")
@@ -263,7 +263,7 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(2, time_code.get_frames())
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(1_800, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(1800, Fraction(30000, 1001)), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(1800, Fraction(30000, 1001)), time_code.as_duration())
     self.assertEqual("00:01:00;02", str(time_code))
 
     time_code = SccTimeCode.parse("00:19:59;29")
@@ -274,5 +274,5 @@ class SccTimeCodesTest(TestCase):
     self.assertEqual(0, time_code.get_frames())
     self.assertTrue(time_code.is_drop_frame())
     self.assertEqual(35_964, time_code.get_nb_frames())
-    self.assertAlmostEqual(Fraction(35964, Fraction(30000, 1001)), time_code.as_duration(), delta=0.001)
+    self.assertEqual(Fraction(35964, Fraction(30000, 1001)), time_code.as_duration())
     self.assertEqual("00:20:00;00", str(time_code))
