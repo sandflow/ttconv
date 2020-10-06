@@ -112,7 +112,7 @@ class SccLineTest(unittest.TestCase):
     line_str = "01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(18, len(scc_line.scc_words))
-    self.assertEqual(SccTimeCode(1, 3, 27, 29).get_fraction(), scc_line.time_code.get_fraction())
+    self.assertEqual(SccTimeCode(1, 3, 27, 29).as_duration(), scc_line.time_code.as_duration())
 
     self.assertIsNone(SccLine.from_str(""))
     self.assertIsNone(SccLine.from_str("Hello world!"))
@@ -150,8 +150,8 @@ class SCCReaderTest(unittest.TestCase):
 
     caption1 = p_list[0]
     self.assertEqual("caption1", caption1.get_id())
-    self.assertEqual(SccTimeCode.parse("01:02:54:00").get_fraction(), caption1.get_begin())
-    self.assertEqual(SccTimeCode.parse("01:02:55:15").get_fraction(), caption1.get_end())
+    self.assertEqual(SccTimeCode.parse("01:02:54:00").as_duration(), caption1.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:02:55:15").as_duration(), caption1.get_end())
     spans = list(caption1)
     self.assertEqual(1, len(spans))
     texts = list(spans[0])
@@ -159,8 +159,8 @@ class SCCReaderTest(unittest.TestCase):
 
     caption2 = p_list[1]
     self.assertEqual("caption2", caption2.get_id())
-    self.assertEqual(SccTimeCode.parse("01:03:28:12").get_fraction(), caption2.get_begin())
-    self.assertEqual(SccTimeCode.parse("01:11:31:26").get_fraction(), caption2.get_end())
+    self.assertEqual(SccTimeCode.parse("01:03:28:12").as_duration(), caption2.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:11:31:26").as_duration(), caption2.get_end())
     spans = list(caption2)
     self.assertEqual(1, len(spans))
     texts = list(spans[0])
@@ -168,8 +168,8 @@ class SCCReaderTest(unittest.TestCase):
 
     caption3 = p_list[2]
     self.assertEqual("caption3", caption3.get_id())
-    self.assertEqual(SccTimeCode.parse("01:11:31:27").get_fraction(), caption3.get_begin())
-    self.assertEqual(SccTimeCode.parse("01:11:33:15").get_fraction(), caption3.get_end())
+    self.assertEqual(SccTimeCode.parse("01:11:31:27").as_duration(), caption3.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:11:33:15").as_duration(), caption3.get_end())
     spans = list(caption3)
     self.assertEqual(4, len(spans))
     texts = list(spans[0])

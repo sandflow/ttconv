@@ -143,14 +143,15 @@ class _SccContext:
       self.previous_paragraph = self.current_paragraph
       self.new_span()
 
-      self.count += 1
-      self.current_paragraph.set_id("caption" + str(self.count))
-      self.current_paragraph.set_begin(time_code.get_fraction())
+      if self.current_paragraph:
+        self.count += 1
+        self.current_paragraph.set_id("caption" + str(self.count))
+        self.current_paragraph.set_begin(time_code.as_duration())
 
     if control_code is SccControlCode.EDM:
       # Erase displayed caption
       if self.previous_paragraph:
-        self.previous_paragraph.set_end(time_code.get_fraction())
+        self.previous_paragraph.set_end(time_code.as_duration())
         self.div.push_child(self.previous_paragraph)
         self.previous_paragraph = None
 
@@ -306,12 +307,12 @@ class SccLine:
           context.new_span()
           context.process_mid_row_code(mid_row_code)
 
-
         elif control_code:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
 
           context.process_control_code(control_code, self.time_code)
           context.previous_code = scc_word.value
+
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
 
