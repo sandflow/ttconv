@@ -146,12 +146,12 @@ class _SccContext:
       if self.current_paragraph:
         self.count += 1
         self.current_paragraph.set_id("caption" + str(self.count))
-        self.current_paragraph.set_begin(time_code.as_duration())
+        self.current_paragraph.set_begin(time_code.to_temporal_offset())
 
     if control_code is SccControlCode.EDM:
       # Erase displayed caption
       if self.previous_paragraph:
-        self.previous_paragraph.set_end(time_code.as_duration())
+        self.previous_paragraph.set_end(time_code.to_temporal_offset())
         self.div.push_child(self.previous_paragraph)
         self.previous_paragraph = None
 

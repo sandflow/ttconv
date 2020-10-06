@@ -160,7 +160,7 @@ class SccTimeCode:
     frame_rate = frame_rate if frame_rate else DEFAULT_NDF_FRAME_RATE
     return (self._hours * 3600 + self._minutes * 60 + self._seconds) * frame_rate + self._frames - dropped_frames
 
-  def as_duration(self, frame_rate: typing.Optional[Fraction] = None) -> Fraction:
+  def to_temporal_offset(self, frame_rate: typing.Optional[Fraction] = None) -> Fraction:
     """Converts the time code in a second-based fraction"""
 
     base_frame_rate = frame_rate if frame_rate else DEFAULT_DF_FRAME_RATE if self.is_drop_frame() else DEFAULT_NDF_FRAME_RATE
