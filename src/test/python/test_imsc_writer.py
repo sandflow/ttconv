@@ -32,12 +32,20 @@ import unittest
 import xml.etree.ElementTree as et
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
+import xml.dom.minidom as minidom
 
 class IMSCWriterTest(unittest.TestCase):
 
   def setUp(self):
     if not os.path.exists('build'):
       os.makedirs('build')
+
+  def pretty_print(self, elem):
+    """Return a pretty-printed XML string for the Element.
+    """
+    rough_string = et.tostring(elem, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    print(reparsed.toprettyxml(indent="\t"))
 
   def test_body_only(self):
 
@@ -52,6 +60,8 @@ class IMSCWriterTest(unittest.TestCase):
 
     # write the document out to a file
     tree_from_model.write('build/body_only.out.ttml', encoding='utf-8', xml_declaration=True)
+
+    #self.pretty_print(tree_from_model.getroot())
 
 if __name__ == '__main__':
   unittest.main()

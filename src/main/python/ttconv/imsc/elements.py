@@ -136,12 +136,6 @@ class TTElement:
         region
       )
 
-    #for style in i_model.iter_styles():
-    #  HeadElement.from_model(
-    #    context,
-    #    region
-    #  )
-
 class HeadElement:
   '''Processes the TTML <head> element
   '''
@@ -193,12 +187,17 @@ class HeadElement:
           LOGGER.error("Multiple styling elements")
 
   @staticmethod
-  def from_model(context, body):
-    pass
-    # layout
+  def from_model(context, region):
 
-    # styling
+    # Check for exiting head
+    head = context.imsc_doc.find("head")
+    if head is None:
+      head = et.SubElement(context.imsc_doc, "head")
 
+    LayoutElement.from_model(
+      head,
+      region
+    )
 
 class LayoutElement:
   '''Process the TTML <layout> element
@@ -232,10 +231,17 @@ class LayoutElement:
         LOGGER.warning("Unexpected child of layout element")
 
   @staticmethod
-  def from_model(context, body, element):
+  def from_model(head, region):
     
-    # regions
-    body.get_region
+    # Check for exiting head
+    layout = head.find("layout")
+    if layout is None:
+      layout = et.SubElement(head, "layout")
+
+    RegionElement.from_model(
+      layout,
+      region
+    )
 
 class RegionElement:
   '''Process the TTML <region> element
@@ -263,6 +269,52 @@ class RegionElement:
     ContentElement.process_style_properties(context, ttml_element, r)
 
     return r
+
+  @staticmethod
+  def from_model(layout, region):
+
+    region_element = et.SubElement(layout, "region")
+
+    # TODO - should there be a getter for _id?
+    attrib = region._id
+    if attrib is not None:
+      region_element.set(imsc_attr.XMLIDAttribute.qn, attrib)
+
+    attrib = region.get_style(StyleProperties.FontFamily)
+    if attrib is not None:
+      region_element.set("tts:fontFamily", attrib)
+
+    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = None
+    if attrib is not None:
+      region_element.set("tts:showBackground", attrib)
+
+    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = None
+    if attrib is not None:
+      region_element.set("tts:origin", attrib)
+
+    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = None
+    if attrib is not None:
+      region_element.set("tts:extent", attrib)
+
+    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = None
+    if attrib is not None:
+      region_element.set("tts:color", attrib)
+
+    attrib = region.get_style(StyleProperties.BackgroundColor)
+    if attrib is not None:
+      region_element.set("tts:backgroundColor", attrib)
+
+    attrib = region.get_style(StyleProperties.TextAlign)
+    if attrib is not None:
+      region_element.set("tts:textAlign", attrib)
+
+    attrib = region.get_style(StyleProperties.DisplayAlign)
+    if attrib is not None:
+      region_element.set("tts:displayAlign", attrib)
 
 class StylingElement:
   '''Process the TTML <styling> element
