@@ -128,7 +128,7 @@ class SccSpecialAndExtendedCharacter(SccCode, Enum):
   BOX_DRAWINGS_HEAVY_DOWN_AND_RIGHT = (0x133C, 0x1B3C, '\u250F')  # ⎡ upper left corner
   BOX_DRAWINGS_HEAVY_DOWN_AND_LEFT = (0x133D, 0x1B3D, '\u2513')  # ⎤ upper right corner
   BOX_DRAWINGS_HEAVY_UP_AND_RIGHT = (0x133E, 0x1B3E, '\u2517')  # ⎣ lower left corner
-  BOX_DRAW_INGS_HEAVY_UP_AND_LEFT = (0x133F, 0x1B3F, '\u251B')  # ⎦ lower right corner
+  BOX_DRAWINGS_HEAVY_UP_AND_LEFT = (0x133F, 0x1B3F, '\u251B')  # ⎦ lower right corner
 
   def __init__(self, channel_1: int, channel_2: int, unicode: chr):
     super().__init__(channel_1, channel_2)
