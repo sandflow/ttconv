@@ -123,12 +123,12 @@ class TTElement:
 
     space = model.WhiteSpaceHandling.DEFAULT
 
-    #body = i_model.get_body()
-    #if body is not None:
-    #  ContentElement.from_model(
-    #    context,
-    #    body
-    #  )
+    body = i_model.get_body()
+    if body is not None:
+      BodyElement.from_model(
+        context,
+        body
+      )
 
     for region in i_model.iter_regions():
       HeadElement.from_model(
@@ -472,7 +472,20 @@ class BodyElement:
     if body is None:
       return
     
-    DivElement.from_model(context, body)
+    body_element = context.imsc_doc.find("body")
+    if body_element is None:
+      body_element = et.SubElement(context.imsc_doc, "body")
+    
+    attrib = body._id
+    if attrib is not None:
+      body_element.set(imsc_attr.XMLIDAttribute.qn, attrib)
+
+    attrib = body.get_style(StyleProperties.LineHeight)
+    if attrib is not None:
+      body_element.set("tts:lineHeight", attrib)
+
+    #for div in body.iter():
+    #  DivElement.from_model(body_element, div)
 
 class DivElement:
   '''Process TTML <div> element
@@ -514,12 +527,13 @@ class DivElement:
     return element
 
   @staticmethod
-  def from_model(context, body):
+  def from_model(parent_element, parent_div):
     
-    if body is None:
+    if parent_div is None:
       return
 
-    BodyElement.from_model(context, body)
+    for div in parent_div.iter():
+      DivElement.from_model(parent_element, parent_div)
 
 class PElement:
   '''Process TTML <p> element
