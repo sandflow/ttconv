@@ -73,6 +73,7 @@ class _SccContext:
     """Adds the current Span reference to the model if present, and drop it"""
     if self.current_span and self.current_text:
       self.current_span.push_child(Text(self.div.get_doc(), self.current_text))
+      self.current_span.set_style(StyleProperties.Origin, self.get_current_position())
       self.current_paragraph.push_child(self.current_span)
 
       self.current_text = ""
