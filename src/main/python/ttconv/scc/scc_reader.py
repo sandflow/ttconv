@@ -55,6 +55,7 @@ class _SccContext:
     self.count: int = 0
     self.safe_area_x: int = 0
     self.safe_area_y: int = 0
+    self.row_offset = self.safe_area_y
     self.column_offset = self.safe_area_x
     self.previous_code = 0
     self.previous_paragraph = None
@@ -76,24 +77,33 @@ class _SccContext:
 
       self.current_text = ""
       self.current_span = None
+      self.row_offset = self.safe_area_y
+      self.column_offset = self.safe_area_x
 
   def new_span(self):
     """Set current Span with a new instance"""
     self.current_span = Span()
     self.current_span.set_doc(self.div.get_doc())
 
-  def process_preamble_access_code(self, pac: SccPreambleAccessCode):
-    """Processes SCC Preamble Access Code it to the map to model"""
-    self.column_offset += pac.get_indent()
-    row_offset = pac.get_row() + self.safe_area_y
-
+  def get_current_position(self) -> PositionType:
+    """Returns current row and column offsets as a cell-based PositionType"""
     x_cell_offset = self.column_offset
-    y_cell_offset = row_offset
+    y_cell_offset = self.row_offset
 
     x_position = LengthType(value=x_cell_offset, units=LengthType.Units.c)
     y_position = LengthType(value=y_cell_offset, units=LengthType.Units.c)
 
-    self.current_span.set_style(StyleProperties.Origin, PositionType(x_position, y_position))
+    return PositionType(x_position, y_position)
+
+  def process_preamble_access_code(self, pac: SccPreambleAccessCode):
+    """Processes SCC Preamble Access Code it to the map to model"""
+    if pac.get_indent():
+      self.column_offset += pac.get_indent()
+    if pac.get_row():
+      self.row_offset = pac.get_row() + self.safe_area_y
+
+    self.push_span()
+    self.new_span()
 
     color = pac.get_color()
     if color:
@@ -292,7 +302,10 @@ class SccLine:
         pac = SccPreambleAccessCode.find(scc_word.byte_1, scc_word.byte_2)
 
         if pac:
-          debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_color().name) + "/" + hex(scc_word.value) + "]"
+          debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
+          if pac.get_color():
+            debug += "|" + str(pac.get_color().name)
+          debug += "/" + hex(scc_word.value) + "]"
           context.push_span()
           context.new_span()
           context.process_preamble_access_code(pac)
