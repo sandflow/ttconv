@@ -50,7 +50,9 @@ class IMSCWriterTest(unittest.TestCase):
   def test_body_only(self):
 
     # parse the data
-    tree = et.parse('src/test/resources/ttml/body_only.ttml')
+    file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/activeArea/ActiveArea001.ttml"
+    #file_to_parse = "src/test/resources/ttml/body_only.ttml"
+    tree = et.parse(file_to_parse)
 
     # create the model
     model = imsc_reader.to_model(tree)

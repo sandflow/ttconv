@@ -484,8 +484,8 @@ class BodyElement:
     if attrib is not None:
       body_element.set("tts:lineHeight", attrib)
 
-    #for div in body.iter():
-    #  DivElement.from_model(body_element, div)
+    for div in body:
+      DivElement.from_model(body_element, div)
 
 class DivElement:
   '''Process TTML <div> element
@@ -532,8 +532,18 @@ class DivElement:
     if parent_div is None:
       return
 
-    for div in parent_div.iter():
-      DivElement.from_model(parent_element, parent_div)
+    div_element = et.SubElement(parent_element, "div")
+
+    if parent_div.has_children():
+      for child in parent_div:
+        if isinstance(child, model.P):
+          PElement.from_model(div_element, child)
+        elif isinstance(child, model.Div):
+          DivElement.from_model(div_element, child)
+        else:
+          LOGGER.error("Children of div must be p or div")
+    else:
+      pass
 
 class PElement:
   '''Process TTML <p> element
@@ -583,6 +593,25 @@ class PElement:
         element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
 
     return element
+
+  @staticmethod
+  def from_model(parent_element, parent_p):
+    
+    if parent_p is None:
+      return
+
+    p_element = et.SubElement(parent_element, "p")
+
+    if parent_p.has_children():
+      for child in parent_p:
+        if isinstance(child, model.Span):
+          SpanElement.from_model(p_element, child)
+        elif isinstance(child, model.Ruby):
+          RubyElement.from_model(p_element, child)
+        elif isinstance(child, model.Br):
+          BrElement.from_model(p_element, child)
+        else:
+          LOGGER.error("Children of p must be span or br or text")
 
 class SpanElement:
   '''Process the TTML <span> element
@@ -651,6 +680,29 @@ class SpanElement:
 
     return element
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
+
+    span_element = et.SubElement(parent_element, "span")
+
+    if parent_div.has_children():
+      for child in parent_div:
+        if isinstance(child, model.Span):
+          SpanElement.from_model(parent_element, child)
+        elif isinstance(child, model.Br):
+          BrElement.from_model(parent_element, child)
+        elif isinstance(child, model.Text):
+          # TODO - do we want to have a TextElement object?
+          #TextElement.from_model(parent_element, child)          
+          span_element.text = child.get_text()
+        else:
+          LOGGER.error("Children of div must be p or div")
+    else:
+      pass
+
 
 class RubyElement:
   '''Process the TTML <span tts:ruby="container"> element
@@ -701,6 +753,11 @@ class RubyElement:
 
       return None
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
 
 class RbElement:
   '''Process the TTML <span tts:ruby="base"> element
@@ -756,6 +813,11 @@ class RbElement:
 
     return element
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
 
 class RtElement:
   '''Process the TTML <span tts:ruby="text"> element
@@ -811,6 +873,11 @@ class RtElement:
 
     return element
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
 
 class RpElement:
   '''Process the TTML <span tts:ruby="delimiter"> element
@@ -866,6 +933,12 @@ class RpElement:
 
     return element
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
+
 class RbcElement:
   '''Process the TTML <span tts:ruby="baseContainer"> element
   '''
@@ -910,6 +983,11 @@ class RbcElement:
 
     return element
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
 
 class RtcElement:
   '''Process the TTML <span tts:ruby="textContainer"> element
@@ -960,6 +1038,11 @@ class RtcElement:
 
       return None
 
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
 
 class BrElement:
   '''Process the TTML <br> element
@@ -989,3 +1072,9 @@ class BrElement:
       LOGGER.error("Br cannot contain text nodes")
 
     return element
+
+  @staticmethod
+  def from_model(parent_element, parent_div):
+    
+    if parent_div is None:
+      return
