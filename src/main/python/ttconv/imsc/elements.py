@@ -123,17 +123,18 @@ class TTElement:
 
     space = model.WhiteSpaceHandling.DEFAULT
 
+    # Write the <head> section first
+    for region in i_model.iter_regions():
+      HeadElement.from_model(
+        context,
+        region
+      )
+
     body = i_model.get_body()
     if body is not None:
       BodyElement.from_model(
         context,
         body
-      )
-
-    for region in i_model.iter_regions():
-      HeadElement.from_model(
-        context,
-        region
       )
 
 class HeadElement:
@@ -275,8 +276,7 @@ class RegionElement:
 
     region_element = et.SubElement(layout, "region")
 
-    # TODO - should there be a getter for _id?
-    attrib = region._id
+    attrib = region.get_id()
     if attrib is not None:
       region_element.set(imsc_attr.XMLIDAttribute.qn, attrib)
 
