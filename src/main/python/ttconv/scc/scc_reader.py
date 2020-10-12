@@ -36,6 +36,7 @@ from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_access_codes import SccPreambleAccessCode
+from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 from ttconv.scc.scc_caption_style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
 from ttconv.style_properties import StyleProperties, PositionType, LengthType
@@ -301,6 +302,7 @@ class SccLine:
         control_code = SccControlCode.find(scc_word.value)
         mid_row_code = SccMidRowCode.find(scc_word.value)
         pac = SccPreambleAccessCode.find(scc_word.byte_1, scc_word.byte_2)
+        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
 
         if pac:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
@@ -326,6 +328,11 @@ class SccLine:
 
           context.process_control_code(control_code, self.time_code)
           context.previous_code = scc_word.value
+
+        elif spec_char:
+          word = spec_char.get_unicode_value()
+          debug += word
+          context.current_text += word
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
