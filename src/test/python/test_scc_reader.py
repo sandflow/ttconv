@@ -127,9 +127,9 @@ class SCCReaderTest(unittest.TestCase):
 
 01:02:55:14	942c 942c
 
-01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f
+01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 91b0 45ae 942c 942c 8080 8080 942f 942f
 
-01:11:31:01	9420 9420 9452 9452 97a1 97a1 54e5 73f4 2043 6170 f4e9 ef6e 2080 94f2 94f2 97a1 97a1 54e5 73f4 2080 91ae 91ae f4e5 73f4 9120 9120 2043 6170 f4e9 ef6e 7380 942c 942c 942f 942f
+01:11:31:01	9420 9420 9452 9452 97a1 97a1 54e5 73f4 2080 9132 2043 6170 f4e9 ef6e 2080 94f2 94f2 97a1 97a1 54e5 73f4 2080 91ae 91ae f4e5 73f4 9120 9120 2043 6170 f4e9 ef6e 7380 942c 942c 942f 942f
 
 01:11:33:14	942c 942c
 """
@@ -160,20 +160,20 @@ class SCCReaderTest(unittest.TestCase):
     caption2 = p_list[1]
     self.assertEqual("caption2", caption2.get_id())
     self.assertEqual(SccTimeCode.parse("01:03:28:12").to_temporal_offset(), caption2.get_begin())
-    self.assertEqual(SccTimeCode.parse("01:11:31:26").to_temporal_offset(), caption2.get_end())
+    self.assertEqual(SccTimeCode.parse("01:11:31:28").to_temporal_offset(), caption2.get_end())
     spans = list(caption2)
     self.assertEqual(1, len(spans))
     texts = list(spans[0])
-    self.assertEqual("HEY, THERE.", texts[0].get_text())
+    self.assertEqual("HEY, THE®E.", texts[0].get_text())
 
     caption3 = p_list[2]
     self.assertEqual("caption3", caption3.get_id())
-    self.assertEqual(SccTimeCode.parse("01:11:31:27").to_temporal_offset(), caption3.get_begin())
+    self.assertEqual(SccTimeCode.parse("01:11:31:29").to_temporal_offset(), caption3.get_begin())
     self.assertEqual(SccTimeCode.parse("01:11:33:15").to_temporal_offset(), caption3.get_end())
     spans = list(caption3)
     self.assertEqual(4, len(spans))
     texts = list(spans[0])
-    self.assertEqual("Test Caption ", texts[0].get_text())
+    self.assertEqual("Test ½ Caption ", texts[0].get_text())
     texts = list(spans[1])
     self.assertEqual("Test ", texts[0].get_text())
     texts = list(spans[2])
