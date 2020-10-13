@@ -51,7 +51,15 @@ PARITY_BIT_MASK = 0b01111111
 DEBUG = False
 
 
-class SccCaptionText:
+class SccCaptionContent:
+  """Caption content"""
+
+
+class SccCaptionLineBreak(SccCaptionContent):
+  """Caption line break element"""
+
+
+class SccCaptionText(SccCaptionContent):
   """Caption text content"""
 
   def __init__(self):
@@ -60,6 +68,7 @@ class SccCaptionText:
     self.style_properties = {}
     self.text: str = ""
     self._position = None
+    self._new_line = False
 
   def set_x_offset(self, indent: Optional[int]):
     """Sets the x offset"""
@@ -82,9 +91,18 @@ class SccCaptionText:
 
     return PositionType(x_position, y_position)
 
+  def has_same_style_properties(self, other):
+    """Returns whether the current text has the same style properties as the other text"""
+    return self.style_properties == other.style_properties
+
   def is_contiguous(self, other: SccCaptionText) -> bool:
     """Returns whether the current text is contiguous according to the other text"""
-    return self.x_offset == other.x_offset and self.y_offset == other.y_offset + 1 and self.style_properties == other.style_properties
+    return self.x_offset == other.x_offset and self.y_offset == other.y_offset + 1
+
+  def has_same_origin(self, other: SccCaptionText) -> bool:
+    """Returns whether the current text has the same origin as the other text"""
+    return self.x_offset == other.x_offset and self.y_offset == other.y_offset
+
 
 
 class SccCaptionParagraph:
@@ -100,7 +118,7 @@ class SccCaptionParagraph:
     self._column_offset: int = safe_area_x_offset
     self._row_offset: int = safe_area_y_offset
     self.current_text: Optional[SccCaptionText] = None
-    self.caption_texts: List[SccCaptionText] = []
+    self.caption_contents: List[SccCaptionContent] = []
     self._style: SccCaptionStyle = caption_style
 
   def set_id(self, caption_id: str):
@@ -123,10 +141,10 @@ class SccCaptionParagraph:
     """Sets the paragraph y offset"""
     self._row_offset = self._safe_area_y_offset + (row if row else 0)
 
-  def new_caption_line(self):
+  def new_caption_text(self):
     """Appends a new caption text content, and keeps reference on it"""
-    self.caption_texts.append(SccCaptionText())
-    self.current_text = self.caption_texts[-1]
+    self.caption_contents.append(SccCaptionText())
+    self.current_text = self.caption_contents[-1]
 
   def set_current_text_offsets(self):
     """Sets the x and y offsets of the current text"""
@@ -138,6 +156,22 @@ class SccCaptionParagraph:
     self._column_offset += indent
     self.current_text.set_x_offset(self._column_offset)
 
+  def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionText]:
+    """Returns the caption text elements from the expected number of last lines"""
+    last_lines = []
+    added_lines = 0
+    for caption in reversed(self.caption_contents):
+      if not isinstance(caption, SccCaptionText):
+        added_lines += 1
+        continue
+
+      if added_lines == expected_lines:
+        return last_lines
+
+      last_lines.insert(0, caption)
+
+    return last_lines
+
   def to_paragraph(self, doc: Document) -> P:
     """Converts and returns current caption paragraph into P instance"""
     p = P()
@@ -146,30 +180,24 @@ class SccCaptionParagraph:
     p.set_begin(self._begin.to_temporal_offset())
     p.set_end(self._end.to_temporal_offset())
 
-    last_line: Optional[SccCaptionText] = None
-    last_span: Optional[Span] = None
+    for caption_content in self.caption_contents:
 
-    for caption_line in self.caption_texts:
+      if isinstance(caption_content, SccCaptionLineBreak):
+        p.push_child(Br(doc))
+        continue
 
-      if self._style is SccCaptionStyle.PopOn and last_span and last_line and caption_line.is_contiguous(last_line):
-        last_span.push_child(Br(doc))
-        last_span.push_child(Text(doc, caption_line.text))
-
-      else:
+      if isinstance(caption_content, SccCaptionText):
         span = Span(doc)
 
-        origin = caption_line.get_position()
+        origin = caption_content.get_position()
         span.set_style(StyleProperties.Origin, origin)
 
-        for (prop, value) in caption_line.style_properties.items():
+        for (prop, value) in caption_content.style_properties.items():
           span.set_style(prop, value)
 
-        span.push_child(Text(doc, caption_line.text))
+        span.push_child(Text(doc, caption_content.text))
 
         p.push_child(span)
-        last_span = span
-
-      last_line = caption_line
 
     return p
 
@@ -214,7 +242,7 @@ class _SccContext:
     if not self.current_caption:
       raise ValueError("No current SCC caption initialized")
 
-    self.current_caption.new_caption_line()
+    self.current_caption.new_caption_text()
 
     self.current_caption.set_column_offset(pac.get_indent())
     self.current_caption.set_row_offset(pac.get_row())
@@ -229,7 +257,7 @@ class _SccContext:
     if not self.current_caption:
       raise ValueError("No current SCC caption initialized")
 
-    self.current_caption.new_caption_line()
+    self.current_caption.new_caption_text()
     self.current_caption.set_current_text_offsets()
 
     self.current_caption.current_text.add_style_property(StyleProperties.Color, mid_row_code.get_color())
@@ -256,6 +284,28 @@ class _SccContext:
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
 
+    if control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
+      # Start a new Roll-Up caption
+      self.set_current_to_previous()
+
+      previous_last_lines: List[SccCaptionContent] = []
+      if self.previous_caption:
+
+        if control_code is SccControlCode.RU2:
+          previous_last_lines = self.previous_caption.get_last_caption_lines(1)
+        if control_code is SccControlCode.RU3:
+          previous_last_lines = self.previous_caption.get_last_caption_lines(2)
+        if control_code is SccControlCode.RU4:
+          previous_last_lines = self.previous_caption.get_last_caption_lines(3)
+
+        previous_last_lines.append(SccCaptionLineBreak())
+
+      self.close_previous_caption(time_code)
+
+      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
+      self.current_caption.caption_contents = previous_last_lines
+      self.init_current_caption(time_code)
+
     if control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
       self.init_current_caption(time_code)
@@ -263,6 +313,18 @@ class _SccContext:
 
     if control_code is SccControlCode.EDM:
       # Erase displayed caption (Pop-On)
+      if self.previous_caption:
+        # Set line breaks depending on the position of the content
+        last_text: Optional[SccCaptionText] = None
+        for (index, content) in enumerate(self.previous_caption.caption_contents):
+          if not isinstance(content, SccCaptionText):
+            continue
+
+          if last_text and self.previous_caption.current_text.is_contiguous(last_text):
+            self.previous_caption.caption_contents.insert(index, SccCaptionLineBreak())
+
+          last_text = content
+
       self.close_previous_caption(time_code)
 
     if control_code is SccControlCode.TO1:
@@ -272,9 +334,20 @@ class _SccContext:
     if control_code is SccControlCode.TO3:
       self.current_caption.indent(3)
 
+    if control_code is SccControlCode.CR:
+      # Roll the display up one row (Roll-Up)
+      pass
+
   def process_text(self, word):
     """Processes SCC text words"""
     self.current_caption.current_text.text += word
+
+  def flush(self, time_code: SccTimeCode):
+    """Flushes the remaining current caption"""
+    if self.current_caption:
+      self.previous_caption = self.current_caption
+      self.close_previous_caption(time_code)
+      self.current_caption = None
 
 
 class SccWord:
@@ -380,10 +453,10 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_model(self, context: _SccContext):
+  def to_model(self, context: _SccContext) -> SccTimeCode:
     """Converts the SCC line to the data model"""
 
-    if self.get_style() not in (SccCaptionStyle.PopOn, SccCaptionStyle.Unknown):
+    if self.get_style() is SccCaptionStyle.PaintOn:
       raise ValueError(f"Unsupported caption style: {self.get_style()}")
 
     debug = str(self.time_code) + "\t"
@@ -445,6 +518,7 @@ class SccLine:
       print(debug)
 
 
+    return self.time_code
 
 
 #
@@ -471,13 +545,20 @@ def to_model(scc_content: str):
   context.div.set_doc(document)
   body.push_child(context.div)
 
+  time_code = None
   for line in scc_content.splitlines():
-    if DEBUG:
-      print(line)
+    LOGGER.info(line)
     scc_line = SccLine.from_str(line)
     if not scc_line:
       continue
 
-    scc_line.to_model(context)
+    time_code = scc_line.to_model(context)
+
+  context.flush(time_code)
+
+  # for region in context.regions:
+  #   if not region.get_doc():
+  #     region.set_doc(document)
+  #     document.put_region(region)
 
   return document

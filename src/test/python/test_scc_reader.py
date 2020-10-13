@@ -154,24 +154,28 @@ class SCCReaderTest(unittest.TestCase):
     self.assertEqual("caption1", caption1.get_id())
     self.assertEqual(SccTimeCode.parse("01:02:54:00").to_temporal_offset(), caption1.get_begin())
     self.assertEqual(SccTimeCode.parse("01:02:55:15").to_temporal_offset(), caption1.get_end())
-    spans = list(caption1)
-    self.assertEqual(1, len(spans))
+
+    caption_children = list(caption1)
+    self.assertEqual(1, len(caption_children))
+
     expected_origin = PositionType(x=LengthType(value=26, units=LengthType.Units.c),
                                    y=LengthType(value=17, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[0].get_style(StyleProperties.Origin))
-    texts = list(spans[0])
+    self.assertEqual(expected_origin, caption_children[0].get_style(StyleProperties.Origin))
+    texts = list(caption_children[0])
     self.assertEqual("( horn honking )", texts[0].get_text())
 
     caption2 = p_list[1]
     self.assertEqual("caption2", caption2.get_id())
     self.assertEqual(SccTimeCode.parse("01:03:28:12").to_temporal_offset(), caption2.get_begin())
     self.assertEqual(SccTimeCode.parse("01:11:31:28").to_temporal_offset(), caption2.get_end())
-    spans = list(caption2)
-    self.assertEqual(1, len(spans))
+
+    caption_children = list(caption2)
+    self.assertEqual(1, len(caption_children))
+
     expected_origin = PositionType(x=LengthType(value=8, units=LengthType.Units.c),
                                    y=LengthType(value=17, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[0].get_style(StyleProperties.Origin))
-    texts = list(spans[0])
+    self.assertEqual(expected_origin, caption_children[0].get_style(StyleProperties.Origin))
+    texts = list(caption_children[0])
     self.assertEqual("HEY, THE®E.", texts[0].get_text())
 
     caption3 = p_list[2]
@@ -179,33 +183,188 @@ class SCCReaderTest(unittest.TestCase):
     self.assertEqual(SccTimeCode.parse("01:11:31:29").to_temporal_offset(), caption3.get_begin())
     self.assertEqual(SccTimeCode.parse("01:11:33:15").to_temporal_offset(), caption3.get_end())
 
-    spans = list(caption3)
-    self.assertEqual(3, len(spans))
+    caption_children = list(caption3)
+    self.assertEqual(5, len(caption_children))
 
     expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
                                    y=LengthType(value=16, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[0].get_style(StyleProperties.Origin))
-    texts = list(spans[0])
-    self.assertEqual(3, len(texts))
+    child = caption_children[0]
+    self.assertEqual(expected_origin, child.get_style(StyleProperties.Origin))
+    texts = list(child)
+    self.assertEqual(1, len(texts))
     self.assertEqual("Test ½ Caption ", texts[0].get_text())
-    self.assertIsInstance(texts[1], Br)
-    self.assertEqual("Test ", texts[2].get_text())
 
+    child = caption_children[1]
+    self.assertIsInstance(child, Br)
+
+    child = caption_children[2]
     expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
                                    y=LengthType(value=17, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[1].get_style(StyleProperties.Origin))
-    self.assertEqual(FontStyleType.italic, spans[1].get_style(StyleProperties.FontStyle))
-    texts = list(spans[1])
+    self.assertEqual(expected_origin, child.get_style(StyleProperties.Origin))
+    texts = list(child)
+    self.assertEqual("Test ", texts[0].get_text())
+
+    child = caption_children[3]
+    expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
+                                   y=LengthType(value=17, units=LengthType.Units.c))
+    self.assertEqual(expected_origin, child.get_style(StyleProperties.Origin))
+    self.assertEqual(FontStyleType.italic, child.get_style(StyleProperties.FontStyle))
+    texts = list(child)
     self.assertEqual("test", texts[0].get_text())
 
+    child = caption_children[4]
     expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
                                    y=LengthType(value=17, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[2].get_style(StyleProperties.Origin))
-    self.assertIsNone(spans[2].get_style(StyleProperties.FontStyle))
-    self.assertEqual(NamedColors.white.value, spans[2].get_style(StyleProperties.Color))
-    texts = list(spans[2])
+    self.assertEqual(expected_origin, child.get_style(StyleProperties.Origin))
+    self.assertIsNone(child.get_style(StyleProperties.FontStyle))
+    self.assertEqual(NamedColors.white.value, child.get_style(StyleProperties.Color))
+    texts = list(child)
     self.assertEqual(" Captions", texts[0].get_text())
 
+
+  def test_roll_up_content(self):
+    scc_content = """Scenarist_SCC V1.0
+
+00:00:00;22	9425 9425 94ad 94ad 9470 9470 3e3e 3e20 c849 ae80
+
+00:00:02;23	9425 9425 94ad 94ad 9470 9470 49a7 cd20 cb45 d649 ce20 43d5 cece 49ce c720 c1ce c420 c154
+
+00:00:04;17	9425 9425 94ad 94ad 9470 9470 49ce d645 d354 4f52 a7d3 20c2 c1ce cb20 5745 20c2 454c 4945 d645 2049 ce80
+
+00:00:06;04	9425 9425 94ad 94ad 9470 9470 c845 4cd0 49ce c720 54c8 4520 4c4f 43c1 4c20 ce45 49c7 c8c2 4f52 c84f 4fc4 d380
+
+00:00:09;21	9425 9425 94ad 94ad 9470 9470 c1ce c420 91ae 91ae 49cd d052 4fd6 49ce c720 9120 9120 54c8 4520 4c49 d645 d320 4f46 20c1 4c4c
+
+00:00:11;07	9425 9425 94ad 94ad 9470 9470 5745 20d3 4552 d645 ae80
+
+00:00:12;07	9425 9425 94ad 94ad 9470 9470 91b0 9131 9132 9132
+
+00:00:13;07	9425 9425 94ad 94ad 9470 9470 c1c2 c3c4 c580 91bf
+
+"""
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(8, len(p_list))
+
+    p = p_list[0]
+    self.assertEqual("caption1", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:00;23").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:02;24").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(1, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual(">>> HI.", texts[0].get_text())
+
+    p = p_list[1]
+    self.assertEqual("caption2", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:02;24").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:04;18").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(3, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual(">>> HI.", texts[0].get_text())
+    self.assertIsInstance(p_children[1], Br)
+    texts = list(p_children[2])
+    self.assertEqual("I'M KEVIN CUNNING AND AT", texts[0].get_text())
+
+    p = p_list[2]
+    self.assertEqual("caption3", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:04;18").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:06;05").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(3, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual("I'M KEVIN CUNNING AND AT", texts[0].get_text())
+    self.assertIsInstance(p_children[1], Br)
+    texts = list(p_children[2])
+    self.assertEqual("INVESTOR'S BANK WE BELIEVE IN", texts[0].get_text())
+
+    p = p_list[3]
+    self.assertEqual("caption4", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:06;05").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:09;22").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(3, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual("INVESTOR'S BANK WE BELIEVE IN", texts[0].get_text())
+    self.assertIsInstance(p_children[1], Br)
+    texts = list(p_children[2])
+    self.assertEqual("HELPING THE LOCAL NEIGHBORHOODS", texts[0].get_text())
+
+    p = p_list[4]
+    self.assertEqual("caption5", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:09;22").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:11;08").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(5, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual("HELPING THE LOCAL NEIGHBORHOODS", texts[0].get_text())
+    self.assertIsInstance(p_children[1], Br)
+    texts = list(p_children[2])
+    self.assertEqual("AND ", texts[0].get_text())
+    texts = list(p_children[3])
+    self.assertEqual("IMPROVING ", texts[0].get_text())
+    texts = list(p_children[4])
+    self.assertEqual("THE LIVES OF ALL", texts[0].get_text())
+
+    p = p_list[5]
+    self.assertEqual("caption6", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:11;08").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:12;08").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(5, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual("AND ", texts[0].get_text())
+    texts = list(p_children[1])
+    self.assertEqual("IMPROVING ", texts[0].get_text())
+    texts = list(p_children[2])
+    self.assertEqual("THE LIVES OF ALL", texts[0].get_text())
+    self.assertIsInstance(p_children[3], Br)
+    texts = list(p_children[4])
+    self.assertEqual("WE SERVE.", texts[0].get_text())
+
+    p = p_list[6]
+    self.assertEqual("caption7", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:12;08").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:13;08").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(3, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual("WE SERVE.", texts[0].get_text())
+    self.assertIsInstance(p_children[1], Br)
+    texts = list(p_children[2])
+    self.assertEqual("®°½", texts[0].get_text())
+
+    p = p_list[7]
+    self.assertEqual("caption8", p.get_id())
+    self.assertEqual(SccTimeCode.parse("00:00:13;08").to_temporal_offset(), p.get_begin())
+    self.assertEqual(SccTimeCode.parse("00:00:13;14").to_temporal_offset(), p.get_end())
+
+    p_children = list(p)
+    self.assertEqual(3, len(p_children))
+    texts = list(p_children[0])
+    self.assertEqual("®°½", texts[0].get_text())
+    self.assertIsInstance(p_children[1], Br)
+    texts = list(p_children[2])
+    self.assertEqual("ABCDEû", texts[0].get_text())
 
 if __name__ == '__main__':
   unittest.main()

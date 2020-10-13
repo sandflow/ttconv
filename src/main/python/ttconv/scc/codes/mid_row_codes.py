@@ -31,7 +31,7 @@ import typing
 from enum import Enum
 
 from ttconv.scc.codes import SccCode, SCC_COLOR_MAPPING
-from ttconv.style_properties import NamedColors, FontStyleType, TextDecorationType, ColorType
+from ttconv.style_properties import FontStyleType, TextDecorationType, ColorType
 
 
 class SccMidRowCode(SccCode, Enum):
