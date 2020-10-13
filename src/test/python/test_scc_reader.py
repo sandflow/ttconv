@@ -29,6 +29,7 @@
 
 import unittest
 
+from ttconv.model import Br
 from ttconv.scc.scc_reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors
@@ -121,7 +122,7 @@ class SccLineTest(unittest.TestCase):
 
 class SCCReaderTest(unittest.TestCase):
 
-  def test_scc_text_content(self):
+  def test_scc_pop_on_content(self):
     scc_content = """Scenarist_SCC V1.0
 
 01:02:53:14	94ae 94ae 9420 9420 947a 947a 97a2 97a2 a820 68ef f26e 2068 ef6e 6be9 6e67 2029 942c 942c 8080 8080 942f 942f
@@ -177,34 +178,32 @@ class SCCReaderTest(unittest.TestCase):
     self.assertEqual("caption3", caption3.get_id())
     self.assertEqual(SccTimeCode.parse("01:11:31:29").to_temporal_offset(), caption3.get_begin())
     self.assertEqual(SccTimeCode.parse("01:11:33:15").to_temporal_offset(), caption3.get_end())
+
     spans = list(caption3)
-    self.assertEqual(4, len(spans))
+    self.assertEqual(3, len(spans))
 
     expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
                                    y=LengthType(value=16, units=LengthType.Units.c))
     self.assertEqual(expected_origin, spans[0].get_style(StyleProperties.Origin))
     texts = list(spans[0])
+    self.assertEqual(3, len(texts))
     self.assertEqual("Test ½ Caption ", texts[0].get_text())
+    self.assertIsInstance(texts[1], Br)
+    self.assertEqual("Test ", texts[2].get_text())
 
     expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
                                    y=LengthType(value=17, units=LengthType.Units.c))
     self.assertEqual(expected_origin, spans[1].get_style(StyleProperties.Origin))
+    self.assertEqual(FontStyleType.italic, spans[1].get_style(StyleProperties.FontStyle))
     texts = list(spans[1])
-    self.assertEqual("Test ", texts[0].get_text())
-
-    expected_origin = PositionType(x=LengthType(value=4, units=LengthType.Units.c),
-                                   y=LengthType(value=2, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[2].get_style(StyleProperties.Origin))
-    self.assertEqual(FontStyleType.italic, spans[2].get_style(StyleProperties.FontStyle))
-    texts = list(spans[2])
     self.assertEqual("test", texts[0].get_text())
 
-    expected_origin = PositionType(x=LengthType(value=4, units=LengthType.Units.c),
-                                   y=LengthType(value=2, units=LengthType.Units.c))
-    self.assertEqual(expected_origin, spans[3].get_style(StyleProperties.Origin))
-    self.assertIsNone(spans[3].get_style(StyleProperties.FontStyle))
-    self.assertEqual(NamedColors.white.value, spans[3].get_style(StyleProperties.Color))
-    texts = list(spans[3])
+    expected_origin = PositionType(x=LengthType(value=9, units=LengthType.Units.c),
+                                   y=LengthType(value=17, units=LengthType.Units.c))
+    self.assertEqual(expected_origin, spans[2].get_style(StyleProperties.Origin))
+    self.assertIsNone(spans[2].get_style(StyleProperties.FontStyle))
+    self.assertEqual(NamedColors.white.value, spans[2].get_style(StyleProperties.Color))
+    texts = list(spans[2])
     self.assertEqual(" Captions", texts[0].get_text())
 
 

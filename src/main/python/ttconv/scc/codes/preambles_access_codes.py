@@ -31,7 +31,7 @@ from typing import Optional
 
 from ttconv.scc.codes import SCC_COLOR_MAPPING
 from ttconv.style_properties import NamedColors, TextDecorationType, \
-  FontStyleType
+  FontStyleType, ColorType
 
 _ROW_MAPPING = {
   (0x01, 0x40): 1,
@@ -66,14 +66,14 @@ class _SccPacDescriptionBits:
     """Returns whether the PAC description bits sets the italic style"""
     return self._bits in (0x0E, 0x0F)
 
-  def get_color(self) -> Optional[NamedColors]:
+  def get_color(self) -> Optional[ColorType]:
     """Returns the color from the PAC description bits"""
 
     if self._bits not in list(range(0x00, 0x10)):
       return None
 
     if self._bits in (0x00, 0x01, 0x0E, 0x0F):
-      return NamedColors.white
+      return NamedColors.white.value
 
     return SCC_COLOR_MAPPING.get(self._bits, None)
 
@@ -112,7 +112,7 @@ class SccPreambleAccessCode:
     """Returns PAC column offset"""
     return self._indent
 
-  def get_color(self) -> Optional[NamedColors]:
+  def get_color(self) -> Optional[ColorType]:
     """Returns PAC color"""
     return self._color
 

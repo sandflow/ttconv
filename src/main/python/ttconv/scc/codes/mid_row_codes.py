@@ -31,7 +31,7 @@ import typing
 from enum import Enum
 
 from ttconv.scc.codes import SccCode, SCC_COLOR_MAPPING
-from ttconv.style_properties import NamedColors, FontStyleType, TextDecorationType
+from ttconv.style_properties import NamedColors, FontStyleType, TextDecorationType, ColorType
 
 
 class SccMidRowCode(SccCode, Enum):
@@ -57,7 +57,7 @@ class SccMidRowCode(SccCode, Enum):
     """Retrieves SCC Mid-Row Code name"""
     return self.name
 
-  def get_color(self) -> typing.Optional[NamedColors]:
+  def get_color(self) -> typing.Optional[ColorType]:
     """Returns SCC Mid-Row Code color"""
     style_bits = self._channel_1 & 0x000F
 
