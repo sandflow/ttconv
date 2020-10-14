@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from enum import Enum
 
+ROLL_UP_BASE_ROW = 15
 
 class SccCaptionStyle(Enum):
   """SCC caption style"""

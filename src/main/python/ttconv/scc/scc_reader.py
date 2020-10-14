@@ -38,7 +38,7 @@ from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_access_codes import SccPreambleAccessCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
-from ttconv.scc.scc_caption_style import SccCaptionStyle
+from ttconv.scc.scc_caption_style import SccCaptionStyle, ROLL_UP_BASE_ROW
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
 from ttconv.style_properties import StyleProperties, PositionType, LengthType
 
@@ -151,10 +151,28 @@ class SccCaptionParagraph:
     self.current_text.set_x_offset(self._column_offset)
     self.current_text.set_y_offset(self._row_offset)
 
+  def set_roll_up_row_offsets(self):
+    """Sets Roll-up captions row offset in relation to the base row 15"""
+    if self._style is not SccCaptionStyle.RollUp:
+      raise (RuntimeError(f"Cannot set Roll-Up row offset for {self._style}-styled caption."))
+
+    count = 0
+    for caption_content in reversed(self.caption_contents):
+      if not isinstance(caption_content, SccCaptionText):
+        count += 1
+        continue
+      caption_content.set_y_offset(self._safe_area_y_offset + ROLL_UP_BASE_ROW - count)
+
+    self.set_row_offset(ROLL_UP_BASE_ROW)
+
   def indent(self, indent: int):
     """Indents the current text (x offset)"""
     self._column_offset += indent
     self.current_text.set_x_offset(self._column_offset)
+
+  def get_style(self) -> SccCaptionStyle:
+    """Returns the caption style"""
+    return self._style
 
   def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionText]:
     """Returns the caption text elements from the expected number of last lines"""
@@ -244,7 +262,10 @@ class _SccContext:
     self.current_caption.new_caption_text()
 
     self.current_caption.set_column_offset(pac.get_indent())
-    self.current_caption.set_row_offset(pac.get_row())
+
+    if self.current_caption.get_style() is not SccCaptionStyle.RollUp:
+      self.current_caption.set_row_offset(pac.get_row())
+
     self.current_caption.set_current_text_offsets()
 
     self.current_caption.current_text.add_style_property(StyleProperties.Color, pac.get_color())
@@ -304,6 +325,7 @@ class _SccContext:
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
       self.current_caption.caption_contents = previous_last_lines
       self.init_current_caption(time_code)
+      self.current_caption.set_roll_up_row_offsets()
 
     if control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
