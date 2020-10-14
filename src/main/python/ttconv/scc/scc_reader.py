@@ -161,9 +161,8 @@ class SccCaptionParagraph:
     last_lines = []
     added_lines = 0
     for caption in reversed(self.caption_contents):
-      if not isinstance(caption, SccCaptionText):
+      if isinstance(caption, SccCaptionLineBreak):
         added_lines += 1
-        continue
 
       if added_lines == expected_lines:
         return last_lines
