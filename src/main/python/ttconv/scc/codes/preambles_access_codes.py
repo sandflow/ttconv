@@ -101,7 +101,7 @@ class SccPreambleAccessCode:
     self._color = desc_bits.get_color()
     self._indent = desc_bits.get_indent()
     self._font_style = FontStyleType.italic if desc_bits.get_italic() else None
-    self._text_decoration = TextDecorationType.underline if desc_bits.get_underline() else None
+    self._text_decoration: Optional[TextDecorationType] = TextDecorationType(underline=TextDecorationType.Action.add) if desc_bits.get_underline() else None
     self._channel = 2 if byte_1 & 0x08 else 1
 
   def get_row(self) -> int:
