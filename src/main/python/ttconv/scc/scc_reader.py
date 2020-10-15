@@ -154,7 +154,7 @@ class SccCaptionParagraph:
   def set_roll_up_row_offsets(self):
     """Sets Roll-up captions row offset in relation to the base row 15"""
     if self._style is not SccCaptionStyle.RollUp:
-      raise (RuntimeError(f"Cannot set Roll-Up row offset for {self._style}-styled caption."))
+      raise RuntimeError(f"Cannot set Roll-Up row offset for {self._style}-styled caption.")
 
     count = 0
     for caption_content in reversed(self.caption_contents):
@@ -261,16 +261,25 @@ class _SccContext:
 
     self.current_caption.new_caption_text()
 
-    self.current_caption.set_column_offset(pac.get_indent())
+    pac_row = pac.get_row()
+    pac_indent = pac.get_indent()
 
-    if self.current_caption.get_style() is not SccCaptionStyle.RollUp:
-      self.current_caption.set_row_offset(pac.get_row())
+    if self.current_caption.get_style() is SccCaptionStyle.RollUp:
+      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15.
+      if pac_row in range(5, 12):
+        self.current_caption.set_current_text_offsets()
+        return
 
-    self.current_caption.set_current_text_offsets()
+      self.current_caption.set_column_offset(pac_indent)
+    else:
+      self.current_caption.set_row_offset(pac_row)
+      self.current_caption.set_column_offset(pac_indent)
 
     self.current_caption.current_text.add_style_property(StyleProperties.Color, pac.get_color())
     self.current_caption.current_text.add_style_property(StyleProperties.FontStyle, pac.get_font_style())
     self.current_caption.current_text.add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
+
+    self.current_caption.set_current_text_offsets()
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode):
     """Processes SCC Mid-Row Code to map it to the model"""

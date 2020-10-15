@@ -32,7 +32,8 @@ import unittest
 from ttconv.model import Br, P, Span
 from ttconv.scc.scc_reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
-from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors
+from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
+  StyleProperty
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -130,26 +131,29 @@ class SccLineTest(unittest.TestCase):
 
 class SCCReaderTest(unittest.TestCase):
 
-  def check_caption(self, p: P, caption_id: str, begin: str, end: str, *children):
-    self.assertEqual(caption_id, p.get_id())
-    self.assertEqual(SccTimeCode.parse(begin).to_temporal_offset(), p.get_begin())
-    self.assertEqual(SccTimeCode.parse(end).to_temporal_offset(), p.get_end())
+  def check_caption(self, paragraph: P, caption_id: str, begin: str, end: str, *children):
+    self.assertEqual(caption_id, paragraph.get_id())
+    self.assertEqual(SccTimeCode.parse(begin).to_temporal_offset(), paragraph.get_begin())
+    self.assertEqual(SccTimeCode.parse(end).to_temporal_offset(), paragraph.get_end())
 
-    p_children = list(p)
+    p_children = list(paragraph)
     self.assertEqual(len(children), len(p_children))
 
-    for index in range(0, len(p_children)):
+    for (index, child) in enumerate(p_children):
       expected_child = children[index]
       if isinstance(expected_child, str):
-        texts = list(p_children[index])
+        texts = list(child)
         self.assertEqual(expected_child, texts[0].get_text())
       else:
         self.assertEqual(expected_child, Br)
 
+  def check_element_style(self, elem: Span, style_property: StyleProperty, expected_value):
+    self.assertEqual(expected_value, elem.get_style(style_property))
+
   def check_element_origin(self, elem: Span, expected_x_origin: int, expected_y_origin: int, unit=LengthType.Units.c):
     expected_origin = PositionType(x=LengthType(value=expected_x_origin, units=unit),
                                    y=LengthType(value=expected_y_origin, units=unit))
-    self.assertEqual(expected_origin, elem.get_style(StyleProperties.Origin))
+    self.check_element_style(elem, StyleProperties.Origin, expected_origin)
 
   def test_scc_pop_on_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -190,19 +194,19 @@ class SCCReaderTest(unittest.TestCase):
     self.check_element_origin(list(p_list[2])[0], 9, 16)
     self.check_element_origin(list(p_list[2])[2], 9, 17)
     self.check_element_origin(list(p_list[2])[3], 9, 17)
-    self.assertEqual(FontStyleType.italic, list(p_list[2])[3].get_style(StyleProperties.FontStyle))
+    self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
     self.check_element_origin(list(p_list[2])[4], 9, 17)
-    self.assertIsNone(list(p_list[2])[4].get_style(StyleProperties.FontStyle))
-    self.assertEqual(NamedColors.white.value, list(p_list[2])[4].get_style(StyleProperties.Color))
+    self.check_element_style(list(p_list[2])[4], StyleProperties.FontStyle, None)
+    self.check_element_style(list(p_list[2])[4], StyleProperties.Color, NamedColors.white.value)
 
   def test_2_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
 
 00:00:00:22	9425 9425 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
-00:00:02:23	9425 9425 94ad 94ad 9470 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+00:00:02:23	9425 9425 94ad 94ad 9673 9673 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
-00:00:04:17	9425 9425 94ad 94ad 9470 9470 5065 6c6c 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80
+00:00:04:17	9425 9425 94ad 94ad 9473 9473 5065 6c6c 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80
 
 00:00:06:04	9425 9425 94ad 94ad 9470 9470 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 
@@ -230,9 +234,11 @@ class SCCReaderTest(unittest.TestCase):
     self.check_element_origin(list(p_list[1])[2], 4, 17)
     self.check_caption(p_list[2], "caption3", "00:00:04:18", "00:00:06:05", expected_text[1], Br, expected_text[2])
     self.check_element_origin(list(p_list[2])[0], 4, 16)
-    self.check_element_origin(list(p_list[2])[2], 4, 17)
+    self.check_element_origin(list(p_list[2])[2], 8, 17)
+    self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
+                             TextDecorationType(underline=TextDecorationType.Action.add))
     self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
-    self.check_element_origin(list(p_list[3])[0], 4, 16)
+    self.check_element_origin(list(p_list[3])[0], 8, 16)
     self.check_element_origin(list(p_list[3])[2], 4, 17)
 
   def test_3_rows_roll_up_content(self):
