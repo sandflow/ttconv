@@ -29,11 +29,11 @@
 
 import unittest
 
-from ttconv.model import Br, P, Span
+from ttconv.model import Br, P, ContentElement
 from ttconv.scc.scc_reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
-  StyleProperty
+  StyleProperty, ExtentType
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -147,13 +147,18 @@ class SCCReaderTest(unittest.TestCase):
       else:
         self.assertEqual(expected_child, Br)
 
-  def check_element_style(self, elem: Span, style_property: StyleProperty, expected_value):
+  def check_element_style(self, elem: ContentElement, style_property: StyleProperty, expected_value):
     self.assertEqual(expected_value, elem.get_style(style_property))
 
-  def check_element_origin(self, elem: Span, expected_x_origin: int, expected_y_origin: int, unit=LengthType.Units.c):
+  def check_element_origin(self, elem: ContentElement, expected_x_origin: int, expected_y_origin: int, unit=LengthType.Units.c):
     expected_origin = PositionType(x=LengthType(value=expected_x_origin, units=unit),
                                    y=LengthType(value=expected_y_origin, units=unit))
     self.check_element_style(elem, StyleProperties.Origin, expected_origin)
+
+  def check_element_extent(self, elem: ContentElement, width: int, height: int, unit=LengthType.Units.c):
+    expected_extent = ExtentType(width=LengthType(value=width, units=unit),
+                                 height=LengthType(value=height, units=unit))
+    self.check_element_style(elem, StyleProperties.Extent, expected_extent)
 
   def test_scc_pop_on_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -172,6 +177,21 @@ class SCCReaderTest(unittest.TestCase):
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 26, 17)
+    self.check_element_extent(region_1, 16, 1)
+
+    region_2 = doc.get_region("pop2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 8, 17)
+    self.check_element_extent(region_2, 11, 1)
+
+    region_3 = doc.get_region("pop3")
+    self.assertIsNotNone(region_3)
+    self.check_element_origin(region_3, 9, 16)
+    self.check_element_extent(region_3, 15, 2)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -184,18 +204,15 @@ class SCCReaderTest(unittest.TestCase):
     self.assertEqual(3, len(p_list))
 
     self.check_caption(p_list[0], "caption1", "01:02:54:00", "01:02:55:15", "( horn honking )")
-    self.check_element_origin(list(p_list[0])[0], 26, 17)
+    self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "01:03:28:12", "01:11:31:28", "HEY, THE®E.")
-    self.check_element_origin(list(p_list[1])[0], 8, 17)
+    self.assertEqual(region_2, p_list[1].get_region())
 
     self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", "test", " Captions")
+    self.assertEqual(region_3, p_list[2].get_region())
 
-    self.check_element_origin(list(p_list[2])[0], 9, 16)
-    self.check_element_origin(list(p_list[2])[2], 9, 17)
-    self.check_element_origin(list(p_list[2])[3], 9, 17)
     self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
-    self.check_element_origin(list(p_list[2])[4], 9, 17)
     self.check_element_style(list(p_list[2])[4], StyleProperties.FontStyle, None)
     self.check_element_style(list(p_list[2])[4], StyleProperties.Color, NamedColors.white.value)
 
@@ -214,6 +231,16 @@ class SCCReaderTest(unittest.TestCase):
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    region_1 = doc.get_region("rollup1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 4, 17)
+    self.check_element_extent(region_1, 27, 1)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 4, 16)
+    self.check_element_extent(region_2, 43, 2)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -228,18 +255,19 @@ class SCCReaderTest(unittest.TestCase):
     expected_text = LOREM_IPSUM.splitlines()
 
     self.check_caption(p_list[0], "caption1", "00:00:00:23", "00:00:02:24", expected_text[0])
-    self.check_element_origin(list(p_list[0])[0], 4, 17)
+    self.assertEqual(region_1, p_list[0].get_region())
+
     self.check_caption(p_list[1], "caption2", "00:00:02:24", "00:00:04:18", expected_text[0], Br, expected_text[1])
-    self.check_element_origin(list(p_list[1])[0], 4, 16)
-    self.check_element_origin(list(p_list[1])[2], 4, 17)
+    self.assertEqual(region_2, p_list[1].get_region())
+
     self.check_caption(p_list[2], "caption3", "00:00:04:18", "00:00:06:05", expected_text[1], Br, expected_text[2])
-    self.check_element_origin(list(p_list[2])[0], 4, 16)
-    self.check_element_origin(list(p_list[2])[2], 8, 17)
+    self.assertEqual(region_2, p_list[2].get_region())
+
     self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
                              TextDecorationType(underline=TextDecorationType.Action.add))
+
     self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
-    self.check_element_origin(list(p_list[3])[0], 8, 16)
-    self.check_element_origin(list(p_list[3])[2], 4, 17)
+    self.assertEqual(region_2, p_list[3].get_region())
 
   def test_3_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -255,6 +283,21 @@ class SCCReaderTest(unittest.TestCase):
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    region_1 = doc.get_region("rollup1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 4, 17)
+    self.check_element_extent(region_1, 27, 1)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 4, 16)
+    self.check_element_extent(region_2, 28, 2)
+
+    region_3 = doc.get_region("rollup3")
+    self.assertIsNotNone(region_3)
+    self.check_element_origin(region_3, 4, 15)
+    self.check_element_extent(region_3, 43, 3)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -269,20 +312,18 @@ class SCCReaderTest(unittest.TestCase):
     expected_text = LOREM_IPSUM.splitlines()
 
     self.check_caption(p_list[0], "caption1", "00:00:17;02", "00:00:18;20", expected_text[0])
-    self.check_element_origin(list(p_list[0])[0], 4, 17)
+    self.assertEqual(region_1, p_list[0].get_region())
+
     self.check_caption(p_list[1], "caption2", "00:00:18;20", "00:00:20;07", expected_text[0], Br, expected_text[1])
-    self.check_element_origin(list(p_list[1])[0], 4, 16)
-    self.check_element_origin(list(p_list[1])[2], 4, 17)
+    self.assertEqual(region_2, p_list[1].get_region())
+
     self.check_caption(p_list[2], "caption3", "00:00:20;07", "00:00:21;25", expected_text[0], Br, expected_text[1], Br,
                        expected_text[2])
-    self.check_element_origin(list(p_list[2])[0], 4, 15)
-    self.check_element_origin(list(p_list[2])[2], 4, 16)
-    self.check_element_origin(list(p_list[2])[4], 4, 17)
+    self.assertEqual(region_3, p_list[2].get_region())
+
     self.check_caption(p_list[3], "caption4", "00:00:21;25", "00:00:22;16", expected_text[1], Br, expected_text[2], Br,
                        expected_text[3])
-    self.check_element_origin(list(p_list[3])[0], 4, 15)
-    self.check_element_origin(list(p_list[3])[2], 4, 16)
-    self.check_element_origin(list(p_list[3])[4], 4, 17)
+    self.assertEqual(region_3, p_list[3].get_region())
 
   def test_4_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -303,6 +344,26 @@ class SCCReaderTest(unittest.TestCase):
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    region_1 = doc.get_region("rollup1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 4, 17)
+    self.check_element_extent(region_1, 27, 1)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 4, 16)
+    self.check_element_extent(region_2, 28, 2)
+
+    region_3 = doc.get_region("rollup3")
+    self.assertIsNotNone(region_3)
+    self.check_element_origin(region_3, 4, 15)
+    self.check_element_extent(region_3, 43, 3)
+
+    region_4 = doc.get_region("rollup4")
+    self.assertIsNotNone(region_4)
+    self.check_element_origin(region_4, 4, 14)
+    self.check_element_extent(region_4, 43, 4)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -317,33 +378,26 @@ class SCCReaderTest(unittest.TestCase):
     expected_text = LOREM_IPSUM.splitlines()
 
     self.check_caption(p_list[0], "caption1", "00:00:34;28", "00:00:36;13", expected_text[0])
-    self.check_element_origin(list(p_list[0])[0], 4, 17)
+    self.assertEqual(region_1, p_list[0].get_region())
+
     self.check_caption(p_list[1], "caption2", "00:00:36;13", "00:00:44;09", expected_text[0], Br, expected_text[1])
-    self.check_element_origin(list(p_list[1])[0], 4, 16)
-    self.check_element_origin(list(p_list[1])[2], 4, 17)
+    self.assertEqual(region_2, p_list[1].get_region())
+
     self.check_caption(p_list[2], "caption3", "00:00:44;09", "00:00:47;13", expected_text[0], Br, expected_text[1], Br,
                        expected_text[2])
-    self.check_element_origin(list(p_list[2])[0], 4, 15)
-    self.check_element_origin(list(p_list[2])[2], 4, 16)
-    self.check_element_origin(list(p_list[2])[4], 4, 17)
+    self.assertEqual(region_3, p_list[2].get_region())
+
     self.check_caption(p_list[3], "caption4", "00:00:47;13", "00:00:49;04", expected_text[0], Br, expected_text[1], Br,
                        expected_text[2], Br, expected_text[3])
-    self.check_element_origin(list(p_list[3])[0], 4, 14)
-    self.check_element_origin(list(p_list[3])[2], 4, 15)
-    self.check_element_origin(list(p_list[3])[4], 4, 16)
-    self.check_element_origin(list(p_list[3])[6], 4, 17)
+    self.assertEqual(region_4, p_list[3].get_region())
+
     self.check_caption(p_list[4], "caption5", "00:00:49;04", "00:00:50;24", expected_text[1], Br, expected_text[2], Br,
                        expected_text[3], Br, expected_text[4])
-    self.check_element_origin(list(p_list[4])[0], 4, 14)
-    self.check_element_origin(list(p_list[4])[2], 4, 15)
-    self.check_element_origin(list(p_list[4])[4], 4, 16)
-    self.check_element_origin(list(p_list[4])[6], 4, 17)
+    self.assertEqual(region_4, p_list[4].get_region())
+
     self.check_caption(p_list[5], "caption6", "00:00:50;24", "00:00:51;09", expected_text[2], Br, expected_text[3], Br,
                        expected_text[4], Br, expected_text[5])
-    self.check_element_origin(list(p_list[5])[0], 4, 14)
-    self.check_element_origin(list(p_list[5])[2], 4, 15)
-    self.check_element_origin(list(p_list[5])[4], 4, 16)
-    self.check_element_origin(list(p_list[5])[6], 4, 17)
+    self.assertEqual(region_4, p_list[5].get_region())
 
   def test_mix_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -385,6 +439,26 @@ class SCCReaderTest(unittest.TestCase):
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    region_1 = doc.get_region("rollup1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 4, 17)
+    self.check_element_extent(region_1, 7, 1)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 4, 16)
+    self.check_element_extent(region_2, 31, 2)
+
+    region_3 = doc.get_region("rollup3")
+    self.assertIsNotNone(region_3)
+    self.check_element_origin(region_3, 4, 15)
+    self.check_element_extent(region_3, 29, 3)
+
+    region_4 = doc.get_region("rollup4")
+    self.assertIsNotNone(region_4)
+    self.check_element_origin(region_4, 4, 14)
+    self.check_element_extent(region_4, 30, 4)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -397,74 +471,62 @@ class SCCReaderTest(unittest.TestCase):
     self.assertEqual(16, len(p_list))
 
     self.check_caption(p_list[0], "caption1", "00:00:00;23", "00:00:02;24", ">>> HI.")
-    self.check_element_origin(list(p_list[0])[0], 4, 17)
+    self.assertEqual(region_1, p_list[0].get_region())
+
     self.check_caption(p_list[1], "caption2", "00:00:02;24", "00:00:04;18", ">>> HI.", Br, "I'M KEVIN CUNNING AND AT")
-    self.check_element_origin(list(p_list[1])[0], 4, 16)
-    self.check_element_origin(list(p_list[1])[2], 4, 17)
+    self.assertEqual(region_2, p_list[1].get_region())
+
     self.check_caption(p_list[2], "caption3", "00:00:04;18", "00:00:06;05", "I'M KEVIN CUNNING AND AT", Br,
                        "INVESTOR'S BANK WE BELIEVE IN")
-    self.check_element_origin(list(p_list[2])[0], 4, 16)
-    self.check_element_origin(list(p_list[2])[2], 4, 17)
+    self.assertEqual(region_2, p_list[2].get_region())
+
     self.check_caption(p_list[3], "caption4", "00:00:06;05", "00:00:09;22", "INVESTOR'S BANK WE BELIEVE IN", Br,
                        "HELPING THE LOCAL NEIGHBORHOODS")
-    self.check_element_origin(list(p_list[3])[0], 4, 16)
-    self.check_element_origin(list(p_list[3])[2], 4, 17)
+    self.assertEqual(region_2, p_list[3].get_region())
+
     self.check_caption(p_list[4], "caption5", "00:00:09;22", "00:00:11;08", "HELPING THE LOCAL NEIGHBORHOODS", Br, "AND ",
                        "IMPROVING ", "THE LIVES OF ALL")
-    self.check_element_origin(list(p_list[4])[0], 4, 16)
-    self.check_element_origin(list(p_list[4])[2], 4, 17)
+    self.assertEqual(region_2, p_list[4].get_region())
+
     self.check_caption(p_list[5], "caption6", "00:00:11;08", "00:00:12;08", "AND ", "IMPROVING ", "THE LIVES OF ALL", Br,
                        "WE SERVE.")
-    self.check_element_origin(list(p_list[5])[0], 4, 16)
-    self.check_element_origin(list(p_list[5])[4], 4, 17)
+    self.assertEqual(region_2, p_list[5].get_region())
+
     self.check_caption(p_list[6], "caption7", "00:00:12;08", "00:00:13;08", "WE SERVE.", Br, "®°½")
-    self.check_element_origin(list(p_list[6])[0], 4, 16)
-    self.check_element_origin(list(p_list[6])[2], 4, 17)
+    self.assertEqual(region_2, p_list[6].get_region())
+
     self.check_caption(p_list[7], "caption8", "00:00:13;08", "00:00:14;08", "®°½", Br, "ABCDEû")
-    self.check_element_origin(list(p_list[7])[0], 4, 16)
-    self.check_element_origin(list(p_list[7])[2], 4, 17)
+    self.assertEqual(region_2, p_list[7].get_region())
+
     self.check_caption(p_list[8], "caption9", "00:00:14;08", "00:00:17;02", "ABCDEû", Br, "ÁÉÓ¡")
-    self.check_element_origin(list(p_list[8])[0], 4, 16)
-    self.check_element_origin(list(p_list[8])[2], 4, 17)
+    self.assertEqual(region_2, p_list[8].get_region())
 
     self.check_caption(p_list[9], "caption10", "00:00:17;02", "00:00:18;20", "ABCDEû", Br, "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,")
-    self.check_element_origin(list(p_list[9])[0], 4, 15)
-    self.check_element_origin(list(p_list[9])[2], 4, 16)
-    self.check_element_origin(list(p_list[9])[4], 4, 17)
+    self.assertEqual(region_3, p_list[9].get_region())
+
     self.check_caption(p_list[10], "caption11", "00:00:18;20", "00:00:20;07", "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,", Br,
                        "LOOKING OUT THERE, THAT'S ALL")
-    self.check_element_origin(list(p_list[10])[0], 4, 15)
-    self.check_element_origin(list(p_list[10])[2], 4, 16)
-    self.check_element_origin(list(p_list[10])[4], 4, 17)
+    self.assertEqual(region_3, p_list[10].get_region())
+
     self.check_caption(p_list[11], "caption12", "00:00:20;07", "00:00:21;25", "WHERE YOU'RE STANDING NOW,", Br,
                        "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.")
-    self.check_element_origin(list(p_list[11])[0], 4, 15)
-    self.check_element_origin(list(p_list[11])[2], 4, 16)
-    self.check_element_origin(list(p_list[11])[4], 4, 17)
+    self.assertEqual(region_3, p_list[11].get_region())
+
     self.check_caption(p_list[12], "caption13", "00:00:21;25", "00:00:34;28", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
                        ">> IT WAS GOOD TO BE IN THE")
-    self.check_element_origin(list(p_list[12])[0], 4, 15)
-    self.check_element_origin(list(p_list[12])[2], 4, 16)
-    self.check_element_origin(list(p_list[12])[4], 4, 17)
+    self.assertEqual(region_3, p_list[12].get_region())
 
     self.check_caption(p_list[13], "caption14", "00:00:34;28", "00:00:36;13", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
                        ">> IT WAS GOOD TO BE IN THE", Br, "And restore Iowa's land, water")
-    self.check_element_origin(list(p_list[13])[0], 4, 14)
-    self.check_element_origin(list(p_list[13])[2], 4, 15)
-    self.check_element_origin(list(p_list[13])[4], 4, 16)
-    self.check_element_origin(list(p_list[13])[6], 4, 17)
+    self.assertEqual(region_4, p_list[13].get_region())
+
     self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS GOOD TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.")
-    self.check_element_origin(list(p_list[14])[0], 4, 14)
-    self.check_element_origin(list(p_list[14])[2], 4, 15)
-    self.check_element_origin(list(p_list[14])[4], 4, 16)
-    self.check_element_origin(list(p_list[14])[6], 4, 17)
+    self.assertEqual(region_4, p_list[14].get_region())
+
     self.check_caption(p_list[15], "caption16", "00:00:44;09", "00:00:44;26", ">> IT WAS GOOD TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
-    self.check_element_origin(list(p_list[15])[0], 4, 14)
-    self.check_element_origin(list(p_list[15])[2], 4, 15)
-    self.check_element_origin(list(p_list[15])[4], 4, 16)
-    self.check_element_origin(list(p_list[15])[6], 4, 17)
+    self.assertEqual(region_4, p_list[15].get_region())
 
 
 if __name__ == '__main__':

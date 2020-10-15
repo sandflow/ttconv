@@ -32,11 +32,28 @@ import logging
 from enum import Enum
 from typing import List, Optional
 
-from ttconv.model import Document, P, Span, Br, Text
+from ttconv.model import Document, P, Span, Br, Text, Region
 from ttconv.scc.time_codes import SccTimeCode
-from ttconv.style_properties import PositionType, LengthType, StyleProperties
+from ttconv.style_properties import PositionType, LengthType, StyleProperties, ExtentType
 
 ROLL_UP_BASE_ROW = 15
+
+
+def _get_position_from_offsets(x_offset, y_offset, units=LengthType.Units.c) -> PositionType:
+  """Converts offsets into position"""
+  x_position = LengthType(value=x_offset, units=units)
+  y_position = LengthType(value=y_offset, units=units)
+
+  return PositionType(x_position, y_position)
+
+
+def _get_extent_from_dimensions(width, height, units=LengthType.Units.c) -> ExtentType:
+  """Converts dimensions into extent"""
+  height = LengthType(value=height, units=units)
+  width = LengthType(value=width, units=units)
+
+  return ExtentType(height, width)
+
 
 class SccCaptionStyle(Enum):
   """SCC caption style"""
@@ -81,10 +98,7 @@ class SccCaptionText(SccCaptionContent):
 
   def get_position(self) -> PositionType:
     """Returns current row and column offsets as a cell-based PositionType"""
-    x_position = LengthType(value=self.x_offset, units=LengthType.Units.c)
-    y_position = LengthType(value=self.y_offset, units=LengthType.Units.c)
-
-    return PositionType(x_position, y_position)
+    return _get_position_from_offsets(self.x_offset, self.y_offset)
 
   def has_same_style_properties(self, other):
     """Returns whether the current text has the same style properties as the other text"""
@@ -168,6 +182,22 @@ class SccCaptionParagraph:
     """Returns the caption style"""
     return self._style
 
+  def get_origin(self) -> PositionType:
+    """Computes and returns the current paragraph origin, based on its content"""
+    x_offsets = [text.x_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
+    y_offsets = [text.y_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
+
+    return _get_position_from_offsets(min(x_offsets), min(y_offsets))
+
+  def get_extent(self) -> ExtentType:
+    """Computes and returns the current paragraph extent, based on its content"""
+    nb_lines = sum(map(lambda br: isinstance(br, SccCaptionLineBreak), self.caption_contents)) + 1
+    max_text_lengths = max([len(caption_text.text)
+                            for caption_text in self.caption_contents
+                            if isinstance(caption_text, SccCaptionText)])
+
+    return _get_extent_from_dimensions(max_text_lengths, nb_lines)
+
   def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionText]:
     """Returns the caption text elements from the expected number of last lines"""
     last_lines = []
@@ -183,8 +213,61 @@ class SccCaptionParagraph:
 
     return last_lines
 
+  def has_same_origin_as_region(self, region: Region) -> bool:
+    """Checks whether the region origin is the same as the current paragraph origin"""
+    region_origin: Optional[PositionType] = region.get_style(StyleProperties.Origin)
+    # Consider region origin units are cells
+    return region_origin \
+           and region_origin.x.value is self.get_origin().x.value \
+           and region_origin.y.value is self.get_origin().y.value
+
+  def find_matching_region(self, doc: Document) -> Optional[Region]:
+    """Looks for a region that origin matches with the current paragraph origin"""
+    for region in doc.iter_regions():
+      if self.has_same_origin_as_region(region):
+        return region
+    return None
+
+  def extend_region_to_paragraph(self, region: Region):
+    """Extends region dimensions based on current paragraph extent"""
+    if not self.has_same_origin_as_region(region):
+      raise ValueError("Paragraph origin does not match with region.")
+
+    region_extent = region.get_style(StyleProperties.Extent)
+
+    max_width = max(self.get_extent().width.value, region_extent.width.value)
+    max_height = max(self.get_extent().height.value, region_extent.height.value)
+
+    new_extent = _get_extent_from_dimensions(max_width, max_height)
+
+    region.set_style(StyleProperties.Extent, new_extent)
+
+  def get_region_prefix(self):
+    """Returns region prefix based on current paragraph style"""
+    if self._style is SccCaptionStyle.PaintOn:
+      return "paint"
+    if self._style is SccCaptionStyle.PopOn:
+      return "pop"
+    if self._style is SccCaptionStyle.RollUp:
+      return "rollup"
+    return "region"
+
+  def create_matching_region(self, doc: Document) -> Region:
+    """Creates a new region based on current paragraph needs"""
+    doc_regions = list(doc.iter_regions())
+
+    region = Region(self.get_region_prefix() + str(len(doc_regions) + 1), doc)
+    region.set_style(StyleProperties.Origin, self.get_origin())
+    region.set_style(StyleProperties.Extent, self.get_extent())
+
+    doc.put_region(region)
+
+    return region
+
   def to_paragraph(self, doc: Document) -> P:
     """Converts and returns current caption paragraph into P instance"""
+
+    # Set up a new paragraph
     p = P()
     p.set_doc(doc)
     p.set_id(self._caption_id)
@@ -194,6 +277,20 @@ class SccCaptionParagraph:
     if self._end:
       p.set_end(self._end.to_temporal_offset())
 
+    # Set a matching region
+    matching_region = self.find_matching_region(doc)
+
+    if matching_region:
+      # Extend region to paragraph if needed
+      self.extend_region_to_paragraph(matching_region)
+    else:
+      # Create a new matching region
+      matching_region = self.create_matching_region(doc)
+
+    # Set the region to current caption
+    p.set_region(matching_region)
+
+    # Add caption content (text and line-breaks)
     for caption_content in self.caption_contents:
 
       if isinstance(caption_content, SccCaptionLineBreak):
@@ -202,9 +299,6 @@ class SccCaptionParagraph:
 
       if isinstance(caption_content, SccCaptionText):
         span = Span(doc)
-
-        origin = caption_content.get_position()
-        span.set_style(StyleProperties.Origin, origin)
 
         for (prop, value) in caption_content.style_properties.items():
           span.set_style(prop, value)
