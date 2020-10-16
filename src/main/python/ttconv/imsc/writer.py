@@ -46,6 +46,6 @@ def from_model(model):
 
   context.imsc_doc = et.Element("tt")
 
-  imsc_elements.TTElement.from_model(context, model)
+  imsc_elements.TTElement.from_model(model, context)
 
   return et.ElementTree(context.imsc_doc)

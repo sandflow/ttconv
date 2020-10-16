@@ -109,7 +109,7 @@ class TTElement:
           LOGGER.error("More than one head element present")
 
   @staticmethod
-  def from_model(context, i_model):
+  def from_model(i_model, context):
 
     body = i_model.get_body()
     
@@ -126,6 +126,7 @@ class TTElement:
     # Write the <head> section first
     for region in i_model.iter_regions():
       HeadElement.from_model(
+        i_model, 
         context,
         region
       )
@@ -188,7 +189,7 @@ class HeadElement:
           LOGGER.error("Multiple styling elements")
 
   @staticmethod
-  def from_model(context, region):
+  def from_model(i_model, context, region):
 
     # Check for exiting head
     head = context.imsc_doc.find("head")
@@ -196,6 +197,7 @@ class HeadElement:
       head = et.SubElement(context.imsc_doc, "head")
 
     LayoutElement.from_model(
+      i_model,
       head,
       region
     )
@@ -232,7 +234,7 @@ class LayoutElement:
         LOGGER.warning("Unexpected child of layout element")
 
   @staticmethod
-  def from_model(head, region):
+  def from_model(i_model, head, region):
     
     # Check for exiting head
     layout = head.find("layout")
@@ -240,6 +242,7 @@ class LayoutElement:
       layout = et.SubElement(head, "layout")
 
     RegionElement.from_model(
+      i_model, 
       layout,
       region
     )
@@ -272,15 +275,15 @@ class RegionElement:
     return r
 
   @staticmethod
-  def from_model(layout, region):
+  def from_model(i_model, layout, region):
 
     region_element = et.SubElement(layout, "region")
-
-    #ContentElement.process_style_properties(context, ttml_element, r)
 
     attrib = region.get_id()
     if attrib is not None:
       imsc_attr.RegionAttribute.set(region_element, attrib)
+
+    ContentElement.from_model_style_properties(region, region_element)
 
     attrib = region.get_style(model.StyleProperties.FontFamily)
     if attrib is not None:
@@ -350,13 +353,13 @@ class ContentElement:
         LOGGER.warning("Element references unknown region")
 
   @staticmethod
-  def process_style_properties(context, ttml_element, element):
+  def process_style_properties(context, ttml_element, model_content_element):
     '''Read TTML style properties into the model'''
     for attr in ttml_element.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
       if prop is not None:
         try:
-          element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+          model_content_element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
         except ValueError:
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
@@ -418,13 +421,17 @@ class ContentElement:
     return element
 
   @staticmethod
-  def from_model_style_properties(context, ttml_element, element):
-    '''Read TTML style properties into the model'''
-    for attr in ttml_element.attrib:
-      prop = StyleProperties.BY_QNAME.get(attr)
+  def from_model_style_properties(model_content_element, element):
+    '''Write TTML style properties from the model into into the region_element'''
+    for key, value in model_content_element._styles.items():
+      # TODO - How do I get a imsc style_property from the model style_property
+      # it seems like I could create a new lookup dictionary the similar
+      # to BY_QNAME but using model_prop
+      #DICT = StyleProperties.BY_MODEL_STYLE_PROPERTY
+      prop = StyleProperties.BY_MODEL_STYLE_PROPERTY.get(key)
       if prop is not None:
         try:
-          element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+          prop.set(element, value)
         except ValueError:
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
