@@ -225,6 +225,21 @@ class DocumentTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       cr = model.CellResolutionType(rows=0, columns=20)
 
+  def language(self):
+
+    d = model.Document()
+
+    self.assertEqual(d.get_lang(), "")
+
+    lang = "fr-CA"
+
+    d.set_lang(lang)
+
+    self.assertEqual(d.get_lang(), lang)
+
+    with self.assertRaises(TypeError):
+      d.set_lang(1)
+
   def pixel_resolution(self):
 
     cr = model.PixelResolutionType(height=480, width=640)

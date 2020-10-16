@@ -822,6 +822,7 @@ class Document:
     self._px_resolution = PixelResolutionType(width=1920, height=1080)
     self._active_area = ActiveAreaType(0, 0, 1, 1)
     self._dar = None
+    self._lang = ""
 
   # active area
 
@@ -837,6 +838,18 @@ class Document:
       raise TypeError("Argument must be an instance of ActiveAreaType")
 
     self._active_area = active_area
+
+  # language
+
+  def set_lang(self, language: str):
+    '''Sets the langugage of the document, as an RFC 5646 language tag.'''
+    if not isinstance(language, str):
+      raise TypeError("Argument must be a string")
+    self._lang = language
+
+  def get_lang(self) -> str:
+    '''Returns the langugage of the document, as an RFC 5646 language tag.'''
+    return self._lang
 
   # display aspect ratio
 
