@@ -230,6 +230,15 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertRaisesRegex(TypeError, "Element id must be a valid xml:id string", caption_paragraph.to_paragraph, doc)
 
     caption_paragraph.set_id("test-id")
+
+    origin = caption_paragraph.get_origin()
+    self.assertEqual(0, origin.x.value)
+    self.assertEqual(0, origin.y.value)
+
+    extent = caption_paragraph.get_extent()
+    self.assertEqual(0, extent.width.value)
+    self.assertEqual(0, extent.height.value)
+
     paragraph = caption_paragraph.to_paragraph(doc)
 
     self.assertEqual("test-id", paragraph.get_id())

@@ -184,19 +184,26 @@ class SccCaptionParagraph:
 
   def get_origin(self) -> PositionType:
     """Computes and returns the current paragraph origin, based on its content"""
-    x_offsets = [text.x_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
-    y_offsets = [text.y_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
+    if len(self.caption_contents):
+      x_offsets = [text.x_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
+      y_offsets = [text.y_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
 
-    return _get_position_from_offsets(min(x_offsets), min(y_offsets))
+      return _get_position_from_offsets(min(x_offsets), min(y_offsets))
+
+    return _get_position_from_offsets(self._safe_area_x_offset, self._safe_area_y_offset)
 
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
-    nb_lines = sum(map(lambda br: isinstance(br, SccCaptionLineBreak), self.caption_contents)) + 1
-    max_text_lengths = max([len(caption_text.text)
+    if len(self.caption_contents):
+      nb_lines = sum(map(lambda br: isinstance(br, SccCaptionLineBreak), self.caption_contents)) + 1
+      text_lengths = [0] + [len(caption_text.text)
                             for caption_text in self.caption_contents
-                            if isinstance(caption_text, SccCaptionText)])
+                            if isinstance(caption_text, SccCaptionText)]
+      max_text_lengths = max(text_lengths)
 
-    return _get_extent_from_dimensions(max_text_lengths, nb_lines)
+      return _get_extent_from_dimensions(max_text_lengths, nb_lines)
+
+    return _get_extent_from_dimensions(0, 0)
 
   def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionText]:
     """Returns the caption text elements from the expected number of last lines"""
