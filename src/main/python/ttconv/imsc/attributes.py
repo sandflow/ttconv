@@ -93,6 +93,9 @@ class RegionAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(RegionAttribute.qn)
 
+  @staticmethod
+  def set(ttml_element, res):
+    ttml_element.set(XMLIDAttribute.qn, res)
 
 
 class CellResolutionAttribute:

@@ -276,43 +276,45 @@ class RegionElement:
 
     region_element = et.SubElement(layout, "region")
 
+    #ContentElement.process_style_properties(context, ttml_element, r)
+
     attrib = region.get_id()
     if attrib is not None:
-      region_element.set(imsc_attr.XMLIDAttribute.qn, attrib)
+      imsc_attr.RegionAttribute.set(region_element, attrib)
 
-    attrib = region.get_style(StyleProperties.FontFamily)
+    attrib = region.get_style(model.StyleProperties.FontFamily)
     if attrib is not None:
       region_element.set("tts:fontFamily", attrib)
 
-    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = region.get_style(model.StyleProperties.ShowBackground)
     attrib = None
     if attrib is not None:
       region_element.set("tts:showBackground", attrib)
 
-    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = region.get_style(model.StyleProperties.Origin)
     attrib = None
     if attrib is not None:
       region_element.set("tts:origin", attrib)
 
-    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = region.get_style(model.StyleProperties.Extent)
     attrib = None
     if attrib is not None:
       region_element.set("tts:extent", attrib)
 
-    #attrib = region.get_style(StyleProperties.showBackground)
+    attrib = region.get_style(model.StyleProperties.Color)
     attrib = None
     if attrib is not None:
       region_element.set("tts:color", attrib)
 
-    attrib = region.get_style(StyleProperties.BackgroundColor)
+    attrib = region.get_style(model.StyleProperties.BackgroundColor)
     if attrib is not None:
       region_element.set("tts:backgroundColor", attrib)
 
-    attrib = region.get_style(StyleProperties.TextAlign)
+    attrib = region.get_style(model.StyleProperties.TextAlign)
     if attrib is not None:
       region_element.set("tts:textAlign", attrib)
 
-    attrib = region.get_style(StyleProperties.DisplayAlign)
+    attrib = region.get_style(model.StyleProperties.DisplayAlign)
     if attrib is not None:
       region_element.set("tts:displayAlign", attrib)
 
@@ -416,6 +418,17 @@ class ContentElement:
     return element
 
   @staticmethod
+  def from_model_style_properties(context, ttml_element, element):
+    '''Read TTML style properties into the model'''
+    for attr in ttml_element.attrib:
+      prop = StyleProperties.BY_QNAME.get(attr)
+      if prop is not None:
+        try:
+          element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+        except ValueError:
+          LOGGER.error("Error reading style property: %s", prop.__name__)
+
+  @staticmethod
   def from_model(context, body):
     
     if body is None:
@@ -476,7 +489,7 @@ class BodyElement:
     if body_element is None:
       body_element = et.SubElement(context.imsc_doc, "body")
     
-    attrib = body._id
+    attrib = body.get_id()
     if attrib is not None:
       body_element.set(imsc_attr.XMLIDAttribute.qn, attrib)
 
