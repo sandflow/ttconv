@@ -423,17 +423,11 @@ class ContentElement:
   @staticmethod
   def from_model_style_properties(model_content_element, element):
     '''Write TTML style properties from the model into into the region_element'''
-    for key, value in model_content_element._styles.items():
-      # TODO - How do I get a imsc style_property from the model style_property
-      # it seems like I could create a new lookup dictionary the similar
-      # to BY_QNAME but using model_prop
-      #DICT = StyleProperties.BY_MODEL_STYLE_PROPERTY
-      prop = StyleProperties.BY_MODEL_STYLE_PROPERTY.get(key)
-      if prop is not None:
-        try:
-          prop.set(element, value)
-        except ValueError:
-          LOGGER.error("Error reading style property: %s", prop.__name__)
+
+    for qname, style_property_class in StyleProperties.BY_QNAME.items():
+      value = model_content_element.get_style(style_property_class.model_prop)
+      if value is not None:
+          style_property_class.set(element, value)
 
   @staticmethod
   def from_model(context, body):

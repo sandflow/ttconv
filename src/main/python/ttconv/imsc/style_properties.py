@@ -66,9 +66,8 @@ class StyleProperties:
       return utils.parse_color(xml_attrib)
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib.center)
 
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''
@@ -899,11 +898,6 @@ class StyleProperties:
 
   BY_QNAME = {
     f"{{{v.ns}}}{v.local_name}" : v
-    for n, v in list(locals().items()) if inspect.isclass(v)
-    }
-
-  BY_MODEL_STYLE_PROPERTY = {
-    f"{v.model_prop}" : v
     for n, v in list(locals().items()) if inspect.isclass(v)
     }
 
