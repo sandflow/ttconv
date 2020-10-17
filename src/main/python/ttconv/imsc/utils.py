@@ -28,6 +28,7 @@
 import re
 import typing
 import ttconv.style_properties as styles
+from fractions import Fraction
 
 
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
@@ -38,6 +39,15 @@ _LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
 _FAMILIES_SEPARATOR = re.compile(r"(?<=[^\\]),")
 _FAMILIES_ESCAPED_CHAR = re.compile(r"\\(.)")
+
+_CLOCK_TIME_FRACTION_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d(?:\.\d+)?)$")
+_CLOCK_TIME_FRAMES_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d)\:(\d{2,})$")
+_OFFSET_FRAME_RE = re.compile(r"^(\d+(?:\.\d+)?)f")
+_OFFSET_TICK_RE = re.compile(r"^(\d+(?:\.\d+)?)t$")
+_OFFSET_MS_RE = re.compile(r"^(\d+(?:\.\d+)?)ms$")
+_OFFSET_S_RE = re.compile(r"^(\d+(?:\.\d+)?)s$")
+_OFFSET_H_RE = re.compile(r"^(\d+(?:\.\d+)?)h$")
+_OFFSET_M_RE = re.compile(r"^(\d+(?:\.\d+)?)m$")
 
 
 def parse_color(attr_value: str) -> styles.ColorType:
@@ -119,3 +129,58 @@ def parse_font_families(attr_value: str) -> typing.List[str]:
     raise ValueError("Bad syntax")
 
   return rslt
+
+
+def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) -> Fraction:
+
+  m = _OFFSET_FRAME_RE.match(time_expr)
+
+  if m and frame_rate:
+    return Fraction(m.group(1)) / frame_rate
+
+  m = _OFFSET_TICK_RE.match(time_expr)
+
+  if m and tick_rate:
+    return Fraction(m.group(1)) / tick_rate
+
+  m = _OFFSET_MS_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) / 1000
+
+  m = _OFFSET_S_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1))
+
+  m = _OFFSET_M_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) * 60
+
+  m = _OFFSET_H_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) * 3600
+
+  m = _CLOCK_TIME_FRACTION_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) * 3600 + \
+            Fraction(m.group(2)) * 60 + \
+            Fraction(m.group(3))
+  
+  m = _CLOCK_TIME_FRAMES_RE.match(time_expr)
+
+  if m and frame_rate:
+    frames = Fraction(m.group(4)) if m.group(4) else None
+
+    if frames and frames >= frame_rate:
+      raise ValueError("Frame cound exceeds frame rate")
+
+    return Fraction(m.group(1)) * 3600 + \
+            Fraction(m.group(2)) * 60 + \
+            Fraction(m.group(3)) + \
+            frames / frame_rate if frames else 0
+
+  raise ValueError("Syntax error")

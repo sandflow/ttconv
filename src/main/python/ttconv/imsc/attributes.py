@@ -27,6 +27,10 @@
 
 import re
 import logging
+from fractions import Fraction
+import typing
+from dataclasses import dataclass
+from enum import Enum
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
@@ -119,6 +123,7 @@ class CellResolutionAttribute:
 
     return model.CellResolutionType(rows=15, columns=32)
 
+
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
   '''
@@ -145,6 +150,7 @@ class ExtentAttribute:
       return model.PixelResolutionType(w, h)
 
     return None
+
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
@@ -185,3 +191,160 @@ class ActiveAreaAttribute:
         )
 
     return None
+
+
+class TickRateAttribute:
+  '''ttp:tickRate attribute
+  '''
+
+  qn = f"{ns.TTP}tickRate"
+
+  _TICK_RATE_RE = re.compile(r"(\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> int:
+
+    tr = ttml_element.attrib.get(TickRateAttribute.qn)
+
+    if tr is not None:
+
+      m = TickRateAttribute._TICK_RATE_RE.match(tr)
+
+      if m is not None:
+
+        return int(m.group(1))
+
+      LOGGER.error("ttp:tickRate invalid syntax")
+
+    # default value
+
+    return 1
+
+
+class FrameRateAttribute:
+  '''ttp:frameRate and ttp:frameRateMultiplier attribute
+  '''
+
+  frame_rate_qn = f"{ns.TTP}frameRate"
+
+  frame_rate_multiplier_qn = f"{ns.TTP}frameRateMultiplier"
+
+  _FRAME_RATE_RE = re.compile(r"(\d+)")
+
+  _FRAME_RATE_MULT_RE = re.compile(r"(\d+) (\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> Fraction:
+
+    # process ttp:frameRate
+
+    fr = Fraction(30, 1)
+
+    fr_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_qn)
+
+    if fr_raw is not None:
+
+      m = FrameRateAttribute._FRAME_RATE_RE.match(fr_raw)
+
+      if m is not None:
+
+        fr = Fraction(int(m.group(1)))
+
+      LOGGER.error("ttp:frameRate invalid syntax")
+
+    # process ttp:frameRateMultiplier
+    
+    frm = Fraction(1, 1)
+
+    frm_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_qn)
+
+    if frm_raw is not None:
+
+      m = FrameRateAttribute._FRAME_RATE_MULT_RE.match(frm_raw)
+
+      if m is not None:
+
+        frm = Fraction(int(m.group(1)), int(m.group(2)))
+
+      LOGGER.error("ttp:frameRateMultiplier invalid syntax")
+
+    return fr * frm
+
+@dataclass
+class TemporalAttributeParsingContext:
+  frame_rate: Fraction = Fraction(30, 1)
+  tick_rate: int = 1
+
+class TimeContainer(Enum):
+  par = "par"
+  seq = "seq"
+
+class TemporalAttribute:
+  '''begin, end, dur and timeContainer attributes
+  '''
+
+  begin_qn = "begin"
+  end_qn = "end"
+  dur_qn = "dur"
+  time_container_qn = "timeContainer"
+
+  @staticmethod
+  def extract(context: TemporalAttributeParsingContext, ttml_element) -> typing.Tuple[Fraction, Fraction, Fraction, TimeContainer]:
+
+    # read begin attribute
+
+    begin_raw = ttml_element.attrib.get(TemporalAttribute.begin_qn)
+
+    try:
+
+      begin = utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad begin value")
+
+      begin = None
+
+    # read end attribute
+
+    end_raw = ttml_element.attrib.get(TemporalAttribute.end_qn)
+
+    try:
+
+      end = utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad end value")
+
+      end = None
+
+    # read dur attribute
+
+    dur_raw = ttml_element.attrib.get(TemporalAttribute.dur_qn)
+  
+    try:
+
+      dur = utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad dur value")
+
+      dur = None
+
+    # read timeContainer attribute
+
+    time_container_raw = ttml_element.attrib.get(TemporalAttribute.time_container_qn)
+
+    try:
+
+      time_container = TimeContainer(time_container_raw) if time_container_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad timeContainer value")
+
+      time_container = TimeContainer.par
+
+    return (begin, end, dur, time_container)

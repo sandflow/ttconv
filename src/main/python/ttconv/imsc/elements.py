@@ -26,14 +26,34 @@
 '''Process TTML elements'''
 
 import logging
+from fractions import Fraction
+from dataclasses import dataclass, field
+import typing
 import ttconv.model as model
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.attributes as imsc_attr
 from ttconv.imsc.style_properties import StyleProperties
-
+import ttconv.imsc.style_properties as styles
 
 LOGGER = logging.getLogger(__name__)
 
+@dataclass
+class DocumentParsingContext:
+  
+  doc: model.Document = field(default_factory=model.Document)
+
+  style_context: styles.StyleParsingContext = field(default_factory=styles.StyleParsingContext)
+  
+  temporal_context: imsc_attr.TemporalAttributeParsingContext = \
+    field(default_factory=imsc_attr.TemporalAttributeParsingContext)
+
+@dataclass
+class ParentParsingContext:
+  implicit_begin: typing.Optional[Fraction] = Fraction(0)
+  time_container: imsc_attr.TimeContainer = imsc_attr.TimeContainer.par
+  lang: str = ""
+  space: model.WhiteSpaceHandling = model.WhiteSpaceHandling.DEFAULT
+    
 class TTElement:
   '''Processes the TTML <tt> element
   '''
@@ -41,9 +61,9 @@ class TTElement:
   qn = f"{{{xml_ns.TTML}}}tt"
 
   @staticmethod
-  def process(context, ttml_elem):
+  def process(ttml_elem):
 
-    context.doc = model.Document()
+    context = DocumentParsingContext()
 
     # process attributes
 
@@ -54,6 +74,8 @@ class TTElement:
     if lang is None:
       LOGGER.warning("xml:lang not specified on tt")
       lang = ""
+
+    context.doc.set_lang(lang)
 
     context.doc.set_cell_resolution(imsc_attr.CellResolutionAttribute.extract(ttml_elem))
 
@@ -67,22 +89,27 @@ class TTElement:
     if active_area is not None:
       context.doc.set_active_area(active_area)
 
+    context.temporal_context.frame_rate = imsc_attr.FrameRateAttribute.extract(ttml_elem)
+
+    context.temporal_context.tick_rate = imsc_attr.TickRateAttribute.extract(ttml_elem)
+
     # process children elements elements
 
     has_body = False
     has_head = False
 
+    parent_context = ParentParsingContext(lang=lang, space=space)
+
     for child_element in ttml_elem:
 
-      if child_element.tag == BodyElement.qn:
+      if BodyElement.is_instance(child_element):
 
         if not has_body:
 
           context.doc.set_body(
             ContentElement.process(
               context,
-              space,
-              lang,
+              parent_context,
               child_element
             )
           )
@@ -97,8 +124,7 @@ class TTElement:
         if not has_head:
           HeadElement.process(
             context,
-            space,
-            lang,
+            parent_context,
             child_element
           )
 
@@ -114,7 +140,12 @@ class HeadElement:
   qn = f"{{{xml_ns.TTML}}}head"
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def process(context: DocumentParsingContext, parent_context: ParentParsingContext, ttml_element):
+
+    self_context = ParentParsingContext(
+      space=imsc_attr.XMLSpaceAttribute.extract(ttml_element) or parent_context.space,
+      lang=imsc_attr.XMLLangAttribute.extract(ttml_element) or parent_context.lang
+    )
 
     # process children elements
 
@@ -131,8 +162,7 @@ class HeadElement:
 
           LayoutElement.process(
             context,
-            imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space,
-            imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang,
+            self_context,
             child_element
           )
 
@@ -148,8 +178,7 @@ class HeadElement:
 
           StylingElement.process(
             context,
-            imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space,
-            imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang,
+            self_context,
             child_element
           )
 
@@ -166,7 +195,12 @@ class LayoutElement:
   qn = f"{{{xml_ns.TTML}}}layout"
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def process(context: DocumentParsingContext, parent_context: ParentParsingContext, ttml_element):
+
+    self_context = ParentParsingContext(
+      space=imsc_attr.XMLSpaceAttribute.extract(ttml_element) or parent_context.space,
+      lang=imsc_attr.XMLLangAttribute.extract(ttml_element) or parent_context.lang
+    )
     
     for child_element in ttml_element:
 
@@ -174,8 +208,7 @@ class LayoutElement:
 
         r = RegionElement.process(
           context,
-          imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space,
-          imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang,
+          self_context,
           child_element
         )
 
@@ -199,7 +232,7 @@ class RegionElement:
   qn = f"{{{xml_ns.TTML}}}region"
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def process(context: DocumentParsingContext, parent_context: ParentParsingContext, ttml_element):
 
     rid = imsc_attr.XMLIDAttribute.extract(ttml_element)
 
@@ -211,11 +244,11 @@ class RegionElement:
 
     # process attributes
     
-    r.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
+    r.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or parent_context.space)
 
-    r.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
+    r.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or parent_context.lang)
     
-    ContentElement.process_style_properties(context, ttml_element, r)
+    ContentElement.process_style_properties(context, parent_context, ttml_element, r)
 
     return r
 
@@ -226,7 +259,7 @@ class StylingElement:
   qn = f"{{{xml_ns.TTML}}}styling"
 
   @staticmethod
-  def process(_context, _inherited_space, _inherited_lang, _ttml_element):
+  def process(_context: DocumentParsingContext, _parent_context: ParentParsingContext, _ttml_element):
     pass
 
 #
@@ -238,12 +271,12 @@ class ContentElement:
   '''
 
   @staticmethod
-  def process_region_property(context, ttml_element, element):
+  def process_region_property(doc_context: DocumentParsingContext, _parent_context : ParentParsingContext, ttml_element, element):
     '''Read the region attribute and associate the element with the corresponding region'''
     rid = ttml_element.attrib.get('region')
 
     if rid is not None:
-      r = context.doc.get_region(rid)
+      r = doc_context.doc.get_region(rid)
       
       if r is not None:
         element.set_region(r)
@@ -251,111 +284,324 @@ class ContentElement:
         LOGGER.warning("Element references unknown region")
 
   @staticmethod
-  def process_style_properties(context, ttml_element, element):
+  def process_style_properties(doc_context: DocumentParsingContext, _: ParentParsingContext, ttml_element, element):
     '''Read TTML style properties into the model'''
     for attr in ttml_element.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
       if prop is not None:
         try:
-          element.set_style(prop.model_prop, prop.extract(context, ttml_element.attrib.get(attr)))
+          element.set_style(prop.model_prop, prop.extract(doc_context, ttml_element.attrib.get(attr)))
         except ValueError:
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
+
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def class_from_ttml_element(ttml_element):
 
-    if ttml_element.tag == BodyElement.qn:
+    content_element_classes = [
+      BodyElement,
+      DivElement,
+      PElement,
+      SpanElement,
+      RubyElement,
+      RbElement,
+      RtElement,
+      RpElement,
+      RbcElement,
+      RtcElement,
+      BrElement
+    ]
 
-      element = BodyElement.process(context, inherited_space, inherited_lang, ttml_element)
+    for element_class in content_element_classes:
+      if element_class.is_instance(ttml_element):
+        return element_class
 
-    elif ttml_element.tag == DivElement.qn:
+    return None
 
-      element = DivElement.process(context, inherited_space, inherited_lang, ttml_element)
+  @staticmethod
+  def make_anonymous_span(document, parent_element, span_text):
+    if isinstance(parent_element, model.Span):
 
-    elif ttml_element.tag == PElement.qn:
-
-      element = PElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-    elif ttml_element.tag == SpanElement.qn:
-
-      ruby = SpanElement.get_ruby_attr(ttml_element)
-
-      if ruby == RubyElement.ruby:
-
-        element = RubyElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-      elif ruby == RbElement.ruby:
-
-        element = RbElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-      elif ruby == RtElement.ruby:
-
-        element = RtElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-      elif ruby == RpElement.ruby:
-
-        element = RpElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-      elif ruby == RbcElement.ruby:
-
-        element = RbcElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-      elif ruby == RtcElement.ruby:
-
-        element = RtcElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-      else:
-
-        element = SpanElement.process(context, inherited_space, inherited_lang, ttml_element)
-
-    elif ttml_element.tag == BrElement.qn:
-
-      element = BrElement.process(context, inherited_space, inherited_lang, ttml_element)
+      return model.Text(document, span_text)
 
     else:
 
+      s = model.Span(document)
+      
+      s.push_child(model.Text(document, span_text))
+
+      return s
+  
+  @staticmethod
+  def process(doc_context: DocumentParsingContext, parent_context: ParentParsingContext, ttml_element):
+
+    model_class = ContentElement.class_from_ttml_element(ttml_element)
+    
+    if model_class is None:
+      return None
+      
+    model_element = model_class.make(doc_context.doc)
+
+    this_context = ParentParsingContext(
+      lang=imsc_attr.XMLLangAttribute.extract(ttml_element) or parent_context.lang,
+      space=imsc_attr.XMLSpaceAttribute.extract(ttml_element) or parent_context.space
+      )
+
+    model_element.set_space(this_context.space)
+
+    model_element.set_lang(this_context.lang)
+
+    if model_class.has_region:
+      ContentElement.process_region_property(doc_context, parent_context, ttml_element, model_element)
+
+    if model_class.has_styles:
+      ContentElement.process_style_properties(doc_context, parent_context, ttml_element, model_element)
+
+    if model_class.has_timing:
+
+      (explicit_begin, explicit_end, explicit_dur, time_container) = \
+        imsc_attr.TemporalAttribute.extract(doc_context, ttml_element)
+
+      implicit_begin = parent_context.implicit_begin
+
+      desired_begin = implicit_begin + (explicit_begin if explicit_begin is not None else Fraction(0))
+
+      implicit_end = desired_begin
+
+      this_context.time_container = time_container
+
+      this_context.implicit_begin = Fraction(0)
+
+    children = []
+
+    # process text nodes
+
+    if ttml_element.text is not None and \
+      parent_context.time_container != imsc_attr.TimeContainer.seq and \
+      model_class.is_mixed:
+
+      children.append(ContentElement.make_anonymous_span(parent_context.doc, model_element, ttml_element.text))
+
+    # process children elements
+
+    for ttml_child_element in ttml_element:
+
+      child_element = ContentElement.process(
+        doc_context,
+        this_context,
+        ttml_child_element
+      )
+
+      if child_element is None:
+        continue
+
+      if model_class.has_timing:
+
+        if parent_context.time_container == imsc_attr.TimeContainer.seq:
+
+          implicit_end = child_element.get_end()
+
+          this_context.implicit_begin = implicit_end
+
+        else:
+
+          implicit_end = max(implicit_end, child_element.get_end()) if child_element.get_end() is not None else None
+
+      # TODO: add support for set
+
+      children.append(child_element)
+
+      # process tail text node
+      
+      if ttml_child_element.tail is not None and \
+        parent_context.time_container != imsc_attr.TimeContainer.seq and \
+        model_class.is_mixed:
+
+        children.append(ContentElement.make_anonymous_span(doc_context.doc, model_element, ttml_child_element.tail))
+
+    # add childrend
+
+    try:
+
+      model_element.push_children(children)
+
+    except ValueError:
+
+      LOGGER.error("illegal children elements")
+
       return None
 
-    return element
+    # compute end
+    
+    if model_class.has_timing:
+
+      if explicit_end is not None and explicit_dur is not None:
+
+        desired_end = min(desired_begin + model_element.explicit_dur, implicit_begin + model_element.explicit_end)
+
+      elif explicit_end is None and explicit_dur is not None:
+
+        desired_end = desired_begin + explicit_dur
+
+      elif explicit_end is not None and explicit_dur is None:
+
+        desired_end = implicit_begin + explicit_end
+
+      else:
+
+        desired_end = implicit_end
+
+      model_element.set_begin(desired_begin)
+      model_element.set_end(desired_end)
+
+
+    return model_element
+'''
+function resolveTiming(doc, element, prev_sibling, parent) {
+
+        /* are we in a seq container? */
+
+        var isinseq = parent && parent.timeContainer === "seq";
+
+        /* determine implicit begin */
+
+        var implicit_begin = 0; /* default */
+
+        if (parent) {
+
+            if (isinseq && prev_sibling) {
+
+                /*
+                 * if seq time container, offset from the previous sibling end
+                 */
+
+                implicit_begin = prev_sibling.end;
+
+
+            } else {
+
+                implicit_begin = parent.begin;
+
+            }
+
+        }
+
+        /* compute desired begin */
+
+        element.begin = element.explicit_begin ? element.explicit_begin + implicit_begin : implicit_begin;
+
+
+        /* determine implicit end */
+
+        var implicit_end = element.begin;
+
+        var s = null;
+
+        for (var set_i in element.sets) {
+
+            resolveTiming(doc, element.sets[set_i], s, element);
+
+            if (element.timeContainer === "seq") {
+
+                implicit_end = element.sets[set_i].end;
+
+            } else {
+
+                implicit_end = Math.max(implicit_end, element.sets[set_i].end);
+
+            }
+
+            s = element.sets[set_i];
+
+        }
+
+        if (!('contents' in element)) {
+
+            /* anonymous spans and regions and <set> and <br>s and spans with only children text nodes */
+
+            if (isinseq) {
+
+                /* in seq container, implicit duration is zero */
+
+                implicit_end = element.begin;
+
+            } else {
+
+                /* in par container, implicit duration is indefinite */
+
+                implicit_end = Number.POSITIVE_INFINITY;
+
+            }
+
+        } else {
+
+            for (var content_i in element.contents) {
+
+                resolveTiming(doc, element.contents[content_i], s, element);
+
+                if (element.timeContainer === "seq") {
+
+                    implicit_end = element.contents[content_i].end;
+
+                } else {
+
+                    implicit_end = Math.max(implicit_end, element.contents[content_i].end);
+
+                }
+
+                s = element.contents[content_i];
+
+            }
+
+        }
+
+        /* determine desired end */
+        /* it is never made really clear in SMIL that the explicit end is offset by the implicit begin */
+
+        if (element.explicit_end !== null && element.explicit_dur !== null) {
+
+            element.end = Math.min(element.begin + element.explicit_dur, implicit_begin + element.explicit_end);
+
+        } else if (element.explicit_end === null && element.explicit_dur !== null) {
+
+            element.end = element.begin + element.explicit_dur;
+
+        } else if (element.explicit_end !== null && element.explicit_dur === null) {
+
+            element.end = implicit_begin + element.explicit_end;
+
+        } else {
+
+            element.end = implicit_end;
+        }
+
+        delete element.explicit_begin;
+        delete element.explicit_dur;
+        delete element.explicit_end;
+
+        doc._registerEvent(element);
+
+    }
+'''
+
 
 class BodyElement:
   '''Process TTML body element
   '''
 
   qn = f"{{{xml_ns.TTML}}}body"
+  has_region = True
+  has_styles = True
+  has_timing = True
+  is_mixed = False
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == BodyElement.qn
 
-    element = model.Body(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-        if not isinstance(child_element, model.Div):
-          LOGGER.error("Children of body must be div instances")
-        else:
-          element.push_child(child_element)
-
-    return element
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Body(doc)
 
 
 class DivElement:
@@ -363,315 +609,112 @@ class DivElement:
   '''
 
   qn = f"{{{xml_ns.TTML}}}div"
+  has_region = True
+  has_styles = True
+  has_timing = True
+  is_mixed = False
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == DivElement.qn
 
-    element = model.Div(context.doc)
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Div(doc)
 
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-        if not isinstance(child_element, (model.P, model.Div)):
-          LOGGER.error("Children of div must be div or p instances")
-        else:
-          element.push_child(child_element)
-
-    return element
 
 class PElement:
   '''Process TTML <p> element
   '''
 
   qn = f"{{{xml_ns.TTML}}}p"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = True
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == PElement.qn
 
-    element = model.P(context.doc)
+  @staticmethod
+  def make(doc: model.Document):
+    return model.P(doc)
 
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    if ttml_element.text:
-      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
-
-    for ttml_child_element in ttml_element:
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        if not isinstance(child_element, (model.Span, model.Br, model.Ruby)):
-
-          LOGGER.error("Children of p must be span, br or ruby instances")
-
-        else:
-
-          element.push_child(child_element)
-
-      if ttml_child_element.tail:
-        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
-
-    return element
 
 class SpanElement:
   '''Process the TTML <span> element
   '''
-
   qn = f"{{{xml_ns.TTML}}}span"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = True
 
   @staticmethod
-  def make_anonymous_span(doc, text):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) is None
 
-    s = model.Span(doc)
-    t = model.Text(doc, text)
-    s.push_child(t)
-
-    return s
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Span(doc)
 
   @staticmethod
   def get_ruby_attr(ttml_span):
     return ttml_span.get(f"{{{xml_ns.TTS}}}ruby")
 
-  @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
-
-    element = model.Span(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process head text node
-
-    if ttml_element.text is not None:
-      element.push_child(model.Text(context.doc, ttml_element.text))
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        if not isinstance(child_element, (model.Span, model.Br)):
-
-          LOGGER.error("Children of p must be span or br or text instances")
-
-        else:
-
-          element.push_child(child_element)
-
-      # process tail text node
-
-      if ttml_child_element.tail:
-        element.push_child(model.Text(context.doc, ttml_child_element.tail))
-
-    return element
-
 
 class RubyElement:
   '''Process the TTML <span tts:ruby="container"> element
   '''
-
   ruby = "container"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = False
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RubyElement.ruby
 
-    element = model.Ruby(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    children = []
-
-    for ttml_child_element in ttml_element:
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        children.append(child_element)
-
-    try:
-
-      element.push_children(children)
-
-      return element
-
-    except (RuntimeError, TypeError):
-      
-      LOGGER.error("Malformed ruby element")
-
-      return None
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Ruby(doc)
 
 
 class RbElement:
   '''Process the TTML <span tts:ruby="base"> element
   '''
-
   ruby = "base"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = True
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RbElement.ruby
 
-    element = model.Rb(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process head text node
-
-    if ttml_element.text is not None:
-      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        if not isinstance(child_element, model.Span):
-
-          LOGGER.error("Children of rb must be span instances")
-
-        else:
-
-          element.push_child(child_element)
-
-      # process tail text node
-
-      if ttml_child_element.tail:
-        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
-
-    return element
-
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Rb(doc)
 
 class RtElement:
   '''Process the TTML <span tts:ruby="text"> element
   '''
-
   ruby = "text"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = True
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RtElement.ruby
 
-    element = model.Rt(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process head text node
-
-    if ttml_element.text is not None:
-      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        if not isinstance(child_element, model.Span):
-
-          LOGGER.error("Children of rt must be span instances")
-
-        else:
-
-          element.push_child(child_element)
-
-      # process tail text node
-
-      if ttml_child_element.tail:
-        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
-
-    return element
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Rt(doc)
 
 
 class RpElement:
@@ -679,98 +722,37 @@ class RpElement:
   '''
 
   ruby = "delimiter"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = True
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RpElement.ruby
 
-    element = model.Rp(context.doc)
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Rp(doc)
 
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process head text node
-
-    if ttml_element.text is not None:
-      element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_element.text))
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        if not isinstance(child_element, model.Span):
-
-          LOGGER.error("Children of rp must be span instances")
-
-        else:
-
-          element.push_child(child_element)
-
-      # process tail text node
-
-      if ttml_child_element.tail:
-        element.push_child(SpanElement.make_anonymous_span(context.doc, ttml_child_element.tail))
-
-    return element
 
 class RbcElement:
   '''Process the TTML <span tts:ruby="baseContainer"> element
   '''
 
   ruby = "baseContainer"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = False
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RbcElement.ruby
 
-    element = model.Rbc(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    for ttml_child_element in ttml_element:
-
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        if not isinstance(child_element, model.Rb):
-
-          LOGGER.error("Children of rbc must be rb instances")
-
-        else:
-
-          element.push_child(child_element)
-
-    return element
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Rbc(doc)
 
 
 class RtcElement:
@@ -778,76 +760,33 @@ class RtcElement:
   '''
 
   ruby = "textContainer"
+  has_timing = True
+  has_region = True
+  has_styles = True
+  is_mixed = False
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RtcElement.ruby
 
-    element = model.Rtc(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_region_property(context, ttml_element, element)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    children = []
-
-    for ttml_child_element in ttml_element:
-      child_element = ContentElement.process(
-        context,
-        element.get_space(),
-        element.get_lang(),
-        ttml_child_element
-      )
-
-      if child_element is not None:
-
-        children.append(child_element)
-
-    try:
-
-      element.push_children(children)
-
-      return element
-
-    except (RuntimeError, TypeError):
-      
-      LOGGER.error("Malformed rtc element")
-
-      return None
-
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Rtc(doc)
 
 class BrElement:
   '''Process the TTML <br> element
   '''
 
   qn = f"{{{xml_ns.TTML}}}br"
+  has_timing = False
+  has_region = False
+  has_styles = True
+  is_mixed = False
 
   @staticmethod
-  def process(context, inherited_space, inherited_lang, ttml_element):
+  def is_instance(ttml_element):
+    return ttml_element.tag == BrElement.qn
 
-    element = model.Br(context.doc)
-
-    # process attributes
-    
-    element.set_space(imsc_attr.XMLSpaceAttribute.extract(ttml_element) or inherited_space)
-
-    element.set_lang(imsc_attr.XMLLangAttribute.extract(ttml_element) or inherited_lang)
-
-    ContentElement.process_style_properties(context, ttml_element, element)
-
-    # process children elements
-
-    if len(ttml_element) > 0:
-      LOGGER.error("Br cannot contain children elements")
-
-    if ttml_element.text is not None:
-      LOGGER.error("Br cannot contain text nodes")
-
-    return element
+  @staticmethod
+  def make(doc: model.Document):
+    return model.Br(doc)
