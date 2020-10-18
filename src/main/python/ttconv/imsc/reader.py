@@ -29,11 +29,12 @@ import logging
 from fractions import Fraction
 import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.attributes as imsc_attr
+import ttconv.model as model
 
 LOGGER = logging.getLogger(__name__)
 
 
-def to_model(xml_tree):
+def to_model(xml_tree) -> model.Document:
   '''Convers an IMSC document to the data model'''
 
   tt_element = xml_tree.getroot()

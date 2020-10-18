@@ -40,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 @dataclass
 class DocumentParsingContext:
   
-  doc: model.Document = field(default_factory=model.Document)
+  doc: model.Document
 
   style_context: styles.StyleParsingContext = field(default_factory=styles.StyleParsingContext)
   
@@ -63,7 +63,9 @@ class TTElement:
   @staticmethod
   def process(ttml_elem):
 
-    context = DocumentParsingContext()
+    doc = model.Document()
+
+    context = DocumentParsingContext(doc=doc)
 
     # process attributes
 
@@ -132,6 +134,8 @@ class TTElement:
 
         else:
           LOGGER.error("More than one head element present")
+
+    return doc
 
 class HeadElement:
   '''Processes the TTML <head> element
@@ -339,17 +343,20 @@ class ContentElement:
     
     if model_class is None:
       return None
+
+    if parent_context.time_container == imsc_attr.TimeContainer.seq and model_class is model.Br:
+      return None
       
     model_element = model_class.make(doc_context.doc)
 
-    this_context = ParentParsingContext(
+    self_context = ParentParsingContext(
       lang=imsc_attr.XMLLangAttribute.extract(ttml_element) or parent_context.lang,
       space=imsc_attr.XMLSpaceAttribute.extract(ttml_element) or parent_context.space
       )
 
-    model_element.set_space(this_context.space)
+    model_element.set_space(self_context.space)
 
-    model_element.set_lang(this_context.lang)
+    model_element.set_lang(self_context.lang)
 
     if model_class.has_region:
       ContentElement.process_region_property(doc_context, parent_context, ttml_element, model_element)
@@ -360,7 +367,7 @@ class ContentElement:
     if model_class.has_timing:
 
       (explicit_begin, explicit_end, explicit_dur, time_container) = \
-        imsc_attr.TemporalAttribute.extract(doc_context, ttml_element)
+        imsc_attr.TemporalAttribute.extract(doc_context.temporal_context, ttml_element)
 
       implicit_begin = parent_context.implicit_begin
 
@@ -368,9 +375,9 @@ class ContentElement:
 
       implicit_end = desired_begin
 
-      this_context.time_container = time_container
+      self_context.time_container = time_container
 
-      this_context.implicit_begin = Fraction(0)
+      self_context.implicit_begin = Fraction(0)
 
     children = []
 
@@ -380,7 +387,9 @@ class ContentElement:
       parent_context.time_container != imsc_attr.TimeContainer.seq and \
       model_class.is_mixed:
 
-      children.append(ContentElement.make_anonymous_span(parent_context.doc, model_element, ttml_element.text))
+      children.append(ContentElement.make_anonymous_span(doc_context.doc, model_element, ttml_element.text))
+
+      implicit_end = None
 
     # process children elements
 
@@ -388,7 +397,7 @@ class ContentElement:
 
       child_element = ContentElement.process(
         doc_context,
-        this_context,
+        self_context,
         ttml_child_element
       )
 
@@ -401,11 +410,14 @@ class ContentElement:
 
           implicit_end = child_element.get_end()
 
-          this_context.implicit_begin = implicit_end
+          self_context.implicit_begin = implicit_end
 
         else:
 
-          implicit_end = max(implicit_end, child_element.get_end()) if child_element.get_end() is not None else None
+          if implicit_end is not None and child_element.get_end() is not None:
+            implicit_end = max(implicit_end, child_element.get_end())
+          else:
+            implicit_end = None
 
       # TODO: add support for set
 
@@ -418,6 +430,8 @@ class ContentElement:
         model_class.is_mixed:
 
         children.append(ContentElement.make_anonymous_span(doc_context.doc, model_element, ttml_child_element.tail))
+
+        implicit_end = None
 
     # add childrend
 
@@ -451,7 +465,8 @@ class ContentElement:
 
         desired_end = implicit_end
 
-      model_element.set_begin(desired_begin)
+      model_element.set_begin(desired_begin if desired_begin != 0 else None)
+
       model_element.set_end(desired_end)
 
 

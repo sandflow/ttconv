@@ -30,6 +30,8 @@
 import unittest
 import xml.etree.ElementTree as et
 import os
+from fractions import Fraction
+import ttconv.model as model
 import ttconv.imsc.reader as imsc_reader
 
 class IMSCReaderTest(unittest.TestCase):
@@ -37,6 +39,34 @@ class IMSCReaderTest(unittest.TestCase):
   def test_body_only(self):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')
     imsc_reader.to_model(tree)
+
+  def test_BasicTimeContainment001(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment001.ttml')
+    doc = imsc_reader.to_model(tree)
+
+    body = doc.get_body()
+
+    self.assertIsNone(body.get_begin())
+    self.assertEqual(body.get_end(), Fraction(10))
+
+    div = list(body)[0]
+
+    self.assertIsNone(div.get_begin())
+    self.assertEqual(div.get_end(), Fraction(10))
+
+    p = list(div)[0]
+
+    self.assertIsNone(p.get_begin())
+    self.assertIsNone(p.get_end())
+
+    span_children = [v for v in list(p) if len(list(v)[0].get_text().strip()) > 0]
+
+    self.assertIsNone(span_children[0].get_begin())
+    self.assertEqual(span_children[0].get_end(), Fraction(5))
+
+    self.assertIsNone(span_children[1].get_begin())
+    self.assertEqual(span_children[1].get_end(), Fraction(10))
+
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
