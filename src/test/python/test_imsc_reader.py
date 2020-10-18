@@ -67,7 +67,58 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertIsNone(span_children[1].get_begin())
     self.assertEqual(span_children[1].get_end(), Fraction(10))
 
+  def test_BasicTimeContainment002(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment002.ttml')
+    doc = imsc_reader.to_model(tree)
 
+    body = doc.get_body()
+
+    self.assertIsNone(body.get_begin())
+    self.assertEqual(body.get_end(), Fraction(20))
+
+    div = list(body)[0]
+
+    self.assertIsNone(div.get_begin())
+    self.assertEqual(div.get_end(), Fraction(20))
+
+    p_children = [v for v in list(div) if isinstance(v, model.P)]
+
+    self.assertIsNone(p_children[0].get_begin())
+    self.assertEqual(p_children[0].get_end(), Fraction(10))
+
+    self.assertEqual(p_children[1].get_begin(), Fraction(10))
+    self.assertEqual(p_children[1].get_end(), Fraction(20))
+
+  def test_BasicTimeContainment003(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment003.ttml')
+    doc = imsc_reader.to_model(tree)
+
+    body = doc.get_body()
+
+    self.assertIsNone(body.get_begin())
+    self.assertEqual(body.get_end(), Fraction(10))
+
+    div = list(body)[0]
+
+    self.assertIsNone(div.get_begin())
+    self.assertEqual(div.get_end(), Fraction(10))
+
+    p_children = [v for v in list(div) if isinstance(v, model.P)]
+
+    self.assertIsNone(p_children[0].get_begin())
+    self.assertEqual(p_children[0].get_end(), Fraction(10))
+
+    self.assertEqual(p_children[1].get_begin(), Fraction(10))
+    self.assertEqual(p_children[1].get_end(), Fraction(20))
+
+    span_children = [v for v in list(p_children[0]) if len(list(v)[0].get_text().strip()) > 0]
+
+    self.assertEqual(span_children[0].get_begin(), Fraction(5))
+    self.assertEqual(span_children[0].get_end(), Fraction(10))
+
+    self.assertEqual(span_children[1].get_begin(), Fraction(10))
+    self.assertEqual(span_children[1].get_end(), Fraction(15))
+  
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
       for filename in files:

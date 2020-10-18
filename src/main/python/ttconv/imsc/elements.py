@@ -406,7 +406,7 @@ class ContentElement:
 
       if model_class.has_timing:
 
-        if parent_context.time_container == imsc_attr.TimeContainer.seq:
+        if time_container == imsc_attr.TimeContainer.seq:
 
           implicit_end = child_element.get_end()
 
