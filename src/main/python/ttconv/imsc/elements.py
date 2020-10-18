@@ -228,7 +228,6 @@ class LayoutElement:
         LOGGER.warning("Unexpected child of layout element")
 
 
-
 class RegionElement:
   '''Process the TTML <region> element
   '''
@@ -344,7 +343,7 @@ class ContentElement:
     if model_class is None:
       return None
 
-    if parent_context.time_container == imsc_attr.TimeContainer.seq and model_class is model.Br:
+    if parent_context.time_container == imsc_attr.TimeContainer.seq and model_class is BrElement:
       return None
       
     model_element = model_class.make(doc_context.doc)
@@ -451,7 +450,7 @@ class ContentElement:
 
       if explicit_end is not None and explicit_dur is not None:
 
-        desired_end = min(desired_begin + model_element.explicit_dur, implicit_begin + model_element.explicit_end)
+        desired_end = min(desired_begin + explicit_dur, implicit_begin + explicit_end)
 
       elif explicit_end is None and explicit_dur is not None:
 
