@@ -80,6 +80,8 @@ class SccCaptionText(SccCaptionContent):
     self.text: str = ""
     self._position = None
     self._new_line = False
+    self._begin: Optional[SccTimeCode] = None
+    self._end: Optional[SccTimeCode] = None
 
   def set_x_offset(self, indent: Optional[int]):
     """Sets the x offset"""
@@ -88,6 +90,14 @@ class SccCaptionText(SccCaptionContent):
   def set_y_offset(self, row: Optional[int]):
     """Sets the y offset"""
     self.y_offset = row if row else 0
+
+  def set_begin(self, time_code: SccTimeCode):
+    """Sets begin time code"""
+    self._begin = copy.copy(time_code)
+
+  def set_end(self, time_code: SccTimeCode):
+    """Sets end time code"""
+    self._end = copy.copy(time_code)
 
   def add_style_property(self, style_property, value):
     """Adds a style property"""
@@ -98,6 +108,14 @@ class SccCaptionText(SccCaptionContent):
   def get_position(self) -> PositionType:
     """Returns current row and column offsets as a cell-based PositionType"""
     return _get_position_from_offsets(self.x_offset, self.y_offset)
+
+  def get_begin(self) -> SccTimeCode:
+    """Returns the begin time code"""
+    return self._begin
+
+  def get_end(self) -> SccTimeCode:
+    """Returns the end time code"""
+    return self._end
 
   def has_same_style_properties(self, other):
     """Returns whether the current text has the same style properties as the other text"""
@@ -148,6 +166,14 @@ class SccCaptionParagraph:
     """Sets the paragraph y offset"""
     self._row_offset = self._safe_area_y_offset + (row if row else 0)
 
+  def get_column_offset(self) -> int:
+    """Returns the paragraph x offset"""
+    return self._column_offset
+
+  def get_row_offset(self) -> int:
+    """Returns the paragraph y offset"""
+    return self._row_offset
+
   def new_caption_text(self):
     """Appends a new caption text content, and keeps reference on it"""
     self.caption_contents.append(SccCaptionText())
@@ -195,7 +221,7 @@ class SccCaptionParagraph:
     """Computes and returns the current paragraph extent, based on its content"""
     lines: List[str] = []
     last_line = []
-    separator = ""
+    separator = " " if self._style is SccCaptionStyle.PaintOn else ""
     for caption_content in self.caption_contents:
       if isinstance(caption_content, SccCaptionLineBreak):
         lines.append(separator.join(last_line))
@@ -313,6 +339,12 @@ class SccCaptionParagraph:
 
       if isinstance(caption_content, SccCaptionText):
         span = Span(doc)
+
+        if caption_content.get_begin():
+          span.set_begin(caption_content.get_begin().to_temporal_offset())
+
+        if caption_content.get_end():
+          span.set_end(caption_content.get_end().to_temporal_offset())
 
         for (prop, value) in caption_content.style_properties.items():
           span.set_style(prop, value)

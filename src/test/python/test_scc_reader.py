@@ -528,6 +528,54 @@ class SccReaderTest(unittest.TestCase):
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_4, p_list[15].get_region())
 
+  def test_scc_paint_on_content(self):
+    scc_content = """Scenarist_SCC V1.0
+
+00:02:53:14	9429 9429 94d2 94d2 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 94f2 94f2 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+
+00:02:56:00	9429 9429 94d2 94d2 5065 6c6c 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80
+
+00:02:56:25	9429 9429 94f2 94f2 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
+
+"""
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("paint1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 8, 16)
+    self.check_element_extent(region_1, 43, 1)
+
+    region_2 = doc.get_region("paint2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 8, 17)
+    self.check_element_extent(region_2, 37, 1)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(4, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:02:53:15", "00:02:54:01", "Lorem", "ipsum", "dolor", "sit", "amet,")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:01", "consectetur", "adipiscing", "elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:56:26", "Pellentesque", "interdum", "lacinia", "sollicitudin.")
+    self.assertEqual(region_1, p_list[2].get_region())
+
+    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer", "luctus", "et", "ligula", "ac", "sagittis.")
+    self.assertEqual(region_2, p_list[3].get_region())
+
 
 if __name__ == '__main__':
   unittest.main()

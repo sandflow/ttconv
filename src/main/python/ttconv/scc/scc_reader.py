@@ -87,15 +87,24 @@ class _SccContext:
       self.div.push_child(self.previous_caption.to_paragraph(self.div.get_doc()))
       self.previous_caption = None
 
-  def process_preamble_address_code(self, pac: SccPreambleAddressCode):
+  def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SccTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
     if not self.current_caption:
       raise ValueError("No current SCC caption initialized")
 
-    self.current_caption.new_caption_text()
-
     pac_row = pac.get_row()
     pac_indent = pac.get_indent()
+
+    if self.current_caption.get_style() is SccCaptionStyle.PaintOn and self.current_caption.current_text \
+        and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
+      # Paint-on create a new Paragraph if contiguous
+      self.set_current_to_previous()
+      self.close_previous_caption(time_code)
+
+      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
+      self.init_current_caption(time_code)
+
+    self.current_caption.new_caption_text()
 
     if self.current_caption.get_style() is SccCaptionStyle.RollUp:
       # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15.
@@ -145,6 +154,13 @@ class _SccContext:
       # Start a new Pop-On caption
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
+    if control_code is SccControlCode.RDC:
+      # Start a new Paint-On caption
+      self.set_current_to_previous()
+      self.close_previous_caption(time_code)
+
+      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
+      self.init_current_caption(time_code)
 
     if control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
       # Start a new Roll-Up caption
@@ -201,8 +217,23 @@ class _SccContext:
       # Roll the display up one row (Roll-Up)
       pass
 
-  def process_text(self, word):
+  def process_text(self, word: str, time_code: SccTimeCode):
     """Processes SCC text words"""
+    if self.current_caption.get_style() is SccCaptionStyle.PaintOn:
+      if word.startswith(" "):
+        self.current_caption.new_caption_text()
+        self.current_caption.current_text.text += word.strip(" ")
+        self.current_caption.set_current_text_offsets()
+        self.current_caption.current_text.set_begin(time_code)
+        return
+
+      if word.endswith(" "):
+        self.current_caption.current_text.text += word.strip(" ")
+        self.current_caption.new_caption_text()
+        self.current_caption.set_current_text_offsets()
+        self.current_caption.current_text.set_begin(time_code)
+        return
+
     self.current_caption.current_text.text += word
 
   def flush(self, time_code: SccTimeCode):
@@ -319,8 +350,6 @@ class SccLine:
   def to_model(self, context: _SccContext) -> SccTimeCode:
     """Converts the SCC line to the data model"""
 
-    if self.get_style() is SccCaptionStyle.PaintOn:
-      raise ValueError(f"Unsupported caption style: {self.get_style()}")
 
     debug = str(self.time_code) + "\t"
 
@@ -347,7 +376,7 @@ class SccLine:
           if pac.get_color():
             debug += "|" + str(pac.get_color())
           debug += "/" + hex(scc_word.value) + "]"
-          context.process_preamble_address_code(pac)
+          context.process_preamble_address_code(pac, self.time_code)
 
         elif attribute_code:
           debug += "[ATC/" + hex(scc_word.value) + "]"
@@ -364,7 +393,7 @@ class SccLine:
         elif spec_char:
           word = spec_char.get_unicode_value()
           debug += word
-          context.process_text(word)
+          context.process_text(word, self.time_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
@@ -374,7 +403,7 @@ class SccLine:
       else:
         word = scc_word.to_text()
         debug += word
-        context.process_text(word)
+        context.process_text(word, self.time_code)
         context.previous_code = scc_word.value
 
     if DEBUG:
