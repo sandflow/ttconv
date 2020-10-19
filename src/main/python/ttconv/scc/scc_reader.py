@@ -35,7 +35,7 @@ from ttconv.model import Document, Body, Div, CellResolutionType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
-from ttconv.scc.codes.preambles_access_codes import SccPreambleAccessCode
+from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 from ttconv.scc.scc_elements import SccCaptionStyle, SccCaptionParagraph, SccCaptionContent, SccCaptionLineBreak, \
   SccCaptionText
@@ -87,8 +87,8 @@ class _SccContext:
       self.div.push_child(self.previous_caption.to_paragraph(self.div.get_doc()))
       self.previous_caption = None
 
-  def process_preamble_access_code(self, pac: SccPreambleAccessCode):
-    """Processes SCC Preamble Access Code it to the map to model"""
+  def process_preamble_address_code(self, pac: SccPreambleAddressCode):
+    """Processes SCC Preamble Address Code it to the map to model"""
     if not self.current_caption:
       raise ValueError("No current SCC caption initialized")
 
@@ -339,7 +339,7 @@ class SccLine:
         attribute_code = SccAttributeCode.find(scc_word.value)
         control_code = SccControlCode.find(scc_word.value)
         mid_row_code = SccMidRowCode.find(scc_word.value)
-        pac = SccPreambleAccessCode.find(scc_word.byte_1, scc_word.byte_2)
+        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
         spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
 
         if pac:
@@ -347,7 +347,7 @@ class SccLine:
           if pac.get_color():
             debug += "|" + str(pac.get_color())
           debug += "/" + hex(scc_word.value) + "]"
-          context.process_preamble_access_code(pac)
+          context.process_preamble_address_code(pac)
 
         elif attribute_code:
           debug += "[ATC/" + hex(scc_word.value) + "]"
