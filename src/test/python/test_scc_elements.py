@@ -203,6 +203,8 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(extent.width.value, region_extent.width.value)
     self.assertEqual(extent.height.value, region_extent.height.value)
 
+    caption_paragraph.caption_contents.append(SccCaptionLineBreak())
+
     caption_paragraph.new_caption_text()
     caption_paragraph.set_current_text_offsets()
     caption_paragraph.current_text.text = "This is another 34-char long line."
@@ -213,7 +215,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
     extent = caption_paragraph.get_extent()
     self.assertEqual(34, extent.width.value)
-    self.assertEqual(1, extent.height.value)
+    self.assertEqual(2, extent.height.value)
 
     self.assertEqual(region, caption_paragraph.find_matching_region(doc))
     caption_paragraph.extend_region_to_paragraph(region)

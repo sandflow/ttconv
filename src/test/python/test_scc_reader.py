@@ -129,7 +129,7 @@ class SccLineTest(unittest.TestCase):
     self.assertIsNone(SccLine.from_str("Hello world!"))
 
 
-class SCCReaderTest(unittest.TestCase):
+class SccReaderTest(unittest.TestCase):
 
   def check_caption(self, paragraph: P, caption_id: str, begin: str, end: str, *children):
     self.assertEqual(caption_id, paragraph.get_id())
@@ -190,7 +190,7 @@ class SCCReaderTest(unittest.TestCase):
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
     self.check_element_origin(region_3, 9, 16)
-    self.check_element_extent(region_3, 15, 2)
+    self.check_element_extent(region_3, 18, 2)
 
     body = doc.get_body()
     self.assertIsNotNone(body)

@@ -28,7 +28,6 @@
 from __future__ import annotations
 
 import copy
-import logging
 from enum import Enum
 from typing import List, Optional
 
@@ -184,7 +183,7 @@ class SccCaptionParagraph:
 
   def get_origin(self) -> PositionType:
     """Computes and returns the current paragraph origin, based on its content"""
-    if len(self.caption_contents):
+    if len(self.caption_contents) > 0:
       x_offsets = [text.x_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
       y_offsets = [text.y_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
 
@@ -194,16 +193,24 @@ class SccCaptionParagraph:
 
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
-    if len(self.caption_contents):
-      nb_lines = sum(map(lambda br: isinstance(br, SccCaptionLineBreak), self.caption_contents)) + 1
-      text_lengths = [0] + [len(caption_text.text)
-                            for caption_text in self.caption_contents
-                            if isinstance(caption_text, SccCaptionText)]
-      max_text_lengths = max(text_lengths)
+    lines: List[str] = []
+    last_line = []
+    separator = ""
+    for caption_content in self.caption_contents:
+      if isinstance(caption_content, SccCaptionLineBreak):
+        lines.append(separator.join(last_line))
+        last_line = []
+        continue
 
-      return _get_extent_from_dimensions(max_text_lengths, nb_lines)
+      last_line.append(caption_content.text)
 
-    return _get_extent_from_dimensions(0, 0)
+    if len(last_line) > 0:
+      lines.append(separator.join(last_line))
+
+    nb_lines = len(lines)
+    max_text_lengths = max([len(line) for line in lines]) if len(lines) > 0 else 0
+
+    return _get_extent_from_dimensions(max_text_lengths, nb_lines)
 
   def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionText]:
     """Returns the caption text elements from the expected number of last lines"""
