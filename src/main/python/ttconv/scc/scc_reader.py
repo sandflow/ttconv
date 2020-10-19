@@ -31,15 +31,16 @@ import logging
 import re
 from typing import Optional, List
 
-from ttconv.model import Document, P, Body, Div, Text, Span, CellResolutionType
+from ttconv.model import Document, Body, Div, CellResolutionType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_access_codes import SccPreambleAccessCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
-from ttconv.scc.scc_caption_style import SccCaptionStyle
+from ttconv.scc.scc_elements import SccCaptionStyle, SccCaptionParagraph, SccCaptionContent, SccCaptionLineBreak, \
+  SccCaptionText
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
-from ttconv.style_properties import StyleProperties, PositionType, LengthType
+from ttconv.style_properties import StyleProperties
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,129 +51,166 @@ PARITY_BIT_MASK = 0b01111111
 DEBUG = False
 
 
+
 class _SccContext:
   def __init__(self):
     self.div: Optional[Div] = None
+    # self.regions: List[Region] = []
     self.count: int = 0
-    self.safe_area_x: int = 0
-    self.safe_area_y: int = 0
-    self.row_offset = self.safe_area_y
-    self.column_offset = self.safe_area_x
+    self.safe_area_x_offset: int = 0
+    self.safe_area_y_offset: int = 0
     self.previous_code = 0
-    self.previous_paragraph = None
-    self.current_text = ""
-    self.current_paragraph: Optional[P] = None
-    self.current_span: Optional[Span] = None
+    self.current_caption: Optional[SccCaptionParagraph] = None
+    self.previous_caption: Optional[SccCaptionParagraph] = None
 
-  def new_paragraph(self):
-    """Adds the current P reference to the model if present, and re-initializes it"""
-    self.column_offset = self.safe_area_x
-    self.current_paragraph = P()
-    self.current_paragraph.set_doc(self.div.get_doc())
+  def set_safe_area(self, safe_area_x_offset: int, safe_area_y_offset: int):
+    """Sets the safe area"""
+    self.safe_area_x_offset = safe_area_x_offset
+    self.safe_area_y_offset = safe_area_y_offset
 
-  def push_span(self):
-    """Adds the current Span reference to the model if present, and drop it"""
-    if self.current_span and self.current_text:
-      self.current_span.push_child(Text(self.div.get_doc(), self.current_text))
-      self.current_span.set_style(StyleProperties.Origin, self.get_current_position())
-      self.current_paragraph.push_child(self.current_span)
+  def set_current_to_previous(self):
+    """Rotates current caption to previous caption"""
+    self.previous_caption = self.current_caption
+    self.current_caption = None
 
-      self.current_text = ""
-      self.current_span = None
-      self.row_offset = self.safe_area_y
-      self.column_offset = self.safe_area_x
+  def init_current_caption(self, time_code: SccTimeCode):
+    """Initializes the current caption with id and begin time"""
+    if self.current_caption:
+      self.count += 1
+      self.current_caption.set_id("caption" + str(self.count))
+      self.current_caption.set_begin(time_code)
 
-  def new_span(self):
-    """Set current Span with a new instance"""
-    self.current_span = Span()
-    self.current_span.set_doc(self.div.get_doc())
-
-  def get_current_position(self) -> PositionType:
-    """Returns current row and column offsets as a cell-based PositionType"""
-    x_cell_offset = self.column_offset
-    y_cell_offset = self.row_offset
-
-    x_position = LengthType(value=x_cell_offset, units=LengthType.Units.c)
-    y_position = LengthType(value=y_cell_offset, units=LengthType.Units.c)
-
-    return PositionType(x_position, y_position)
+  def close_previous_caption(self, time_code: SccTimeCode):
+    """Sets previous caption end time, pushes it into the data model and resets it"""
+    if self.previous_caption:
+      self.previous_caption.set_end(time_code)
+      self.div.push_child(self.previous_caption.to_paragraph(self.div.get_doc()))
+      self.previous_caption = None
 
   def process_preamble_access_code(self, pac: SccPreambleAccessCode):
     """Processes SCC Preamble Access Code it to the map to model"""
-    if pac.get_indent():
-      self.column_offset += pac.get_indent()
-    if pac.get_row():
-      self.row_offset = pac.get_row() + self.safe_area_y
+    if not self.current_caption:
+      raise ValueError("No current SCC caption initialized")
 
-    self.push_span()
-    self.new_span()
+    self.current_caption.new_caption_text()
 
-    color = pac.get_color()
-    if color:
-      self.current_span.set_style(StyleProperties.Color, color.value)
+    pac_row = pac.get_row()
+    pac_indent = pac.get_indent()
 
-    font_style = pac.get_font_style()
-    if font_style:
-      self.current_span.set_style(StyleProperties.FontStyle, font_style)
+    if self.current_caption.get_style() is SccCaptionStyle.RollUp:
+      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15.
+      if pac_row in range(5, 12):
+        self.current_caption.set_current_text_offsets()
+        return
 
-    text_decoration = pac.get_text_decoration()
-    if text_decoration:
-      self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
+      self.current_caption.set_column_offset(pac_indent)
+    else:
+      self.current_caption.set_row_offset(pac_row)
+      self.current_caption.set_column_offset(pac_indent)
+
+    self.current_caption.current_text.add_style_property(StyleProperties.Color, pac.get_color())
+    self.current_caption.current_text.add_style_property(StyleProperties.FontStyle, pac.get_font_style())
+    self.current_caption.current_text.add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
+
+    self.current_caption.set_current_text_offsets()
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode):
     """Processes SCC Mid-Row Code to map it to the model"""
-    span_color = mid_row_code.get_color()
-    span_font_style = mid_row_code.get_font_style()
-    span_text_decoration = mid_row_code.get_text_decoration()
+    if not self.current_caption:
+      raise ValueError("No current SCC caption initialized")
 
-    if span_color:
-      self.current_span.set_style(StyleProperties.Color, span_color.value)
-    if span_font_style:
-      self.current_span.set_style(StyleProperties.FontStyle, span_font_style)
-    if span_text_decoration:
-      self.current_span.set_style(StyleProperties.TextDecoration, span_text_decoration)
+    self.current_caption.new_caption_text()
+    self.current_caption.set_current_text_offsets()
+
+    self.current_caption.current_text.add_style_property(StyleProperties.Color, mid_row_code.get_color())
+    self.current_caption.current_text.add_style_property(StyleProperties.FontStyle, mid_row_code.get_font_style())
+    self.current_caption.current_text.add_style_property(StyleProperties.TextDecoration, mid_row_code.get_text_decoration())
 
   def process_attribute_code(self, attribute_code: SccAttributeCode):
     """Processes SCC Attribute Code to map it to the model"""
-    if attribute_code.is_background():
-      self.current_span.set_style(StyleProperties.BackgroundColor, attribute_code.get_color())
-    else:
-      self.current_span.set_style(StyleProperties.Color, attribute_code.get_color())
+    if not self.current_caption or not self.current_caption.current_text:
+      raise ValueError("No current SCC caption nor content initialized")
 
-    text_decoration = attribute_code.get_text_decoration()
-    if text_decoration:
-      self.current_span.set_style(StyleProperties.TextDecoration, text_decoration)
+    if attribute_code.is_background():
+      self.current_caption.current_text.add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
+    else:
+      self.current_caption.current_text.add_style_property(StyleProperties.Color, attribute_code.get_color())
+
+    self.current_caption.current_text.add_style_property(StyleProperties.TextDecoration, attribute_code.get_text_decoration())
 
   def process_control_code(self, control_code: SccControlCode, time_code: SccTimeCode):
     """Processes SCC Control Code to map it to the model"""
+
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
-      self.new_paragraph()
+      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
+
+
+    if control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
+      # Start a new Roll-Up caption
+      self.set_current_to_previous()
+
+      previous_last_lines: List[SccCaptionContent] = []
+      if self.previous_caption:
+
+        if control_code is SccControlCode.RU2:
+          previous_last_lines = self.previous_caption.get_last_caption_lines(1)
+        if control_code is SccControlCode.RU3:
+          previous_last_lines = self.previous_caption.get_last_caption_lines(2)
+        if control_code is SccControlCode.RU4:
+          previous_last_lines = self.previous_caption.get_last_caption_lines(3)
+
+        previous_last_lines.append(SccCaptionLineBreak())
+
+      self.close_previous_caption(time_code)
+
+      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
+      self.current_caption.caption_contents = previous_last_lines
+      self.init_current_caption(time_code)
+      self.current_caption.set_roll_up_row_offsets()
 
     if control_code is SccControlCode.EOC:
-      # Display caption
-      self.push_span()
-      self.previous_paragraph = self.current_paragraph
-      self.new_span()
-
-      if self.current_paragraph:
-        self.count += 1
-        self.current_paragraph.set_id("caption" + str(self.count))
-        self.current_paragraph.set_begin(time_code.to_temporal_offset())
+      # Display caption (Pop-On)
+      self.init_current_caption(time_code)
+      self.set_current_to_previous()
 
     if control_code is SccControlCode.EDM:
-      # Erase displayed caption
-      if self.previous_paragraph:
-        self.previous_paragraph.set_end(time_code.to_temporal_offset())
-        self.div.push_child(self.previous_paragraph)
-        self.previous_paragraph = None
+      # Erase displayed caption (Pop-On)
+      if self.previous_caption:
+        # Set line breaks depending on the position of the content
+        last_text: Optional[SccCaptionText] = None
+        for (index, content) in enumerate(self.previous_caption.caption_contents):
+          if not isinstance(content, SccCaptionText):
+            continue
+
+          if last_text and self.previous_caption.current_text.is_contiguous(last_text):
+            self.previous_caption.caption_contents.insert(index, SccCaptionLineBreak())
+
+          last_text = content
+
+      self.close_previous_caption(time_code)
 
     if control_code is SccControlCode.TO1:
-      self.column_offset += 1
+      self.current_caption.indent(1)
     if control_code is SccControlCode.TO2:
-      self.column_offset += 2
+      self.current_caption.indent(2)
     if control_code is SccControlCode.TO3:
-      self.column_offset += 3
+      self.current_caption.indent(3)
+
+    if control_code is SccControlCode.CR:
+      # Roll the display up one row (Roll-Up)
+      pass
+
+  def process_text(self, word):
+    """Processes SCC text words"""
+    self.current_caption.current_text.text += word
+
+  def flush(self, time_code: SccTimeCode):
+    """Flushes the remaining current caption"""
+    if self.current_caption:
+      self.previous_caption = self.current_caption
+      self.close_previous_caption(time_code)
+      self.current_caption = None
 
 
 class SccWord:
@@ -278,10 +316,10 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_model(self, context: _SccContext) -> Optional[P]:
+  def to_model(self, context: _SccContext) -> SccTimeCode:
     """Converts the SCC line to the data model"""
 
-    if self.get_style() not in (SccCaptionStyle.PopOn, SccCaptionStyle.Unknown):
+    if self.get_style() is SccCaptionStyle.PaintOn:
       raise ValueError(f"Unsupported caption style: {self.get_style()}")
 
     debug = str(self.time_code) + "\t"
@@ -307,10 +345,8 @@ class SccLine:
         if pac:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
           if pac.get_color():
-            debug += "|" + str(pac.get_color().name)
+            debug += "|" + str(pac.get_color())
           debug += "/" + hex(scc_word.value) + "]"
-          context.push_span()
-          context.new_span()
           context.process_preamble_access_code(pac)
 
         elif attribute_code:
@@ -319,20 +355,16 @@ class SccLine:
 
         elif mid_row_code:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
-          context.push_span()
-          context.new_span()
           context.process_mid_row_code(mid_row_code)
 
         elif control_code:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
-
           context.process_control_code(control_code, self.time_code)
-          context.previous_code = scc_word.value
 
         elif spec_char:
           word = spec_char.get_unicode_value()
           debug += word
-          context.current_text += word
+          context.process_text(word)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
@@ -342,16 +374,14 @@ class SccLine:
       else:
         word = scc_word.to_text()
         debug += word
-        context.current_text += word
+        context.process_text(word)
         context.previous_code = scc_word.value
 
     if DEBUG:
       print(debug)
 
-    if not context.current_span:
-      return None
 
-    return context.current_paragraph
+    return self.time_code
 
 
 #
@@ -368,8 +398,7 @@ def to_model(scc_content: str):
   root_cell_resolution = CellResolutionType(rows=19, columns=40)
   document.set_cell_resolution(root_cell_resolution)
 
-  context.safe_area_x = (root_cell_resolution.columns - 32) / 2
-  context.safe_area_y = (root_cell_resolution.rows - 15) / 2
+  context.set_safe_area(int((root_cell_resolution.columns - 32) / 2), int((root_cell_resolution.rows - 15) / 2))
 
   body = Body()
   body.set_doc(document)
@@ -379,13 +408,20 @@ def to_model(scc_content: str):
   context.div.set_doc(document)
   body.push_child(context.div)
 
+  time_code = None
   for line in scc_content.splitlines():
-    if DEBUG:
-      print(line)
+    LOGGER.info(line)
     scc_line = SccLine.from_str(line)
     if not scc_line:
       continue
 
-    scc_line.to_model(context)
+    time_code = scc_line.to_model(context)
+
+  context.flush(time_code)
+
+  # for region in context.regions:
+  #   if not region.get_doc():
+  #     region.set_doc(document)
+  #     document.put_region(region)
 
   return document
