@@ -275,76 +275,98 @@ class TemporalAttributeParsingContext:
   frame_rate: Fraction = Fraction(30, 1)
   tick_rate: int = 1
 
-class TimeContainer(Enum):
-  par = "par"
-  seq = "seq"
-
-class TemporalAttribute:
-  '''begin, end, dur and timeContainer attributes
+class BeginAttribute:
+  '''begin attribute
   '''
-
-  begin_qn = "begin"
-  end_qn = "end"
-  dur_qn = "dur"
-  time_container_qn = "timeContainer"
+  qn = "begin"
 
   @staticmethod
-  def extract(context: TemporalAttributeParsingContext, ttml_element) -> typing.Tuple[Fraction, Fraction, Fraction, TimeContainer]:
+  def extract(context: TemporalAttributeParsingContext, xml_element) -> typing.Optional[Fraction]:
 
     # read begin attribute
 
-    begin_raw = ttml_element.attrib.get(TemporalAttribute.begin_qn)
+    begin_raw = xml_element.attrib.get(BeginAttribute.qn)
 
     try:
 
-      begin = utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw else None
 
     except ValueError:
 
       LOGGER.error("bad begin value")
 
-      begin = None
+      return None
+
+
+class EndAttribute:
+  '''end attributes
+  '''
+  qn = "end"
+
+  @staticmethod
+  def extract(context: TemporalAttributeParsingContext, xml_element) -> typing.Optional[Fraction]:
 
     # read end attribute
 
-    end_raw = ttml_element.attrib.get(TemporalAttribute.end_qn)
+    end_raw = xml_element.attrib.get(EndAttribute.qn)
 
     try:
 
-      end = utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw else None
 
     except ValueError:
 
       LOGGER.error("bad end value")
 
-      end = None
+      return None
 
-    # read dur attribute
+class DurAttribute:
+  '''dur attributes
+  '''
+  qn = "dur"
 
-    dur_raw = ttml_element.attrib.get(TemporalAttribute.dur_qn)
-  
+  @staticmethod
+  def extract(context: TemporalAttributeParsingContext, xml_element) -> typing.Optional[Fraction]:
+
+    dur_raw = xml_element.attrib.get(DurAttribute.qn)
+
     try:
 
-      dur = utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw else None
 
     except ValueError:
 
       LOGGER.error("bad dur value")
 
-      dur = None
+      return None
 
-    # read timeContainer attribute
+class TimeContainer(Enum):
+  par = "par"
+  seq = "seq"
 
-    time_container_raw = ttml_element.attrib.get(TemporalAttribute.time_container_qn)
+  def is_seq(self) -> bool:
+    return self == TimeContainer.seq
+
+  def is_par(self) -> bool:
+    return self == TimeContainer.par
+
+class TimeContainerAttribute:
+  '''timeContainer attributes
+  '''
+
+  qn = "timeContainer"
+
+  @staticmethod
+  def extract(xml_elem) -> TimeContainer:
+
+    time_container_raw = xml_elem.attrib.get(TimeContainerAttribute.qn)
 
     try:
 
-      time_container = TimeContainer(time_container_raw) if time_container_raw else None
+      return TimeContainer(time_container_raw) if time_container_raw else TimeContainer.par
 
     except ValueError:
 
       LOGGER.error("bad timeContainer value")
 
-      time_container = TimeContainer.par
-
-    return (begin, end, dur, time_container)
+      return TimeContainer.par

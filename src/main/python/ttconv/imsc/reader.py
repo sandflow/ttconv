@@ -26,9 +26,7 @@
 '''IMSC reader'''
 
 import logging
-from fractions import Fraction
 import ttconv.imsc.elements as imsc_elements
-import ttconv.imsc.attributes as imsc_attr
 import ttconv.model as model
 
 LOGGER = logging.getLogger(__name__)
@@ -37,10 +35,16 @@ LOGGER = logging.getLogger(__name__)
 def to_model(xml_tree) -> model.Document:
   '''Convers an IMSC document to the data model'''
 
-  tt_element = xml_tree.getroot()
+  xml_element = xml_tree.getroot()
 
-  if tt_element.tag != imsc_elements.TTElement.qn:
+  if not imsc_elements.TTElement.is_instance(xml_element):
     LOGGER.fatal("A tt element is not the root element")
     return None
 
-  return imsc_elements.TTElement.process(tt_element)
+  tt_element = imsc_elements.TTElement.from_xml(xml_element)
+
+  if tt_element is None:
+    LOGGER.fatal("Invalid TT element")
+    return None 
+
+  return tt_element.doc
