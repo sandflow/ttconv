@@ -30,6 +30,7 @@
 import unittest
 import xml.etree.ElementTree as et
 import os
+import logging
 from fractions import Fraction
 import ttconv.model as model
 import ttconv.imsc.reader as imsc_reader
@@ -118,15 +119,43 @@ class IMSCReaderTest(unittest.TestCase):
 
     self.assertEqual(span_children[1].get_begin(), Fraction(10))
     self.assertEqual(span_children[1].get_end(), Fraction(15))
-  
+
+  def test_BasicTiming007(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming007.ttml')
+    doc = imsc_reader.to_model(tree)
+
+    body = doc.get_body()
+
+    self.assertIsNone(body.get_begin())
+    self.assertEqual(body.get_end(), Fraction(20))
+
+    div = list(body)[0]
+
+    self.assertIsNone(div.get_begin())
+    self.assertEqual(div.get_end(), Fraction(20))
+
+    p = list(div)[0]
+
+    self.assertEqual(p.get_begin(), 5)
+    self.assertEqual(p.get_end(), 20)
+
+    span_children = [v for v in list(p) if isinstance(v, model.Span)]
+
+    self.assertEqual(len(span_children), 1)
+
+    self.assertEqual(span_children[0].get_begin(), None)
+    self.assertEqual(span_children[0].get_end(), Fraction(10))
+
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".ttml":
-          with self.subTest(name):
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
             tree = et.parse(os.path.join(root, filename))
             self.assertIsNotNone(imsc_reader.to_model(tree))
+            self.assertEqual(len(logs.output), 1)
 
   def test_imsc_1_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):

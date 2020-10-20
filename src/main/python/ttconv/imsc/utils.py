@@ -41,7 +41,7 @@ _FAMILIES_SEPARATOR = re.compile(r"(?<=[^\\]),")
 _FAMILIES_ESCAPED_CHAR = re.compile(r"\\(.)")
 
 _CLOCK_TIME_FRACTION_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d(?:\.\d+)?)$")
-_CLOCK_TIME_FRAMES_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d)\:(\d{2,})$")
+_CLOCK_TIME_FRAMES_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d):(\d{2,})$")
 _OFFSET_FRAME_RE = re.compile(r"^(\d+(?:\.\d+)?)f")
 _OFFSET_TICK_RE = re.compile(r"^(\d+(?:\.\d+)?)t$")
 _OFFSET_MS_RE = re.compile(r"^(\d+(?:\.\d+)?)ms$")
@@ -173,14 +173,14 @@ def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) 
   m = _CLOCK_TIME_FRAMES_RE.match(time_expr)
 
   if m and frame_rate:
-    frames = Fraction(m.group(4)) if m.group(4) else None
+    frames = Fraction(m.group(4)) if m.group(4) else 0
 
-    if frames and frames >= frame_rate:
+    if frames >= frame_rate:
       raise ValueError("Frame cound exceeds frame rate")
 
     return Fraction(m.group(1)) * 3600 + \
             Fraction(m.group(2)) * 60 + \
             Fraction(m.group(3)) + \
-            frames / frame_rate if frames else 0
+            frames / frame_rate
 
   raise ValueError("Syntax error")

@@ -44,7 +44,8 @@ class IMSCTimeExpressionsTest(unittest.TestCase):
     ("01:02:03.2350", Fraction(24000, 1001), 60, Fraction(3723235, 1000)),
     ("01:02:03:20", Fraction(24000, 1001), 60, Fraction(3723) + 20/Fraction(24000, 1001)),
     ("100:00:00.1", Fraction(24000, 1001), 60, 360000 + Fraction(1, 10)),
-    ("100:00:00:10", Fraction(24000, 1001), 60, 360000 + 10/Fraction(24000, 1001))
+    ("100:00:00:10", Fraction(24000, 1001), 60, 360000 + 10/Fraction(24000, 1001)),
+    ("00:00:15:00", Fraction(24000, 1001), 60, Fraction(15, 1))
   ]
 
   def test_timing_expressions(self):

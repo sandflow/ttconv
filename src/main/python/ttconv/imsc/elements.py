@@ -418,7 +418,7 @@ class ContentElement(TTMLElement):
 
     self.explicit_end = imsc_attr.EndAttribute.extract(self.temporal_context, xml_elem)
 
-    self.implicit_begin = Fraction(0) if parent.time_container.is_par() else parent.implicit_end
+    self.implicit_begin = Fraction(0) if parent.time_container.is_par() else (parent.implicit_end - parent.desired_begin)
     
     self.desired_begin = self.implicit_begin + (self.explicit_begin if self.explicit_begin is not None else Fraction(0))
 
@@ -429,7 +429,7 @@ class ContentElement(TTMLElement):
       
     # process children elements
 
-    if self.is_mixed and xml_elem.text is not None and parent.time_container.is_par():
+    if self.is_mixed and xml_elem.text is not None and self.time_container.is_par():
       self.children.append(ContentElement.make_anonymous_span(self.doc, self.model_element, xml_elem.text))
       self.implicit_end = None
 
@@ -464,7 +464,7 @@ class ContentElement(TTMLElement):
 
       # process tail text node
 
-      if self.is_mixed and child_xml_element.tail is not None and parent.time_container.is_par():
+      if self.is_mixed and child_xml_element.tail is not None and self.time_container.is_par():
         self.children.append(
           ContentElement.make_anonymous_span(
             self.doc,
@@ -917,6 +917,6 @@ class BrElement(ContentElement):
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
-    element = BrElement(parent, model.Rtc(parent.doc))
+    element = BrElement(parent, model.Br(parent.doc))
     element.process(parent, xml_elem)
     return element
