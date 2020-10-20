@@ -1,10 +1,11 @@
 FROM python:3.7-buster
 
-RUN apt-get update && apt-get -y install pipenv
-
 WORKDIR /usr/src/app
 
-COPY . .
+ADD . .
+
+RUN apt-get update && \
+    apt-get -y install pipenv
 
 RUN pipenv install --dev 
 
