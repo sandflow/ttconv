@@ -39,6 +39,8 @@ import ttconv.imsc.style_properties as styles
 LOGGER = logging.getLogger(__name__)
 
 class TTMLElement:
+  '''Represents any TTML element
+  '''
 
   def __init__(self, parent: typing.Optional[TTMLElement] = None):
 
@@ -71,10 +73,27 @@ class TTMLElement:
     self.explicit_dur = None
 
   def process_lang_attribute(self, parent: TTMLElement, xml_elem):
+    '''Processes the xml:lang attribute, including inheritance from the parent
+    '''
     self.lang = imsc_attr.XMLLangAttribute.extract(xml_elem) or parent.lang
 
   def process_space_attribute(self, parent: TTMLElement, xml_elem):
+    '''Processes the xml:space attribute, including inheritance from the parent
+    '''
     self.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or parent.space
+
+  @staticmethod
+  def is_instance(xml_elem) -> bool:
+    '''Returns true if the XML element `xml_elem` is an instance of the class
+    '''
+    raise NotImplementedError
+
+  @staticmethod
+  def from_xml(parent, xml_elem):
+    '''Returns an in-memory representation of a TTML element from the XML element `xml_elem` and
+    given the parent `parent` of the TTML element
+    '''
+    raise NotImplementedError
 
 
 class TTElement(TTMLElement):
@@ -88,7 +107,9 @@ class TTElement(TTMLElement):
     return xml_elem.tag == TTElement.qn
 
   @staticmethod
-  def from_xml(xml_elem) -> TTElement:
+  def from_xml(_parent: typing.Optional[TTMLElement], xml_elem) -> TTElement:
+    '''`_parent` is ignored and can be set to `None`
+    '''
 
     element = TTElement()
 
@@ -166,20 +187,20 @@ class HeadElement(TTMLElement):
     return xml_elem.tag == HeadElement.qn
 
   @staticmethod
-  def from_xml(parent: TTMLElement, xml_element) -> HeadElement:
+  def from_xml(parent: TTMLElement, xml_elem) -> HeadElement:
     
     element = HeadElement(parent)
 
-    element.process_lang_attribute(parent, xml_element)
+    element.process_lang_attribute(parent, xml_elem)
 
-    element.process_space_attribute(parent, xml_element)
+    element.process_space_attribute(parent, xml_elem)
 
     # process children elements
 
     has_layout = False
     has_styling = False
     
-    for child_element in xml_element:
+    for child_element in xml_elem:
 
       if LayoutElement.is_instance(child_element):
 
@@ -260,6 +281,9 @@ class StylingElement(TTMLElement):
     return xml_elem.tag == StylingElement.qn
 
   def merge_chained_styles(self, style_element: StyleElement):
+    '''Flattens Chained Referential Styling of the target `style_element` by specifying
+    the style properties of the referenced style elements directly in the target element
+    '''
 
     while len(style_element.style_refs) > 0:
 
@@ -416,25 +440,37 @@ class ContentElement(TTMLElement):
 
   @property
   def has_timing(self):
+    '''`True` if the element supports temporal attributes
+    '''
     raise NotImplementedError
 
   @property
   def has_region(self):
+    '''`True` if the element can reference a region
+    '''
     raise NotImplementedError
 
   @property
   def has_styles(self):
+    '''`True` if the element can contain style properties
+    '''
     raise NotImplementedError
 
   @property
   def is_mixed(self):
+    '''`True` if the element can contain text
+    '''
     raise NotImplementedError
 
   @property
   def has_children(self):
+    '''`True` if the element can contain children elements
+    '''
     raise NotImplementedError
 
   def process_region_property(self, xml_elem):
+    '''Reads and processes the `region` attribute
+    '''
     rid = xml_elem.attrib.get('region')
 
     if rid is None:
@@ -448,7 +484,8 @@ class ContentElement(TTMLElement):
       LOGGER.warning("Element references unknown region")
 
   def process_referential_styling(self, xml_elem):
-
+    '''Processes referential styling
+    '''
     for style_ref in imsc_attr.StyleAttribute.extract(xml_elem):
       style_element = self.style_elements.get(style_ref)
 
@@ -461,7 +498,8 @@ class ContentElement(TTMLElement):
           self.model_element.set_style(model_prop, value)
 
   def process_specified_styling(self, xml_elem):
-
+    '''Processes specified styling
+    '''
     for attr in xml_elem.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
 
@@ -477,6 +515,8 @@ class ContentElement(TTMLElement):
         LOGGER.error("Error reading style property: %s", prop.__name__)
 
   def process_set_style_properties(self, parent: TTMLElement, xml_elem):
+    '''Processes style properties on `<set>` element
+    '''
     if parent.model_element is None:
       LOGGER.error("Set parent does not exist")
       return
@@ -510,8 +550,10 @@ class ContentElement(TTMLElement):
     self.model_element.set_space(self.space)
 
   @staticmethod
-  def make_anonymous_span(document, parent_model_element, span_text):
-    if isinstance(parent_model_element, model.Span):
+  def make_anonymous_span(document, model_element, span_text):
+    '''Creates an anonymous span in the element `model_element` from the text contained in `span_text`
+    '''
+    if isinstance(model_element, model.Span):
 
       return model.Text(document, span_text)
 
@@ -545,8 +587,11 @@ class ContentElement(TTMLElement):
     
     return None
 
-  def process(self, parent: TTMLElement, xml_elem):
+  # pylint: disable=too-many-branches
 
+  def process(self, parent: TTMLElement, xml_elem):
+    '''Generic processing applicable to TTML elements rooted in `region` and `body` elements
+    '''
     self.process_lang_attribute(parent, xml_elem)
 
     self.process_space_attribute(parent, xml_elem)
@@ -645,7 +690,7 @@ class ContentElement(TTMLElement):
 
       LOGGER.error(str(e))
 
-      return None
+      return
 
     # temporal end processing
 
@@ -671,6 +716,8 @@ class ContentElement(TTMLElement):
       self.model_element.set_begin(self.desired_begin if self.desired_begin != 0 else None)
 
       self.model_element.set_end(self.desired_end)
+
+  # pylint: enable=too-many-branches
 
 class RegionElement(ContentElement):
   '''Process the TTML <region> element
@@ -711,8 +758,8 @@ class SetElement(ContentElement):
   has_children = False
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == DivElement.qn
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == DivElement.qn
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -732,8 +779,8 @@ class BodyElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == BodyElement.qn
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == BodyElement.qn
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -754,8 +801,8 @@ class DivElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == DivElement.qn
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == DivElement.qn
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -775,8 +822,8 @@ class PElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == PElement.qn
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == PElement.qn
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -796,11 +843,13 @@ class SpanElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) is None
+  def is_instance(xml_elem):
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) is None
 
   @staticmethod
   def get_ruby_attr(ttml_span):
+    '''extracts the value of the TTML `tts:ruby` attribute from the XML element `ttml_span`
+    '''
     return ttml_span.get(f"{{{xml_ns.TTS}}}ruby")
 
   @classmethod
@@ -821,8 +870,8 @@ class RubyElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RubyElement.ruby
+  def is_instance(xml_elem):
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RubyElement.ruby
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -842,8 +891,8 @@ class RbElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RbElement.ruby
+  def is_instance(xml_elem):
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RbElement.ruby
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -862,8 +911,8 @@ class RtElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RtElement.ruby
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RtElement.ruby
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -884,8 +933,8 @@ class RpElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RpElement.ruby
+  def is_instance(xml_elem):
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RpElement.ruby
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -906,8 +955,8 @@ class RbcElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RbcElement.ruby
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RbcElement.ruby
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -928,8 +977,8 @@ class RtcElement(ContentElement):
   has_children = True
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == SpanElement.qn and SpanElement.get_ruby_attr(ttml_element) == RtcElement.ruby
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RtcElement.ruby
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):
@@ -949,8 +998,8 @@ class BrElement(ContentElement):
   has_children = False
 
   @staticmethod
-  def is_instance(ttml_element):
-    return ttml_element.tag == BrElement.qn
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == BrElement.qn
 
   @classmethod
   def from_xml(cls, parent: TTMLElement, xml_elem):

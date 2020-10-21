@@ -41,7 +41,7 @@ def to_model(xml_tree) -> model.Document:
     LOGGER.fatal("A tt element is not the root element")
     return None
 
-  tt_element = imsc_elements.TTElement.from_xml(xml_element)
+  tt_element = imsc_elements.TTElement.from_xml(None, xml_element)
 
   if tt_element is None:
     LOGGER.fatal("Invalid TT element")

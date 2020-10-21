@@ -42,7 +42,7 @@ class IMSCReaderTest(unittest.TestCase):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')
     imsc_reader.to_model(tree)
 
-  def test_BasicTimeContainment001(self):
+  def test_basic_time_containment_001(self):
     tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment001.ttml')
     doc = imsc_reader.to_model(tree)
 
@@ -69,7 +69,7 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertIsNone(span_children[1].get_begin())
     self.assertEqual(span_children[1].get_end(), Fraction(10))
 
-  def test_BasicTimeContainment002(self):
+  def test_basic_time_containment_002(self):
     tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment002.ttml')
     doc = imsc_reader.to_model(tree)
 
@@ -91,7 +91,7 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(p_children[1].get_begin(), Fraction(10))
     self.assertEqual(p_children[1].get_end(), Fraction(20))
 
-  def test_BasicTimeContainment003(self):
+  def test_basic_time_containment_003(self):
     tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment003.ttml')
     doc = imsc_reader.to_model(tree)
 
@@ -121,7 +121,7 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(span_children[1].get_begin(), Fraction(10))
     self.assertEqual(span_children[1].get_end(), Fraction(15))
 
-  def test_BasicTiming007(self):
+  def test_basic_timing_007(self):
     tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming007.ttml')
     doc = imsc_reader.to_model(tree)
 

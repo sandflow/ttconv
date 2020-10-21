@@ -27,8 +27,8 @@
 
 import re
 import typing
-import ttconv.style_properties as styles
 from fractions import Fraction
+import ttconv.style_properties as styles
 
 
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
