@@ -463,8 +463,10 @@ class BodyElement:
     if attrib is not None:
       body_element.set("tts:lineHeight", attrib)
 
+    ContentElement.from_model_style_properties(body, body_element)
+
     for div in body:
-      DivElement.from_model(body_element, div)
+      DivElement.from_model(div, body_element)
 
 class DivElement:
   '''Process TTML <div> element
@@ -506,19 +508,21 @@ class DivElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
 
     div_element = et.SubElement(parent_element, "div")
 
+    ContentElement.from_model_style_properties(parent_div, div_element)
+
     if parent_div.has_children():
       for child in parent_div:
         if isinstance(child, model.P):
-          PElement.from_model(div_element, child)
+          PElement.from_model(child, div_element)
         elif isinstance(child, model.Div):
-          DivElement.from_model(div_element, child)
+          DivElement.from_model(child, div_element)
         else:
           LOGGER.error("Children of div must be p or div")
     else:
@@ -574,21 +578,23 @@ class PElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_p):
+  def from_model(parent_p, parent_element):
     
     if parent_p is None:
       return
 
     p_element = et.SubElement(parent_element, "p")
 
+    ContentElement.from_model_style_properties(parent_p, parent_element)
+
     if parent_p.has_children():
       for child in parent_p:
         if isinstance(child, model.Span):
-          SpanElement.from_model(p_element, child)
+          SpanElement.from_model(child, p_element)
         elif isinstance(child, model.Ruby):
-          RubyElement.from_model(p_element, child)
+          RubyElement.from_model(child, p_element)
         elif isinstance(child, model.Br):
-          BrElement.from_model(p_element, child)
+          BrElement.from_model(child, p_element)
         else:
           LOGGER.error("Children of p must be span or br or text")
 
@@ -660,19 +666,21 @@ class SpanElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
 
     span_element = et.SubElement(parent_element, "span")
 
+    ContentElement.from_model_style_properties(parent_div, span_element)
+
     if parent_div.has_children():
       for child in parent_div:
         if isinstance(child, model.Span):
-          SpanElement.from_model(parent_element, child)
+          SpanElement.from_model(child, parent_element)
         elif isinstance(child, model.Br):
-          BrElement.from_model(parent_element, child)
+          BrElement.from_model(child, parent_element)
         elif isinstance(child, model.Text):
           # TODO - do we want to have a TextElement object?
           #TextElement.from_model(parent_element, child)          
@@ -733,10 +741,12 @@ class RubyElement:
       return None
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
+
+    #ContentElement.from_model_style_properties(parent_div, span_element)
 
 class RbElement:
   '''Process the TTML <span tts:ruby="base"> element
@@ -793,7 +803,7 @@ class RbElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
@@ -853,7 +863,7 @@ class RtElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
@@ -913,7 +923,7 @@ class RpElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
@@ -963,7 +973,7 @@ class RbcElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
@@ -1018,7 +1028,7 @@ class RtcElement:
       return None
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
@@ -1053,7 +1063,7 @@ class BrElement:
     return element
 
   @staticmethod
-  def from_model(parent_element, parent_div):
+  def from_model(parent_div, parent_element):
     
     if parent_div is None:
       return
