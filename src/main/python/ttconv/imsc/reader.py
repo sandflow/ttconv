@@ -27,26 +27,25 @@
 
 import logging
 import ttconv.imsc.elements as imsc_elements
-
+import ttconv.model as model
 
 LOGGER = logging.getLogger(__name__)
 
 
-def to_model(xml_tree):
+def to_model(xml_tree) -> model.Document:
   '''Convers an IMSC document to the data model'''
 
-  class _Context:
-    def __init__(self):
-      self.doc = None
+  xml_element = xml_tree.getroot()
 
-  context = _Context()
-
-  tt_element = xml_tree.getroot()
-
-  if tt_element.tag != imsc_elements.TTElement.qn:
+  if not imsc_elements.TTElement.is_instance(xml_element):
     LOGGER.fatal("A tt element is not the root element")
     return None
 
-  imsc_elements.TTElement.process(context, tt_element)
+  tt_element = imsc_elements.TTElement.from_xml(None, xml_element)
 
-  return context.doc
+  if tt_element is None:
+    LOGGER.fatal("Invalid TT element")
+    return None 
+
+  return tt_element.doc
+  
