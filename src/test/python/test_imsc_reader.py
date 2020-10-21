@@ -187,6 +187,13 @@ class IMSCReaderTest(unittest.TestCase):
 
     self.assertEqual(regions[1].get_style(styles.StyleProperties.Color), styles.NamedColors.red.value)
     self.assertEqual(regions[1].get_style(styles.StyleProperties.BackgroundColor), styles.NamedColors.yellow.value)
+  
+  def test_initial(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1_1/ttml/initial/initial002.ttml')
+    doc = imsc_reader.to_model(tree)
+
+    self.assertEqual(doc.get_initial_value(styles.StyleProperties.Color), styles.NamedColors.green.value)
+    self.assertEqual(doc.get_initial_value(styles.StyleProperties.FontStyle), styles.FontStyleType.italic)
 
 if __name__ == '__main__':
   unittest.main()

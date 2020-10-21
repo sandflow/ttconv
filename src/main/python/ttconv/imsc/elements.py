@@ -243,10 +243,6 @@ class LayoutElement(TTMLElement):
         if r is not None:
           element.doc.put_region(r.model_element)
 
-      #elif child_element.tag == INITIAL_ELEMENT_QNAME:
-
-      #  _process_initial_element(context, space, lang, child_element)
-
       else:
 
         LOGGER.warning("Unexpected child of layout element")
@@ -284,19 +280,23 @@ class StylingElement(TTMLElement):
     styling_elem = StylingElement(parent)
 
     for child_xml_elem in xml_elem:
-      if not StyleElement.is_instance(child_xml_elem):
-        continue
 
-      style_element = StyleElement.from_xml(styling_elem, child_xml_elem)
+      if InitialElement.is_instance(child_xml_elem):
 
-      if style_element is None:
-        continue
+        InitialElement.from_xml(styling_elem, child_xml_elem)
 
-      if style_element.id in styling_elem.style_elements:
-        LOGGER.error("Duplicate style id")
-        continue
+      elif StyleElement.is_instance(child_xml_elem):
+        
+        style_element = StyleElement.from_xml(styling_elem, child_xml_elem)
 
-      style_element.style_elements[style_element.id] = style_element
+        if style_element is None:
+          continue
+
+        if style_element.id in styling_elem.style_elements:
+          LOGGER.error("Duplicate style id")
+          continue
+
+        style_element.style_elements[style_element.id] = style_element
       
     # merge style elements
 
@@ -363,6 +363,43 @@ class StyleElement(TTMLElement):
       return None
 
     return element
+
+class InitialElement(TTMLElement):
+  '''Process the TTML <initial> element
+  '''
+
+  qn = f"{{{xml_ns.TTML}}}initial"
+
+  @staticmethod
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == InitialElement.qn
+
+  @staticmethod
+  def from_xml(parent: TTMLElement, xml_elem):
+    
+    element = InitialElement(parent)
+
+    for attr in xml_elem.attrib:
+
+      prop = StyleProperties.BY_QNAME.get(attr)
+
+      if not prop:
+
+        continue
+
+      try:
+
+        element.doc.put_initial_value(
+          prop.model_prop,
+          prop.extract(element.style_context, xml_elem.attrib.get(attr))
+        )
+
+      except (ValueError, TypeError):
+
+        LOGGER.error("Error reading style property: %s", prop.__name__)
+
+    return element
+
 
 #
 # process content elements
