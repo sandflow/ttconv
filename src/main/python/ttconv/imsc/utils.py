@@ -132,6 +132,8 @@ def parse_font_families(attr_value: str) -> typing.List[str]:
 
 
 def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) -> Fraction:
+  '''Parse a TTML time expression in a fractional number in seconds
+  '''
 
   m = _OFFSET_FRAME_RE.match(time_expr)
 

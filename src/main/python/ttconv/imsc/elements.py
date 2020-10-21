@@ -44,15 +44,15 @@ class TTMLElement:
   class ParsingContext:
     '''State information when parsing a TTML element'''
 
-    def __init__(self, ttml_class: TTMLElement, parent: typing.Optional[TTMLElement.ParsingContext] = None):
+    def __init__(self, ttml_class: TTMLElement, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
 
-      self.doc = parent.doc if parent is not None else model.Document()
+      self.doc = parent_ctx.doc if parent_ctx is not None else model.Document()
 
-      self.style_context = parent.style_context if parent else imsc_styles.StyleParsingContext()
+      self.style_context = parent_ctx.style_context if parent_ctx else imsc_styles.StyleParsingContext()
 
-      self.style_elements: typing.Dict[str, StyleElement] = parent.style_elements if parent else {}
+      self.style_elements: typing.Dict[str, StyleElement] = parent_ctx.style_elements if parent_ctx else {}
 
-      self.temporal_context = parent.temporal_context if parent else imsc_attr.TemporalAttributeParsingContext()
+      self.temporal_context = parent_ctx.temporal_context if parent_ctx else imsc_attr.TemporalAttributeParsingContext()
 
       self.ttml_class: TTMLElement = ttml_class
 
@@ -76,15 +76,15 @@ class TTMLElement:
 
       self.explicit_dur = None
 
-    def process_lang_attribute(self, parent: TTMLElement.ParsingContext, xml_elem):
+    def process_lang_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       '''Processes the xml:lang attribute, including inheritance from the parent
       '''
-      self.lang = imsc_attr.XMLLangAttribute.extract(xml_elem) or parent.lang
+      self.lang = imsc_attr.XMLLangAttribute.extract(xml_elem) or parent_ctx.lang
 
-    def process_space_attribute(self, parent: TTMLElement.ParsingContext, xml_elem):
+    def process_space_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       '''Processes the xml:space attribute, including inheritance from the parent
       '''
-      self.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or parent.space
+      self.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or parent_ctx.space
 
   @staticmethod
   def is_instance(xml_elem) -> bool:
@@ -93,9 +93,9 @@ class TTMLElement:
     raise NotImplementedError
 
   @staticmethod
-  def from_xml(parent, xml_elem):
-    '''Returns an in-memory representation of a TTML element from the XML element `xml_elem` and
-    given the parent `parent` of the TTML element
+  def from_xml(parent_ctx, xml_elem):
+    '''Returns a parsing context for the TTML element represented by the XML element `xml_elem` and
+    given the parent context `parent_ctx`
     '''
     raise NotImplementedError
 
@@ -114,13 +114,13 @@ class TTElement(TTMLElement):
     return xml_elem.tag == TTElement.qn
 
   @staticmethod
-  def from_xml(_parent: typing.Optional[TTMLElement.ParsingContext], xml_elem) -> TTElement.ParsingContext:
-    '''`_parent` is ignored and can be set to `None`
+  def from_xml(_parent_ctx: typing.Optional[TTMLElement.ParsingContext], xml_elem) -> TTElement.ParsingContext:
+    '''`_parent_ctx` is ignored and can be set to `None`
     '''
 
-    element = TTElement.ParsingContext(TTElement)
+    tt_ctx = TTElement.ParsingContext(TTElement)
 
-    element.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or model.WhiteSpaceHandling.DEFAULT
+    tt_ctx.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or model.WhiteSpaceHandling.DEFAULT
 
     lang_attr = imsc_attr.XMLLangAttribute.extract(xml_elem)
 
@@ -128,27 +128,27 @@ class TTElement(TTMLElement):
       LOGGER.warning("xml:lang not specified on tt")
       lang_attr = ""
 
-    element.lang = lang_attr
+    tt_ctx.lang = lang_attr
 
-    element.doc.set_lang(element.lang)
+    tt_ctx.doc.set_lang(tt_ctx.lang)
 
-    element.doc.set_cell_resolution(
+    tt_ctx.doc.set_cell_resolution(
       imsc_attr.CellResolutionAttribute.extract(xml_elem)
     )
 
     px_resolution = imsc_attr.ExtentAttribute.extract(xml_elem)
 
     if px_resolution is not None:
-      element.doc.set_px_resolution(px_resolution)
+      tt_ctx.doc.set_px_resolution(px_resolution)
 
     active_area = imsc_attr.ActiveAreaAttribute.extract(xml_elem)
 
     if active_area is not None:
-      element.doc.set_active_area(active_area)
+      tt_ctx.doc.set_active_area(active_area)
 
-    element.temporal_context.frame_rate = imsc_attr.FrameRateAttribute.extract(xml_elem)
+    tt_ctx.temporal_context.frame_rate = imsc_attr.FrameRateAttribute.extract(xml_elem)
 
-    element.temporal_context.tick_rate = imsc_attr.TickRateAttribute.extract(xml_elem)
+    tt_ctx.temporal_context.tick_rate = imsc_attr.TickRateAttribute.extract(xml_elem)
 
     # process children elements elements
 
@@ -163,9 +163,9 @@ class TTElement(TTMLElement):
 
           has_body = True
 
-          body_element = ContentElement.from_xml(element, child_element)
+          body_element = ContentElement.from_xml(tt_ctx, child_element)
 
-          element.doc.set_body(body_element.model_element if body_element is not None else None)
+          tt_ctx.doc.set_body(body_element.model_element if body_element is not None else None)
 
         else:
           LOGGER.error("More than one body element present")
@@ -176,12 +176,12 @@ class TTElement(TTMLElement):
 
           has_head = True
 
-          HeadElement.from_xml(element, child_element)
+          HeadElement.from_xml(tt_ctx, child_element)
 
         else:
           LOGGER.error("More than one head element present")
 
-    return element
+    return tt_ctx
 
 class HeadElement(TTMLElement):
   '''Processes the TTML <head> element
@@ -198,13 +198,13 @@ class HeadElement(TTMLElement):
     return xml_elem.tag == HeadElement.qn
 
   @staticmethod
-  def from_xml(parent: TTMLElement.ParsingContext, xml_elem) -> HeadElement.ParsingContext:
+  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> HeadElement.ParsingContext:
     
-    element = HeadElement.ParsingContext(HeadElement, parent)
+    head_ctx = HeadElement.ParsingContext(HeadElement, parent_ctx)
 
-    element.process_lang_attribute(parent, xml_elem)
+    head_ctx.process_lang_attribute(parent_ctx, xml_elem)
 
-    element.process_space_attribute(parent, xml_elem)
+    head_ctx.process_space_attribute(parent_ctx, xml_elem)
 
     # process children elements
 
@@ -220,7 +220,7 @@ class HeadElement(TTMLElement):
           has_layout = True
 
           LayoutElement.from_xml(
-            element,
+            head_ctx,
             child_element
           )
 
@@ -235,7 +235,7 @@ class HeadElement(TTMLElement):
           has_styling = True
 
           StylingElement.from_xml(
-            element,
+            head_ctx,
             child_element
           )
 
@@ -243,7 +243,7 @@ class HeadElement(TTMLElement):
 
           LOGGER.error("Multiple styling elements")
 
-    return element
+    return head_ctx
 
 
 
@@ -262,28 +262,28 @@ class LayoutElement(TTMLElement):
     return xml_elem.tag == LayoutElement.qn
 
   @staticmethod
-  def from_xml(parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[LayoutElement.ParsingContext]:
+  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[LayoutElement.ParsingContext]:
 
-    element = LayoutElement.ParsingContext(LayoutElement, parent)
+    layout_ctx = LayoutElement.ParsingContext(LayoutElement, parent_ctx)
 
-    element.process_lang_attribute(parent, xml_elem)
+    layout_ctx.process_lang_attribute(parent_ctx, xml_elem)
 
-    element.process_space_attribute(parent, xml_elem)
+    layout_ctx.process_space_attribute(parent_ctx, xml_elem)
     
     for child_element in xml_elem:
 
       if RegionElement.is_instance(child_element):
 
-        r = RegionElement.from_xml(element, child_element)
+        r = RegionElement.from_xml(layout_ctx, child_element)
 
         if r is not None:
-          element.doc.put_region(r.model_element)
+          layout_ctx.doc.put_region(r.model_element)
 
       else:
 
         LOGGER.warning("Unexpected child of layout element")
 
-    return element
+    return layout_ctx
 
 class StylingElement(TTMLElement):
   '''Process the TTML <styling> element
@@ -318,23 +318,23 @@ class StylingElement(TTMLElement):
     return xml_elem.tag == StylingElement.qn
 
   @staticmethod
-  def from_xml(parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StylingElement.ParsingContext]:
-    styling_elem = StylingElement.ParsingContext(StylingElement, parent)
+  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StylingElement.ParsingContext]:
+    styling_ctx = StylingElement.ParsingContext(StylingElement, parent_ctx)
 
     for child_xml_elem in xml_elem:
 
       if InitialElement.is_instance(child_xml_elem):
 
-        InitialElement.from_xml(styling_elem, child_xml_elem)
+        InitialElement.from_xml(styling_ctx, child_xml_elem)
 
       elif StyleElement.is_instance(child_xml_elem):
         
-        style_element = StyleElement.from_xml(styling_elem, child_xml_elem)
+        style_element = StyleElement.from_xml(styling_ctx, child_xml_elem)
 
         if style_element is None:
           continue
 
-        if style_element.id in styling_elem.style_elements:
+        if style_element.id in styling_ctx.style_elements:
           LOGGER.error("Duplicate style id")
           continue
 
@@ -342,10 +342,10 @@ class StylingElement(TTMLElement):
       
     # merge style elements
 
-    for style_element in parent.style_elements.values():
-      styling_elem.merge_chained_styles(style_element)
+    for style_element in parent_ctx.style_elements.values():
+      styling_ctx.merge_chained_styles(style_element)
 
-    return styling_elem
+    return styling_ctx
 
 
 class StyleElement(TTMLElement):
@@ -356,11 +356,11 @@ class StyleElement(TTMLElement):
     '''Maintains state when parsing the element
     '''
 
-    def __init__(self, parent: typing.Optional[TTMLElement.ParsingContext] = None):
+    def __init__(self, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
       self.styles: typing.Dict[imsc_styles.StyleProperty, typing.Any] = dict()
       self.style_refs: typing.List[str] = None
       self.id: str = None
-      super().__init__(StyleElement, parent)
+      super().__init__(StyleElement, parent_ctx)
 
   qn = f"{{{xml_ns.TTML}}}style"
 
@@ -369,9 +369,9 @@ class StyleElement(TTMLElement):
     return xml_elem.tag == StyleElement.qn
 
   @staticmethod
-  def from_xml(parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StyleElement.ParsingContext]:
+  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StyleElement.ParsingContext]:
     
-    element = StyleElement.ParsingContext(parent)
+    style_ctx = StyleElement.ParsingContext(parent_ctx)
 
     for attr in xml_elem.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
@@ -381,36 +381,36 @@ class StyleElement(TTMLElement):
 
       try:
 
-        element.styles[prop.model_prop] = prop.extract(element.style_context, xml_elem.attrib.get(attr))
+        style_ctx.styles[prop.model_prop] = prop.extract(style_ctx.style_context, xml_elem.attrib.get(attr))
 
       except ValueError:
 
         LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    if issubclass(parent.ttml_class, RegionElement):
+    if issubclass(parent_ctx.ttml_class, RegionElement):
 
       # nested styling
       # merge style properties with the parent Region element
 
-      for style_prop, value in element.styles.items():
-        region_style = parent.model_element.get_style(style_prop)
+      for style_prop, value in style_ctx.styles.items():
+        region_style = parent_ctx.model_element.get_style(style_prop)
 
         if region_style is None:
-          parent.model_element.set_style(style_prop, value)
+          parent_ctx.model_element.set_style(style_prop, value)
 
       return None
 
     # styling > style element
 
-    element.style_refs = imsc_attr.StyleAttribute.extract(xml_elem)
+    style_ctx.style_refs = imsc_attr.StyleAttribute.extract(xml_elem)
 
-    element.id = imsc_attr.XMLIDAttribute.extract(xml_elem)
+    style_ctx.id = imsc_attr.XMLIDAttribute.extract(xml_elem)
 
-    if element.id is None:
+    if style_ctx.id is None:
       LOGGER.error("A style element must have an id")
       return None
 
-    return element
+    return style_ctx
 
 class InitialElement(TTMLElement):
   '''Process the TTML <initial> element
@@ -427,9 +427,9 @@ class InitialElement(TTMLElement):
     return xml_elem.tag == InitialElement.qn
 
   @staticmethod
-  def from_xml(parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[InitialElement.ParsingContext]:
+  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[InitialElement.ParsingContext]:
     
-    element = InitialElement.ParsingContext(InitialElement, parent)
+    initial_ctx = InitialElement.ParsingContext(InitialElement, parent_ctx)
 
     for attr in xml_elem.attrib:
 
@@ -441,16 +441,16 @@ class InitialElement(TTMLElement):
 
       try:
 
-        element.doc.put_initial_value(
+        initial_ctx.doc.put_initial_value(
           prop.model_prop,
-          prop.extract(element.style_context, xml_elem.attrib.get(attr))
+          prop.extract(initial_ctx.style_context, xml_elem.attrib.get(attr))
         )
 
       except (ValueError, TypeError):
 
         LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    return element
+    return initial_ctx
 
 
 #
@@ -467,12 +467,12 @@ class ContentElement(TTMLElement):
     def __init__(
         self,
         ttml_class: typing.Optional[TTMLElement],
-        parent: TTMLElement.ParsingContext,
+        parent_ctx: TTMLElement.ParsingContext,
         model_element: typing.Optional[model.ContentElement] = None
       ):
       self.children: typing.List[model.ContentElement] = []
       self.model_element: model.ContentElement = model_element
-      super().__init__(ttml_class, parent)
+      super().__init__(ttml_class, parent_ctx)
 
     def process_region_property(self, xml_elem):
       '''Reads and processes the `region` attribute
@@ -520,14 +520,14 @@ class ContentElement(TTMLElement):
         except ValueError:
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    def process_set_style_properties(self, parent: TTMLElement, xml_elem):
+    def process_set_style_properties(self, parent_ctx: TTMLElement, xml_elem):
       '''Processes style properties on `<set>` element
       '''
-      if parent.model_element is None:
+      if parent_ctx.model_element is None:
         LOGGER.error("Set parent does not exist")
         return
 
-      if not issubclass(parent.ttml_class, ContentElement):
+      if not issubclass(parent_ctx.ttml_class, ContentElement):
         LOGGER.error("Set parent is not a content element")
         return
 
@@ -535,7 +535,7 @@ class ContentElement(TTMLElement):
         prop = StyleProperties.BY_QNAME.get(attr)
         if prop is not None:
           try:
-            parent.model_element.add_animation_step(
+            parent_ctx.model_element.add_animation_step(
               model.DiscreteAnimationStep(
                 prop.model_prop,
                 self.desired_begin,
@@ -547,29 +547,29 @@ class ContentElement(TTMLElement):
           except ValueError:
             LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    def process_lang_attribute(self, parent: TTMLElement, xml_elem):
-      super().process_lang_attribute(parent, xml_elem)
+    def process_lang_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
+      super().process_lang_attribute(parent_ctx, xml_elem)
       self.model_element.set_lang(self.lang)
 
-    def process_space_attribute(self, parent: TTMLElement, xml_elem):
-      super().process_space_attribute(parent, xml_elem)
+    def process_space_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
+      super().process_space_attribute(parent_ctx, xml_elem)
       self.model_element.set_space(self.space)
 
     # pylint: disable=too-many-branches
 
-    def process(self, parent: TTMLElement.ParsingContext, xml_elem):
+    def process(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       '''Generic processing applicable to TTML elements rooted in `region` and `body` elements
       '''
-      self.process_lang_attribute(parent, xml_elem)
+      self.process_lang_attribute(parent_ctx, xml_elem)
 
-      self.process_space_attribute(parent, xml_elem)
+      self.process_space_attribute(parent_ctx, xml_elem)
 
       if self.ttml_class.has_region:
         self.process_region_property(xml_elem)
 
       if issubclass(self.ttml_class, SetElement):
 
-        self.process_set_style_properties(parent, xml_elem)
+        self.process_set_style_properties(parent_ctx, xml_elem)
 
       elif self.ttml_class.has_styles:
 
@@ -585,12 +585,15 @@ class ContentElement(TTMLElement):
 
       self.explicit_end = imsc_attr.EndAttribute.extract(self.temporal_context, xml_elem)
 
-      self.implicit_begin = Fraction(0) if parent.time_container.is_par() else (parent.implicit_end - parent.desired_begin)
+      if parent_ctx.time_container.is_par():
+        self.implicit_begin = Fraction(0)
+      else:      
+        self.implicit_begin = parent_ctx.implicit_end - parent_ctx.desired_begin
       
       self.desired_begin = self.implicit_begin + (self.explicit_begin if self.explicit_begin is not None else Fraction(0))
 
       if issubclass(self.ttml_class, (BrElement, RegionElement, SetElement)) and \
-        parent.time_container.is_par():
+        parent_ctx.time_container.is_par():
         self.implicit_end = None
       else:
         self.implicit_end = self.desired_begin
@@ -732,7 +735,7 @@ class ContentElement(TTMLElement):
     return s
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[ContentElement.ParsingContext]:
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[ContentElement.ParsingContext]:
     content_classes = [
       BodyElement,
       DivElement,
@@ -751,7 +754,7 @@ class ContentElement(TTMLElement):
 
     for ttml_elem_class in content_classes:
       if ttml_elem_class.is_instance(xml_elem):
-        return ttml_elem_class.from_xml(parent, xml_elem)
+        return ttml_elem_class.from_xml(parent_ctx, xml_elem)
     
     return None
 
@@ -777,16 +780,16 @@ class RegionElement(ContentElement):
     return xml_elem.tag == RegionElement.qn
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RegionElement.ParsingContext]:
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RegionElement.ParsingContext]:
     rid = imsc_attr.XMLIDAttribute.extract(xml_elem)
 
     if rid is None:
       LOGGER.error("All regions must have an id")
       return None
 
-    element = RegionElement.ParsingContext(RegionElement, parent, model.Region(rid, parent.doc))
-    element.process(parent, xml_elem)
-    return element
+    region_ctx = RegionElement.ParsingContext(RegionElement, parent_ctx, model.Region(rid, parent_ctx.doc))
+    region_ctx.process(parent_ctx, xml_elem)
+    return region_ctx
     
 class SetElement(ContentElement):
   '''Process TTML <set> element
@@ -808,10 +811,10 @@ class SetElement(ContentElement):
     return xml_elem.tag == DivElement.qn
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SetElement.ParsingContext]:
-    element = SetElement.ParsingContext(SetElement, parent)
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SetElement.ParsingContext]:
+    set_ctx = SetElement.ParsingContext(SetElement, parent_ctx)
+    set_ctx.process(parent_ctx, xml_elem)
+    return set_ctx
 
 class BodyElement(ContentElement):
   '''Process TTML body element
@@ -833,10 +836,10 @@ class BodyElement(ContentElement):
     return xml_elem.tag == BodyElement.qn
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[BodyElement.ParsingContext]:
-    element = BodyElement.ParsingContext(BodyElement, parent, model.Body(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[BodyElement.ParsingContext]:
+    body_ctx = BodyElement.ParsingContext(BodyElement, parent_ctx, model.Body(parent_ctx.doc))
+    body_ctx.process(parent_ctx, xml_elem)
+    return body_ctx
 
 
 class DivElement(ContentElement):
@@ -859,10 +862,10 @@ class DivElement(ContentElement):
     return xml_elem.tag == DivElement.qn
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[DivElement.ParsingContext]:
-    element = DivElement.ParsingContext(DivElement, parent, model.Div(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[DivElement.ParsingContext]:
+    div_ctx = DivElement.ParsingContext(DivElement, parent_ctx, model.Div(parent_ctx.doc))
+    div_ctx.process(parent_ctx, xml_elem)
+    return div_ctx
 
 class PElement(ContentElement):
   '''Process TTML <p> element
@@ -884,10 +887,10 @@ class PElement(ContentElement):
     return xml_elem.tag == PElement.qn
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[PElement.ParsingContext]:
-    element = PElement.ParsingContext(PElement, parent, model.P(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[PElement.ParsingContext]:
+    p_ctx = PElement.ParsingContext(PElement, parent_ctx, model.P(parent_ctx.doc))
+    p_ctx.process(parent_ctx, xml_elem)
+    return p_ctx
 
 
 class SpanElement(ContentElement):
@@ -916,10 +919,10 @@ class SpanElement(ContentElement):
     return ttml_span.get(f"{{{xml_ns.TTS}}}ruby")
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SpanElement.ParsingContext]:
-    element = SpanElement.ParsingContext(SpanElement, parent, model.Span(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SpanElement.ParsingContext]:
+    span_ctx = SpanElement.ParsingContext(SpanElement, parent_ctx, model.Span(parent_ctx.doc))
+    span_ctx.process(parent_ctx, xml_elem)
+    return span_ctx
 
 
 class RubyElement(ContentElement):
@@ -942,10 +945,10 @@ class RubyElement(ContentElement):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RubyElement.ruby
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RubyElement.ParsingContext]:
-    element = RubyElement.ParsingContext(RubyElement, parent, model.Ruby(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RubyElement.ParsingContext]:
+    ruby_ctx = RubyElement.ParsingContext(RubyElement, parent_ctx, model.Ruby(parent_ctx.doc))
+    ruby_ctx.process(parent_ctx, xml_elem)
+    return ruby_ctx
 
 
 class RbElement(ContentElement):
@@ -968,10 +971,10 @@ class RbElement(ContentElement):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RbElement.ruby
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RbElement.ParsingContext]:
-    element = RbElement.ParsingContext(RbElement, parent, model.Rb(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RbElement.ParsingContext]:
+    rb_ctx = RbElement.ParsingContext(RbElement, parent_ctx, model.Rb(parent_ctx.doc))
+    rb_ctx.process(parent_ctx, xml_elem)
+    return rb_ctx
 
 class RtElement(ContentElement):
   '''Process the TTML <span tts:ruby="text"> element
@@ -993,10 +996,10 @@ class RtElement(ContentElement):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RtElement.ruby
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RtElement.ParsingContext]:
-    element = RtElement.ParsingContext(RtElement, parent, model.Rt(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RtElement.ParsingContext]:
+    rt_ctx = RtElement.ParsingContext(RtElement, parent_ctx, model.Rt(parent_ctx.doc))
+    rt_ctx.process(parent_ctx, xml_elem)
+    return rt_ctx
 
 
 class RpElement(ContentElement):
@@ -1019,10 +1022,10 @@ class RpElement(ContentElement):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RpElement.ruby
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RpElement.ParsingContext]:
-    element = RpElement.ParsingContext(RpElement, parent, model.Rp(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RpElement.ParsingContext]:
+    rp_ctx = RpElement.ParsingContext(RpElement, parent_ctx, model.Rp(parent_ctx.doc))
+    rp_ctx.process(parent_ctx, xml_elem)
+    return rp_ctx
 
 
 class RbcElement(ContentElement):
@@ -1045,10 +1048,10 @@ class RbcElement(ContentElement):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RbcElement.ruby
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RbcElement.ParsingContext]:
-    element = RbcElement.ParsingContext(RbcElement, parent, model.Rbc(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RbcElement.ParsingContext]:
+    rbc_ctx = RbcElement.ParsingContext(RbcElement, parent_ctx, model.Rbc(parent_ctx.doc))
+    rbc_ctx.process(parent_ctx, xml_elem)
+    return rbc_ctx
 
 
 class RtcElement(ContentElement):
@@ -1071,10 +1074,10 @@ class RtcElement(ContentElement):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RtcElement.ruby
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RtcElement.ParsingContext]:
-    element = RtcElement.ParsingContext(RtcElement, parent, model.Rtc(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RtcElement.ParsingContext]:
+    rtc_ctx = RtcElement.ParsingContext(RtcElement, parent_ctx, model.Rtc(parent_ctx.doc))
+    rtc_ctx.process(parent_ctx, xml_elem)
+    return rtc_ctx
 
 class BrElement(ContentElement):
   '''Process the TTML <br> element
@@ -1096,7 +1099,7 @@ class BrElement(ContentElement):
     return xml_elem.tag == BrElement.qn
 
   @classmethod
-  def from_xml(cls, parent: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[BrElement.ParsingContext]:
-    element = BrElement.ParsingContext(BrElement, parent, model.Br(parent.doc))
-    element.process(parent, xml_elem)
-    return element
+  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[BrElement.ParsingContext]:
+    br_ctx = BrElement.ParsingContext(BrElement, parent_ctx, model.Br(parent_ctx.doc))
+    br_ctx.process(parent_ctx, xml_elem)
+    return br_ctx
