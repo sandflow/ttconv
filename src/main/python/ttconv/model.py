@@ -388,11 +388,11 @@ class ContentElement:
   # language
 
   def set_lang(self, language: str):
-    '''Sets the langugage of the element, as an RFC 5646 language tag.'''
+    '''Sets the language of the element, as an RFC 5646 language tag.'''
     self._lang = str(language)
 
   def get_lang(self) -> str:
-    '''Returns the langugage of the element, as an RFC 5646 language tag.'''
+    '''Returns the language of the element, as an RFC 5646 language tag.'''
     return self._lang
 
 
@@ -842,13 +842,13 @@ class Document:
   # language
 
   def set_lang(self, language: str):
-    '''Sets the langugage of the document, as an RFC 5646 language tag.'''
+    '''Sets the language of the document, as an RFC 5646 language tag.'''
     if not isinstance(language, str):
       raise TypeError("Argument must be a string")
     self._lang = language
 
   def get_lang(self) -> str:
-    '''Returns the langugage of the document, as an RFC 5646 language tag.'''
+    '''Returns the language of the document, as an RFC 5646 language tag.'''
     return self._lang
 
   # display aspect ratio
