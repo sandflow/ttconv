@@ -30,6 +30,7 @@ import logging
 from fractions import Fraction
 import typing
 import ttconv.model as model
+import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.attributes as imsc_attr
 from ttconv.imsc.style_properties import StyleProperties
@@ -44,6 +45,8 @@ class TTMLElement:
     self.doc = parent.doc if parent is not None else model.Document()
 
     self.style_context = parent.style_context if parent else styles.StyleParsingContext()
+
+    self.style_elements: typing.Dict[str, StyleElement] = {}
 
     self.temporal_context = parent.temporal_context if parent else imsc_attr.TemporalAttributeParsingContext()
 
@@ -260,9 +263,106 @@ class StylingElement(TTMLElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == StylingElement.qn
 
+  def merge_chained_styles(self, style_element: StyleElement):
+
+    while len(style_element.style_refs) > 0:
+
+      style_ref = style_element.style_refs.pop()
+
+      if style_ref not in self.style_elements:
+        LOGGER.error("Style id not present")
+        continue
+
+      self.merge_chained_styles(self.style_elements[style_ref])
+
+      for style_prop, value in self.style_elements[style_ref].styles:
+        style_element.styles.setdefault(style_prop, value)
+
+
   @staticmethod
-  def from_xml(_parent: TTMLElement, _xml_elem):
-    return None
+  def from_xml(parent: TTMLElement, xml_elem):
+    styling_elem = StylingElement(parent)
+
+    for child_xml_elem in xml_elem:
+      if not StyleElement.is_instance(child_xml_elem):
+        continue
+
+      style_element = StyleElement.from_xml(styling_elem, child_xml_elem)
+
+      if style_element is None:
+        continue
+
+      if style_element.id in styling_elem.style_elements:
+        LOGGER.error("Duplicate style id")
+        continue
+
+      style_element.style_elements[style_element.id] = style_element
+      
+    # merge style elements
+
+    for style_element in parent.style_elements.values():
+      styling_elem.merge_chained_styles(style_element)
+
+
+class StyleElement(TTMLElement):
+  '''Process the TTML <style> element
+  '''
+
+  qn = f"{{{xml_ns.TTML}}}style"
+
+  def __init__(self, parent: typing.Optional[TTMLElement] = None):
+    self.styles: typing.Dict[styles.StyleProperty, typing.Any] = dict()
+    self.style_refs: typing.List[str] = None
+    self.id: str = None
+    super().__init__(parent)
+
+  @staticmethod
+  def is_instance(xml_elem) -> bool:
+    return xml_elem.tag == StyleElement.qn
+
+  @staticmethod
+  def from_xml(parent: TTMLElement, xml_elem):
+    
+    element = StyleElement(parent)
+
+    for attr in xml_elem.attrib:
+      prop = StyleProperties.BY_QNAME.get(attr)
+
+      if not prop:
+        continue
+
+      try:
+
+        element.styles[prop.model_prop] = prop.extract(element.style_context, xml_elem.attrib.get(attr))
+
+      except ValueError:
+
+        LOGGER.error("Error reading style property: %s", prop.__name__)
+
+    if isinstance(parent, RegionElement):
+
+      # nested styling
+      # merge style properties with the parent Region element
+
+      for style_prop, value in element.styles.items():
+        region_style = parent.model_element.get_style(style_prop)
+
+        if region_style is None:
+          parent.model_element.set_style(style_prop, value)
+
+      return None
+
+    # styling > style element
+
+    element.style_refs = imsc_attr.StyleAttribute.extract(xml_elem)
+
+    element.id = imsc_attr.XMLIDAttribute.extract(xml_elem)
+
+    if element.id is None:
+      LOGGER.error("A style element must have an id")
+      return None
+
+    return element
 
 #
 # process content elements

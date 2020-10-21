@@ -370,3 +370,16 @@ class TimeContainerAttribute:
       LOGGER.error("bad timeContainer value")
 
       return TimeContainer.par
+
+
+class StyleAttribute:
+  '''style attribute
+  '''
+  qn = "style"
+
+  @staticmethod
+  def extract(xml_element) -> typing.List[str]:
+
+    raw_value = xml_element.attrib.get(StyleAttribute.qn)
+
+    return raw_value.split(" ") if raw_value is not None else []
