@@ -286,44 +286,6 @@ class RegionElement:
 
     ContentElement.from_model_style_properties(region, region_element)
 
-    attrib = region.get_style(model.StyleProperties.FontFamily)
-    if attrib is not None:
-      region_element.set("tts:fontFamily", attrib)
-
-    attrib = region.get_style(model.StyleProperties.ShowBackground)
-    attrib = None
-    if attrib is not None:
-      region_element.set("tts:showBackground", attrib)
-
-    attrib = region.get_style(model.StyleProperties.Origin)
-    attrib = None
-    if attrib is not None:
-      region_element.set("tts:origin", attrib)
-
-    attrib = region.get_style(model.StyleProperties.Extent)
-    attrib = None
-    if attrib is not None:
-      region_element.set("tts:extent", attrib)
-
-    attrib = region.get_style(model.StyleProperties.Color)
-    attrib = None
-    if attrib is not None:
-      region_element.set("tts:color", 
-      f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
-
-    attrib = region.get_style(model.StyleProperties.BackgroundColor)
-    if attrib is not None:
-      region_element.set("tts:backgroundColor", 
-      f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
-
-    attrib = region.get_style(model.StyleProperties.TextAlign)
-    if attrib is not None:
-      region_element.set("tts:textAlign", attrib.value)
-
-    attrib = region.get_style(model.StyleProperties.DisplayAlign)
-    if attrib is not None:
-      region_element.set("tts:displayAlign", attrib.value)
-
 class StylingElement:
   '''Process the TTML <styling> element
   '''

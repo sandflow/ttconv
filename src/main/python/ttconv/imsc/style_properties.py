@@ -146,8 +146,8 @@ class StyleProperties:
       return styles.DisplayAlignType[xml_attrib]
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center.value)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib.center.value)
 
 
   class Extent(StyleProperty):
@@ -585,9 +585,8 @@ class StyleProperties:
       return r
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib.center.value)
 
 
   class TextCombine(StyleProperty):
