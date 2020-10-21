@@ -33,6 +33,7 @@ import os
 import logging
 from fractions import Fraction
 import ttconv.model as model
+import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
 
 class IMSCReaderTest(unittest.TestCase):
@@ -166,6 +167,26 @@ class IMSCReaderTest(unittest.TestCase):
           with self.subTest(name):
             tree = et.parse(os.path.join(root, filename))
             self.assertIsNotNone(imsc_reader.to_model(tree))
+
+  def test_referential_styling(self):
+    tree = et.parse('src/test/resources/ttml/referential_styling.ttml')
+    doc = imsc_reader.to_model(tree)
+
+    divs = list(doc.get_body())
+
+    self.assertEqual(divs[0].get_style(styles.StyleProperties.Color), styles.NamedColors.green.value)
+    self.assertEqual(divs[0].get_style(styles.StyleProperties.BackgroundColor), styles.NamedColors.blue.value)
+
+    self.assertEqual(divs[1].get_style(styles.StyleProperties.Color), styles.NamedColors.black.value)
+    self.assertEqual(divs[1].get_style(styles.StyleProperties.BackgroundColor), styles.NamedColors.blue.value)
+
+    regions = list(doc.iter_regions())
+
+    self.assertEqual(regions[0].get_style(styles.StyleProperties.Color), styles.NamedColors.blue.value)
+    self.assertEqual(regions[0].get_style(styles.StyleProperties.BackgroundColor), styles.NamedColors.yellow.value)
+
+    self.assertEqual(regions[1].get_style(styles.StyleProperties.Color), styles.NamedColors.red.value)
+    self.assertEqual(regions[1].get_style(styles.StyleProperties.BackgroundColor), styles.NamedColors.yellow.value)
 
 if __name__ == '__main__':
   unittest.main()

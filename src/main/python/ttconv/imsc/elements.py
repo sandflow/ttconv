@@ -46,7 +46,7 @@ class TTMLElement:
 
     self.style_context = parent.style_context if parent else styles.StyleParsingContext()
 
-    self.style_elements: typing.Dict[str, StyleElement] = {}
+    self.style_elements: typing.Dict[str, StyleElement] = parent.style_elements if parent else {}
 
     self.temporal_context = parent.temporal_context if parent else imsc_attr.TemporalAttributeParsingContext()
 
@@ -275,7 +275,7 @@ class StylingElement(TTMLElement):
 
       self.merge_chained_styles(self.style_elements[style_ref])
 
-      for style_prop, value in self.style_elements[style_ref].styles:
+      for style_prop, value in self.style_elements[style_ref].styles.items():
         style_element.styles.setdefault(style_prop, value)
 
 
@@ -410,17 +410,34 @@ class ContentElement(TTMLElement):
     else:
       LOGGER.warning("Element references unknown region")
 
-  def process_style_properties(self, xml_elem):
+  def process_referential_styling(self, xml_elem):
+
+    for style_ref in imsc_attr.StyleAttribute.extract(xml_elem):
+      style_element = self.style_elements.get(style_ref)
+
+      if style_element is None:
+        LOGGER.error("non existant style id")
+        continue
+
+      for model_prop, value in style_element.styles.items():
+        if self.model_element.get_style(model_prop) is None:
+          self.model_element.set_style(model_prop, value)
+
+  def process_specified_styling(self, xml_elem):
+
     for attr in xml_elem.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
-      if prop is not None:
-        try:
-          self.model_element.set_style(
-            prop.model_prop,
-            prop.extract(self.style_context, xml_elem.attrib.get(attr))
-            )
-        except ValueError:
-          LOGGER.error("Error reading style property: %s", prop.__name__)
+
+      if prop is None:
+        continue
+
+      try:
+        self.model_element.set_style(
+          prop.model_prop,
+          prop.extract(self.style_context, xml_elem.attrib.get(attr))
+          )
+      except ValueError:
+        LOGGER.error("Error reading style property: %s", prop.__name__)
 
   def process_set_style_properties(self, parent: TTMLElement, xml_elem):
     if parent.model_element is None:
@@ -506,7 +523,7 @@ class ContentElement(TTMLElement):
 
     elif self.has_styles:
 
-      self.process_style_properties(xml_elem)
+      self.process_specified_styling(xml_elem)
 
     # temporal processing
 
@@ -534,6 +551,11 @@ class ContentElement(TTMLElement):
       self.implicit_end = None
 
     for child_xml_element in xml_elem:
+
+      if isinstance(self, RegionElement) and StyleElement.is_instance(child_xml_element):
+        style_element = StyleElement(self)
+        style_element.from_xml(self, child_xml_element)
+        continue
 
       child_element = ContentElement.from_xml(self, child_xml_element)
 
@@ -573,6 +595,10 @@ class ContentElement(TTMLElement):
             )
           )
         self.implicit_end = None
+
+    if self.has_styles:
+
+      self.process_referential_styling(xml_elem)
 
     try:
 
