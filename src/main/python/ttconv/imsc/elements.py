@@ -112,16 +112,17 @@ class TTElement:
   def from_model(i_model, context):
 
     body = i_model.get_body()
+
+    space = model.WhiteSpaceHandling.DEFAULT
     
     if body is not None:
       lang = body.get_lang()
       if lang is not None:
         imsc_attr.XMLLangAttribute.set(context.imsc_doc, lang)
 
-    imsc_attr.CellResolutionAttribute.set(context.imsc_doc, i_model.get_px_resolution())
+    imsc_attr.CellResolutionAttribute.set(context.imsc_doc, i_model.get_cell_resolution())
+    imsc_attr.ExtentAttribute.set(context.imsc_doc, i_model.get_px_resolution())
     imsc_attr.ActiveAreaAttribute.set(context.imsc_doc, i_model.get_active_area())
-
-    space = model.WhiteSpaceHandling.DEFAULT
 
     # Write the <head> section first
     for region in i_model.iter_regions():
@@ -307,19 +308,21 @@ class RegionElement:
     attrib = region.get_style(model.StyleProperties.Color)
     attrib = None
     if attrib is not None:
-      region_element.set("tts:color", attrib)
+      region_element.set("tts:color", 
+      f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
 
     attrib = region.get_style(model.StyleProperties.BackgroundColor)
     if attrib is not None:
-      region_element.set("tts:backgroundColor", attrib)
+      region_element.set("tts:backgroundColor", 
+      f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
 
     attrib = region.get_style(model.StyleProperties.TextAlign)
     if attrib is not None:
-      region_element.set("tts:textAlign", attrib)
+      region_element.set("tts:textAlign", attrib.value)
 
     attrib = region.get_style(model.StyleProperties.DisplayAlign)
     if attrib is not None:
-      region_element.set("tts:displayAlign", attrib)
+      region_element.set("tts:displayAlign", attrib.value)
 
 class StylingElement:
   '''Process the TTML <styling> element

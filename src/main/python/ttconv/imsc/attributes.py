@@ -127,7 +127,7 @@ class CellResolutionAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(CellResolutionAttribute.qn, str(res.width) + " " + str(res.height))
+    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows:.0f}px {res.columns:.0f}px")
 
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
@@ -158,7 +158,8 @@ class ExtentAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(ExtentAttribute.qn, str(res.width) + " " + str(res.height))
+    ttml_element.set(ExtentAttribute.qn, 
+    f"{res.width:.0f} {res.height:.0f}")
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
@@ -203,8 +204,4 @@ class ActiveAreaAttribute:
   @staticmethod
   def set(ttml_element, activeArea):
     ttml_element.set(ActiveAreaAttribute.qn, 
-      "{0}% {1}% {2}% {3}%".format(
-        activeArea.left_offset, 
-        activeArea.top_offset, 
-        activeArea.width, 
-        activeArea.height))
+      f"{(activeArea.left_offset * 100):.0f}% {(activeArea.top_offset * 100):.0f}% {(activeArea.width * 100):.0f}% {activeArea.height * 100:.0f}%")

@@ -67,7 +67,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
 
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''
@@ -81,9 +81,8 @@ class StyleProperties:
       return utils.parse_color(xml_attrib)
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
 
 
   class Direction(StyleProperty):
@@ -99,8 +98,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class Disparity(StyleProperty):
@@ -117,8 +115,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
       
       
   class Display(StyleProperty):
@@ -134,8 +131,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class DisplayAlign(StyleProperty):
@@ -151,7 +147,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center.value)
 
 
   class Extent(StyleProperty):
@@ -182,9 +178,9 @@ class StyleProperties:
       )
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
+      f"{attrib.height.value:.0f}{attrib.height.units.value} {attrib.width.value:.0f}{attrib.width.units.value}")
 
 
   class FillLineGap(StyleProperty):
@@ -200,8 +196,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class FontFamily(StyleProperty):
@@ -221,8 +216,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class FontSize(StyleProperty):
@@ -237,9 +231,9 @@ class StyleProperties:
       return StyleProperties.ttml_length_to_model(context, xml_attrib)
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
+      f"{attrib.value:.0f}{attrib.units.value} {attrib.value:.0f}{attrib.units.value}")
 
 
   class FontStyle(StyleProperty):
@@ -255,8 +249,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class FontWeight(StyleProperty):
@@ -272,8 +265,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class LineHeight(StyleProperty):
@@ -291,8 +283,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class LinePadding(StyleProperty):
@@ -311,8 +302,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class LuminanceGain(StyleProperty):
@@ -328,8 +318,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class MultiRowAlign(StyleProperty):
@@ -345,8 +334,7 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
 
 
   class Opacity(StyleProperty):
@@ -398,7 +386,8 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, xml_attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{xml_attrib.x}% {xml_attrib.x}%")
+      pass
+      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{xml_attrib.x}% {xml_attrib.x}%")
 
 
   class Overflow(StyleProperty):
