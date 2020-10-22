@@ -61,7 +61,7 @@ class _SccContext:
     self.safe_area_y_offset: int = 0
     self.previous_code = 0
     self.current_caption: Optional[SccCaptionParagraph] = None
-    self.previous_caption: Optional[SccCaptionParagraph] = None
+    self.previous_captions: List[SccCaptionParagraph] = []
 
   def set_safe_area(self, safe_area_x_offset: int, safe_area_y_offset: int):
     """Sets the safe area"""
@@ -70,8 +70,9 @@ class _SccContext:
 
   def set_current_to_previous(self):
     """Rotates current caption to previous caption"""
-    self.previous_caption = self.current_caption
-    self.current_caption = None
+    if self.current_caption:
+      self.previous_captions.append(self.current_caption)
+      self.current_caption = None
 
   def init_current_caption(self, time_code: SccTimeCode):
     """Initializes the current caption with id and begin time"""
@@ -80,12 +81,12 @@ class _SccContext:
       self.current_caption.set_id("caption" + str(self.count))
       self.current_caption.set_begin(time_code)
 
-  def close_previous_caption(self, time_code: SccTimeCode):
+  def push_previous_caption(self, time_code: SccTimeCode, index: int = 0):
     """Sets previous caption end time, pushes it into the data model and resets it"""
-    if self.previous_caption:
-      self.previous_caption.set_end(time_code)
-      self.div.push_child(self.previous_caption.to_paragraph(self.div.get_doc()))
-      self.previous_caption = None
+    if len(self.previous_captions) > 0:
+      previous_caption = self.previous_captions.pop(index)
+      previous_caption.set_end(time_code)
+      self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SccTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
@@ -95,19 +96,23 @@ class _SccContext:
     pac_row = pac.get_row()
     pac_indent = pac.get_indent()
 
-    if self.current_caption.get_style() is SccCaptionStyle.PaintOn and self.current_caption.current_text \
-        and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
-      # Paint-on create a new Paragraph if contiguous
-      self.set_current_to_previous()
-      self.close_previous_caption(time_code)
+    if self.current_caption.get_style() is SccCaptionStyle.PaintOn:
+      if self.current_caption.current_text and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
+        # Creates a new Paragraph if the new caption is contiguous (Paint-On)
+        self.set_current_to_previous()
 
-      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
-      self.init_current_caption(time_code)
+        self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
+        self.init_current_caption(time_code)
+
+      elif len(self.previous_captions) > 0 and self.previous_captions[0].current_text \
+          and self.safe_area_y_offset + pac_row == self.previous_captions[0].get_row_offset():
+        # Pushes and erases displayed row so that it can be replaced by current row (Paint-On)
+        self.push_previous_caption(self.current_caption.get_begin())
 
     self.current_caption.new_caption_text()
 
     if self.current_caption.get_style() is SccCaptionStyle.RollUp:
-      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15.
+      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
       if pac_row in range(5, 12):
         self.current_caption.set_current_text_offsets()
         return
@@ -157,7 +162,6 @@ class _SccContext:
     if control_code is SccControlCode.RDC:
       # Start a new Paint-On caption
       self.set_current_to_previous()
-      self.close_previous_caption(time_code)
 
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
       self.init_current_caption(time_code)
@@ -167,18 +171,18 @@ class _SccContext:
       self.set_current_to_previous()
 
       previous_last_lines: List[SccCaptionContent] = []
-      if self.previous_caption:
+      if len(self.previous_captions) > 0:
 
         if control_code is SccControlCode.RU2:
-          previous_last_lines = self.previous_caption.get_last_caption_lines(1)
+          previous_last_lines = self.previous_captions[0].get_last_caption_lines(1)
         if control_code is SccControlCode.RU3:
-          previous_last_lines = self.previous_caption.get_last_caption_lines(2)
+          previous_last_lines = self.previous_captions[0].get_last_caption_lines(2)
         if control_code is SccControlCode.RU4:
-          previous_last_lines = self.previous_caption.get_last_caption_lines(3)
+          previous_last_lines = self.previous_captions[0].get_last_caption_lines(3)
 
         previous_last_lines.append(SccCaptionLineBreak())
 
-      self.close_previous_caption(time_code)
+      self.push_previous_caption(time_code)
 
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
       self.current_caption.caption_contents = previous_last_lines
@@ -192,19 +196,19 @@ class _SccContext:
 
     if control_code is SccControlCode.EDM:
       # Erase displayed caption (Pop-On)
-      if self.previous_caption:
+      if len(self.previous_captions) > 0:
         # Set line breaks depending on the position of the content
         last_text: Optional[SccCaptionText] = None
-        for (index, content) in enumerate(self.previous_caption.caption_contents):
+        for (index, content) in enumerate(self.previous_captions[0].caption_contents):
           if not isinstance(content, SccCaptionText):
             continue
 
-          if last_text and self.previous_caption.current_text.is_contiguous(last_text):
-            self.previous_caption.caption_contents.insert(index, SccCaptionLineBreak())
+          if last_text and self.previous_captions[0].current_text.is_contiguous(last_text):
+            self.previous_captions[0].caption_contents.insert(index, SccCaptionLineBreak())
 
           last_text = content
 
-      self.close_previous_caption(time_code)
+      self.push_previous_caption(time_code)
 
     if control_code is SccControlCode.TO1:
       self.current_caption.indent(1)
@@ -215,6 +219,10 @@ class _SccContext:
 
     if control_code is SccControlCode.CR:
       # Roll the display up one row (Roll-Up)
+      pass
+
+    if control_code is SccControlCode.DER:
+      # Delete to End of Row (Paint-On)
       pass
 
   def process_text(self, word: str, time_code: SccTimeCode):
@@ -239,8 +247,9 @@ class _SccContext:
   def flush(self, time_code: SccTimeCode):
     """Flushes the remaining current caption"""
     if self.current_caption:
-      self.previous_caption = self.current_caption
-      self.close_previous_caption(time_code)
+      self.set_current_to_previous()
+      while len(self.previous_captions) > 0:
+        self.push_previous_caption(time_code)
       self.current_caption = None
 
 

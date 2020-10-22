@@ -203,6 +203,14 @@ class SccCaptionParagraph:
     self._column_offset += indent
     self.current_text.set_x_offset(self._column_offset)
 
+  def get_begin(self) -> SccTimeCode:
+    """Returns the caption begin time code"""
+    return self._begin
+
+  def get_end(self) -> SccTimeCode:
+    """Returns the caption end time code"""
+    return self._end
+
   def get_style(self) -> SccCaptionStyle:
     """Returns the caption style"""
     return self._style
