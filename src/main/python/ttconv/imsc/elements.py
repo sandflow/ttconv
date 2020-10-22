@@ -1050,6 +1050,19 @@ class PElement(ContentElement):
 
     ContentElement.from_model_style_properties(parent_p, parent_element)
 
+    if parent_p.get_region():
+      imsc_attr.RegionAttribute.set(parent_element, parent_p.get_region())
+
+    if parent_p.get_begin():
+      imsc_attr.BeginAttribute.set(parent_element, parent_p.get_begin())
+
+    # TODO - do we need to set a dur? If so, do we compute it here with end - begin?
+    #if parent_p.get_dur():
+    #  imsc_attr.DurAttribute.set(parent_element, parent_p.get_dur())
+
+    if parent_p.get_end():
+      imsc_attr.EndAttribute.set(parent_element, parent_p.get_end())
+
     if parent_p.has_children():
       for child in parent_p:
         if isinstance(child, model.Span):

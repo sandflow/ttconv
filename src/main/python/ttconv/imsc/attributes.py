@@ -314,6 +314,10 @@ class BeginAttribute:
 
       return None
 
+  @staticmethod
+  def set(ttml_element, begin):
+    ttml_element.set(BeginAttribute.qn, begin)
+
 
 class EndAttribute:
   '''end attributes
@@ -337,6 +341,11 @@ class EndAttribute:
 
       return None
 
+  @staticmethod
+  def set(ttml_element, end):
+    value = end.numerator / end.denominator
+    ttml_element.set(EndAttribute.qn, f"{value}s")
+
 class DurAttribute:
   '''dur attributes
   '''
@@ -356,6 +365,11 @@ class DurAttribute:
       LOGGER.error("bad dur value")
 
       return None
+
+  @staticmethod
+  def set(ttml_element, dur):
+    ttml_element.set(DurAttribute.qn, dur)
+
 
 class TimeContainer(Enum):
   par = "par"
