@@ -34,6 +34,7 @@ import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.attributes as imsc_attr
 from ttconv.imsc.style_properties import StyleProperties
 import ttconv.imsc.style_properties as imsc_styles
+import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
 
@@ -1336,7 +1337,7 @@ class BrElement(ContentElement):
     br_ctx.process(parent_ctx, xml_elem)
     return br_ctx
 
-@staticmethod
+  @staticmethod
   def from_model(parent_div, parent_element):
     
     if parent_div is None:
