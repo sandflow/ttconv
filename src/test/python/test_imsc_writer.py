@@ -33,8 +33,12 @@ import xml.etree.ElementTree as et
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import xml.dom.minidom as minidom
+import ttconv.model as model
+import ttconv.style_properties as styles
+import ttconv.imsc.namespaces as xml_ns
+import ttconv.imsc.elements as imsc_elements
 
-class IMSCWriterTest(unittest.TestCase):
+class ReaderWriterTest(unittest.TestCase):
 
   def setUp(self):
     if not os.path.exists('build'):
@@ -55,13 +59,58 @@ class IMSCWriterTest(unittest.TestCase):
     tree = et.parse(file_to_parse)
 
     # create the model
-    model = imsc_reader.to_model(tree)
+    test_model = imsc_reader.to_model(tree)
 
     # convert from a model to a ttml document
-    tree_from_model = imsc_writer.from_model(model)
+    tree_from_model = imsc_writer.from_model(test_model)
 
     # write the document out to a file
-    tree_from_model.write('build/body_only.out.ttml', encoding='utf-8', xml_declaration=True)
+    tree_from_model.write('build/ActiveArea001.out.ttml', encoding='utf-8', xml_declaration=True)
+
+    #self.pretty_print(tree_from_model.getroot())
+
+class FromModelBodyWriterTest(unittest.TestCase):
+
+  def setUp(self):
+    if not os.path.exists('build'):
+      os.makedirs('build')
+    
+    et.register_namespace("ttml", xml_ns.TTML)
+    et.register_namespace("ttp", xml_ns.TTP)
+    et.register_namespace("tts", xml_ns.TTS)
+    et.register_namespace("ittp", xml_ns.ITTP)
+    et.register_namespace("itts", xml_ns.ITTS)
+
+  def test_body_only(self):
+
+    class _Context:
+      def __init__(self):
+        self.imsc_doc = None
+
+    context = _Context()
+
+    context.imsc_doc = et.Element("tt")
+
+    body = model.Body()
+    div = model.Div()
+    p = model.P()
+    span = model.Span()
+    text = model.Text()
+    text.set_text("asdf")
+    
+    span.push_child(text)
+    p.push_child(span)
+    div.push_child(p)
+    body.push_child(div)
+
+    imsc_elements.BodyElement.from_model(context, body)
+
+    found_span = et.ElementTree(context.imsc_doc).find("tt")
+    if found_span is not None:
+      found_span.text 
+
+    # write the document out to a file
+    et.ElementTree(context.imsc_doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
 
     #self.pretty_print(tree_from_model.getroot())
 
