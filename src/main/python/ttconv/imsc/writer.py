@@ -27,6 +27,7 @@
 
 import logging
 import ttconv.imsc.elements as imsc_elements
+import ttconv.imsc.namespaces as xml_ns
 import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,12 @@ def from_model(model):
 
   context = _Context()
 
+  et.register_namespace("ttml", xml_ns.TTML)
+  et.register_namespace("ttp", xml_ns.TTP)
+  et.register_namespace("tts", xml_ns.TTS)
+  et.register_namespace("ittp", xml_ns.ITTP)
+  et.register_namespace("itts", xml_ns.ITTS)
+    
   context.imsc_doc = et.Element("tt")
 
   imsc_elements.TTElement.from_model(model, context)
