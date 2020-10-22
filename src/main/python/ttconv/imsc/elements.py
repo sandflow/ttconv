@@ -630,10 +630,9 @@ class ContentElement(TTMLElement):
 
           # skip child if it has no temporal extent
 
-          if not issubclass(child_element.ttml_class, SetElement) or \
-            child_element.desired_begin is None or \
-            child_element.desired_end is None and \
-            child_element.desired_begin != child_element.desired_end:
+          if not issubclass(child_element.ttml_class, SetElement) and \
+            (child_element.desired_begin is None or child_element.desired_end is None or \
+              child_element.desired_begin != child_element.desired_end):
 
             self.children.append(child_element.model_element)
 
@@ -654,8 +653,9 @@ class ContentElement(TTMLElement):
         self.process_referential_styling(xml_elem)
 
       try:
-
-        self.model_element.push_children(self.children)
+        
+        if self.ttml_class.has_children:
+          self.model_element.push_children(self.children)
 
       except (ValueError, TypeError) as e:
 
@@ -798,17 +798,24 @@ class SetElement(ContentElement):
   class ParsingContext(ContentElement.ParsingContext):
     '''Maintains state when parsing the element
     '''
+    def process_lang_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
+      # <set> ignores xml:lang
+      pass
+
+    def process_space_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
+      # <set> ignores xml:space
+      pass
 
   qn = f"{{{xml_ns.TTML}}}set"
   has_region = False
   has_styles = False
-  has_timing = True
+  has_timing = False
   is_mixed = False
   has_children = False
 
   @staticmethod
   def is_instance(xml_elem) -> bool:
-    return xml_elem.tag == DivElement.qn
+    return xml_elem.tag == SetElement.qn
 
   @classmethod
   def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SetElement.ParsingContext]:
