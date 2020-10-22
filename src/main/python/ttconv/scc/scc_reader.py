@@ -222,13 +222,13 @@ class _SccContext:
     if self.current_caption.get_style() is SccCaptionStyle.PaintOn:
       if word.startswith(" "):
         self.current_caption.new_caption_text()
-        self.current_caption.current_text.text += word.strip(" ")
+        self.current_caption.current_text.text += word
         self.current_caption.set_current_text_offsets()
         self.current_caption.current_text.set_begin(time_code)
         return
 
       if word.endswith(" "):
-        self.current_caption.current_text.text += word.strip(" ")
+        self.current_caption.current_text.text += word
         self.current_caption.new_caption_text()
         self.current_caption.set_current_text_offsets()
         self.current_caption.current_text.set_begin(time_code)

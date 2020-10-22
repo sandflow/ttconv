@@ -545,12 +545,12 @@ class SccReaderTest(unittest.TestCase):
     region_1 = doc.get_region("paint1")
     self.assertIsNotNone(region_1)
     self.check_element_origin(region_1, 8, 16)
-    self.check_element_extent(region_1, 43, 1)
+    self.check_element_extent(region_1, 46, 1)
 
     region_2 = doc.get_region("paint2")
     self.assertIsNotNone(region_2)
     self.check_element_origin(region_2, 8, 17)
-    self.check_element_extent(region_2, 37, 1)
+    self.check_element_extent(region_2, 42, 1)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -564,16 +564,16 @@ class SccReaderTest(unittest.TestCase):
     p_list = list(div)
     self.assertEqual(4, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:02:53:15", "00:02:54:01", "Lorem", "ipsum", "dolor", "sit", "amet,")
+    self.check_caption(p_list[0], "caption1", "00:02:53:15", "00:02:54:01", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:01", "consectetur", "adipiscing", "elit.")
+    self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:01", "consectetur ", "adipiscing", " elit.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:56:26", "Pellentesque", "interdum", "lacinia", "sollicitudin.")
+    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:56:26", "Pellentesque", " interdum ", "lacinia ", "sollicitudin.")
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer", "luctus", "et", "ligula", "ac", "sagittis.")
+    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ", "sagittis.")
     self.assertEqual(region_2, p_list[3].get_region())
 
 
