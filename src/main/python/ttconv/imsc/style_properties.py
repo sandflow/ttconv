@@ -67,7 +67,8 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", \
+        f"#{format(attrib.components[0], '02x')}{format(attrib.components[1], '02x')}{format(attrib.components[2], '02x')}{format(attrib.components[3], '02x')}")
 
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''
@@ -82,7 +83,8 @@ class StyleProperties:
 
     @classmethod
     def set(cls, ttml_element, attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{attrib.components[0]} {attrib.components[1]} {attrib.components[2]} {attrib.components[3]}")
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", \
+        f"#{format(attrib.components[0], '02x')}{format(attrib.components[1], '02x')}{format(attrib.components[2], '02x')}{format(attrib.components[3], '02x')}")
 
 
   class Direction(StyleProperty):
