@@ -28,20 +28,20 @@
 from ttconv.style_properties import NamedColors
 
 SCC_COLOR_MAPPING = {
-  0x00: NamedColors.white,
-  0x01: NamedColors.white,
-  0x02: NamedColors.green,
-  0x03: NamedColors.green,
-  0x04: NamedColors.blue,
-  0x05: NamedColors.blue,
-  0x06: NamedColors.cyan,
-  0x07: NamedColors.cyan,
-  0x08: NamedColors.red,
-  0x09: NamedColors.red,
-  0x0A: NamedColors.yellow,
-  0x0B: NamedColors.yellow,
-  0x0C: NamedColors.magenta,
-  0x0D: NamedColors.magenta
+  0x00: NamedColors.white.value,
+  0x01: NamedColors.white.value,
+  0x02: NamedColors.green.value,
+  0x03: NamedColors.green.value,
+  0x04: NamedColors.blue.value,
+  0x05: NamedColors.blue.value,
+  0x06: NamedColors.cyan.value,
+  0x07: NamedColors.cyan.value,
+  0x08: NamedColors.red.value,
+  0x09: NamedColors.red.value,
+  0x0A: NamedColors.yellow.value,
+  0x0B: NamedColors.yellow.value,
+  0x0C: NamedColors.magenta.value,
+  0x0D: NamedColors.magenta.value
 }
 
 

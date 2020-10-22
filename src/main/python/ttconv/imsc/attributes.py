@@ -27,6 +27,10 @@
 
 import re
 import logging
+from fractions import Fraction
+import typing
+from dataclasses import dataclass
+from enum import Enum
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
@@ -205,3 +209,194 @@ class ActiveAreaAttribute:
   def set(ttml_element, activeArea):
     ttml_element.set(ActiveAreaAttribute.qn, 
       f"{(activeArea.left_offset * 100):.0f}% {(activeArea.top_offset * 100):.0f}% {(activeArea.width * 100):.0f}% {activeArea.height * 100:.0f}%")
+
+class TickRateAttribute:
+  '''ttp:tickRate attribute
+  '''
+
+  qn = f"{ns.TTP}tickRate"
+
+  _TICK_RATE_RE = re.compile(r"(\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> int:
+
+    tr = ttml_element.attrib.get(TickRateAttribute.qn)
+
+    if tr is not None:
+
+      m = TickRateAttribute._TICK_RATE_RE.match(tr)
+
+      if m is not None:
+
+        return int(m.group(1))
+
+      LOGGER.error("ttp:tickRate invalid syntax")
+
+    # default value
+
+    return 1
+
+
+class FrameRateAttribute:
+  '''ttp:frameRate and ttp:frameRateMultiplier attribute
+  '''
+
+  frame_rate_qn = f"{ns.TTP}frameRate"
+
+  frame_rate_multiplier_qn = f"{ns.TTP}frameRateMultiplier"
+
+  _FRAME_RATE_RE = re.compile(r"(\d+)")
+
+  _FRAME_RATE_MULT_RE = re.compile(r"(\d+) (\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> Fraction:
+
+    # process ttp:frameRate
+
+    fr = Fraction(30, 1)
+
+    fr_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_qn)
+
+    if fr_raw is not None:
+
+      m = FrameRateAttribute._FRAME_RATE_RE.match(fr_raw)
+
+      if m is not None:
+
+        fr = Fraction(int(m.group(1)))
+
+      LOGGER.error("ttp:frameRate invalid syntax")
+
+    # process ttp:frameRateMultiplier
+    
+    frm = Fraction(1, 1)
+
+    frm_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_qn)
+
+    if frm_raw is not None:
+
+      m = FrameRateAttribute._FRAME_RATE_MULT_RE.match(frm_raw)
+
+      if m is not None:
+
+        frm = Fraction(int(m.group(1)), int(m.group(2)))
+
+      LOGGER.error("ttp:frameRateMultiplier invalid syntax")
+
+    return fr * frm
+
+@dataclass
+class TemporalAttributeParsingContext:
+  frame_rate: Fraction = Fraction(30, 1)
+  tick_rate: int = 1
+
+class BeginAttribute:
+  '''begin attribute
+  '''
+  qn = "begin"
+
+  @staticmethod
+  def extract(context: TemporalAttributeParsingContext, xml_element) -> typing.Optional[Fraction]:
+
+    # read begin attribute
+
+    begin_raw = xml_element.attrib.get(BeginAttribute.qn)
+
+    try:
+
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad begin value")
+
+      return None
+
+
+class EndAttribute:
+  '''end attributes
+  '''
+  qn = "end"
+
+  @staticmethod
+  def extract(context: TemporalAttributeParsingContext, xml_element) -> typing.Optional[Fraction]:
+
+    # read end attribute
+
+    end_raw = xml_element.attrib.get(EndAttribute.qn)
+
+    try:
+
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad end value")
+
+      return None
+
+class DurAttribute:
+  '''dur attributes
+  '''
+  qn = "dur"
+
+  @staticmethod
+  def extract(context: TemporalAttributeParsingContext, xml_element) -> typing.Optional[Fraction]:
+
+    dur_raw = xml_element.attrib.get(DurAttribute.qn)
+
+    try:
+
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw else None
+
+    except ValueError:
+
+      LOGGER.error("bad dur value")
+
+      return None
+
+class TimeContainer(Enum):
+  par = "par"
+  seq = "seq"
+
+  def is_seq(self) -> bool:
+    return self == TimeContainer.seq
+
+  def is_par(self) -> bool:
+    return self == TimeContainer.par
+
+class TimeContainerAttribute:
+  '''timeContainer attributes
+  '''
+
+  qn = "timeContainer"
+
+  @staticmethod
+  def extract(xml_elem) -> TimeContainer:
+
+    time_container_raw = xml_elem.attrib.get(TimeContainerAttribute.qn)
+
+    try:
+
+      return TimeContainer(time_container_raw) if time_container_raw else TimeContainer.par
+
+    except ValueError:
+
+      LOGGER.error("bad timeContainer value")
+
+      return TimeContainer.par
+
+
+class StyleAttribute:
+  '''style attribute
+  '''
+  qn = "style"
+
+  @staticmethod
+  def extract(xml_element) -> typing.List[str]:
+
+    raw_value = xml_element.attrib.get(StyleAttribute.qn)
+
+    return raw_value.split(" ") if raw_value is not None else []

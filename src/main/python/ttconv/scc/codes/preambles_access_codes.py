@@ -31,7 +31,7 @@ from typing import Optional
 
 from ttconv.scc.codes import SCC_COLOR_MAPPING
 from ttconv.style_properties import NamedColors, TextDecorationType, \
-  FontStyleType
+  FontStyleType, ColorType
 
 _ROW_MAPPING = {
   (0x01, 0x40): 1,
@@ -66,26 +66,26 @@ class _SccPacDescriptionBits:
     """Returns whether the PAC description bits sets the italic style"""
     return self._bits in (0x0E, 0x0F)
 
-  def get_color(self) -> Optional[NamedColors]:
+  def get_color(self) -> Optional[ColorType]:
     """Returns the color from the PAC description bits"""
 
-    if self._bits not in list(range(0x00, 0x20)):
+    if self._bits not in list(range(0x00, 0x10)):
       return None
 
-    if self._bits > 0x0D:
-      return NamedColors.white
+    if self._bits in (0x00, 0x01, 0x0E, 0x0F):
+      return NamedColors.white.value
 
     return SCC_COLOR_MAPPING.get(self._bits, None)
 
   def get_indent(self) -> int:
     """Returns the column offset from the PAC description bits"""
     if self._bits in list(range(0x10, 0x20)):
-      return (self._bits - 0x10) - (self._bits % 2) * 4
+      return ((self._bits - 0x10) - (self._bits % 2)) * 2
 
-    return 0
+    return None
 
 
-class SccPreambleAccessCode():
+class SccPreambleAccessCode:
   """SCC PAC definition"""
 
   def __init__(self, byte_1: int, byte_2: int):
@@ -101,7 +101,8 @@ class SccPreambleAccessCode():
     self._color = desc_bits.get_color()
     self._indent = desc_bits.get_indent()
     self._font_style = FontStyleType.italic if desc_bits.get_italic() else None
-    self._text_decoration = TextDecorationType.underline if desc_bits.get_underline() else None
+    self._text_decoration: Optional[TextDecorationType] = TextDecorationType(underline=TextDecorationType.Action.add) if desc_bits.get_underline() else None
+    self._channel = 2 if byte_1 & 0x08 else 1
 
   def get_row(self) -> int:
     """Returns the PAC row"""
@@ -111,7 +112,7 @@ class SccPreambleAccessCode():
     """Returns PAC column offset"""
     return self._indent
 
-  def get_color(self) -> Optional[NamedColors]:
+  def get_color(self) -> Optional[ColorType]:
     """Returns PAC color"""
     return self._color
 
@@ -122,6 +123,10 @@ class SccPreambleAccessCode():
   def get_text_decoration(self) -> Optional[TextDecorationType]:
     """Returns PAC text decoration"""
     return self._text_decoration
+
+  def get_channel(self):
+    """Returns PAC channel"""
+    return self._channel
 
   def __eq__(self, other) -> bool:
     """Overrides default implementation"""
