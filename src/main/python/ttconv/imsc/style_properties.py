@@ -233,7 +233,7 @@ class StyleProperties:
     @classmethod
     def set(cls, ttml_element, attrib):
       ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
-      f"{attrib.value:.0f}{attrib.units.value} {attrib.value:.0f}{attrib.units.value}")
+      f"{attrib.value:.0f}{attrib.units.value}")
 
 
   class FontStyle(StyleProperty):
@@ -385,9 +385,9 @@ class StyleProperties:
       return r
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      pass
-      #ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{xml_attrib.x}% {xml_attrib.x}%")
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
+      f"{attrib.x.value:.0f}{attrib.x.units.value} {attrib.y.value:.0f}{attrib.y.units.value}")
 
 
   class Overflow(StyleProperty):
