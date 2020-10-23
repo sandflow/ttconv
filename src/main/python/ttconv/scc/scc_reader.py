@@ -52,7 +52,6 @@ PARITY_BIT_MASK = 0b01111111
 class _SccContext:
   def __init__(self):
     self.div: Optional[Div] = None
-    # self.regions: List[Region] = []
     self.count: int = 0
     self.safe_area_x_offset: int = 0
     self.safe_area_y_offset: int = 0
@@ -220,10 +219,16 @@ class _SccContext:
 
     elif control_code is SccControlCode.CR:
       # Roll the display up one row (Roll-Up)
+      # Not used in this implementation since this SCC reader does not really map the roll-up effect,
+      # but it erases the displayed paragraph and resets a new paragraph with the resulting rows.
       pass
 
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
+      # The DER may be issued from any point on a row to delete all displayable characters, transparent
+      # spaces, and mid-row codes from (and including) the current cell to the end of the row.
+      # Not used in this implementation since this SCC reader does not map the text overlapping into
+      # the model (i.e. a row is erased when a PAC is received, so before a new caption is written onto it).
       pass
 
   def process_text(self, word: str, time_code: SccTimeCode):
@@ -422,7 +427,7 @@ class SccLine:
 
 
 #
-# scc reader
+# SCC reader
 #
 
 def to_model(scc_content: str):
@@ -431,7 +436,7 @@ def to_model(scc_content: str):
   context = _SccContext()
   document = Document()
 
-  # safe area must be a 32x15 grid, that represents 80% of the root area
+  # Safe area must be a 32x15 grid, that represents 80% of the root area
   root_cell_resolution = CellResolutionType(rows=19, columns=40)
   document.set_cell_resolution(root_cell_resolution)
 
@@ -456,10 +461,5 @@ def to_model(scc_content: str):
     time_code = scc_line.to_model(context)
 
   context.flush(time_code)
-
-  # for region in context.regions:
-  #   if not region.get_doc():
-  #     region.set_doc(document)
-  #     document.put_region(region)
 
   return document
