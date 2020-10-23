@@ -294,12 +294,11 @@ class HeadElement(TTMLElement):
 
     StylingElement.from_model(
       i_model,
-      head,
-      region
+      context,
+      head
     )
 
     LayoutElement.from_model(
-      i_model,
       head,
       region
     )
@@ -344,7 +343,7 @@ class LayoutElement(TTMLElement):
     return layout_ctx
 
   @staticmethod
-  def from_model(i_model, head, region):
+  def from_model(head, region):
     
     # Check for exiting head
     layout = head.find("layout")
@@ -352,7 +351,6 @@ class LayoutElement(TTMLElement):
       layout = et.SubElement(head, "layout")
 
     RegionElement.from_model(
-      i_model, 
       layout,
       region
     )
@@ -420,8 +418,22 @@ class StylingElement(TTMLElement):
     return styling_ctx
 
   @staticmethod
-  def from_model(i_model, head, region):
-    pass
+  def from_model(model_value, context, xml_element):
+    
+    if model_value is None:
+      return
+
+    styling_element = context.imsc_doc.find("styling")
+    if styling_element is None:
+      styling_element = et.SubElement(xml_element, "styling")
+
+    StyleElement.from_model(model_value, styling_element)
+
+    #ContentElement.from_model_style_properties(model_value, styling_element)
+
+    for init_val in model_value.iter_initial_values():
+      InitialElement.from_model(init_val, styling_element)
+
 
 
 class StyleElement(TTMLElement):
@@ -488,9 +500,17 @@ class StyleElement(TTMLElement):
 
     return style_ctx
 
+
   @staticmethod
-  def from_model(i_model, head, region):
-    pass
+  def from_model(model_value, xml_element):
+    
+    if model_value is None:
+      return
+
+    styling_element = et.SubElement(xml_element, "style")
+
+    #ContentElement.from_model_style_properties(model_value, styling_element)
+
 
 class InitialElement(TTMLElement):
   '''Process the TTML <initial> element
@@ -531,6 +551,17 @@ class InitialElement(TTMLElement):
         LOGGER.error("Error reading style property: %s", prop.__name__)
 
     return initial_ctx
+
+
+  @staticmethod
+  def from_model(model_value, xml_element):
+    
+    if model_value is None:
+      return
+
+    initial_element = et.SubElement(xml_element, "initial")
+
+    #ContentElement.from_model_style_properties(model_value, initial_element)
 
 
 #
@@ -890,7 +921,7 @@ class RegionElement(ContentElement):
     return region_ctx
 
   @staticmethod
-  def from_model(i_model, layout, region):
+  def from_model(layout, region):
 
     region_element = et.SubElement(layout, "region")
 

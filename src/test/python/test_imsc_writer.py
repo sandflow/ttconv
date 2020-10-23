@@ -66,7 +66,8 @@ class ReaderWriterTest(unittest.TestCase):
     #file_to_parse = "src/test/resources/ttml/body_only.ttml"
     #file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/aspectRatio/aspectRatio1.ttml"
     #file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/backgroundColor/BackgroundColor001.ttml"
-    file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/br/br-in-span-001.ttml"
+    #file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/br/br-in-span-001.ttml"
+    file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1_1/ttml/initial/initial001.ttml"
     
     tree = et.parse(file_to_parse)
 
