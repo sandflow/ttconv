@@ -184,57 +184,6 @@ class SccCaptionParagraph:
 
     return last_lines
 
-  def has_same_origin_as_region(self, region: Region) -> bool:
-    """Checks whether the region origin is the same as the current paragraph origin"""
-    region_origin: Optional[PositionType] = region.get_style(StyleProperties.Origin)
-    # Consider region origin units are cells
-    return region_origin \
-           and region_origin.x.value is self.get_origin().x.value \
-           and region_origin.y.value is self.get_origin().y.value
-
-  def find_matching_region(self, doc: Document) -> Optional[Region]:
-    """Looks for a region that origin matches with the current paragraph origin"""
-    for region in doc.iter_regions():
-      if self.has_same_origin_as_region(region):
-        return region
-    return None
-
-  def extend_region_to_paragraph(self, region: Region):
-    """Extends region dimensions based on current paragraph extent"""
-    if not self.has_same_origin_as_region(region):
-      raise ValueError("Paragraph origin does not match with region.")
-
-    region_extent = region.get_style(StyleProperties.Extent)
-
-    max_width = max(self.get_extent().width.value, region_extent.width.value)
-    max_height = max(self.get_extent().height.value, region_extent.height.value)
-
-    new_extent = get_extent_from_dimensions(max_width, max_height)
-
-    region.set_style(StyleProperties.Extent, new_extent)
-
-  def get_region_prefix(self):
-    """Returns region prefix based on current paragraph style"""
-    if self._style is SccCaptionStyle.PaintOn:
-      return "paint"
-    if self._style is SccCaptionStyle.PopOn:
-      return "pop"
-    if self._style is SccCaptionStyle.RollUp:
-      return "rollup"
-    return "region"
-
-  def create_matching_region(self, doc: Document) -> Region:
-    """Creates a new region based on current paragraph needs"""
-    doc_regions = list(doc.iter_regions())
-
-    region = Region(self.get_region_prefix() + str(len(doc_regions) + 1), doc)
-    region.set_style(StyleProperties.Origin, self.get_origin())
-    region.set_style(StyleProperties.Extent, self.get_extent())
-
-    doc.put_region(region)
-
-    return region
-
   def to_paragraph(self, doc: Document) -> P:
     """Converts and returns current caption paragraph into P instance"""
 
@@ -248,18 +197,9 @@ class SccCaptionParagraph:
     if self._end:
       p.set_end(self._end.to_temporal_offset())
 
-    # Set a matching region
-    matching_region = self.find_matching_region(doc)
-
-    if matching_region:
-      # Extend region to paragraph if needed
-      self.extend_region_to_paragraph(matching_region)
-    else:
-      # Create a new matching region
-      matching_region = self.create_matching_region(doc)
-
     # Set the region to current caption
-    p.set_region(matching_region)
+    region = _SccParagraphRegion(self)
+    p.set_region(region.get_region(doc))
 
     # Add caption content (text and line-breaks)
     for caption_content in self._caption_contents:
@@ -288,3 +228,75 @@ class SccCaptionParagraph:
 
   def __repr__(self) -> str:
     return "<" + self.__class__.__name__ + " " + str(self.__dict__) + ">"
+
+
+class _SccParagraphRegion:
+  """SCC paragraph region utility class"""
+
+  def __init__(self, paragraph: SccCaptionParagraph):
+    self._paragraph = paragraph
+
+  def get_region(self, doc: Document) -> Region:
+    """Get a paragraph matching region"""
+
+    matching_region = self._find_matching_region(doc)
+
+    if matching_region:
+      # Extend region to paragraph if needed
+      self._extend_region_to_paragraph(matching_region)
+    else:
+      # Create a new matching region
+      matching_region = self._create_matching_region(doc)
+
+    return matching_region
+
+  def _has_same_origin_as_region(self, region: Region) -> bool:
+    """Checks whether the region origin is the same as the paragraph origin"""
+    region_origin: Optional[PositionType] = region.get_style(StyleProperties.Origin)
+    # Consider region origin units are cells
+    return region_origin \
+           and region_origin.x.value is self._paragraph.get_origin().x.value \
+           and region_origin.y.value is self._paragraph.get_origin().y.value
+
+  def _find_matching_region(self, doc: Document) -> Optional[Region]:
+    """Looks for a region that origin matches with the paragraph origin"""
+    for region in doc.iter_regions():
+      if self._has_same_origin_as_region(region):
+        return region
+    return None
+
+  def _extend_region_to_paragraph(self, region: Region):
+    """Extends region dimensions based on paragraph extent"""
+    if not self._has_same_origin_as_region(region):
+      raise ValueError("Paragraph origin does not match with region.")
+
+    region_extent = region.get_style(StyleProperties.Extent)
+
+    max_width = max(self._paragraph.get_extent().width.value, region_extent.width.value)
+    max_height = max(self._paragraph.get_extent().height.value, region_extent.height.value)
+
+    new_extent = get_extent_from_dimensions(max_width, max_height)
+
+    region.set_style(StyleProperties.Extent, new_extent)
+
+  def _get_region_prefix(self):
+    """Returns region prefix based on paragraph style"""
+    if self._paragraph.get_style() is SccCaptionStyle.PaintOn:
+      return "paint"
+    if self._paragraph.get_style() is SccCaptionStyle.PopOn:
+      return "pop"
+    if self._paragraph.get_style() is SccCaptionStyle.RollUp:
+      return "rollup"
+    return "region"
+
+  def _create_matching_region(self, doc: Document) -> Region:
+    """Creates a new region based on paragraph needs"""
+    doc_regions = list(doc.iter_regions())
+
+    region = Region(self._get_region_prefix() + str(len(doc_regions) + 1), doc)
+    region.set_style(StyleProperties.Origin, self._paragraph.get_origin())
+    region.set_style(StyleProperties.Extent, self._paragraph.get_extent())
+
+    doc.put_region(region)
+
+    return region

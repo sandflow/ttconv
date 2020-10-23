@@ -24,6 +24,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """SCC utility functions"""
+from numbers import Number
+from typing import Union
 
 from ttconv.style_properties import LengthType, PositionType, ExtentType
 
@@ -36,7 +38,7 @@ def get_position_from_offsets(x_offset: int, y_offset: int, units=LengthType.Uni
   return PositionType(x_position, y_position)
 
 
-def get_extent_from_dimensions(width: int, height: int, units=LengthType.Units.c) -> ExtentType:
+def get_extent_from_dimensions(width: Union[int, Number], height: Union[int, Number], units=LengthType.Units.c) -> ExtentType:
   """Converts dimensions into extent"""
   height = LengthType(value=height, units=units)
   width = LengthType(value=width, units=units)
