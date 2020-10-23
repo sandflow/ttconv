@@ -956,6 +956,15 @@ class SetElement(ContentElement):
     set_ctx.process(parent_ctx, xml_elem)
     return set_ctx
 
+  @staticmethod
+  def from_model(layout, set):
+
+    set_element = et.SubElement(layout, "set")
+
+#    attrib = region.get_id()
+#    if attrib is not None:
+#      imsc_attr.RegionAttribute.set(region_element, attrib)
+
 class BodyElement(ContentElement):
   '''Process TTML body element
   '''
