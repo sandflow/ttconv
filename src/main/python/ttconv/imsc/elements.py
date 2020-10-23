@@ -1051,7 +1051,7 @@ class PElement(ContentElement):
     ContentElement.from_model_style_properties(parent_p, parent_element)
 
     if parent_p.get_region():
-      imsc_attr.RegionAttribute.set(parent_element, parent_p.get_region())
+      imsc_attr.RegionAttribute.set(parent_element, parent_p.get_region().get_id())
 
     if parent_p.get_begin():
       imsc_attr.BeginAttribute.set(parent_element, parent_p.get_begin())

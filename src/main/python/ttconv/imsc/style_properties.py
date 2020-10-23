@@ -217,8 +217,8 @@ class StyleProperties:
       ))
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib[0])
 
 
   class FontSize(StyleProperty):
@@ -284,8 +284,9 @@ class StyleProperties:
         else StyleProperties.ttml_length_to_model(context, xml_attrib)
 
     @classmethod
-    def set(cls, ttml_element, xml_attrib):
-      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", xml_attrib.center)
+    def set(cls, ttml_element, attrib):
+      ttml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
+      f"{attrib.value:.0f}{attrib.units.value}")
 
 
   class LinePadding(StyleProperty):

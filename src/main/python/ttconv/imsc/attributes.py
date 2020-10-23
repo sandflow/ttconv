@@ -99,7 +99,7 @@ class RegionAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(XMLIDAttribute.qn, res)
+    ttml_element.set(RegionAttribute.qn, res)
 
 
 class CellResolutionAttribute:
@@ -316,7 +316,8 @@ class BeginAttribute:
 
   @staticmethod
   def set(ttml_element, begin):
-    ttml_element.set(BeginAttribute.qn, begin)
+    value = begin.numerator / begin.denominator
+    ttml_element.set(BeginAttribute.qn, f"{value}s")
 
 
 class EndAttribute:
