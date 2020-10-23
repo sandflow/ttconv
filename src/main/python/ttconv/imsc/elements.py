@@ -101,7 +101,7 @@ class TTMLElement:
     raise NotImplementedError
 
   @staticmethod
-  def from_model(i_model, context):
+  def from_model(model_value, xml_element):
     '''Returns a parsing context for the TTML element represented by the XML element `xml_elem` and
     given the parent context `parent_ctx`
     '''
@@ -192,9 +192,9 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(i_model, context):
+  def from_model(model_value, context):
 
-    body = i_model.get_body()
+    body = model_value.get_body()
 
     space = model.WhiteSpaceHandling.DEFAULT
     
@@ -203,19 +203,19 @@ class TTElement(TTMLElement):
       if lang is not None:
         imsc_attr.XMLLangAttribute.set(context.imsc_doc, lang)
 
-    imsc_attr.CellResolutionAttribute.set(context.imsc_doc, i_model.get_cell_resolution())
-    imsc_attr.ExtentAttribute.set(context.imsc_doc, i_model.get_px_resolution())
-    imsc_attr.ActiveAreaAttribute.set(context.imsc_doc, i_model.get_active_area())
+    imsc_attr.CellResolutionAttribute.set(context.imsc_doc, model_value.get_cell_resolution())
+    imsc_attr.ExtentAttribute.set(context.imsc_doc, model_value.get_px_resolution())
+    imsc_attr.ActiveAreaAttribute.set(context.imsc_doc, model_value.get_active_area())
 
     # Write the <head> section first
-    for region in i_model.iter_regions():
+    for region in model_value.iter_regions():
       HeadElement.from_model(
-        i_model, 
+        model_value, 
         context,
         region
       )
 
-    body = i_model.get_body()
+    body = model_value.get_body()
     if body is not None:
       BodyElement.from_model(
         context,
@@ -291,6 +291,12 @@ class HeadElement(TTMLElement):
     head = context.imsc_doc.find("head")
     if head is None:
       head = et.SubElement(context.imsc_doc, "head")
+
+    StylingElement.from_model(
+      i_model,
+      head,
+      region
+    )
 
     LayoutElement.from_model(
       i_model,
@@ -1107,24 +1113,24 @@ class SpanElement(ContentElement):
     return span_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_value, xml_element):
     
-    if parent_div is None:
+    if model_value is None:
       return
 
-    span_element = et.SubElement(parent_element, "span")
+    span_element = et.SubElement(xml_element, "span")
 
-    ContentElement.from_model_style_properties(parent_div, span_element)
+    ContentElement.from_model_style_properties(model_value, span_element)
 
-    if parent_div.has_children():
-      for child in parent_div:
+    if model_value.has_children():
+      for child in model_value:
         if isinstance(child, model.Span):
-          SpanElement.from_model(child, parent_element)
+          SpanElement.from_model(child, xml_element)
         elif isinstance(child, model.Br):
-          BrElement.from_model(child, parent_element)
+          BrElement.from_model(child, xml_element)
         elif isinstance(child, model.Text):
           # TODO - do we want to have a TextElement object?
-          #TextElement.from_model(parent_element, child)          
+          #TextElement.from_model(xml_element, child)          
           span_element.text = child.get_text()
         else:
           LOGGER.error("Children of div must be p or div")
@@ -1351,7 +1357,16 @@ class BrElement(ContentElement):
     return br_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_value, xml_element):
     
-    if parent_div is None:
+    if model_value is None:
       return
+
+    br_element = et.SubElement(xml_element, "br")
+
+    ContentElement.from_model_style_properties(model_value, br_element)
+
+    if model_value.has_children():
+      LOGGER.error("Br should not have children")
+    else:
+      pass
