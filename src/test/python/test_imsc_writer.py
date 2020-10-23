@@ -30,13 +30,20 @@
 import os
 import unittest
 import xml.etree.ElementTree as et
+import xml.dom.minidom as minidom
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
-import xml.dom.minidom as minidom
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.elements as imsc_elements
+import ttconv.imsc.style_properties as imsc_styles
+
+def _get_set_style(imsc_style_prop, model_value):
+  e = et.Element("p")
+  assert imsc_style_prop.model_prop.validate(model_value)
+  imsc_style_prop.set(e, model_value)
+  return e.attrib.get(f"{{{imsc_style_prop.ns}}}{imsc_style_prop.local_name}")
 
 class ReaderWriterTest(unittest.TestCase):
 
@@ -121,5 +128,214 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
     #self.pretty_print(tree_from_model.getroot())
 
+class StylePropertyWriterTest(unittest.TestCase):
+
+  def test_tts_luminance_gain(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.LuminanceGain, 1.2),
+      "1.2"
+    )
+
+  def test_tts_opacity(self):
+    self.assertEqual(_get_set_style(imsc_styles.StyleProperties.Opacity, 0.532), "0.532")
+
+  def test_tts_overflow(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.Overflow, styles.OverflowType.visible),
+      "visible"
+    )
+
+  def test_tts_padding(self):
+    padding = styles.PaddingType(
+      before=styles.LengthType(10.1),
+      end=styles.LengthType(20.2),
+      after=styles.LengthType(30.3),
+      start=styles.LengthType(40.4)
+    )
+
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.Padding, padding),
+      r"10.1% 20.2% 30.3% 40.4%"
+    )
+
+  def test_tts_ruby_align(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.RubyAlign, styles.RubyAlignType.spaceAround),
+      "spaceAround"
+    )
+
+  def test_tts_ruby_position(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.RubyPosition, styles.AnnotationPositionType.outside),
+      "outside"
+    )
+
+  def test_tts_ruby_reserve(self):
+    rr1 = styles.SpecialValues.none
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.RubyReserve,
+        rr1
+        ),
+      "none"
+    )
+
+    rr2 = styles.RubyReserveType(
+      position=styles.RubyReserveType.Position.both,
+      length=styles.LengthType(value=1.2, units=styles.LengthType.Units.em)
+    )
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.RubyReserve,
+        rr2
+        ),
+      "both 1.2em"
+    )
+
+    rr3 = styles.RubyReserveType(
+      position=styles.RubyReserveType.Position.outside,
+    )
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.RubyReserve,
+        rr3
+        ),
+      "outside"
+    )
+
+  def test_tts_shear(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.Shear, 12.3),
+      "12.3%"
+    )
+
+  def test_tts_text_align(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.TextAlign, styles.TextAlignType.start),
+      "start"
+    )
+
+  def test_tts_text_combine(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.TextCombine, styles.TextCombineType.all),
+      "all"
+    )
+
+  def test_tts_text_decoration(self):
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.TextDecoration,
+        styles.TextDecorationType(
+          underline=styles.TextDecorationType.Action.remove,
+          line_through=styles.TextDecorationType.Action.add
+        )
+      ),
+      "noUnderline lineThrough"
+    )
+
+  def test_tts_text_emphasis(self):
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.TextEmphasis,
+        styles.TextEmphasisType(
+          style=styles.TextEmphasisType.Style.filled,
+          color=styles.NamedColors.red.value,
+          position=styles.TextEmphasisType.Position.after
+        )
+      ),
+      "filled #ff0000ff after"
+    )
+
+  def test_tts_text_outline(self):
+    to1 = styles.SpecialValues.none
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.TextOutline,
+        to1
+        ),
+      "none"
+    )
+
+    to2 = styles.TextOutlineType(
+      color=styles.NamedColors.red.value,
+      thickness=styles.LengthType(value="5")
+    )
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.TextOutline,
+        to2
+        ),
+      "#ff0000ff 5%"
+    )
+
+  def test_tts_text_shadow(self):
+    ts1 = styles.SpecialValues.none
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.TextShadow,
+        ts1
+        ),
+      "none"
+    )
+
+    ts2 = styles.TextShadowType(
+      (
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+        ),
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          color=styles.NamedColors.red.value
+        )
+      )
+    )
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.TextShadow,
+        ts2
+        ),
+      "1em 1.2em, 0.5em 0.7em 1em #ff0000ff"
+    )
+
+  def test_tts_unicode_bidi(self):
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.UnicodeBidi,
+        styles.UnicodeBidiType.bidiOverride
+      ),
+      "bidiOverride"
+    )
+
+  def test_tts_visibility(self):
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.Visibility,
+        styles.VisibilityType.hidden
+      ),
+      "hidden"
+    )
+
+  def test_tts_wrap_option(self):
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.WrapOption,
+        styles.WrapOptionType.noWrap
+      ),
+      "noWrap"
+    )
+
+  def test_tts_writing_mode(self):
+    self.assertEqual(
+      _get_set_style(
+        imsc_styles.StyleProperties.WritingMode,
+        styles.WritingModeType.tbrl
+      ),
+      "tbrl"
+    )
+
+    
 if __name__ == '__main__':
   unittest.main()
