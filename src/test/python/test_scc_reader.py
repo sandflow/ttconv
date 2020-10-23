@@ -30,7 +30,7 @@
 import unittest
 
 from ttconv.model import Br, P, ContentElement
-from ttconv.scc.scc_reader import SccWord, SccLine, to_model
+from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType
