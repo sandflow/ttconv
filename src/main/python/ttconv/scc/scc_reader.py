@@ -156,14 +156,14 @@ class _SccContext:
       # Start a new Pop-On caption
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
-    if control_code is SccControlCode.RDC:
+    elif control_code is SccControlCode.RDC:
       # Start a new Paint-On caption
       self.set_current_to_previous()
 
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
       self.init_current_caption(time_code)
 
-    if control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
+    elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
       # Start a new Roll-Up caption
       self.set_current_to_previous()
 
@@ -172,9 +172,11 @@ class _SccContext:
 
         if control_code is SccControlCode.RU2:
           previous_last_lines = self.previous_captions[0].get_last_caption_lines(1)
-        if control_code is SccControlCode.RU3:
+
+        elif control_code is SccControlCode.RU3:
           previous_last_lines = self.previous_captions[0].get_last_caption_lines(2)
-        if control_code is SccControlCode.RU4:
+
+        elif control_code is SccControlCode.RU4:
           previous_last_lines = self.previous_captions[0].get_last_caption_lines(3)
 
         previous_last_lines.append(SccCaptionLineBreak())
@@ -186,12 +188,12 @@ class _SccContext:
       self.init_current_caption(time_code)
       self.current_caption.set_roll_up_row_offsets()
 
-    if control_code is SccControlCode.EOC:
+    elif control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
       self.init_current_caption(time_code)
       self.set_current_to_previous()
 
-    if control_code is SccControlCode.EDM:
+    elif control_code is SccControlCode.EDM:
       # Erase displayed caption (Pop-On)
       if len(self.previous_captions) > 0:
         # Set line breaks depending on the position of the content
@@ -207,18 +209,20 @@ class _SccContext:
 
       self.push_previous_caption(time_code)
 
-    if control_code is SccControlCode.TO1:
+    elif control_code is SccControlCode.TO1:
       self.current_caption.indent(1)
-    if control_code is SccControlCode.TO2:
+
+    elif control_code is SccControlCode.TO2:
       self.current_caption.indent(2)
-    if control_code is SccControlCode.TO3:
+
+    elif control_code is SccControlCode.TO3:
       self.current_caption.indent(3)
 
-    if control_code is SccControlCode.CR:
+    elif control_code is SccControlCode.CR:
       # Roll the display up one row (Roll-Up)
       pass
 
-    if control_code is SccControlCode.DER:
+    elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
       pass
 
