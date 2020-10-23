@@ -48,9 +48,6 @@ SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SMPTE_TIME_CODE_
 
 PARITY_BIT_MASK = 0b01111111
 
-DEBUG = False
-
-
 
 class _SccContext:
   def __init__(self):
@@ -359,7 +356,6 @@ class SccLine:
   def to_model(self, context: _SccContext) -> SccTimeCode:
     """Converts the SCC line to the data model"""
 
-
     debug = str(self.time_code) + "\t"
 
     for scc_word in self.scc_words:
@@ -406,6 +402,7 @@ class SccLine:
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
+          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
 
         context.previous_code = scc_word.value
 
@@ -415,9 +412,7 @@ class SccLine:
         context.process_text(word, self.time_code)
         context.previous_code = scc_word.value
 
-    if DEBUG:
-      print(debug)
-
+    LOGGER.debug(debug)
 
     return self.time_code
 
@@ -448,8 +443,9 @@ def to_model(scc_content: str):
 
   time_code = None
   for line in scc_content.splitlines():
-    LOGGER.info(line)
+    LOGGER.debug(line)
     scc_line = SccLine.from_str(line)
+
     if not scc_line:
       continue
 
