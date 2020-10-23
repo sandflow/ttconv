@@ -30,55 +30,12 @@
 import unittest
 from fractions import Fraction
 
-from ttconv.model import Document, Br, Span
-from ttconv.scc.scc_elements import SccCaptionText, SccCaptionParagraph, SccCaptionStyle, SccCaptionLineBreak
+from ttconv.model import Document, Span, Br
+from ttconv.scc.content import SccCaptionLineBreak
+from ttconv.scc.paragraph import SccCaptionParagraph
+from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode
-from ttconv.style_properties import PositionType, LengthType, StyleProperties, NamedColors
-
-
-class SccCaptionTextTest(unittest.TestCase):
-
-  def test_offsets_and_position(self):
-    caption_text = SccCaptionText()
-
-    caption_text.set_x_offset(None)
-    caption_text.set_y_offset(None)
-
-    expected = PositionType(LengthType(value=0, units=LengthType.Units.c), LengthType(value=0, units=LengthType.Units.c))
-    self.assertEqual(expected, caption_text.get_position())
-
-    caption_text.set_x_offset(12)
-    caption_text.set_y_offset(8)
-
-    expected = PositionType(LengthType(value=12, units=LengthType.Units.c), LengthType(value=8, units=LengthType.Units.c))
-    self.assertEqual(expected, caption_text.get_position())
-
-    other_caption_text = SccCaptionText()
-    other_caption_text.set_x_offset(12)
-    other_caption_text.set_y_offset(8)
-
-    self.assertTrue(caption_text.has_same_origin(other_caption_text))
-    self.assertFalse(caption_text.is_contiguous(other_caption_text))
-
-    caption_text.set_y_offset(9)
-    self.assertFalse(caption_text.has_same_origin(other_caption_text))
-    self.assertTrue(caption_text.is_contiguous(other_caption_text))
-
-  def test_style_properties(self):
-    caption_text = SccCaptionText()
-
-    caption_text.add_style_property(StyleProperties.Color, None)
-    self.assertEqual(0, len(caption_text.get_style_properties()))
-
-    caption_text.add_style_property(StyleProperties.Color, NamedColors.fuchsia.value)
-    self.assertEqual(1, len(caption_text.get_style_properties()))
-    self.assertEqual(NamedColors.fuchsia.value, caption_text.get_style_properties()[StyleProperties.Color])
-
-    other_caption_text = SccCaptionText()
-    self.assertFalse(caption_text.has_same_style_properties(other_caption_text))
-
-    other_caption_text.add_style_property(StyleProperties.Color, NamedColors.fuchsia.value)
-    self.assertTrue(caption_text.has_same_style_properties(other_caption_text))
+from ttconv.style_properties import StyleProperties
 
 
 class SccCaptionParagraphTest(unittest.TestCase):

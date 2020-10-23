@@ -23,159 +23,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""SCC elements"""
-
-from __future__ import annotations
+"""SCC caption paragraph"""
 
 import copy
-from enum import Enum
-from typing import List, Optional
+from typing import Optional, List
 
-from ttconv.model import Document, P, Span, Br, Text, Region
+from ttconv.model import Region, Document, P, Br, Span, Text
+from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_ROW, SccCaptionLineBreak
+from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode
-from ttconv.style_properties import PositionType, LengthType, StyleProperties, ExtentType
-
-ROLL_UP_BASE_ROW = 15
-
-
-def _get_position_from_offsets(x_offset, y_offset, units=LengthType.Units.c) -> PositionType:
-  """Converts offsets into position"""
-  x_position = LengthType(value=x_offset, units=units)
-  y_position = LengthType(value=y_offset, units=units)
-
-  return PositionType(x_position, y_position)
-
-
-def _get_extent_from_dimensions(width, height, units=LengthType.Units.c) -> ExtentType:
-  """Converts dimensions into extent"""
-  height = LengthType(value=height, units=units)
-  width = LengthType(value=width, units=units)
-
-  return ExtentType(height, width)
-
-
-class SccCaptionStyle(Enum):
-  """SCC caption style"""
-  Unknown = 0
-
-  # SCC Roll-Up captions are composed with:
-  #  - RU2 or RU3 or RU4 (to select the Roll-Up style and the number of displayed rows)
-  #  - CR (to roll the displayed rows up)
-  #  - PAC (to set row, indent and/or attributes)
-  #  - text
-  RollUp = 1
-
-  # SCC Paint-On captions are composed with:
-  #  - RDC (to select the Paint-On style)
-  #  - PAC (to set row, indent and/or attributes)
-  #  - text
-  #  - PAC (to change row, indent and/or attributes)
-  #  - text or DER (to erase the following text of the current row)
-  PaintOn = 2
-
-  # SCC Pop-On captions are composed with:
-  #  - RCL (to select the Pop-On style)
-  #  - ENM (to clear the memory, optional)
-  #  - PAC (to set row, indent and/or attributes)
-  #  - text
-  #  - PAC (to change row, indent and/or attributes)
-  #  - text
-  #  etc.
-  #  - EDM (to erase the displayed caption, optional)
-  #  - EOC (to display the current caption)
-  PopOn = 3
-
-
-class SccCaptionContent:
-  """Caption content base class"""
-
-
-class SccCaptionLineBreak(SccCaptionContent):
-  """Caption line break element"""
-
-  def __repr__(self):
-    return "<" + self.__class__.__name__ + ">"
-
-
-class SccCaptionText(SccCaptionContent):
-  """Caption text content"""
-
-  def __init__(self):
-    self._begin: Optional[SccTimeCode] = None
-    self._end: Optional[SccTimeCode] = None
-    self._style_properties = {}
-    self._text: str = ""
-    self._x_offset: int = 0
-    self._y_offset: int = 0
-
-  def set_begin(self, time_code: SccTimeCode):
-    """Sets begin time code"""
-    self._begin = copy.copy(time_code)
-
-  def get_begin(self) -> SccTimeCode:
-    """Returns the begin time code"""
-    return self._begin
-
-  def set_end(self, time_code: SccTimeCode):
-    """Sets end time code"""
-    self._end = copy.copy(time_code)
-
-  def get_end(self) -> SccTimeCode:
-    """Returns the end time code"""
-    return self._end
-
-  def get_text(self) -> str:
-    """Returns the text"""
-    return self._text
-
-  def append(self, text: str):
-    """Concatenates text content to caption text"""
-    self._text += text
-
-  def set_x_offset(self, indent: Optional[int]):
-    """Sets the x offset"""
-    self._x_offset = indent if indent else 0
-
-  def get_x_offset(self) -> int:
-    """Returns the x offset"""
-    return self._x_offset
-
-  def set_y_offset(self, row: Optional[int]):
-    """Sets the y offset"""
-    self._y_offset = row if row else 0
-
-  def get_y_offset(self) -> int:
-    """Returns the y offset"""
-    return self._y_offset
-
-  def get_position(self) -> PositionType:
-    """Returns current row and column offsets as a cell-based PositionType"""
-    return _get_position_from_offsets(self._x_offset, self._y_offset)
-
-  def get_style_properties(self) -> dict:
-    """Sets the style properties map"""
-    return self._style_properties
-
-  def add_style_property(self, style_property, value):
-    """Adds a style property"""
-    if value is None:
-      return
-    self._style_properties[style_property] = value
-
-  def is_contiguous(self, other: SccCaptionText) -> bool:
-    """Returns whether the current text is contiguous according to the other text"""
-    return self._x_offset == other.get_x_offset() and self._y_offset == other.get_y_offset() + 1
-
-  def has_same_style_properties(self, other):
-    """Returns whether the current text has the same style properties as the other text"""
-    return self._style_properties == other.get_style_properties()
-
-  def has_same_origin(self, other: SccCaptionText) -> bool:
-    """Returns whether the current text has the same origin as the other text"""
-    return self._x_offset == other.get_x_offset() and self._y_offset == other.get_y_offset()
-
-  def __repr__(self):
-    return "<" + self.__class__.__name__ + " " + str(self.__dict__) + ">"
+from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions
+from ttconv.style_properties import PositionType, ExtentType, StyleProperties
 
 
 class SccCaptionParagraph:
@@ -285,9 +143,9 @@ class SccCaptionParagraph:
       x_offsets = [text.get_x_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
       y_offsets = [text.get_y_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
 
-      return _get_position_from_offsets(min(x_offsets), min(y_offsets))
+      return get_position_from_offsets(min(x_offsets), min(y_offsets))
 
-    return _get_position_from_offsets(self._safe_area_x_offset, self._safe_area_y_offset)
+    return get_position_from_offsets(self._safe_area_x_offset, self._safe_area_y_offset)
 
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
@@ -309,7 +167,7 @@ class SccCaptionParagraph:
     nb_lines = len(lines)
     max_text_lengths = max([len(line) for line in lines]) if len(lines) > 0 else 0
 
-    return _get_extent_from_dimensions(max_text_lengths, nb_lines)
+    return get_extent_from_dimensions(max_text_lengths, nb_lines)
 
   def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionContent]:
     """Returns the caption text elements from the expected number of last lines"""
@@ -351,7 +209,7 @@ class SccCaptionParagraph:
     max_width = max(self.get_extent().width.value, region_extent.width.value)
     max_height = max(self.get_extent().height.value, region_extent.height.value)
 
-    new_extent = _get_extent_from_dimensions(max_width, max_height)
+    new_extent = get_extent_from_dimensions(max_width, max_height)
 
     region.set_style(StyleProperties.Extent, new_extent)
 

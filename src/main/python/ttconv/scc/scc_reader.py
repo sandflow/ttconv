@@ -37,8 +37,9 @@ from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
-from ttconv.scc.scc_elements import SccCaptionStyle, SccCaptionParagraph, SccCaptionContent, SccCaptionLineBreak, \
-  SccCaptionText
+from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
+from ttconv.scc.paragraph import SccCaptionParagraph
+from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
 from ttconv.style_properties import StyleProperties
 
