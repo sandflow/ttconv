@@ -57,77 +57,125 @@ def _get_extent_from_dimensions(width, height, units=LengthType.Units.c) -> Exte
 class SccCaptionStyle(Enum):
   """SCC caption style"""
   Unknown = 0
+
+  # SCC Roll-Up captions are composed with:
+  #  - RU2 or RU3 or RU4 (to select the Roll-Up style and the number of displayed rows)
+  #  - CR (to roll the displayed rows up)
+  #  - PAC (to set row, indent and/or attributes)
+  #  - text
   RollUp = 1
+
+  # SCC Paint-On captions are composed with:
+  #  - RDC (to select the Paint-On style)
+  #  - PAC (to set row, indent and/or attributes)
+  #  - text
+  #  - PAC (to change row, indent and/or attributes)
+  #  - text or DER (to erase the following text of the current row)
   PaintOn = 2
+
+  # SCC Pop-On captions are composed with:
+  #  - RCL (to select the Pop-On style)
+  #  - ENM (to clear the memory, optional)
+  #  - PAC (to set row, indent and/or attributes)
+  #  - text
+  #  - PAC (to change row, indent and/or attributes)
+  #  - text
+  #  etc.
+  #  - EDM (to erase the displayed caption, optional)
+  #  - EOC (to display the current caption)
   PopOn = 3
 
 
 class SccCaptionContent:
-  """Caption content"""
+  """Caption content base class"""
 
 
 class SccCaptionLineBreak(SccCaptionContent):
   """Caption line break element"""
+
+  def __repr__(self):
+    return "<" + self.__class__.__name__ + ">"
 
 
 class SccCaptionText(SccCaptionContent):
   """Caption text content"""
 
   def __init__(self):
-    self.x_offset: int = 0
-    self.y_offset: int = 0
-    self.style_properties = {}
-    self.text: str = ""
-    self._position = None
-    self._new_line = False
     self._begin: Optional[SccTimeCode] = None
     self._end: Optional[SccTimeCode] = None
-
-  def set_x_offset(self, indent: Optional[int]):
-    """Sets the x offset"""
-    self.x_offset = indent if indent else 0
-
-  def set_y_offset(self, row: Optional[int]):
-    """Sets the y offset"""
-    self.y_offset = row if row else 0
+    self._style_properties = {}
+    self._text: str = ""
+    self._x_offset: int = 0
+    self._y_offset: int = 0
 
   def set_begin(self, time_code: SccTimeCode):
     """Sets begin time code"""
     self._begin = copy.copy(time_code)
 
-  def set_end(self, time_code: SccTimeCode):
-    """Sets end time code"""
-    self._end = copy.copy(time_code)
-
-  def add_style_property(self, style_property, value):
-    """Adds a style property"""
-    if value is None:
-      return
-    self.style_properties[style_property] = value
-
-  def get_position(self) -> PositionType:
-    """Returns current row and column offsets as a cell-based PositionType"""
-    return _get_position_from_offsets(self.x_offset, self.y_offset)
-
   def get_begin(self) -> SccTimeCode:
     """Returns the begin time code"""
     return self._begin
+
+  def set_end(self, time_code: SccTimeCode):
+    """Sets end time code"""
+    self._end = copy.copy(time_code)
 
   def get_end(self) -> SccTimeCode:
     """Returns the end time code"""
     return self._end
 
-  def has_same_style_properties(self, other):
-    """Returns whether the current text has the same style properties as the other text"""
-    return self.style_properties == other.style_properties
+  def get_text(self) -> str:
+    """Returns the text"""
+    return self._text
+
+  def append(self, text: str):
+    """Concatenates text content to caption text"""
+    self._text += text
+
+  def set_x_offset(self, indent: Optional[int]):
+    """Sets the x offset"""
+    self._x_offset = indent if indent else 0
+
+  def get_x_offset(self) -> int:
+    """Returns the x offset"""
+    return self._x_offset
+
+  def set_y_offset(self, row: Optional[int]):
+    """Sets the y offset"""
+    self._y_offset = row if row else 0
+
+  def get_y_offset(self) -> int:
+    """Returns the y offset"""
+    return self._y_offset
+
+  def get_position(self) -> PositionType:
+    """Returns current row and column offsets as a cell-based PositionType"""
+    return _get_position_from_offsets(self._x_offset, self._y_offset)
+
+  def get_style_properties(self) -> dict:
+    """Sets the style properties map"""
+    return self._style_properties
+
+  def add_style_property(self, style_property, value):
+    """Adds a style property"""
+    if value is None:
+      return
+    self._style_properties[style_property] = value
 
   def is_contiguous(self, other: SccCaptionText) -> bool:
     """Returns whether the current text is contiguous according to the other text"""
-    return self.x_offset == other.x_offset and self.y_offset == other.y_offset + 1
+    return self._x_offset == other.get_x_offset() and self._y_offset == other.get_y_offset() + 1
+
+  def has_same_style_properties(self, other):
+    """Returns whether the current text has the same style properties as the other text"""
+    return self._style_properties == other.get_style_properties()
 
   def has_same_origin(self, other: SccCaptionText) -> bool:
     """Returns whether the current text has the same origin as the other text"""
-    return self.x_offset == other.x_offset and self.y_offset == other.y_offset
+    return self._x_offset == other.get_x_offset() and self._y_offset == other.get_y_offset()
+
+  def __repr__(self):
+    return "<" + self.__class__.__name__ + " " + str(self.__dict__) + ">"
 
 
 class SccCaptionParagraph:
@@ -142,8 +190,8 @@ class SccCaptionParagraph:
     self._safe_area_y_offset = safe_area_y_offset
     self._column_offset: int = safe_area_x_offset
     self._row_offset: int = safe_area_y_offset
-    self.current_text: Optional[SccCaptionText] = None
-    self.caption_contents: List[SccCaptionContent] = []
+    self._current_text: Optional[SccCaptionText] = None
+    self._caption_contents: List[SccCaptionContent] = []
     self._style: SccCaptionStyle = caption_style
 
   def set_id(self, caption_id: str):
@@ -154,58 +202,13 @@ class SccCaptionParagraph:
     """Sets caption begin time code"""
     self._begin = copy.copy(time_code)
 
-  def set_end(self, time_code):
-    """Sets caption end time code"""
-    self._end = copy.copy(time_code)
-
-  def set_column_offset(self, indent: Optional[int]):
-    """Sets the paragraph x offset"""
-    self._column_offset = self._safe_area_x_offset + (indent if indent else 0)
-
-  def set_row_offset(self, row: Optional[int]):
-    """Sets the paragraph y offset"""
-    self._row_offset = self._safe_area_y_offset + (row if row else 0)
-
-  def get_column_offset(self) -> int:
-    """Returns the paragraph x offset"""
-    return self._column_offset
-
-  def get_row_offset(self) -> int:
-    """Returns the paragraph y offset"""
-    return self._row_offset
-
-  def new_caption_text(self):
-    """Appends a new caption text content, and keeps reference on it"""
-    self.caption_contents.append(SccCaptionText())
-    self.current_text = self.caption_contents[-1]
-
-  def set_current_text_offsets(self):
-    """Sets the x and y offsets of the current text"""
-    self.current_text.set_x_offset(self._column_offset)
-    self.current_text.set_y_offset(self._row_offset)
-
-  def set_roll_up_row_offsets(self):
-    """Sets Roll-up captions row offset in relation to the base row 15"""
-    if self._style is not SccCaptionStyle.RollUp:
-      raise RuntimeError(f"Cannot set Roll-Up row offset for {self._style}-styled caption.")
-
-    count = 0
-    for caption_content in reversed(self.caption_contents):
-      if not isinstance(caption_content, SccCaptionText):
-        count += 1
-        continue
-      caption_content.set_y_offset(self._safe_area_y_offset + ROLL_UP_BASE_ROW - count)
-
-    self.set_row_offset(ROLL_UP_BASE_ROW)
-
-  def indent(self, indent: int):
-    """Indents the current text (x offset)"""
-    self._column_offset += indent
-    self.current_text.set_x_offset(self._column_offset)
-
   def get_begin(self) -> SccTimeCode:
     """Returns the caption begin time code"""
     return self._begin
+
+  def set_end(self, time_code):
+    """Sets caption end time code"""
+    self._end = copy.copy(time_code)
 
   def get_end(self) -> SccTimeCode:
     """Returns the caption end time code"""
@@ -215,11 +218,72 @@ class SccCaptionParagraph:
     """Returns the caption style"""
     return self._style
 
+  def set_column_offset(self, indent: Optional[int]):
+    """Sets the paragraph x offset"""
+    self._column_offset = self._safe_area_x_offset + (indent if indent else 0)
+
+  def get_column_offset(self) -> int:
+    """Returns the paragraph x offset"""
+    return self._column_offset
+
+  def set_row_offset(self, row: Optional[int]):
+    """Sets the paragraph y offset"""
+    self._row_offset = self._safe_area_y_offset + (row if row else 0)
+
+  def get_row_offset(self) -> int:
+    """Returns the paragraph y offset"""
+    return self._row_offset
+
+  def get_current_text(self) -> Optional[SccCaptionText]:
+    """Returns the current caption text"""
+    return self._current_text
+
+  def set_contents(self, contents: List[SccCaptionContent]):
+    """Sets paragraph contents"""
+    self._caption_contents = contents
+
+  def insert_content(self, index: int, content: SccCaptionContent):
+    """Inserts content to paragraph contents at specified index"""
+    self._caption_contents.insert(index, content)
+
+  def get_contents(self) -> List[SccCaptionContent]:
+    """Returns the paragraph contents"""
+    return self._caption_contents
+
+  def new_caption_text(self):
+    """Appends a new caption text content, and keeps reference on it"""
+    self._caption_contents.append(SccCaptionText())
+    self._current_text = self._caption_contents[-1]
+
+  def apply_current_text_offsets(self):
+    """Applies the x and y offsets of the current text"""
+    self._current_text.set_x_offset(self._column_offset)
+    self._current_text.set_y_offset(self._row_offset)
+
+  def indent(self, indent: int):
+    """Indents the current text (x offset)"""
+    self._column_offset += indent
+    self._current_text.set_x_offset(self._column_offset)
+
+  def apply_roll_up_row_offsets(self):
+    """Applies the row offset in relation to the base row 15 for Roll-Up captions"""
+    if self._style is not SccCaptionStyle.RollUp:
+      raise RuntimeError(f"Cannot set Roll-Up row offset for {self._style}-styled caption.")
+
+    line_count = 0
+    for caption_content in reversed(self._caption_contents):
+      if not isinstance(caption_content, SccCaptionText):
+        line_count += 1
+        continue
+      caption_content.set_y_offset(self._safe_area_y_offset + ROLL_UP_BASE_ROW - line_count)
+
+    self.set_row_offset(ROLL_UP_BASE_ROW)
+
   def get_origin(self) -> PositionType:
     """Computes and returns the current paragraph origin, based on its content"""
-    if len(self.caption_contents) > 0:
-      x_offsets = [text.x_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
-      y_offsets = [text.y_offset for text in self.caption_contents if isinstance(text, SccCaptionText)]
+    if len(self._caption_contents) > 0:
+      x_offsets = [text.get_x_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
+      y_offsets = [text.get_y_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
 
       return _get_position_from_offsets(min(x_offsets), min(y_offsets))
 
@@ -230,13 +294,14 @@ class SccCaptionParagraph:
     lines: List[str] = []
     last_line = []
     separator = " " if self._style is SccCaptionStyle.PaintOn else ""
-    for caption_content in self.caption_contents:
+    for caption_content in self._caption_contents:
       if isinstance(caption_content, SccCaptionLineBreak):
         lines.append(separator.join(last_line))
         last_line = []
         continue
 
-      last_line.append(caption_content.text)
+      if isinstance(caption_content, SccCaptionText):
+        last_line.append(caption_content.get_text())
 
     if len(last_line) > 0:
       lines.append(separator.join(last_line))
@@ -246,11 +311,11 @@ class SccCaptionParagraph:
 
     return _get_extent_from_dimensions(max_text_lengths, nb_lines)
 
-  def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionText]:
+  def get_last_caption_lines(self, expected_lines: int) -> List[SccCaptionContent]:
     """Returns the caption text elements from the expected number of last lines"""
     last_lines = []
     added_lines = 0
-    for caption in reversed(self.caption_contents):
+    for caption in reversed(self._caption_contents):
       if isinstance(caption, SccCaptionLineBreak):
         added_lines += 1
 
@@ -339,7 +404,7 @@ class SccCaptionParagraph:
     p.set_region(matching_region)
 
     # Add caption content (text and line-breaks)
-    for caption_content in self.caption_contents:
+    for caption_content in self._caption_contents:
 
       if isinstance(caption_content, SccCaptionLineBreak):
         p.push_child(Br(doc))
@@ -354,11 +419,14 @@ class SccCaptionParagraph:
         if caption_content.get_end():
           span.set_end(caption_content.get_end().to_temporal_offset())
 
-        for (prop, value) in caption_content.style_properties.items():
+        for (prop, value) in caption_content.get_style_properties().items():
           span.set_style(prop, value)
 
-        span.push_child(Text(doc, caption_content.text))
+        span.push_child(Text(doc, caption_content.get_text()))
 
         p.push_child(span)
 
     return p
+
+  def __repr__(self) -> str:
+    return "<" + self.__class__.__name__ + " " + str(self.__dict__) + ">"

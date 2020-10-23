@@ -68,11 +68,11 @@ class SccCaptionTextTest(unittest.TestCase):
     caption_text = SccCaptionText()
 
     caption_text.add_style_property(StyleProperties.Color, None)
-    self.assertEqual(0, len(caption_text.style_properties))
+    self.assertEqual(0, len(caption_text.get_style_properties()))
 
     caption_text.add_style_property(StyleProperties.Color, NamedColors.fuchsia.value)
-    self.assertEqual(1, len(caption_text.style_properties))
-    self.assertEqual(NamedColors.fuchsia.value, caption_text.style_properties[StyleProperties.Color])
+    self.assertEqual(1, len(caption_text.get_style_properties()))
+    self.assertEqual(NamedColors.fuchsia.value, caption_text.get_style_properties()[StyleProperties.Color])
 
     other_caption_text = SccCaptionText()
     self.assertFalse(caption_text.has_same_style_properties(other_caption_text))
@@ -92,67 +92,67 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(4, caption_paragraph._safe_area_x_offset)
     self.assertEqual(2, caption_paragraph._safe_area_y_offset)
 
-    self.assertIsNone(caption_paragraph.current_text)
-    self.assertEqual(0, len(caption_paragraph.caption_contents))
+    self.assertIsNone(caption_paragraph.get_current_text())
+    self.assertEqual(0, len(caption_paragraph._caption_contents))
 
     caption_paragraph.new_caption_text()
-    self.assertIsNotNone(caption_paragraph.current_text)
-    self.assertEqual(1, len(caption_paragraph.caption_contents))
+    self.assertIsNotNone(caption_paragraph.get_current_text())
+    self.assertEqual(1, len(caption_paragraph._caption_contents))
 
     caption_paragraph.set_row_offset(None)
-    self.assertEqual(2, caption_paragraph._row_offset)
+    self.assertEqual(2, caption_paragraph.get_row_offset())
     caption_paragraph.set_row_offset(4)
-    self.assertEqual(6, caption_paragraph._row_offset)
+    self.assertEqual(6, caption_paragraph.get_row_offset())
 
     caption_paragraph.set_column_offset(None)
-    self.assertEqual(4, caption_paragraph._column_offset)
+    self.assertEqual(4, caption_paragraph.get_column_offset())
     caption_paragraph.set_column_offset(4)
-    self.assertEqual(8, caption_paragraph._column_offset)
+    self.assertEqual(8, caption_paragraph.get_column_offset())
 
-    caption_paragraph.set_current_text_offsets()
-    self.assertEqual(6, caption_paragraph.current_text.y_offset)
-    self.assertEqual(8, caption_paragraph.current_text.x_offset)
+    caption_paragraph.apply_current_text_offsets()
+    self.assertEqual(6, caption_paragraph.get_current_text().get_y_offset())
+    self.assertEqual(8, caption_paragraph.get_current_text().get_x_offset())
 
     caption_paragraph.indent(3)
-    self.assertEqual(6, caption_paragraph._row_offset)
-    self.assertEqual(11, caption_paragraph._column_offset)
-    self.assertEqual(6, caption_paragraph.current_text.y_offset)
-    self.assertEqual(11, caption_paragraph.current_text.x_offset)
+    self.assertEqual(6, caption_paragraph.get_row_offset())
+    self.assertEqual(11, caption_paragraph.get_column_offset())
+    self.assertEqual(6, caption_paragraph.get_current_text().get_y_offset())
+    self.assertEqual(11, caption_paragraph.get_current_text().get_x_offset())
 
     self.assertListEqual([], caption_paragraph.get_last_caption_lines(0))
-    self.assertListEqual([caption_paragraph.current_text], caption_paragraph.get_last_caption_lines(1))
+    self.assertListEqual([caption_paragraph.get_current_text()], caption_paragraph.get_last_caption_lines(1))
 
     self.assertRaisesRegex(RuntimeError, "Cannot set Roll-Up row offset for SccCaptionStyle.Unknown-styled caption.",
-                           caption_paragraph.set_roll_up_row_offsets)
+                           caption_paragraph.apply_roll_up_row_offsets)
 
     caption_paragraph._style = SccCaptionStyle.PopOn
     self.assertRaisesRegex(RuntimeError, "Cannot set Roll-Up row offset for SccCaptionStyle.PopOn-styled caption.",
-                           caption_paragraph.set_roll_up_row_offsets)
+                           caption_paragraph.apply_roll_up_row_offsets)
 
     caption_paragraph._style = SccCaptionStyle.RollUp
-    caption_paragraph.set_roll_up_row_offsets()
-    self.assertEqual(17, caption_paragraph.current_text.y_offset)
-    self.assertEqual(11, caption_paragraph.current_text.x_offset)
+    caption_paragraph.apply_roll_up_row_offsets()
+    self.assertEqual(17, caption_paragraph.get_current_text().get_y_offset())
+    self.assertEqual(11, caption_paragraph.get_current_text().get_x_offset())
 
     self.assertListEqual([], caption_paragraph.get_last_caption_lines(0))
-    self.assertListEqual([caption_paragraph.current_text], caption_paragraph.get_last_caption_lines(1))
-    self.assertListEqual([caption_paragraph.current_text], caption_paragraph.get_last_caption_lines(2))
+    self.assertListEqual([caption_paragraph.get_current_text()], caption_paragraph.get_last_caption_lines(1))
+    self.assertListEqual([caption_paragraph.get_current_text()], caption_paragraph.get_last_caption_lines(2))
 
-    caption_paragraph.caption_contents.append(SccCaptionLineBreak())
+    caption_paragraph._caption_contents.append(SccCaptionLineBreak())
     caption_paragraph.new_caption_text()
-    caption_paragraph.set_current_text_offsets()
+    caption_paragraph.apply_current_text_offsets()
 
-    caption_paragraph.set_roll_up_row_offsets()
-    self.assertEqual(17, caption_paragraph.current_text.y_offset)
-    self.assertEqual(11, caption_paragraph.current_text.x_offset)
+    caption_paragraph.apply_roll_up_row_offsets()
+    self.assertEqual(17, caption_paragraph.get_current_text().get_y_offset())
+    self.assertEqual(11, caption_paragraph.get_current_text().get_x_offset())
 
     self.assertListEqual([], caption_paragraph.get_last_caption_lines(0))
-    self.assertListEqual([caption_paragraph.current_text], caption_paragraph.get_last_caption_lines(1))
+    self.assertListEqual([caption_paragraph.get_current_text()], caption_paragraph.get_last_caption_lines(1))
     self.assertListEqual(
-      [caption_paragraph.caption_contents[-3], caption_paragraph.caption_contents[-2], caption_paragraph.current_text],
+      [caption_paragraph._caption_contents[-3], caption_paragraph._caption_contents[-2], caption_paragraph.get_current_text()],
       caption_paragraph.get_last_caption_lines(2))
     self.assertListEqual(
-      [caption_paragraph.caption_contents[-3], caption_paragraph.caption_contents[-2], caption_paragraph.current_text],
+      [caption_paragraph._caption_contents[-3], caption_paragraph._caption_contents[-2], caption_paragraph.get_current_text()],
       caption_paragraph.get_last_caption_lines(3))
 
   def test_region_prefix(self):
@@ -176,13 +176,13 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
     caption_paragraph.set_row_offset(4)
     caption_paragraph.set_column_offset(4)
-    caption_paragraph.set_current_text_offsets()
+    caption_paragraph.apply_current_text_offsets()
     caption_paragraph.indent(3)
 
-    self.assertEqual(6, caption_paragraph.current_text.y_offset)
-    self.assertEqual(11, caption_paragraph.current_text.x_offset)
+    self.assertEqual(6, caption_paragraph.get_current_text().get_y_offset())
+    self.assertEqual(11, caption_paragraph.get_current_text().get_x_offset())
 
-    caption_paragraph.current_text.text = "This is a 28-char long line."
+    caption_paragraph.get_current_text().append("This is a 28-char long line.")
 
     origin = caption_paragraph.get_origin()
     self.assertEqual(11, origin.x.value)
@@ -203,11 +203,11 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(extent.width.value, region_extent.width.value)
     self.assertEqual(extent.height.value, region_extent.height.value)
 
-    caption_paragraph.caption_contents.append(SccCaptionLineBreak())
+    caption_paragraph._caption_contents.append(SccCaptionLineBreak())
 
     caption_paragraph.new_caption_text()
-    caption_paragraph.set_current_text_offsets()
-    caption_paragraph.current_text.text = "This is another 34-char long line."
+    caption_paragraph.apply_current_text_offsets()
+    caption_paragraph.get_current_text().append("This is another 34-char long line.")
 
     origin = caption_paragraph.get_origin()
     self.assertEqual(11, origin.x.value)
@@ -255,10 +255,10 @@ class SccCaptionParagraphTest(unittest.TestCase):
     caption_paragraph.set_end(SccTimeCode.parse("00:02:03:04"))
 
     caption_paragraph.new_caption_text()
-    caption_paragraph.current_text.text = "Hello"
-    caption_paragraph.caption_contents.append(SccCaptionLineBreak())
+    caption_paragraph.get_current_text().append("Hello")
+    caption_paragraph._caption_contents.append(SccCaptionLineBreak())
     caption_paragraph.new_caption_text()
-    caption_paragraph.current_text.text = "World"
+    caption_paragraph.get_current_text().append("World")
 
     paragraph = caption_paragraph.to_paragraph(doc)
 
