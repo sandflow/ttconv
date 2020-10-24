@@ -57,6 +57,12 @@ class ReaderWriterTest(unittest.TestCase):
     reparsed = minidom.parseString(rough_string)
     print(reparsed.toprettyxml(indent="\t"))
 
+  def write_pretty_xml(self, tree: et.ElementTree, file_path):
+    rough_string = et.tostring(tree.getroot(), 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    with open(file_path, "wb") as f:
+      f.write(reparsed.toprettyxml(indent="  ", encoding="utf-8"))
+
   def test_animation_001(self):
 
     # parse the data
@@ -78,9 +84,7 @@ class ReaderWriterTest(unittest.TestCase):
     tree_from_model = imsc_writer.from_model(test_model)
 
     # write the document out to a file
-    tree_from_model.write('build/Animation001.ttml', encoding='utf-8', xml_declaration=True)
-
-    #self.pretty_print(tree_from_model.getroot())
+    self.write_pretty_xml(tree_from_model, 'build/Animation001.ttml')
 
 class FromModelBodyWriterTest(unittest.TestCase):
 
