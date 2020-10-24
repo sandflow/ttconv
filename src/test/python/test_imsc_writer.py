@@ -57,7 +57,7 @@ class ReaderWriterTest(unittest.TestCase):
     reparsed = minidom.parseString(rough_string)
     print(reparsed.toprettyxml(indent="\t"))
 
-  def test_body_only(self):
+  def test_animation_001(self):
 
     # parse the data
     #file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/activeArea/ActiveArea001.ttml"
@@ -78,7 +78,7 @@ class ReaderWriterTest(unittest.TestCase):
     tree_from_model = imsc_writer.from_model(test_model)
 
     # write the document out to a file
-    tree_from_model.write('build/out.ttml', encoding='utf-8', xml_declaration=True)
+    tree_from_model.write('build/Animation001.ttml', encoding='utf-8', xml_declaration=True)
 
     #self.pretty_print(tree_from_model.getroot())
 

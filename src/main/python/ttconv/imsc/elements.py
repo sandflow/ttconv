@@ -897,24 +897,25 @@ class ContentElement(TTMLElement):
     else:
       return None
 
-    element = et.Element(imsc_class.qn)
+    xml_element = et.Element(imsc_class.qn)
 
     if imsc_class.has_region:
       if model_element.get_region() is not None:
-        imsc_attr.RegionAttribute.set(element, model_element.get_region().get_id())
+        imsc_attr.RegionAttribute.set(xml_element, model_element.get_region().get_id())
 
     if imsc_class.has_timing:
       if model_element.get_begin() is not None:
-        imsc_attr.BeginAttribute.set(element, model_element.get_begin())
+        imsc_attr.BeginAttribute.set(xml_element, model_element.get_begin())
 
       if model_element.get_end() is not None:
-        imsc_attr.EndAttribute.set(element, model_element.get_end())
+        imsc_attr.EndAttribute.set(xml_element, model_element.get_end())
 
     if model_element.get_id() is not None:
-      imsc_attr.XMLIDAttribute.set(element, model_element.get_id())
+      imsc_attr.XMLIDAttribute.set(xml_element, model_element.get_id())
 
     if imsc_class.has_styles:
-      ContentElement.from_model_style_properties(model_element, element)
+      ContentElement.from_model_style_properties(model_element, xml_element)
+      ContentElement.from_model_animation(model_element, xml_element)
 
     if imsc_class.has_children:
       last_child_element = None
@@ -922,17 +923,17 @@ class ContentElement(TTMLElement):
       for child in iter(model_element):
         if isinstance(child, model.Text):
           if last_child_element is None:
-            element.text = child.get_text()
+            xml_element.text = child.get_text()
           else:
             last_child_element.tail = child.get_text()
 
         child_element = ContentElement.from_model(child)
         if child_element is not None:
-          element.append(child_element)
+          xml_element.append(child_element)
         
         last_child_element = child_element
 
-    return element
+    return xml_element
 
 class RegionElement(ContentElement):
   '''Process the TTML <region> element
