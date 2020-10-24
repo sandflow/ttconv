@@ -29,6 +29,7 @@
 
 import os
 import unittest
+import logging
 import xml.etree.ElementTree as et
 import xml.dom.minidom as minidom
 import ttconv.imsc.reader as imsc_reader
@@ -85,6 +86,22 @@ class ReaderWriterTest(unittest.TestCase):
 
     # write the document out to a file
     self.write_pretty_xml(tree_from_model, 'build/Animation001.ttml')
+
+  def test_imsc_1_test_suite(self):
+    if not os.path.exists('build/imsc1'):
+      os.makedirs('build/imsc1')
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            test_model = imsc_reader.to_model(tree)
+            tree_from_model = imsc_writer.from_model(test_model)
+            self.write_pretty_xml(tree_from_model, f'build/imsc1/{name}.ttml')
+            if len(logs.output) > 1:
+              self.fail(logs.output)
 
 class FromModelBodyWriterTest(unittest.TestCase):
 
