@@ -657,14 +657,6 @@ class ContentElement(TTMLElement):
       if self.ttml_class.has_region:
         self.process_region_property(xml_elem)
 
-      if issubclass(self.ttml_class, SetElement):
-
-        self.process_set_style_properties(parent_ctx, xml_elem)
-
-      elif self.ttml_class.has_styles:
-
-        self.process_specified_styling(xml_elem)
-
       # temporal processing
 
       self.time_container = imsc_attr.TimeContainerAttribute.extract(xml_elem)
@@ -777,6 +769,16 @@ class ContentElement(TTMLElement):
         self.model_element.set_begin(self.desired_begin if self.desired_begin != 0 else None)
 
         self.model_element.set_end(self.desired_end)
+
+      # process style properties
+
+      if issubclass(self.ttml_class, SetElement):
+
+        self.process_set_style_properties(parent_ctx, xml_elem)
+
+      elif self.ttml_class.has_styles:
+
+        self.process_specified_styling(xml_elem)
 
     # pylint: enable=too-many-branches
 
@@ -1007,6 +1009,7 @@ class SetElement(ContentElement):
   def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SetElement.ParsingContext]:
     set_ctx = SetElement.ParsingContext(SetElement, parent_ctx)
     set_ctx.process(parent_ctx, xml_elem)
+
     return set_ctx
 
   @staticmethod
