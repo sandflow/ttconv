@@ -782,12 +782,22 @@ class ContentElement(TTMLElement):
 
   @staticmethod
   def from_model_style_properties(model_content_element, element):
-    '''Write TTML style properties from the model into into the region_element'''
+    '''Write TTML style properties from the model'''
 
     for imsc_prop, model_prop in StyleProperties.BY_MODEL_PROP.items():
       value = model_content_element.get_style(model_prop)
       if value is not None:
         imsc_prop.set(element, value)
+
+  @staticmethod
+  def from_model_animation(model_element: model.ContentElement, xml_element):
+    '''Write TTML set element from the model'''
+
+    for a_step in model_element.iter_animation_steps():
+      set_element = SetElement.from_model(a_step)
+      if set_element is not None:
+        xml_element.append(set_element)
+
 
   @property
   def has_timing(self):
@@ -992,15 +1002,24 @@ class SetElement(ContentElement):
     return set_ctx
 
   @staticmethod
-  def from_model():
+  def from_model(anim_step: model.DiscreteAnimationStep):
 
-    set_element = et.Element("set")
+    set_element = et.Element(SetElement.qn)
+
+    imsc_style = imsc_styles.StyleProperties.BY_MODEL_PROP[anim_step.style_property]
+
+    imsc_style.set(
+      set_element,
+      anim_step.value
+    )
+
+    if anim_step.begin is not None:
+      imsc_attr.BeginAttribute.set(set_element, anim_step.begin)
+
+    if anim_step.end is not None:
+      imsc_attr.EndAttribute.set(set_element, anim_step.end)
 
     return set_element
-
-#    attrib = region.get_id()
-#    if attrib is not None:
-#      imsc_attr.RegionAttribute.set(region_element, attrib)
 
 class BodyElement(ContentElement):
   '''Process TTML body element
@@ -1159,11 +1178,7 @@ class RubyElement(ContentElement):
 
   @staticmethod
   def from_model(model_element: model.ContentElement):
-    
     return ContentElement.from_model(model_element)
-
-    #ContentElement.from_model_style_properties(parent_div, span_element)
-
 
 class RbElement(ContentElement):
   '''Process the TTML <span tts:ruby="base"> element
