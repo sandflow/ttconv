@@ -101,13 +101,6 @@ class TTMLElement:
     '''
     raise NotImplementedError
 
-  @staticmethod
-  def from_model(model_value, xml_element):
-    '''Returns a parsing context for the TTML element represented by the XML element `xml_elem` and
-    given the parent context `parent_ctx`
-    '''
-    raise NotImplementedError
-
 
 class TTElement(TTMLElement):
   '''Processes the TTML <tt> element
@@ -214,10 +207,14 @@ class TTElement(TTMLElement):
     if head_element is not None:
       tt_element.append(head_element)
 
-    body_element = BodyElement.from_model(model_doc)
+    model_body = model_doc.get_body()
 
-    if body_element is not None:
-      tt_element.append(body_element)
+    if model_body is not None:
+
+      body_element = BodyElement.from_model(model_body)
+
+      if body_element is not None:
+        tt_element.append(body_element)
 
     return tt_element
 
@@ -787,10 +784,10 @@ class ContentElement(TTMLElement):
   def from_model_style_properties(model_content_element, element):
     '''Write TTML style properties from the model into into the region_element'''
 
-    for qname, style_property_class in StyleProperties.BY_QNAME.items():
-      value = model_content_element.get_style(style_property_class.model_prop)
+    for imsc_prop, model_prop in StyleProperties.BY_MODEL_PROP.items():
+      value = model_content_element.get_style(model_prop)
       if value is not None:
-          style_property_class.set(element, value)
+        imsc_prop.set(element, value)
 
   @property
   def has_timing(self):
@@ -862,6 +859,71 @@ class ContentElement(TTMLElement):
 
   # pylint: disable=too-many-branches
 
+  @staticmethod
+  def from_model(model_element: model.ContentElement) -> typing.Optional[ContentElement]:
+
+    if isinstance(model_element, model.Body):
+      imsc_class = BodyElement
+    elif isinstance(model_element, model.Div):
+      imsc_class = DivElement
+    elif isinstance(model_element, model.P):
+      imsc_class = PElement
+    elif isinstance(model_element, model.Span):
+      imsc_class = SpanElement
+    elif isinstance(model_element, model.Br):
+      imsc_class = BrElement
+    elif isinstance(model_element, model.Ruby):
+      imsc_class = RubyElement
+    elif isinstance(model_element, model.Rb):
+      imsc_class = RbElement
+    elif isinstance(model_element, model.Rt):
+      imsc_class = RtElement
+    elif isinstance(model_element, model.Rbc):
+      imsc_class = RbcElement
+    elif isinstance(model_element, model.Rtc):
+      imsc_class = RtcElement
+    elif isinstance(model_element, model.Region):
+      imsc_class = RegionElement
+    else:
+      return None
+
+    element = et.Element(imsc_class.qn)
+
+    if imsc_class.has_region:
+      if model_element.get_region() is not None:
+        imsc_attr.RegionAttribute.set(element, model_element.get_region().get_id())
+
+    if imsc_class.has_timing:
+      if model_element.get_begin() is not None:
+        imsc_attr.BeginAttribute.set(element, model_element.get_begin())
+
+      if model_element.get_end() is not None:
+        imsc_attr.EndAttribute.set(element, model_element.get_end())
+
+    if model_element.get_id() is not None:
+      imsc_attr.XMLIDAttribute.set(element, model_element.get_id())
+
+    if imsc_class.has_styles:
+      ContentElement.from_model_style_properties(model_element, element)
+
+    if imsc_class.has_children:
+      last_child_element = None
+
+      for child in iter(model_element):
+        if isinstance(child, model.Text):
+          if last_child_element is None:
+            element.text = child.get_text()
+          else:
+            last_child_element.tail = child.get_text()
+
+        child_element = ContentElement.from_model(child)
+        if child_element is not None:
+          element.append(child_element)
+        
+        last_child_element = child_element
+
+    return element
+
 class RegionElement(ContentElement):
   '''Process the TTML <region> element
   '''
@@ -930,9 +992,11 @@ class SetElement(ContentElement):
     return set_ctx
 
   @staticmethod
-  def from_model(layout, set):
+  def from_model():
 
-    set_element = et.SubElement(layout, "set")
+    set_element = et.Element("set")
+
+    return set_element
 
 #    attrib = region.get_id()
 #    if attrib is not None:
@@ -964,27 +1028,9 @@ class BodyElement(ContentElement):
     return body_ctx
 
   @staticmethod
-  def from_model(body):
+  def from_model(model_element: model.ContentElement):
     
-    if body is None:
-      return
-    
-    body_element = context.imsc_doc.find("body")
-    if body_element is None:
-      body_element = et.SubElement(context.imsc_doc, "body")
-    
-    attrib = body.get_id()
-    if attrib is not None:
-      body_element.set(imsc_attr.XMLIDAttribute.qn, attrib)
-
-    attrib = body.get_style(StyleProperties.LineHeight)
-    if attrib is not None:
-      body_element.set("tts:lineHeight", attrib)
-
-    ContentElement.from_model_style_properties(body, body_element)
-
-    for div in body:
-      DivElement.from_model(div, body_element)
+    return ContentElement.from_model(model_element)
 
 
 class DivElement(ContentElement):
@@ -1013,25 +1059,9 @@ class DivElement(ContentElement):
     return div_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
-
-    div_element = et.SubElement(parent_element, "div")
-
-    ContentElement.from_model_style_properties(parent_div, div_element)
-
-    if parent_div.has_children():
-      for child in parent_div:
-        if isinstance(child, model.P):
-          PElement.from_model(child, div_element)
-        elif isinstance(child, model.Div):
-          DivElement.from_model(child, div_element)
-        else:
-          LOGGER.error("Children of div must be p or div")
-    else:
-      pass
+    return ContentElement.from_model(model_element)
 
 
 class PElement(ContentElement):
@@ -1060,38 +1090,9 @@ class PElement(ContentElement):
     return p_ctx
 
   @staticmethod
-  def from_model(parent_p, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_p is None:
-      return
-
-    p_element = et.SubElement(parent_element, "p")
-
-    ContentElement.from_model_style_properties(parent_p, parent_element)
-
-    if parent_p.get_region():
-      imsc_attr.RegionAttribute.set(parent_element, parent_p.get_region().get_id())
-
-    if parent_p.get_begin():
-      imsc_attr.BeginAttribute.set(parent_element, parent_p.get_begin())
-
-    # TODO - do we need to set a dur? If so, do we compute it here with end - begin?
-    #if parent_p.get_dur():
-    #  imsc_attr.DurAttribute.set(parent_element, parent_p.get_dur())
-
-    if parent_p.get_end():
-      imsc_attr.EndAttribute.set(parent_element, parent_p.get_end())
-
-    if parent_p.has_children():
-      for child in parent_p:
-        if isinstance(child, model.Span):
-          SpanElement.from_model(child, p_element)
-        elif isinstance(child, model.Ruby):
-          RubyElement.from_model(child, p_element)
-        elif isinstance(child, model.Br):
-          BrElement.from_model(child, p_element)
-        else:
-          LOGGER.error("Children of p must be span or br or text")
+    return ContentElement.from_model(model_element)
 
 
 class SpanElement(ContentElement):
@@ -1126,29 +1127,9 @@ class SpanElement(ContentElement):
     return span_ctx
 
   @staticmethod
-  def from_model(model_value, xml_element):
+  def from_model(model_element: model.ContentElement):
     
-    if model_value is None:
-      return
-
-    span_element = et.SubElement(xml_element, "span")
-
-    ContentElement.from_model_style_properties(model_value, span_element)
-
-    if model_value.has_children():
-      for child in model_value:
-        if isinstance(child, model.Span):
-          SpanElement.from_model(child, xml_element)
-        elif isinstance(child, model.Br):
-          BrElement.from_model(child, xml_element)
-        elif isinstance(child, model.Text):
-          # TODO - do we want to have a TextElement object?
-          #TextElement.from_model(xml_element, child)          
-          span_element.text = child.get_text()
-        else:
-          LOGGER.error("Children of div must be p or div")
-    else:
-      pass
+    return ContentElement.from_model(model_element)
 
 
 class RubyElement(ContentElement):
@@ -1177,10 +1158,9 @@ class RubyElement(ContentElement):
     return ruby_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
+    return ContentElement.from_model(model_element)
 
     #ContentElement.from_model_style_properties(parent_div, span_element)
 
@@ -1211,10 +1191,9 @@ class RbElement(ContentElement):
     return rb_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
+    return ContentElement.from_model(model_element)
 
 
 class RtElement(ContentElement):
@@ -1243,10 +1222,9 @@ class RtElement(ContentElement):
     return rt_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
+    return ContentElement.from_model(model_element)
 
 
 class RpElement(ContentElement):
@@ -1275,10 +1253,9 @@ class RpElement(ContentElement):
     return rp_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
+    return ContentElement.from_model(model_element)
 
 
 class RbcElement(ContentElement):
@@ -1307,10 +1284,9 @@ class RbcElement(ContentElement):
     return rbc_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
+    return ContentElement.from_model(model_element)
 
 
 class RtcElement(ContentElement):
@@ -1339,10 +1315,9 @@ class RtcElement(ContentElement):
     return rtc_ctx
 
   @staticmethod
-  def from_model(parent_div, parent_element):
+  def from_model(model_element: model.ContentElement):
     
-    if parent_div is None:
-      return
+    return ContentElement.from_model(model_element)
 
 class BrElement(ContentElement):
   '''Process the TTML <br> element
@@ -1370,16 +1345,6 @@ class BrElement(ContentElement):
     return br_ctx
 
   @staticmethod
-  def from_model(model_value, xml_element):
+  def from_model(model_element: model.ContentElement):
     
-    if model_value is None:
-      return
-
-    br_element = et.SubElement(xml_element, "br")
-
-    ContentElement.from_model_style_properties(model_value, br_element)
-
-    if model_value.has_children():
-      LOGGER.error("Br should not have children")
-    else:
-      pass
+    return ContentElement.from_model(model_element)

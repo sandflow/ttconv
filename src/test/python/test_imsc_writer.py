@@ -36,7 +36,6 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
-import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.style_properties as imsc_styles
 
 def _get_set_style(imsc_style_prop, model_value):
@@ -97,16 +96,7 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
   def test_body_only(self):
 
-    return
-
-    class _Context:
-      def __init__(self):
-        self.imsc_doc = None
-
-    context = _Context()
-
-    context.imsc_doc = et.Element("tt")
-
+    doc = model.Document()
     body = model.Body()
     div = model.Div()
     p = model.P()
@@ -118,15 +108,10 @@ class FromModelBodyWriterTest(unittest.TestCase):
     p.push_child(span)
     div.push_child(p)
     body.push_child(div)
-
-    imsc_elements.BodyElement.from_model(context, body)
-
-    found_span = et.ElementTree(context.imsc_doc).find("tt")
-    if found_span is not None:
-      found_span.text 
+    doc.set_body(body)
 
     # write the document out to a file
-    et.ElementTree(context.imsc_doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
+    imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
 
     #self.pretty_print(tree_from_model.getroot())
 

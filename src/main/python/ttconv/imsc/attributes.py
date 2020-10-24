@@ -48,7 +48,9 @@ class XMLIDAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(XMLIDAttribute.qn)
 
-
+  @staticmethod
+  def set(xml_element, model_value):
+    xml_element.set(XMLIDAttribute.qn, model_value)
 
 class XMLLangAttribute:
   '''xml:lang attribute
@@ -62,7 +64,7 @@ class XMLLangAttribute:
 
   @staticmethod
   def set(ttml_element, lang):
-    ttml_element.attrib.set(XMLLangAttribute.qn, lang)
+    ttml_element.set(XMLLangAttribute.qn, lang)
 
 class XMLSpaceAttribute:
   '''xml:space attribute
@@ -131,7 +133,7 @@ class CellResolutionAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.attrib.set(CellResolutionAttribute.qn, f"{res.rows:.0f}px {res.columns:.0f}px")
+    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows:.0f}px {res.columns:.0f}px")
 
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
@@ -162,7 +164,7 @@ class ExtentAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.attrib.set(ExtentAttribute.qn, f"{res.width}px {res.height}px")
+    ttml_element.set(ExtentAttribute.qn, f"{res.width}px {res.height}px")
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>

@@ -47,5 +47,5 @@ def from_model(model_doc: model.Document):
   et.register_namespace("itts", xml_ns.ITTS)
     
   return et.ElementTree(
-      imsc_elements.TTElement.from_model(model_doc)
+    imsc_elements.TTElement.from_model(model_doc)
     )
