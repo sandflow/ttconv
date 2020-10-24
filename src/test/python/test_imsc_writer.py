@@ -29,6 +29,7 @@
 
 import os
 import unittest
+import logging
 import xml.etree.ElementTree as et
 import xml.dom.minidom as minidom
 import ttconv.imsc.reader as imsc_reader
@@ -36,7 +37,6 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
-import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.style_properties as imsc_styles
 
 def _get_set_style(imsc_style_prop, model_value):
@@ -58,7 +58,13 @@ class ReaderWriterTest(unittest.TestCase):
     reparsed = minidom.parseString(rough_string)
     print(reparsed.toprettyxml(indent="\t"))
 
-  def test_body_only(self):
+  def write_pretty_xml(self, tree: et.ElementTree, file_path):
+    rough_string = et.tostring(tree.getroot(), 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    with open(file_path, "wb") as f:
+      f.write(reparsed.toprettyxml(indent="  ", encoding="utf-8"))
+
+  def test_animation_001(self):
 
     # parse the data
     #file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/activeArea/ActiveArea001.ttml"
@@ -79,9 +85,23 @@ class ReaderWriterTest(unittest.TestCase):
     tree_from_model = imsc_writer.from_model(test_model)
 
     # write the document out to a file
-    tree_from_model.write('build/out.ttml', encoding='utf-8', xml_declaration=True)
+    self.write_pretty_xml(tree_from_model, 'build/Animation001.ttml')
 
-    #self.pretty_print(tree_from_model.getroot())
+  def test_imsc_1_test_suite(self):
+    if not os.path.exists('build/imsc1'):
+      os.makedirs('build/imsc1')
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            test_model = imsc_reader.to_model(tree)
+            tree_from_model = imsc_writer.from_model(test_model)
+            self.write_pretty_xml(tree_from_model, f'build/imsc1/{name}.ttml')
+            if len(logs.output) > 1:
+              self.fail(logs.output)
 
 class FromModelBodyWriterTest(unittest.TestCase):
 
@@ -97,16 +117,7 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
   def test_body_only(self):
 
-    return
-
-    class _Context:
-      def __init__(self):
-        self.imsc_doc = None
-
-    context = _Context()
-
-    context.imsc_doc = et.Element("tt")
-
+    doc = model.Document()
     body = model.Body()
     div = model.Div()
     p = model.P()
@@ -118,15 +129,10 @@ class FromModelBodyWriterTest(unittest.TestCase):
     p.push_child(span)
     div.push_child(p)
     body.push_child(div)
-
-    imsc_elements.BodyElement.from_model(context, body)
-
-    found_span = et.ElementTree(context.imsc_doc).find("tt")
-    if found_span is not None:
-      found_span.text 
+    doc.set_body(body)
 
     # write the document out to a file
-    et.ElementTree(context.imsc_doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
+    imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
 
     #self.pretty_print(tree_from_model.getroot())
 

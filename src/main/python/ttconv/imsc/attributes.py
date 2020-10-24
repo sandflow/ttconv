@@ -48,7 +48,9 @@ class XMLIDAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(XMLIDAttribute.qn)
 
-
+  @staticmethod
+  def set(xml_element, model_value):
+    xml_element.set(XMLIDAttribute.qn, model_value)
 
 class XMLLangAttribute:
   '''xml:lang attribute
@@ -162,8 +164,7 @@ class ExtentAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(ExtentAttribute.qn, 
-    f"{res.width:.0f} {res.height:.0f}")
+    ttml_element.set(ExtentAttribute.qn, f"{res.width}px {res.height}px")
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>

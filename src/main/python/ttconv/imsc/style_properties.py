@@ -677,24 +677,29 @@ class StyleProperties:
     @classmethod
     def set(cls, xml_element, model_value: styles.TextDecorationType):
       
-      actual_values = []
+      if model_value == styles.SpecialValues.none:
+        attrib_value = "none"
+      else:
+        actual_values = []
 
-      if model_value.underline == styles.TextDecorationType.Action.add:
-        actual_values.append("underline")
-      elif model_value.underline == styles.TextDecorationType.Action.remove:
-        actual_values.append("noUnderline")
+        if model_value.underline == styles.TextDecorationType.Action.add:
+          actual_values.append("underline")
+        elif model_value.underline == styles.TextDecorationType.Action.remove:
+          actual_values.append("noUnderline")
 
-      if model_value.line_through == styles.TextDecorationType.Action.add:
-        actual_values.append("lineThrough")
-      elif model_value.line_through == styles.TextDecorationType.Action.remove:
-        actual_values.append("noLineThrough")
+        if model_value.line_through == styles.TextDecorationType.Action.add:
+          actual_values.append("lineThrough")
+        elif model_value.line_through == styles.TextDecorationType.Action.remove:
+          actual_values.append("noLineThrough")
 
-      if model_value.overline == styles.TextDecorationType.Action.add:
-        actual_values.append("overline")
-      elif model_value.overline == styles.TextDecorationType.Action.remove:
-        actual_values.append("noOverline")
+        if model_value.overline == styles.TextDecorationType.Action.add:
+          actual_values.append("overline")
+        elif model_value.overline == styles.TextDecorationType.Action.remove:
+          actual_values.append("noOverline")
 
-      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", " ".join(actual_values))
+        attrib_value = " ".join(actual_values)
+
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib_value)
 
 
   class TextEmphasis(StyleProperty):
@@ -981,6 +986,11 @@ class StyleProperties:
 
   BY_QNAME = {
     f"{{{v.ns}}}{v.local_name}" : v
+    for n, v in list(locals().items()) if inspect.isclass(v)
+    }
+
+  BY_MODEL_PROP = {
+    v.model_prop : v
     for n, v in list(locals().items()) if inspect.isclass(v)
     }
 
