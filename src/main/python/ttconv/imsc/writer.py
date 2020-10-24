@@ -28,6 +28,7 @@
 import logging
 import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.namespaces as xml_ns
+import ttconv.model as model
 import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
@@ -36,14 +37,8 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-def from_model(model):
+def from_model(model_doc: model.Document):
   '''Converts the data model to an IMSC document'''
-
-  class _Context:
-    def __init__(self):
-      self.imsc_doc = None
-
-  context = _Context()
 
   et.register_namespace("ttml", xml_ns.TTML)
   et.register_namespace("ttp", xml_ns.TTP)
@@ -51,8 +46,6 @@ def from_model(model):
   et.register_namespace("ittp", xml_ns.ITTP)
   et.register_namespace("itts", xml_ns.ITTS)
     
-  context.imsc_doc = et.Element("tt")
-
-  imsc_elements.TTElement.from_model(model, context)
-
-  return et.ElementTree(context.imsc_doc)
+  return et.ElementTree(
+      imsc_elements.TTElement.from_model(model_doc)
+    )

@@ -984,6 +984,11 @@ class StyleProperties:
     for n, v in list(locals().items()) if inspect.isclass(v)
     }
 
+  BY_MODEL_PROP = {
+    v.model_prop : v
+    for n, v in list(locals().items()) if inspect.isclass(v)
+    }
+
   @classmethod
   def ttml_length_to_model(cls, _context: StyleParsingContext, xml_attrib: str):
     (value, units) = utils.parse_length(xml_attrib)
