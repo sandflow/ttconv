@@ -133,7 +133,7 @@ class CellResolutionAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows:.0f}px {res.columns:.0f}px")
+    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows}px {res.columns}px")
 
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
@@ -209,7 +209,7 @@ class ActiveAreaAttribute:
   @staticmethod
   def set(ttml_element, activeArea):
     ttml_element.set(ActiveAreaAttribute.qn, 
-      f"{(activeArea.left_offset * 100):.0f}% {(activeArea.top_offset * 100):.0f}% {(activeArea.width * 100):.0f}% {activeArea.height * 100:.0f}%")
+      f"{(activeArea.left_offset * 100)}% {(activeArea.top_offset * 100)}% {(activeArea.width * 100)}% {activeArea.height * 100}%")
 
 class TickRateAttribute:
   '''ttp:tickRate attribute

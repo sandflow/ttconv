@@ -188,7 +188,7 @@ class StyleProperties:
     @classmethod
     def set(cls, xml_element, model_value):
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
-      f"{model_value.height.value:.0f}{model_value.height.units.value} {model_value.width.value:.0f}{model_value.width.units.value}")
+      f"{model_value.height.value}{model_value.height.units.value} {model_value.width.value}{model_value.width.units.value}")
 
 
   class FillLineGap(StyleProperty):
@@ -405,7 +405,7 @@ class StyleProperties:
     @classmethod
     def set(cls, xml_element, model_value):
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
-      f"{model_value.x.value:.0f}{model_value.x.units.value} {model_value.y.value:.0f}{model_value.y.units.value}")
+      f"{model_value.x.value}{model_value.x.units.value} {model_value.y.value}{model_value.y.units.value}")
 
 
   class Overflow(StyleProperty):
