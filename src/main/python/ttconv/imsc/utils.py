@@ -187,16 +187,19 @@ def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) 
 
   raise ValueError("Syntax error")
 
-def parse_position(attr_value: str) -> typing.Tuple[styles.PositionType.HorizontalEdge, styles.LengthType, styles.PositionType.VerticalEdge, styles.LengthType]:
+def parse_position(attr_value: str) -> typing.Tuple[str, styles.LengthType, str, styles.LengthType]:
   '''Parse a TTML \\<position\\> value into offsets from a horizontal and vertical edge
   '''
 
   length_50pct = styles.LengthType(value=50, units=styles.LengthType.Units.pct)
   length_0pct = styles.LengthType(value=0, units=styles.LengthType.Units.pct)
 
-  h_edge: styles.PositionType.HorizontalEdge = None
+  h_edges = {"left", "right"}
+  v_edges = {"top", "bottom"}
+
+  h_edge: str = None
   h_offset: styles.LengthType = None
-  v_edge: styles.PositionType.VerticalEdge = None
+  v_edge: str = None
   v_offset: styles.LengthType = None
 
   items = attr_value.split()
@@ -209,26 +212,26 @@ def parse_position(attr_value: str) -> typing.Tuple[styles.PositionType.Horizont
 
       cur_item = items.pop(0)
 
-      if cur_item in styles.PositionType.HorizontalEdge.__members__:
+      if cur_item in h_edges:
 
-        h_edge = styles.PositionType.HorizontalEdge[cur_item]
+        h_edge = cur_item
         h_offset = length_0pct
 
-      elif cur_item in styles.PositionType.VerticalEdge.__members__:
+      elif cur_item in v_edges:
 
-        v_edge = styles.PositionType.VerticalEdge[cur_item]
+        v_edge = cur_item
         v_offset = length_0pct
 
       elif cur_item == "center":
 
         if h_edge is None:
 
-          h_edge = styles.PositionType.HorizontalEdge.left
+          h_edge = "left"
           h_offset = length_50pct
 
         elif v_edge is None:
 
-          v_edge = styles.PositionType.VerticalEdge.top
+          v_edge = "top"
           v_offset = length_50pct
 
       else:
@@ -237,12 +240,12 @@ def parse_position(attr_value: str) -> typing.Tuple[styles.PositionType.Horizont
 
         if h_edge is None:
 
-          h_edge = styles.PositionType.HorizontalEdge.left
+          h_edge = "left"
           h_offset = styles.LengthType(value, styles.LengthType.Units(units))
 
         elif v_edge is None:
 
-          v_edge = styles.PositionType.VerticalEdge.top
+          v_edge = "top"
           v_offset = styles.LengthType(value, styles.LengthType.Units(units))
     
     # end processing 1 and 2 components
@@ -255,16 +258,16 @@ def parse_position(attr_value: str) -> typing.Tuple[styles.PositionType.Horizont
 
       cur_item = items.pop(0)
 
-      if cur_item in styles.PositionType.HorizontalEdge.__members__:
+      if cur_item in h_edges:
 
-        h_edge = styles.PositionType.HorizontalEdge[cur_item]
+        h_edge = cur_item
 
         if v_edge is not None and v_offset is None:
           v_offset = length_0pct
 
-      elif cur_item in styles.PositionType.VerticalEdge.__members__:
+      elif cur_item in v_edges:
 
-        v_edge = styles.PositionType.VerticalEdge[cur_item]
+        v_edge = cur_item
 
         if h_edge is not None and h_offset is None:
           h_offset = length_0pct
@@ -292,7 +295,7 @@ def parse_position(attr_value: str) -> typing.Tuple[styles.PositionType.Horizont
   if h_offset is None:
 
     if h_edge is None:
-      h_edge = styles.PositionType.HorizontalEdge.left
+      h_edge = "left"
       h_offset = length_50pct
     else:
       h_offset = length_0pct
@@ -300,7 +303,7 @@ def parse_position(attr_value: str) -> typing.Tuple[styles.PositionType.Horizont
   if v_offset is None:
 
     if v_edge is None:
-      v_edge = styles.PositionType.VerticalEdge.top
+      v_edge = "top"
       v_offset = length_50pct
     else:
       v_offset = length_0pct

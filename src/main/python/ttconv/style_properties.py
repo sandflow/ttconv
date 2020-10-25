@@ -317,30 +317,11 @@ class WritingModeType(Enum):
 
 @dataclass(frozen=True)
 class PositionType:
-  '''Coordinates (`x`, `y`) in the root container region, as measure from an
-  horizontal and vertical edge, respectives.
-  * If `h_edge` is equal to `HorizontalEdge.left`, then `x` is a positive distance from the left edge
-  * If `h_edge` is equal to `HorizontalEdge.right`, then `x` is a positive distance from the right edge
-  * If `v_edge` is equal to `VerticalEdge.top`, then `y` is a positive distance from the top edge
-  * If `v_edge` is equal to `VerticalEdge.bottom`, then `y` is a positive distance from the bottom edge
+  '''Coordinates (`x`, `y`) in the root container region, as measure from the left and top edges, respectively.
   '''
-  
-  class HorizontalEdge(Enum):
-    '''One of the horizontal edges of the root container
-    '''
-    left = "left"
-    right = "right"
-
-  class VerticalEdge(Enum):
-    '''One of the vertical edges of the root container
-    '''
-    top = "top"
-    bottom = "bottom"
-
   x: LengthType
   y: LengthType
-  h_edge: HorizontalEdge = HorizontalEdge.left
-  v_edge: VerticalEdge = VerticalEdge.top
+
 
 #
 # Style properties

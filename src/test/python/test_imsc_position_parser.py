@@ -33,9 +33,9 @@ import ttconv.style_properties as styles
 
 def position(h_edge, h_offval, h_offunit, v_edge, v_offval, v_offunit):
   return (
-    styles.PositionType.HorizontalEdge[h_edge],
+    h_edge,
     styles.LengthType(value=h_offval, units=styles.LengthType.Units(h_offunit)),
-    styles.PositionType.VerticalEdge[v_edge],
+    v_edge,
     styles.LengthType(value=v_offval, units=styles.LengthType.Units(v_offunit))
   )
 
