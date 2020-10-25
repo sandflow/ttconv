@@ -415,7 +415,7 @@ class StylingElement(TTMLElement):
 
     for style_prop, style_value in model_doc.iter_initial_values():
       if styling_element is None:
-          styling_element = et.Element(StylingElement.qn)
+        styling_element = et.Element(StylingElement.qn)
  
       imsc_style_prop = imsc_styles.StyleProperties.BY_MODEL_PROP.get(style_prop)
 
