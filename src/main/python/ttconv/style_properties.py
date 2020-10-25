@@ -317,11 +317,30 @@ class WritingModeType(Enum):
 
 @dataclass(frozen=True)
 class PositionType:
-  '''Coordinates in the root container region
+  '''Coordinates (`x`, `y`) in the root container region, as measure from an
+  horizontal and vertical edge, respectives.
+  * If `h_edge` is equal to `HorizontalEdge.left`, then `x` is a positive distance from the left edge
+  * If `h_edge` is equal to `HorizontalEdge.right`, then `x` is a positive distance from the right edge
+  * If `v_edge` is equal to `VerticalEdge.top`, then `y` is a positive distance from the top edge
+  * If `v_edge` is equal to `VerticalEdge.bottom`, then `y` is a positive distance from the bottom edge
   '''
+  
+  class HorizontalEdge(Enum):
+    '''One of the horizontal edges of the root container
+    '''
+    left = "left"
+    right = "right"
 
-  x: LengthType = None
-  y: LengthType = None
+  class VerticalEdge(Enum):
+    '''One of the vertical edges of the root container
+    '''
+    top = "top"
+    bottom = "bottom"
+
+  x: LengthType
+  y: LengthType
+  h_edge: HorizontalEdge = HorizontalEdge.left
+  v_edge: VerticalEdge = VerticalEdge.top
 
 #
 # Style properties
@@ -618,8 +637,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
-        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c)
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
 
 
   class Overflow(StyleProperty):

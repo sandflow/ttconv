@@ -366,9 +366,13 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
 
+      (h_edge, h_offset, v_edge, v_offset) = utils.parse_position(xml_attrib)
+
       return styles.PositionType(
-        x=styles.LengthType(),
-        y=styles.LengthType()
+        x=h_offset,
+        y=v_offset,
+        h_edge=h_edge,
+        v_edge=v_edge
       )
 
   class RubyAlign(StyleProperty):
