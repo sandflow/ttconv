@@ -85,7 +85,7 @@ class ReaderWriterTest(unittest.TestCase):
     tree_from_model = imsc_writer.from_model(test_model)
 
     # write the document out to a file
-    self.write_pretty_xml(tree_from_model, 'build/Animation001.ttml')
+    self.write_pretty_xml(tree_from_model, 'build/out.ttml')
 
   def test_imsc_1_test_suite(self):
     if not os.path.exists('build/imsc1'):
@@ -251,7 +251,7 @@ class StylePropertyWriterTest(unittest.TestCase):
           position=styles.TextEmphasisType.Position.after
         )
       ),
-      "filled #ff0000ff after"
+      "filled #ff0000 after"
     )
 
   def test_tts_text_outline(self):
@@ -273,7 +273,7 @@ class StylePropertyWriterTest(unittest.TestCase):
         imsc_styles.StyleProperties.TextOutline,
         to2
         ),
-      "#ff0000ff 5%"
+      "#ff0000 5%"
     )
 
   def test_tts_text_shadow(self):
@@ -300,12 +300,18 @@ class StylePropertyWriterTest(unittest.TestCase):
         )
       )
     )
+
+    teststr =  _get_set_style(
+        imsc_styles.StyleProperties.TextShadow,
+        ts2
+        )
+
     self.assertEqual(
       _get_set_style(
         imsc_styles.StyleProperties.TextShadow,
         ts2
         ),
-      "1em 1.2em, 0.5em 0.7em 1em #ff0000ff"
+      "1em 1.2em, 0.5em 0.7em 1em #ff0000"
     )
 
   def test_tts_unicode_bidi(self):

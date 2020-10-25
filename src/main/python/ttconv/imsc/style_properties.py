@@ -1003,10 +1003,13 @@ class StyleProperties:
   @staticmethod
   def to_ttml_color(model_value: styles.ColorType):
     assert model_value.ident == styles.ColorType.Colorimetry.RGBA8
-    return f"#{model_value.components[0]:02x}" \
-            f"{model_value.components[1]:02x}"  \
-            f"{model_value.components[2]:02x}" \
-            f"{model_value.components[3]:02x}"
+    color_str = f"#{model_value.components[0]:02x}" \
+                 f"{model_value.components[1]:02x}"  \
+                 f"{model_value.components[2]:02x}"
+    if not model_value.components[3] & 0xFF:
+       color_str = f"{color_str}{model_value.components[3]:02x}"
+    
+    return color_str
 
   @staticmethod
   def to_ttml_length(model_value: styles.LengthType):
