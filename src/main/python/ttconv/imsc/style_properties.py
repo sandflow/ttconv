@@ -52,6 +52,7 @@ class StyleProperties:
   Class variables:
   
   `BY_QNAME`: mapping of qualified name to StyleProperty class
+  `BY_MODEL_PROP`: mapping of model style property classes to StyleProperty classes
   '''
 
   class BackgroundColor(StyleProperty):
@@ -493,7 +494,6 @@ class StyleProperties:
 
     @classmethod
     def set(cls, xml_element, model_value):
-      # TODO: the data model does not support tts:position
       pass
 
 
@@ -987,13 +987,13 @@ class StyleProperties:
 
 
   BY_QNAME = {
-    f"{{{v.ns}}}{v.local_name}" : v
-    for n, v in list(locals().items()) if inspect.isclass(v)
+    f"{{{style_prop.ns}}}{style_prop.local_name}" : style_prop
+    for style_name, style_prop in list(locals().items()) if inspect.isclass(style_prop)
     }
 
   BY_MODEL_PROP = {
-    v.model_prop : v
-    for n, v in list(locals().items()) if inspect.isclass(v)
+    style_prop.model_prop : style_prop
+    for style_name, style_prop in list(locals().items()) if inspect.isclass(style_prop)
     }
 
   @classmethod
@@ -1009,7 +1009,7 @@ class StyleProperties:
                  f"{model_value.components[1]:02x}"  \
                  f"{model_value.components[2]:02x}"
     if not model_value.components[3] & 0xFF:
-       color_str = f"{color_str}{model_value.components[3]:02x}"
+      color_str = f"{color_str}{model_value.components[3]:02x}"
     
     return color_str
 

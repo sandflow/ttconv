@@ -301,11 +301,6 @@ class StylePropertyWriterTest(unittest.TestCase):
       )
     )
 
-    teststr =  _get_set_style(
-        imsc_styles.StyleProperties.TextShadow,
-        ts2
-        )
-
     self.assertEqual(
       _get_set_style(
         imsc_styles.StyleProperties.TextShadow,
