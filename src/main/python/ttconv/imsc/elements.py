@@ -789,7 +789,7 @@ class ContentElement(TTMLElement):
   def from_model_style_properties(model_content_element, element):
     '''Write TTML style properties from the model'''
 
-    for imsc_prop, model_prop in StyleProperties.BY_MODEL_PROP.items():
+    for model_prop, imsc_prop in StyleProperties.BY_MODEL_PROP.items():
       value = model_content_element.get_style(model_prop)
       if value is not None:
         imsc_prop.set(element, value)
