@@ -30,7 +30,7 @@
 import unittest
 
 from ttconv.model import Br, P, ContentElement
-from ttconv.scc.scc_reader import SccWord, SccLine, to_model
+from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType
@@ -570,10 +570,12 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:26", "consectetur ", "adipiscing", " elit.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ", "sollicitudin.")
+    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ",
+                       "sollicitudin.")
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ", "sagittis.")
+    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
+                       "sagittis.")
     self.assertEqual(region_2, p_list[3].get_region())
 
 
