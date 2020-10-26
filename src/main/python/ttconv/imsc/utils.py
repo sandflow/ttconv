@@ -186,3 +186,128 @@ def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) 
             frames / frame_rate
 
   raise ValueError("Syntax error")
+
+def parse_position(attr_value: str) -> typing.Tuple[str, styles.LengthType, str, styles.LengthType]:
+  '''Parse a TTML \\<position\\> value into offsets from a horizontal and vertical edge
+  '''
+
+  length_50pct = styles.LengthType(value=50, units=styles.LengthType.Units.pct)
+  length_0pct = styles.LengthType(value=0, units=styles.LengthType.Units.pct)
+
+  h_edges = {"left", "right"}
+  v_edges = {"top", "bottom"}
+
+  h_edge: str = None
+  h_offset: styles.LengthType = None
+  v_edge: str = None
+  v_offset: styles.LengthType = None
+
+  items = attr_value.split()
+
+  if len(items) in (1, 2):
+
+    # begin processing 1 and 2 components
+
+    while len(items) > 0:
+
+      cur_item = items.pop(0)
+
+      if cur_item in h_edges:
+
+        h_edge = cur_item
+        h_offset = length_0pct
+
+      elif cur_item in v_edges:
+
+        v_edge = cur_item
+        v_offset = length_0pct
+
+      elif cur_item == "center":
+
+        if h_edge is None:
+
+          h_edge = "left"
+          h_offset = length_50pct
+
+        elif v_edge is None:
+
+          v_edge = "top"
+          v_offset = length_50pct
+
+      else:
+
+        (value, units) = parse_length(cur_item)
+
+        if h_edge is None:
+
+          h_edge = "left"
+          h_offset = styles.LengthType(value, styles.LengthType.Units(units))
+
+        elif v_edge is None:
+
+          v_edge = "top"
+          v_offset = styles.LengthType(value, styles.LengthType.Units(units))
+    
+    # end processing 1 and 2 components
+
+  else:
+
+    # begin processing 3 and 4 components
+
+    while len(items) > 0:
+
+      cur_item = items.pop(0)
+
+      if cur_item in h_edges:
+
+        h_edge = cur_item
+
+        if v_edge is not None and v_offset is None:
+          v_offset = length_0pct
+
+      elif cur_item in v_edges:
+
+        v_edge = cur_item
+
+        if h_edge is not None and h_offset is None:
+          h_offset = length_0pct
+
+      elif cur_item == "center":
+
+        pass
+
+      else:
+
+        (value, units) = parse_length(cur_item)
+
+        if h_edge is not None and h_offset is None:
+
+          h_offset = styles.LengthType(value, styles.LengthType.Units(units))
+
+        if v_edge is not None and v_offset is None:
+
+          v_offset = styles.LengthType(value, styles.LengthType.Units(units))
+    
+    # end processing 3 and 4 components
+
+  # fill-in missing components, if any
+
+  if h_offset is None:
+
+    if h_edge is None:
+      h_edge = "left"
+      h_offset = length_50pct
+    else:
+      h_offset = length_0pct
+
+  if v_offset is None:
+
+    if v_edge is None:
+      v_edge = "top"
+      v_offset = length_50pct
+    else:
+      v_offset = length_0pct
+
+
+  return (h_edge, h_offset, v_edge, v_offset)
+  

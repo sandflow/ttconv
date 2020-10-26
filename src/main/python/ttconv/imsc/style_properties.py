@@ -31,9 +31,10 @@ import typing
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.style_properties as styles
 import ttconv.imsc.utils as utils
+import ttconv.model as model
 
 class StyleParsingContext:
-  pass
+  doc: model.Document
 
 class StyleProperty:
   '''Base class for style properties'''
@@ -486,9 +487,27 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
 
+      (h_edge, h_offset, v_edge, v_offset) = utils.parse_position(xml_attrib)
+
+      if h_edge == "right":
+        if h_offset.units is styles.LengthType.Units.px:
+          h_offset = styles.LengthType(context.doc.get_px_resolution().width - h_offset.value, h_offset.units)
+        elif h_offset.units is styles.LengthType.Units.pct or h_offset.units is styles.LengthType.Units.rw:
+          h_offset = styles.LengthType(100 - h_offset.value, h_offset.units)
+        else:
+          raise ValueError("Units other than px, pct, rh, rw used in tts:position")
+
+      if v_edge == "bottom":
+        if v_offset.units is styles.LengthType.Units.px:
+          v_offset = styles.LengthType(context.doc.get_px_resolution().height - v_offset.value, v_offset.units)
+        elif v_offset.units is styles.LengthType.Units.pct or v_offset.units is styles.LengthType.Units.rh:
+          v_offset = styles.LengthType(100 - v_offset.value, v_offset.units)
+        else:
+          raise ValueError("Units other than px, pct, rh, rw used in tts:position")
+
       return styles.PositionType(
-        x=styles.LengthType(),
-        y=styles.LengthType()
+        x=h_offset,
+        y=v_offset
       )
 
     @classmethod

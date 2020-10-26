@@ -43,14 +43,12 @@ class TTMLElement:
   '''Static information about a TTML element
   '''
 
-  class ParsingContext:
+  class ParsingContext(imsc_styles.StyleParsingContext):
     '''State information when parsing a TTML element'''
 
     def __init__(self, ttml_class: TTMLElement, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
 
       self.doc = parent_ctx.doc if parent_ctx is not None else model.Document()
-
-      self.style_context = parent_ctx.style_context if parent_ctx else imsc_styles.StyleParsingContext()
 
       self.style_elements: typing.Dict[str, StyleElement] = parent_ctx.style_elements if parent_ctx else {}
 
@@ -463,7 +461,7 @@ class StyleElement(TTMLElement):
 
       try:
 
-        style_ctx.styles[prop.model_prop] = prop.extract(style_ctx.style_context, xml_elem.attrib.get(attr))
+        style_ctx.styles[prop.model_prop] = prop.extract(style_ctx, xml_elem.attrib.get(attr))
 
       except ValueError:
 
@@ -526,7 +524,7 @@ class InitialElement(TTMLElement):
 
         initial_ctx.doc.put_initial_value(
           prop.model_prop,
-          prop.extract(initial_ctx.style_context, xml_elem.attrib.get(attr))
+          prop.extract(initial_ctx, xml_elem.attrib.get(attr))
         )
 
       except (ValueError, TypeError):
@@ -608,7 +606,7 @@ class ContentElement(TTMLElement):
         try:
           self.model_element.set_style(
             prop.model_prop,
-            prop.extract(self.style_context, xml_elem.attrib.get(attr))
+            prop.extract(self, xml_elem.attrib.get(attr))
             )
         except ValueError:
           LOGGER.error("Error reading style property: %s", prop.__name__)
@@ -633,7 +631,7 @@ class ContentElement(TTMLElement):
                 prop.model_prop,
                 self.desired_begin,
                 self.desired_end,
-                prop.extract(self.style_context, xml_elem.attrib.get(attr))
+                prop.extract(self, xml_elem.attrib.get(attr))
               )
             )
             break

@@ -317,11 +317,11 @@ class WritingModeType(Enum):
 
 @dataclass(frozen=True)
 class PositionType:
-  '''Coordinates in the root container region
+  '''Coordinates (`x`, `y`) in the root container region, as measure from the left and top edges, respectively.
   '''
+  x: LengthType
+  y: LengthType
 
-  x: LengthType = None
-  y: LengthType = None
 
 #
 # Style properties
@@ -618,8 +618,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
-        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c)
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
 
 
   class Overflow(StyleProperty):
