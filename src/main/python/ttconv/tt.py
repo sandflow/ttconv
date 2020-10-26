@@ -98,16 +98,17 @@ def convert(args):
   #
   # Pass the parsed xml to the reader
   #
-  _model = imsc_reader.to_model(tree)
+  model = imsc_reader.to_model(tree)
 
   #
   # Construct and configure the writer
   #
-  writer = imsc_writer.Writer()
+  tree_from_model = imsc_writer.from_model(model)
 
-  #writer.from_model(_model)
-  writer.from_xml(inputfile)
-  writer.write(outputfile)
+  #
+  # Write out the converted file
+  #
+  tree_from_model.write(outputfile)
 
 
 @subcommand([argument("-i", "--input", help="Input file path", required=True)])

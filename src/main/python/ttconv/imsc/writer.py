@@ -26,6 +26,9 @@
 '''IMSC writer'''
 
 import logging
+import ttconv.imsc.elements as imsc_elements
+import ttconv.imsc.namespaces as xml_ns
+import ttconv.model as model
 import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
@@ -34,24 +37,15 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-class Writer:
-  '''IMSC Writer'''
+def from_model(model_doc: model.Document):
+  '''Converts the data model to an IMSC document'''
 
-  def __init__(self):
-    self.doc = None
-    self.model = None
-
-  def from_xml(self, ixml):
-    '''Converts the data model to the imsc'''
-
-    self.doc = et.parse(ixml)
-
-  def from_model(self, i_model):
-    '''Converts the data model to the imsc'''
-
-    self.model = i_model
-
-  def write(self, output_file):
-    '''Writes the imsc file'''
+  et.register_namespace("ttml", xml_ns.TTML)
+  et.register_namespace("ttp", xml_ns.TTP)
+  et.register_namespace("tts", xml_ns.TTS)
+  et.register_namespace("ittp", xml_ns.ITTP)
+  et.register_namespace("itts", xml_ns.ITTS)
     
-    self.doc.write(output_file)
+  return et.ElementTree(
+    imsc_elements.TTElement.from_model(model_doc)
+    )
