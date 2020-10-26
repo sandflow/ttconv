@@ -34,6 +34,7 @@ from enum import Enum
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
+#import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,9 @@ class XMLIDAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(XMLIDAttribute.qn)
 
-
+  @staticmethod
+  def set(xml_element, model_value):
+    xml_element.set(XMLIDAttribute.qn, model_value)
 
 class XMLLangAttribute:
   '''xml:lang attribute
@@ -59,7 +62,9 @@ class XMLLangAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(XMLLangAttribute.qn)
 
-
+  @staticmethod
+  def set(ttml_element, lang):
+    ttml_element.set(XMLLangAttribute.qn, lang)
 
 class XMLSpaceAttribute:
   '''xml:space attribute
@@ -94,13 +99,16 @@ class RegionAttribute:
   def extract(ttml_element):
     return ttml_element.attrib.get(RegionAttribute.qn)
 
+  @staticmethod
+  def set(ttml_element, res):
+    ttml_element.set(RegionAttribute.qn, res)
 
 
 class CellResolutionAttribute:
   '''ttp:cellResolution attribute
   '''
 
-  qn = f"{ns.TTP}cellResolution"
+  qn = f"{{{ns.TTP}}}cellResolution"
 
   _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
 
@@ -123,6 +131,9 @@ class CellResolutionAttribute:
 
     return model.CellResolutionType(rows=15, columns=32)
 
+  @staticmethod
+  def set(ttml_element, res):
+    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows}px {res.columns}px")
 
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>
@@ -151,6 +162,9 @@ class ExtentAttribute:
 
     return None
 
+  @staticmethod
+  def set(ttml_element, res):
+    ttml_element.set(ExtentAttribute.qn, f"{res.width}px {res.height}px")
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
@@ -192,6 +206,10 @@ class ActiveAreaAttribute:
 
     return None
 
+  @staticmethod
+  def set(ttml_element, activeArea):
+    ttml_element.set(ActiveAreaAttribute.qn, 
+      f"{(activeArea.left_offset * 100)}% {(activeArea.top_offset * 100)}% {(activeArea.width * 100)}% {activeArea.height * 100}%")
 
 class TickRateAttribute:
   '''ttp:tickRate attribute
@@ -297,6 +315,11 @@ class BeginAttribute:
 
       return None
 
+  @staticmethod
+  def set(ttml_element, begin):
+    value = begin.numerator / begin.denominator
+    ttml_element.set(BeginAttribute.qn, f"{value}s")
+
 
 class EndAttribute:
   '''end attributes
@@ -320,6 +343,11 @@ class EndAttribute:
 
       return None
 
+  @staticmethod
+  def set(ttml_element, end):
+    value = end.numerator / end.denominator
+    ttml_element.set(EndAttribute.qn, f"{value}s")
+
 class DurAttribute:
   '''dur attributes
   '''
@@ -339,6 +367,11 @@ class DurAttribute:
       LOGGER.error("bad dur value")
 
       return None
+
+  @staticmethod
+  def set(ttml_element, dur):
+    ttml_element.set(DurAttribute.qn, dur)
+
 
 class TimeContainer(Enum):
   par = "par"

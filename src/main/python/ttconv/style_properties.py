@@ -266,8 +266,8 @@ class TextOutlineType:
   '''TTML \\<text-outline\\>
   '''
 
+  thickness: LengthType
   color: ColorType = None
-  thickness: LengthType = None
 
 
 @dataclass(frozen=True)
@@ -279,10 +279,10 @@ class TextShadowType:
   class Shadow:
     x_offset: LengthType
     y_offset: LengthType
-    blur_radius: LengthType
-    color: ColorType
+    blur_radius: typing.Optional[LengthType] = None
+    color: typing.Optional[ColorType] = None
 
-  shadows: typing.List[TextShadowType.Shadow]
+  shadows: typing.Tuple[TextShadowType.Shadow]
 
 
 class UnicodeBidiType(Enum):

@@ -42,6 +42,10 @@ class StyleProperty:
   def extract(cls, context: StyleParsingContext, xml_attrib: str):
     '''Converts an IMSC style property to a data model value'''
 
+  @classmethod
+  def set(cls, xml_element, model_value):
+    '''Converts an data model value to an IMSC style property'''
+
 class StyleProperties:
   '''TTML style properties
 
@@ -61,6 +65,13 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return utils.parse_color(xml_attrib)
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.ColorType):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        StyleProperties.to_ttml_color(model_value)
+      )
+
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''
 
@@ -72,6 +83,12 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return utils.parse_color(xml_attrib)
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        StyleProperties.to_ttml_color(model_value)
+      )
 
   class Direction(StyleProperty):
     '''Corresponds to tts:direction.'''
@@ -83,6 +100,10 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.DirectionType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class Disparity(StyleProperty):
@@ -96,6 +117,13 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return StyleProperties.ttml_length_to_model(context, xml_attrib)
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.LengthType):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        StyleProperties.to_ttml_length(model_value)
+      )
       
       
   class Display(StyleProperty):
@@ -109,6 +137,10 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.DisplayType[xml_attrib]
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.DisplayType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class DisplayAlign(StyleProperty):
     '''Corresponds to tts:displayAlign.'''
@@ -120,6 +152,11 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.DisplayAlignType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.DisplayAlignType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class Extent(StyleProperty):
     '''Corresponds to tts:extent.
@@ -148,6 +185,11 @@ class StyleProperties:
         width=StyleProperties.ttml_length_to_model(context, s[0])
       )
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
+      f"{model_value.height.value}{model_value.height.units.value} {model_value.width.value}{model_value.width.units.value}")
+
 
   class FillLineGap(StyleProperty):
     '''Corresponds to itts:fillLineGap.'''
@@ -159,6 +201,11 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return xml_attrib == "true"
+
+    @classmethod
+    def set(cls, xml_element, model_value: bool):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value else "false")
+
 
   class FontFamily(StyleProperty):
     '''Corresponds to tts:fontFamily.'''
@@ -175,6 +222,11 @@ class StyleProperties:
         utils.parse_font_families(xml_attrib)
       ))
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value[0])
+
+
   class FontSize(StyleProperty):
     '''Corresponds to tts:fontSize.'''
 
@@ -185,6 +237,13 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return StyleProperties.ttml_length_to_model(context, xml_attrib)
+
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}", 
+        StyleProperties.to_ttml_length(model_value)
+      )
 
 
   class FontStyle(StyleProperty):
@@ -198,6 +257,10 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.FontStyleType[xml_attrib]
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.FontStyleType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class FontWeight(StyleProperty):
     '''Corresponds to tts:fontWeight.'''
@@ -209,6 +272,10 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.FontWeightType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.FontWeightType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class LineHeight(StyleProperty):
@@ -224,6 +291,16 @@ class StyleProperties:
         if xml_attrib == "normal" \
         else StyleProperties.ttml_length_to_model(context, xml_attrib)
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}", 
+        StyleProperties.to_ttml_length(model_value) \
+          if model_value is not styles.SpecialValues.normal \
+          else "normal"
+      )
+
+
   class LinePadding(StyleProperty):
     '''Corresponds to ebutts:linePadding.'''
 
@@ -238,6 +315,13 @@ class StyleProperties:
       if lp.units != styles.LengthType.Units.c:
         raise ValueError("ebutts:linePadding must be expressed in 'c'")
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.LengthType):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        StyleProperties.to_ttml_length(model_value)
+        )
+
 
   class LuminanceGain(StyleProperty):
     '''Corresponds to tts:luminanceGain.'''
@@ -249,6 +333,13 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return float(xml_attrib)
+
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        f"{model_value}"
+      )
 
 
   class MultiRowAlign(StyleProperty):
@@ -262,6 +353,10 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.MultiRowAlignType[xml_attrib]
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.MultiRowAlignType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class Opacity(StyleProperty):
     '''Corresponds to tts:opacity.'''
@@ -273,6 +368,10 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return float(xml_attrib)
+
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{model_value}")
 
 
   class Origin(StyleProperty):
@@ -305,6 +404,12 @@ class StyleProperties:
 
       return r
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", 
+      f"{model_value.x.value}{model_value.x.units.value} {model_value.y.value}{model_value.y.units.value}")
+
+
   class Overflow(StyleProperty):
     '''Corresponds to tts:overflow.'''
 
@@ -315,6 +420,10 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.OverflowType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.OverflowType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class Padding(StyleProperty):
@@ -356,6 +465,17 @@ class StyleProperties:
 
       return styles.PaddingType(before, end, after, start)
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.PaddingType):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        f"{StyleProperties.to_ttml_length(model_value.before)}"
+        f" {StyleProperties.to_ttml_length(model_value.end)}"
+        f" {StyleProperties.to_ttml_length(model_value.after)}"
+        f" {StyleProperties.to_ttml_length(model_value.start)}"
+      )
+
+
   class Position(StyleProperty):
     '''Corresponds to tts:position.'''
 
@@ -371,6 +491,12 @@ class StyleProperties:
         y=styles.LengthType()
       )
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      # TODO: the data model does not support tts:position
+      pass
+
+
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
 
@@ -381,6 +507,10 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.RubyAlignType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.RubyAlignType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class RubyPosition(StyleProperty):
@@ -393,6 +523,11 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.AnnotationPositionType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.AnnotationPositionType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class RubyReserve(StyleProperty):
     '''Corresponds to tts:rubyReserve.'''
@@ -418,6 +553,22 @@ class StyleProperties:
 
       return styles.RubyReserveType(rr_pos, rr_length)
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      if isinstance(model_value, styles.RubyReserveType):
+        value = model_value.position.value
+        if model_value.length is not None:
+          value += f" {StyleProperties.to_ttml_length(model_value.length)}"
+      elif model_value == styles.SpecialValues.none:
+        value = model_value.value
+      else:
+        raise TypeError
+
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        value
+      )
+
 
   class Shear(StyleProperty):
     '''Corresponds to tts:shear.'''
@@ -435,6 +586,10 @@ class StyleProperties:
         raise ValueError(r"tts:shear must be expressed in % units")
 
       return value if abs(value) <= 100 else math.copysign(100, value)
+
+    @classmethod
+    def set(cls, xml_element, model_value: float):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{model_value}%")
 
 
   class TextAlign(StyleProperty):
@@ -461,6 +616,11 @@ class StyleProperties:
 
       return r
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.TextAlignType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
+
   class TextCombine(StyleProperty):
     '''Corresponds to tts:textCombine.'''
 
@@ -471,6 +631,10 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.TextCombineType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.TextCombineType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class TextDecoration(StyleProperty):
@@ -511,6 +675,34 @@ class StyleProperties:
         line_through=line_through,
         overline=overline
       )
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.TextDecorationType):
+      
+      if model_value == styles.SpecialValues.none:
+        attrib_value = "none"
+      else:
+        actual_values = []
+
+        if model_value.underline == styles.TextDecorationType.Action.add:
+          actual_values.append("underline")
+        elif model_value.underline == styles.TextDecorationType.Action.remove:
+          actual_values.append("noUnderline")
+
+        if model_value.line_through == styles.TextDecorationType.Action.add:
+          actual_values.append("lineThrough")
+        elif model_value.line_through == styles.TextDecorationType.Action.remove:
+          actual_values.append("noLineThrough")
+
+        if model_value.overline == styles.TextDecorationType.Action.add:
+          actual_values.append("overline")
+        elif model_value.overline == styles.TextDecorationType.Action.remove:
+          actual_values.append("noOverline")
+
+        attrib_value = " ".join(actual_values)
+
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib_value)
+
 
   class TextEmphasis(StyleProperty):
     '''Corresponds to tts:textEmphasis.'''
@@ -566,7 +758,28 @@ class StyleProperties:
         position=position,
         symbol=symbol
       )
-        
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.TextEmphasisType):
+      actual_values = []
+
+      actual_values.append(model_value.style.value)
+
+      if model_value.symbol is not None:
+        actual_values.append(model_value.symbol.value)
+
+      if model_value.color is not None:
+        actual_values.append(StyleProperties.to_ttml_color(model_value.color))
+
+      if model_value.position is not None:
+        actual_values.append(model_value.position.value) 
+
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        " ".join(actual_values)
+      )
+
+
   class TextOutline(StyleProperty):
     '''Corresponds to tts:textOutline.'''
 
@@ -593,6 +806,25 @@ class StyleProperties:
         color=color,
         thickness=thickness
       )
+
+    @classmethod
+    def set(cls, xml_element, model_value):
+      if isinstance(model_value, styles.TextOutlineType):
+        values = []
+
+        if model_value.color is not None:
+          values.append(StyleProperties.to_ttml_color(model_value.color))
+
+        if model_value.thickness is not None:
+          values.append(StyleProperties.to_ttml_length(model_value.thickness))
+
+      elif model_value == styles.SpecialValues.none:
+        values = [model_value.value]
+      else:
+        raise TypeError
+      
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", " ".join(values))
+
 
   class TextShadow(StyleProperty):
     '''Corresponds to tts:textShadow.'''
@@ -649,6 +881,37 @@ class StyleProperties:
 
       return styles.TextShadowType(shadows)
 
+    @classmethod
+    def set(cls, xml_element, model_value):
+      if isinstance(model_value, styles.TextShadowType):
+        actual_values = []
+
+        for shadow in model_value.shadows:
+          value = f"{StyleProperties.to_ttml_length(shadow.x_offset)}" \
+                    f" {StyleProperties.to_ttml_length(shadow.y_offset)}"
+          
+          if shadow.blur_radius is not None:
+            value += f" {StyleProperties.to_ttml_length(shadow.blur_radius)}"
+
+          if shadow.color is not None:
+            value += f" {StyleProperties.to_ttml_color(shadow.color)}"
+
+          actual_values.append(value)
+
+      elif model_value == styles.SpecialValues.none:
+
+        actual_values = [model_value.value]
+
+      else:
+
+        raise TypeError
+
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        ", ".join(actual_values)
+      )
+
+
   class UnicodeBidi(StyleProperty):
     '''Corresponds to tts:unicodeBidi.'''
 
@@ -659,6 +922,11 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.UnicodeBidiType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.UnicodeBidiType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class Visibility(StyleProperty):
     '''Corresponds to tts:visibility.'''
@@ -671,6 +939,11 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.VisibilityType[xml_attrib]
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.VisibilityType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
+
   class WrapOption(StyleProperty):
     '''Corresponds to tts:wrapOption.'''
 
@@ -681,6 +954,11 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return styles.WrapOptionType[xml_attrib]
+
+    @classmethod
+    def set(cls, xml_element, model_value: styles.WrapOptionType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
 
   class WritingMode(StyleProperty):
     '''Corresponds to tts:writingMode.'''
@@ -703,8 +981,18 @@ class StyleProperties:
 
       return styles.WritingModeType[xml_attrib]
 
+    @classmethod
+    def set(cls, xml_element, model_value: styles.WritingModeType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
+
   BY_QNAME = {
     f"{{{v.ns}}}{v.local_name}" : v
+    for n, v in list(locals().items()) if inspect.isclass(v)
+    }
+
+  BY_MODEL_PROP = {
+    v.model_prop : v
     for n, v in list(locals().items()) if inspect.isclass(v)
     }
 
@@ -713,3 +1001,18 @@ class StyleProperties:
     (value, units) = utils.parse_length(xml_attrib)
 
     return styles.LengthType(value, styles.LengthType.Units(units))
+
+  @staticmethod
+  def to_ttml_color(model_value: styles.ColorType):
+    assert model_value.ident == styles.ColorType.Colorimetry.RGBA8
+    color_str = f"#{model_value.components[0]:02x}" \
+                 f"{model_value.components[1]:02x}"  \
+                 f"{model_value.components[2]:02x}"
+    if not model_value.components[3] & 0xFF:
+       color_str = f"{color_str}{model_value.components[3]:02x}"
+    
+    return color_str
+
+  @staticmethod
+  def to_ttml_length(model_value: styles.LengthType):
+    return f"{model_value.value}{model_value.units.value}"
