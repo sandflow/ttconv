@@ -295,7 +295,9 @@ class StyleProperties:
     def set(cls, xml_element, model_value):
       xml_element.set(
         f"{{{cls.ns}}}{cls.local_name}", 
-        StyleProperties.to_ttml_length(model_value)
+        StyleProperties.to_ttml_length(model_value) \
+          if model_value is not styles.SpecialValues.normal \
+          else "normal"
       )
 
 
