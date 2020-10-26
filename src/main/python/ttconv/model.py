@@ -820,22 +820,22 @@ class Document:
     self._initial_values = {}
     self._cell_resolution = CellResolutionType(rows=15, columns=32)
     self._px_resolution = PixelResolutionType(width=1920, height=1080)
-    self._active_area = ActiveAreaType(0, 0, 1, 1)
+    self._active_area = None
     self._dar = None
     self._lang = ""
 
   # active area
 
   def get_active_area(self) -> ActiveAreaType:
-    '''Returns the active area of the document, by default the entirety of the root container area.
+    '''Returns the active area of the document.
     '''
     return self._active_area
 
-  def set_active_area(self, active_area: ActiveAreaType):
-    '''Sets the cell resolution of the document.
+  def set_active_area(self, active_area: typing.Optional[ActiveAreaType]):
+    '''Sets the active area of the document, or clears it if `None` is passed.
     '''
-    if not isinstance(active_area, ActiveAreaType):
-      raise TypeError("Argument must be an instance of ActiveAreaType")
+    if not None and not isinstance(active_area, ActiveAreaType):
+      raise TypeError("Argument must be None or an instance of ActiveAreaType")
 
     self._active_area = active_area
 
