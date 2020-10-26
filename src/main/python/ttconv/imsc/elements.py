@@ -56,25 +56,25 @@ class TTMLElement:
 
       self.ttml_class: TTMLElement = ttml_class
 
-      self.lang = None
+      self.lang: str = None
 
-      self.space = None
+      self.space: typing.Optional[model.WhiteSpaceHandling] = None
 
       self.time_container: imsc_attr.TimeContainer = imsc_attr.TimeContainer.par
 
-      self.explicit_begin = None
+      self.explicit_begin: typing.Optional[Fraction] = None
 
-      self.implicit_begin = None
+      self.implicit_begin: typing.Optional[Fraction] = None
 
-      self.desired_begin = None
+      self.desired_begin: typing.Optional[Fraction] = None
 
-      self.explicit_end = None
+      self.explicit_end: typing.Optional[Fraction] = None
 
-      self.implicit_end = None
+      self.implicit_end: typing.Optional[Fraction] = None
 
-      self.desired_end = None
+      self.desired_end: typing.Optional[Fraction] = None
 
-      self.explicit_dur = None
+      self.explicit_dur: typing.Optional[Fraction] = None
 
     def process_lang_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       '''Processes the xml:lang attribute, including inheritance from the parent
@@ -120,6 +120,8 @@ class TTElement(TTMLElement):
 
     tt_ctx = TTElement.ParsingContext(TTElement)
 
+    # process attributes
+
     tt_ctx.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or model.WhiteSpaceHandling.DEFAULT
 
     lang_attr = imsc_attr.XMLLangAttribute.extract(xml_elem)
@@ -150,7 +152,7 @@ class TTElement(TTMLElement):
 
     tt_ctx.temporal_context.tick_rate = imsc_attr.TickRateAttribute.extract(xml_elem)
 
-    # process children elements elements
+    # process head and body children elements
 
     has_body = False
     has_head = False
@@ -235,11 +237,13 @@ class HeadElement(TTMLElement):
     
     head_ctx = HeadElement.ParsingContext(HeadElement, parent_ctx)
 
+    # process attributes
+
     head_ctx.process_lang_attribute(parent_ctx, xml_elem)
 
     head_ctx.process_space_attribute(parent_ctx, xml_elem)
 
-    # process children elements
+    # process layout and styling children elements
 
     has_layout = False
     has_styling = False
@@ -315,9 +319,13 @@ class LayoutElement(TTMLElement):
 
     layout_ctx = LayoutElement.ParsingContext(LayoutElement, parent_ctx)
 
+    # process attributes
+
     layout_ctx.process_lang_attribute(parent_ctx, xml_elem)
 
     layout_ctx.process_space_attribute(parent_ctx, xml_elem)
+
+    # process region elements
     
     for child_element in xml_elem:
 
@@ -356,7 +364,6 @@ class StylingElement(TTMLElement):
       '''Flattens Chained Referential Styling of the target `style_element` by specifying
       the style properties of the referenced style elements directly in the target element
       '''
-
       while len(style_element.style_refs) > 0:
 
         style_ref = style_element.style_refs.pop()
@@ -370,6 +377,7 @@ class StylingElement(TTMLElement):
         for style_prop, value in self.style_elements[style_ref].styles.items():
           style_element.styles.setdefault(style_prop, value)
 
+
   qn = f"{{{xml_ns.TTML}}}styling"
 
   @staticmethod
@@ -378,7 +386,10 @@ class StylingElement(TTMLElement):
 
   @staticmethod
   def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StylingElement.ParsingContext]:
+
     styling_ctx = StylingElement.ParsingContext(StylingElement, parent_ctx)
+
+    # process style and initial children elements
 
     for child_xml_elem in xml_elem:
 
@@ -399,7 +410,8 @@ class StylingElement(TTMLElement):
 
         style_element.style_elements[style_element.id] = style_element
       
-    # merge style elements
+    # merge style elements (the data model does not support referential
+    # styling)
 
     for style_element in parent_ctx.style_elements.values():
       styling_ctx.merge_chained_styles(style_element)
@@ -453,6 +465,8 @@ class StyleElement(TTMLElement):
     
     style_ctx = StyleElement.ParsingContext(parent_ctx)
 
+    # collect all specified style attributes
+
     for attr in xml_elem.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
 
@@ -467,10 +481,9 @@ class StyleElement(TTMLElement):
 
         LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    if issubclass(parent_ctx.ttml_class, RegionElement):
+    # merge nested style attributes if the parent is a region element
 
-      # nested styling
-      # merge style properties with the parent Region element
+    if issubclass(parent_ctx.ttml_class, RegionElement):
 
       for style_prop, value in style_ctx.styles.items():
         region_style = parent_ctx.model_element.get_style(style_prop)
@@ -480,7 +493,7 @@ class StyleElement(TTMLElement):
 
       return None
 
-    # styling > style element
+    # process other attributes
 
     style_ctx.style_refs = imsc_attr.StyleAttribute.extract(xml_elem)
 
@@ -512,6 +525,8 @@ class InitialElement(TTMLElement):
     
     initial_ctx = InitialElement.ParsingContext(InitialElement, parent_ctx)
 
+    # collect the specified style attributes
+
     for attr in xml_elem.attrib:
 
       prop = StyleProperties.BY_QNAME.get(attr)
@@ -521,6 +536,9 @@ class InitialElement(TTMLElement):
         continue
 
       try:
+
+        # set the initial value on the data model Document (the data model does have 
+        # a distinct <initial> element)
 
         initial_ctx.doc.put_initial_value(
           prop.model_prop,
@@ -658,7 +676,8 @@ class ContentElement(TTMLElement):
       if self.ttml_class.has_region:
         self.process_region_property(xml_elem)
 
-      # temporal processing
+      # temporal processing. Sequential time containers are converted to parallel time containers since the data model does not
+      # support the former.
 
       self.time_container = imsc_attr.TimeContainerAttribute.extract(xml_elem)
 
@@ -677,19 +696,25 @@ class ContentElement(TTMLElement):
 
       if issubclass(self.ttml_class, (BrElement, RegionElement, SetElement)) and \
         parent_ctx.time_container.is_par():
+        # br, region and set elements have indefinite duration in parallel time containers
+
         self.implicit_end = None
       else:
         self.implicit_end = self.desired_begin
         
-      # process children elements
+      # process text nodes
 
       if self.ttml_class.is_mixed and xml_elem.text is not None and self.time_container.is_par():
         self.children.append(ContentElement.make_anonymous_span(self.doc, self.model_element, xml_elem.text))
         self.implicit_end = None
 
+      # process children elements
+
       for child_xml_element in xml_elem:
 
         if issubclass(self.ttml_class, RegionElement) and StyleElement.is_instance(child_xml_element):
+          # process nest styling, which is specific to region elements, and does not affect temporal
+          # processing
           StyleElement.from_xml(self, child_xml_element)
           continue
 
@@ -731,6 +756,8 @@ class ContentElement(TTMLElement):
             )
           self.implicit_end = None
 
+      # process referential styling last since it has the lowest priority compared to specified and nested styling
+
       if self.ttml_class.has_styles:
 
         self.process_referential_styling(xml_elem)
@@ -766,6 +793,9 @@ class ContentElement(TTMLElement):
         self.desired_end = self.implicit_end
 
       if self.ttml_class.has_timing:
+
+        # temporal processing applies to all contents elements but explicit begin and end properties are stored only if their values
+        # are not constant, e.g. br elements always have indefinit begin and end times in parallel time containers
 
         self.model_element.set_begin(self.desired_begin if self.desired_begin != 0 else None)
 

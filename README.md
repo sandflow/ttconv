@@ -23,7 +23,15 @@ Processing shared across multiple reader and writer modules is factored out in c
 
 `ttconv.imsc.reader.to_model()` provides an examples of a reader module.
 
+## Documentation
+
+Detailed documentation including useful links and document references are at [`doc`](./doc)
+
 ## Dependencies
+
+### Introduction
+
+The project uses [pipenv](https://pypi.org/project/pipenv/) to manage dependencies.
 
 ### Runtime
 
@@ -31,14 +39,15 @@ Processing shared across multiple reader and writer modules is factored out in c
 
 ### Development
 
-* [pipenv](https://pypi.org/project/pipenv/)
 * [pylint](https://pypi.org/project/pylint/)
+* [coverage](https://pypi.org/project/coverage/)
 
 ## Setup development environment
 
 ### Local
 
 * run `pipenv install --dev`
+* set the `PYTHONPATH` environment variable to `src/main/python`, e.g. `export PYTHONPATH=src/main/python`
 * `pipenv run` can then be used
 
 ### Docker
@@ -48,12 +57,24 @@ docker build --rm -f Dockerfile -t ttconv:latest .
 docker run -it --rm ttconv:latest bash
 ```
 
-## CI
+## Code coverage
+
+Unit test code coverage is provided by the script at `scripts/coverage.sh`
+
+## Automated testing
+
+### Overview
+
+Automated testing is provided by the script at `scripts/ci.sh`
 
 ### Local
 
-See `./scripts/ci.sh`
+Run `./scripts/ci.sh`
+
+### GitHub actions
+
+See `.github/workflows/main.yml`
 
 ### Docker
 
-`docker run -it --rm  ttconv:latest /bin/sh scripts/ci.sh`
+Run `docker run -it --rm  ttconv:latest /bin/sh scripts/ci.sh`
