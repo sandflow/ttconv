@@ -288,10 +288,7 @@ class DocumentTest(unittest.TestCase):
 
     d = model.Document()
 
-    self.assertEqual(
-      d.get_active_area(),
-      model.ActiveAreaType(0, 0, 1, 1)
-      )
+    self.assertIsNone(d.get_active_area())
 
 
   def document_active_area(self):
