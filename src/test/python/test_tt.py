@@ -47,6 +47,9 @@ class IMSCAppTest(unittest.TestCase):
     #
     tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml".split())
 
+  def test_pop_on_scc(self):
+    tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.ttml".split())
+
   def test_bad_function(self):
 
     stdout = io.StringIO()
