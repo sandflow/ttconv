@@ -180,7 +180,7 @@ class SccReaderTest(unittest.TestCase):
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
     self.check_element_origin(region_1, 26, 17)
-    self.check_element_extent(region_1, 16, 1)
+    self.check_element_extent(region_1, 10, 1)
 
     region_2 = doc.get_region("pop2")
     self.assertIsNotNone(region_2)
@@ -239,7 +239,7 @@ class SccReaderTest(unittest.TestCase):
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
     self.check_element_origin(region_2, 4, 16)
-    self.check_element_extent(region_2, 43, 2)
+    self.check_element_extent(region_2, 32, 2)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -296,7 +296,7 @@ class SccReaderTest(unittest.TestCase):
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
     self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 43, 3)
+    self.check_element_extent(region_3, 32, 3)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -357,12 +357,12 @@ class SccReaderTest(unittest.TestCase):
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
     self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 43, 3)
+    self.check_element_extent(region_3, 32, 3)
 
     region_4 = doc.get_region("rollup4")
     self.assertIsNotNone(region_4)
     self.check_element_origin(region_4, 4, 14)
-    self.check_element_extent(region_4, 43, 4)
+    self.check_element_extent(region_4, 32, 4)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -545,12 +545,12 @@ class SccReaderTest(unittest.TestCase):
     region_1 = doc.get_region("paint1")
     self.assertIsNotNone(region_1)
     self.check_element_origin(region_1, 8, 16)
-    self.check_element_extent(region_1, 46, 1)
+    self.check_element_extent(region_1, 28, 2)
 
     region_2 = doc.get_region("paint2")
     self.assertIsNotNone(region_2)
     self.check_element_origin(region_2, 8, 17)
-    self.check_element_extent(region_2, 42, 1)
+    self.check_element_extent(region_2, 28, 1)
 
     body = doc.get_body()
     self.assertIsNotNone(body)

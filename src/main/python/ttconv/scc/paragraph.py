@@ -72,6 +72,14 @@ class SccCaptionParagraph:
     """Returns the caption end time code"""
     return self._end
 
+  def get_safe_area_x_offset(self):
+    """Returns the safe area x offset"""
+    return self._safe_area_x_offset
+
+  def get_safe_area_y_offset(self):
+    """Returns the safe area y offset"""
+    return self._safe_area_y_offset
+
   def get_style(self) -> SccCaptionStyle:
     """Returns the caption style"""
     return self._style
@@ -198,8 +206,8 @@ class SccCaptionParagraph:
       p.set_end(self._end.to_temporal_offset())
 
     # Set the region to current caption
-    region = _SccParagraphRegion(self)
-    p.set_region(region.get_region(doc))
+    region = _SccParagraphRegion(self, doc)
+    p.set_region(region.get_region())
 
     # Add caption content (text and line-breaks)
     for caption_content in self._caption_contents:
@@ -233,20 +241,31 @@ class SccCaptionParagraph:
 class _SccParagraphRegion:
   """SCC paragraph region utility class"""
 
-  def __init__(self, paragraph: SccCaptionParagraph):
+  def __init__(self, paragraph: SccCaptionParagraph, doc: Document):
     self._paragraph = paragraph
+    self._doc = doc
 
-  def get_region(self, doc: Document) -> Region:
+    cell_resolution = doc.get_cell_resolution()
+    x_offset = self._paragraph.get_safe_area_x_offset()
+    y_offset = self._paragraph.get_safe_area_y_offset()
+
+    self._left = x_offset
+    self._top = y_offset
+    self._right = cell_resolution.columns - x_offset
+    # Add 1 cell to bottom since the cursor height is 1
+    self._bottom = cell_resolution.rows - y_offset + 1
+
+  def get_region(self) -> Region:
     """Get a paragraph matching region"""
 
-    matching_region = self._find_matching_region(doc)
+    matching_region = self._find_matching_region()
 
     if matching_region:
       # Extend region to paragraph if needed
       self._extend_region_to_paragraph(matching_region)
     else:
       # Create a new matching region
-      matching_region = self._create_matching_region(doc)
+      matching_region = self._create_matching_region()
 
     return matching_region
 
@@ -258,9 +277,9 @@ class _SccParagraphRegion:
            and region_origin.x.value is self._paragraph.get_origin().x.value \
            and region_origin.y.value is self._paragraph.get_origin().y.value
 
-  def _find_matching_region(self, doc: Document) -> Optional[Region]:
+  def _find_matching_region(self) -> Optional[Region]:
     """Looks for a region that origin matches with the paragraph origin"""
-    for region in doc.iter_regions():
+    for region in self._doc.iter_regions():
       if self._has_same_origin_as_region(region):
         return region
     return None
@@ -272,12 +291,20 @@ class _SccParagraphRegion:
 
     region_extent = region.get_style(StyleProperties.Extent)
 
-    max_width = max(self._paragraph.get_extent().width.value, region_extent.width.value)
-    max_height = max(self._paragraph.get_extent().height.value, region_extent.height.value)
+    paragraph_extent = self._paragraph.get_extent()
 
-    new_extent = get_extent_from_dimensions(max_width, max_height)
+    if paragraph_extent.width.value > region_extent.width.value:
+      # Resets the region width on the paragraph line width (up to the right of the safe area)
+      # The region height always remains the same (depending on the region origin)
+      region_origin: PositionType = region.get_style(StyleProperties.Origin)
 
-    region.set_style(StyleProperties.Extent, new_extent)
+      available_width = self._right - int(region_origin.x.value)
+
+      max_width = min(paragraph_extent.width.value, available_width)
+
+      region_extent = get_extent_from_dimensions(max_width, region_extent.height.value)
+
+      region.set_style(StyleProperties.Extent, region_extent)
 
   def _get_region_prefix(self):
     """Returns region prefix based on paragraph style"""
@@ -289,14 +316,23 @@ class _SccParagraphRegion:
       return "rollup"
     return "region"
 
-  def _create_matching_region(self, doc: Document) -> Region:
+  def _create_matching_region(self) -> Region:
     """Creates a new region based on paragraph needs"""
-    doc_regions = list(doc.iter_regions())
+    doc_regions = list(self._doc.iter_regions())
 
-    region = Region(self._get_region_prefix() + str(len(doc_regions) + 1), doc)
-    region.set_style(StyleProperties.Origin, self._paragraph.get_origin())
-    region.set_style(StyleProperties.Extent, self._paragraph.get_extent())
+    paragraph_origin = self._paragraph.get_origin()
+    region = Region(self._get_region_prefix() + str(len(doc_regions) + 1), self._doc)
+    region.set_style(StyleProperties.Origin, paragraph_origin)
 
-    doc.put_region(region)
+    # The region width is initialized with he paragraph width (up to the right of the safe area)
+    available_width = self._right - int(paragraph_origin.x.value)
+    region_width = min(self._paragraph.get_extent().width.value, available_width)
+
+    # The region height extends from its origin to the bottom of the safe area
+    region_height = self._bottom - int(paragraph_origin.y.value)
+
+    region.set_style(StyleProperties.Extent, get_extent_from_dimensions(region_width, region_height))
+
+    self._doc.put_region(region)
 
     return region

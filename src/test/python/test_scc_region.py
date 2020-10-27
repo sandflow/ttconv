@@ -29,7 +29,7 @@
 
 import unittest
 
-from ttconv.model import Document
+from ttconv.model import Document, CellResolutionType
 from ttconv.scc.content import SccCaptionLineBreak
 from ttconv.scc.paragraph import SccCaptionParagraph, _SccParagraphRegion
 from ttconv.scc.style import SccCaptionStyle
@@ -39,26 +39,34 @@ from ttconv.style_properties import StyleProperties
 class SccParagraphRegionTest(unittest.TestCase):
 
   def test_region_prefix(self):
+    doc = Document()
+
     caption_paragraph = SccCaptionParagraph()
-    paragraph_region = _SccParagraphRegion(caption_paragraph)
+    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
     self.assertEqual("region", paragraph_region._get_region_prefix())
 
     caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PaintOn)
-    paragraph_region = _SccParagraphRegion(caption_paragraph)
+    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
     self.assertEqual("paint", paragraph_region._get_region_prefix())
 
     caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
-    paragraph_region = _SccParagraphRegion(caption_paragraph)
+    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
     self.assertEqual("pop", paragraph_region._get_region_prefix())
 
     caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.RollUp)
-    paragraph_region = _SccParagraphRegion(caption_paragraph)
+    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
     self.assertEqual("rollup", paragraph_region._get_region_prefix())
 
   def test_matching_region(self):
     doc = Document()
+    doc_columns = 40
+    doc_rows = 19
+    doc.set_cell_resolution(CellResolutionType(rows=doc_rows, columns=doc_columns))
 
-    caption_paragraph = SccCaptionParagraph(4, 2)
+    safe_area_x_offset = 4
+    safe_area_y_offset = 2
+
+    caption_paragraph = SccCaptionParagraph(safe_area_x_offset, safe_area_y_offset)
     caption_paragraph.new_caption_text()
 
     caption_paragraph.set_row_offset(4)
@@ -79,18 +87,21 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertEqual(28, extent.width.value)
     self.assertEqual(1, extent.height.value)
 
-    paragraph_region = _SccParagraphRegion(caption_paragraph)
+    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
 
-    self.assertIsNone(paragraph_region._find_matching_region(doc))
-    region = paragraph_region._create_matching_region(doc)
+    self.assertIsNone(paragraph_region._find_matching_region())
+    region = paragraph_region._create_matching_region()
 
     self.assertEqual("region1", region.get_id())
     self.assertTrue(paragraph_region._has_same_origin_as_region(region))
-    self.assertEqual(region, paragraph_region._find_matching_region(doc))
+    self.assertEqual(region, paragraph_region._find_matching_region())
 
     region_extent = region.get_style(StyleProperties.Extent)
-    self.assertEqual(extent.width.value, region_extent.width.value)
-    self.assertEqual(extent.height.value, region_extent.height.value)
+
+    expected_region_width = doc_columns - safe_area_x_offset - origin.x.value
+    expected_region_height = doc_rows - safe_area_y_offset - origin.y.value + 1
+    self.assertEqual(expected_region_width, region_extent.width.value)
+    self.assertEqual(expected_region_height, region_extent.height.value)
 
     caption_paragraph._caption_contents.append(SccCaptionLineBreak())
 
@@ -106,12 +117,15 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertEqual(34, extent.width.value)
     self.assertEqual(2, extent.height.value)
 
-    paragraph_region = _SccParagraphRegion(caption_paragraph)
+    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
 
-    self.assertEqual(region, paragraph_region._find_matching_region(doc))
+    self.assertEqual(region, paragraph_region._find_matching_region())
     paragraph_region._extend_region_to_paragraph(region)
     self.assertTrue(paragraph_region._has_same_origin_as_region(region))
 
     region_extent = region.get_style(StyleProperties.Extent)
-    self.assertEqual(extent.width.value, region_extent.width.value)
-    self.assertEqual(extent.height.value, region_extent.height.value)
+
+    expected_region_width = doc_columns - safe_area_x_offset - origin.x.value
+    expected_region_height = doc_rows - safe_area_y_offset - origin.y.value + 1
+    self.assertEqual(expected_region_width, region_extent.width.value)
+    self.assertEqual(expected_region_height, region_extent.height.value)
