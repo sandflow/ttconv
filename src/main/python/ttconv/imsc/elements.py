@@ -31,6 +31,7 @@ from fractions import Fraction
 import typing
 import xml.etree.ElementTree as et
 import ttconv.model as model
+import ttconv.style_properties as model_styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.attributes as imsc_attr
 from ttconv.imsc.style_properties import StyleProperties
@@ -451,7 +452,7 @@ class StyleElement(TTMLElement):
     '''
 
     def __init__(self, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
-      self.styles: typing.Dict[imsc_styles.StyleProperty, typing.Any] = dict()
+      self.styles: typing.Dict[model_styles.StyleProperty, typing.Any] = dict()
       self.style_refs: typing.List[str] = None
       self.id: str = None
       super().__init__(StyleElement, parent_ctx)
@@ -477,7 +478,8 @@ class StyleElement(TTMLElement):
 
       try:
 
-        style_ctx.styles[prop.model_prop] = prop.extract(style_ctx, xml_elem.attrib.get(attr))
+        model_prop, model_value = prop.to_model(style_ctx, xml_elem)
+        style_ctx.styles[model_prop] = model_value
 
       except ValueError:
 
@@ -542,10 +544,9 @@ class InitialElement(TTMLElement):
         # set the initial value on the data model Document (the data model does have 
         # a distinct <initial> element)
 
-        initial_ctx.doc.put_initial_value(
-          prop.model_prop,
-          prop.extract(initial_ctx, xml_elem.attrib.get(attr))
-        )
+        model_prop, model_value = prop.to_model(initial_ctx, xml_elem)
+
+        initial_ctx.doc.put_initial_value(model_prop, model_value)
 
       except (ValueError, TypeError):
 
@@ -559,7 +560,7 @@ class InitialElement(TTMLElement):
 
     initial_element = et.Element(InitialElement.qn)
     
-    style_prop.set(initial_element, initial_value)
+    style_prop.from_model(initial_element, initial_value)
 
     return initial_element
 
@@ -624,11 +625,12 @@ class ContentElement(TTMLElement):
           continue
 
         try:
-          self.model_element.set_style(
-            prop.model_prop,
-            prop.extract(self, xml_elem.attrib.get(attr))
-            )
+          model_prop, model_value = prop.to_model(self, xml_elem)
+
+          self.model_element.set_style(model_prop, model_value)
+
         except ValueError:
+
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
     def process_set_style_properties(self, parent_ctx: TTMLElement, xml_elem):
@@ -646,12 +648,13 @@ class ContentElement(TTMLElement):
         prop = StyleProperties.BY_QNAME.get(attr)
         if prop is not None:
           try:
+            model_prop, model_value = prop.to_model(self, xml_elem)
             parent_ctx.model_element.add_animation_step(
               model.DiscreteAnimationStep(
-                prop.model_prop,
+                model_prop,
                 self.desired_begin,
                 self.desired_end,
-                prop.extract(self, xml_elem.attrib.get(attr))
+                model_value
               )
             )
             break
@@ -822,7 +825,7 @@ class ContentElement(TTMLElement):
     for model_prop, imsc_prop in StyleProperties.BY_MODEL_PROP.items():
       value = model_content_element.get_style(model_prop)
       if value is not None:
-        imsc_prop.set(element, value)
+        imsc_prop.from_model(element, value)
 
   @staticmethod
   def from_model_animation(model_element: model.ContentElement, xml_element):
@@ -1045,7 +1048,7 @@ class SetElement(ContentElement):
 
     imsc_style = imsc_styles.StyleProperties.BY_MODEL_PROP[anim_step.style_property]
 
-    imsc_style.set(
+    imsc_style.from_model(
       set_element,
       anim_step.value
     )
