@@ -26,6 +26,7 @@
 """SCC caption paragraph"""
 
 import copy
+import logging
 from typing import Optional, List
 
 from ttconv.model import Region, Document, P, Br, Span, Text
@@ -34,6 +35,8 @@ from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions
 from ttconv.style_properties import PositionType, ExtentType, StyleProperties
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SccCaptionParagraph:
@@ -299,6 +302,9 @@ class _SccParagraphRegion:
       region_origin: PositionType = region.get_style(StyleProperties.Origin)
 
       available_width = self._right - int(region_origin.x.value)
+
+      if int(paragraph_extent.width.value) > available_width:
+        LOGGER.warning("The paragraph width overflows from the safe area (at %s)", self._paragraph.get_begin())
 
       max_width = min(paragraph_extent.width.value, available_width)
 
