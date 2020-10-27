@@ -25,6 +25,7 @@
 
 '''ttconv tt'''
 
+import os
 import logging
 import sys
 from argparse import ArgumentParser
@@ -32,6 +33,8 @@ import xml.etree.ElementTree as et
 #import ttconv.model as model
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
+import ttconv.scc.scc_reader as scc_reader
+from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,15 +93,28 @@ def convert(args):
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
 
-  # 
-  # Parse the xml input file into an ElementTree
-  #
-  tree = et.parse(inputfile)
+  _filename, file_extension = os.path.splitext(inputfile)
 
-  #
-  # Pass the parsed xml to the reader
-  #
-  model = imsc_reader.to_model(tree)
+  if file_extension == '.ttml':
+    # 
+    # Parse the xml input file into an ElementTree
+    #
+    tree = et.parse(inputfile)
+
+    #
+    # Pass the parsed xml to the reader
+    #
+    model = imsc_reader.to_model(tree)
+
+  elif file_extension == '.scc':
+    file_as_str = Path(inputfile).read_text()
+
+    #
+    # Pass the parsed xml to the reader
+    #
+    model = scc_reader.to_model(file_as_str)
+  else:
+    LOGGER.warning("Input file is %s is not supported", args.input)
 
   #
   # Construct and configure the writer
