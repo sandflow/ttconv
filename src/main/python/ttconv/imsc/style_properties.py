@@ -217,7 +217,8 @@ class StyleProperties:
     def from_model(cls, xml_element, model_value):
       xml_element.set(
         f"{{{cls.ns}}}{cls.local_name}", 
-        f"{StyleProperties.to_ttml_length(model_value.height)} {StyleProperties.to_ttml_length(model_value.width)}"
+        f"{StyleProperties.to_ttml_length(model_value.width)} "
+        f"{StyleProperties.to_ttml_length(model_value.height)}"
       )
 
 

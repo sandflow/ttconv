@@ -30,11 +30,12 @@ import logging
 import sys
 from argparse import ArgumentParser
 import xml.etree.ElementTree as et
+from pathlib import Path
 #import ttconv.model as model
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
-import ttconv.scc.scc_reader as scc_reader
-from pathlib import Path
+import ttconv.scc.reader as scc_reader
+
 
 LOGGER = logging.getLogger(__name__)
 
