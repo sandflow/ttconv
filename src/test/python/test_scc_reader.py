@@ -172,6 +172,10 @@ class SccReaderTest(unittest.TestCase):
 01:11:31:01	9420 9420 9452 9452 97a1 97a1 54e5 73f4 2080 9132 2043 6170 f4e9 ef6e 2080 94f2 94f2 97a1 97a1 54e5 73f4 2080 91ae 91ae f4e5 73f4 9120 9120 2043 6170 f4e9 ef6e 7380 942c 942c 942f 942f
 
 01:11:33:14	942c 942c
+
+01:16:17:15	9420 9420 1370 1370 91ae 91ae 4c6f 7265 6d20 6970 7375 6d20 94c8 94c8 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 9470 91ae 91ae 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942c 942f 942f
+
+01:16:19:23	942c 942c
 """
 
     doc = to_model(scc_content)
@@ -192,6 +196,11 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_origin(region_3, 9, 16)
     self.check_element_extent(region_3, 18, 2)
 
+    region_4 = doc.get_region("pop4")
+    self.assertIsNotNone(region_4)
+    self.check_element_origin(region_4, 4, 15)
+    self.check_element_extent(region_4, 28, 3)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -201,7 +210,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(3, len(p_list))
+    self.assertEqual(4, len(p_list))
 
     self.check_caption(p_list[0], "caption1", "01:02:54:00", "01:02:55:15", "( horn honking )")
     self.assertEqual(region_1, p_list[0].get_region())
@@ -212,9 +221,16 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", "test", " Captions")
     self.assertEqual(region_3, p_list[2].get_region())
 
+    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", "Lorem ipsum ", Br, "dolor sit amet,", Br, "consectetur adipiscing elit.")
+    self.assertEqual(region_4, p_list[3].get_region())
+
     self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
     self.check_element_style(list(p_list[2])[4], StyleProperties.FontStyle, None)
     self.check_element_style(list(p_list[2])[4], StyleProperties.Color, NamedColors.white.value)
+
+    self.check_element_style(list(p_list[3])[0], StyleProperties.FontStyle, FontStyleType.italic)
+    self.check_element_style(list(p_list[3])[2], StyleProperties.Color, NamedColors.red.value)
+    self.check_element_style(list(p_list[3])[4], StyleProperties.FontStyle, FontStyleType.italic)
 
   def test_2_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0

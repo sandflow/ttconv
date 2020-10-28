@@ -59,6 +59,10 @@ class SccCaptionParagraph:
     """Sets caption identifier"""
     self._caption_id = caption_id
 
+  def get_id(self) -> str:
+    """Returns the caption identifier"""
+    return self._caption_id
+
   def set_begin(self, time_code):
     """Sets caption begin time code"""
     self._begin = copy.copy(time_code)
