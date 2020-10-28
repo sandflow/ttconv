@@ -30,7 +30,7 @@
 import unittest
 
 from ttconv.model import Br, P, ContentElement
-from ttconv.scc.scc_reader import SccWord, SccLine, to_model
+from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType
@@ -129,7 +129,7 @@ class SccLineTest(unittest.TestCase):
     self.assertIsNone(SccLine.from_str("Hello world!"))
 
 
-class SCCReaderTest(unittest.TestCase):
+class SccReaderTest(unittest.TestCase):
 
   def check_caption(self, paragraph: P, caption_id: str, begin: str, end: str, *children):
     self.assertEqual(caption_id, paragraph.get_id())
@@ -180,7 +180,7 @@ class SCCReaderTest(unittest.TestCase):
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
     self.check_element_origin(region_1, 26, 17)
-    self.check_element_extent(region_1, 16, 1)
+    self.check_element_extent(region_1, 10, 1)
 
     region_2 = doc.get_region("pop2")
     self.assertIsNotNone(region_2)
@@ -190,7 +190,7 @@ class SCCReaderTest(unittest.TestCase):
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
     self.check_element_origin(region_3, 9, 16)
-    self.check_element_extent(region_3, 15, 2)
+    self.check_element_extent(region_3, 18, 2)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -239,7 +239,7 @@ class SCCReaderTest(unittest.TestCase):
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
     self.check_element_origin(region_2, 4, 16)
-    self.check_element_extent(region_2, 43, 2)
+    self.check_element_extent(region_2, 32, 2)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -296,7 +296,7 @@ class SCCReaderTest(unittest.TestCase):
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
     self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 43, 3)
+    self.check_element_extent(region_3, 32, 3)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -357,12 +357,12 @@ class SCCReaderTest(unittest.TestCase):
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
     self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 43, 3)
+    self.check_element_extent(region_3, 32, 3)
 
     region_4 = doc.get_region("rollup4")
     self.assertIsNotNone(region_4)
     self.check_element_origin(region_4, 4, 14)
-    self.check_element_extent(region_4, 43, 4)
+    self.check_element_extent(region_4, 32, 4)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -527,6 +527,56 @@ class SCCReaderTest(unittest.TestCase):
     self.check_caption(p_list[15], "caption16", "00:00:44;09", "00:00:44;26", ">> IT WAS GOOD TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_4, p_list[15].get_region())
+
+  def test_scc_paint_on_content(self):
+    scc_content = """Scenarist_SCC V1.0
+
+00:02:53:14	9429 9429 94d2 94d2 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 94f2 94f2 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+
+00:02:56:00	9429 9429 94d2 94d2 5065 6c6c 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80
+
+00:02:56:25	9429 9429 94f2 94f2 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
+
+"""
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("paint1")
+    self.assertIsNotNone(region_1)
+    self.check_element_origin(region_1, 8, 16)
+    self.check_element_extent(region_1, 28, 2)
+
+    region_2 = doc.get_region("paint2")
+    self.assertIsNotNone(region_2)
+    self.check_element_origin(region_2, 8, 17)
+    self.check_element_extent(region_2, 28, 1)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(4, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:02:53:15", "00:02:56:01", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:26", "consectetur ", "adipiscing", " elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ",
+                       "sollicitudin.")
+    self.assertEqual(region_1, p_list[2].get_region())
+
+    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
+                       "sagittis.")
+    self.assertEqual(region_2, p_list[3].get_region())
 
 
 if __name__ == '__main__':
