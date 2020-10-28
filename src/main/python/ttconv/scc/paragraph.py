@@ -27,14 +27,15 @@
 
 import copy
 import logging
+import math
 from typing import Optional, List
 
 from ttconv.model import Region, Document, P, Br, Span, Text
 from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_ROW, SccCaptionLineBreak
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode
-from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions
-from ttconv.style_properties import PositionType, ExtentType, StyleProperties
+from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
+from ttconv.style_properties import PositionType, ExtentType, StyleProperties, LengthType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -279,10 +280,15 @@ class _SccParagraphRegion:
   def _has_same_origin_as_region(self, region: Region) -> bool:
     """Checks whether the region origin is the same as the paragraph origin"""
     region_origin: Optional[PositionType] = region.get_style(StyleProperties.Origin)
-    # Consider region origin units are cells
+
+    # Convert paragraph origin units into percentages
+    paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
+
     return region_origin \
-           and region_origin.x.value is self._paragraph.get_origin().x.value \
-           and region_origin.y.value is self._paragraph.get_origin().y.value
+           and region_origin.x.units is paragraph_origin.x.units \
+           and region_origin.y.units is paragraph_origin.y.units \
+           and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
+           and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
 
   def _find_matching_region(self) -> Optional[Region]:
     """Looks for a region that origin matches with the paragraph origin"""
@@ -300,21 +306,25 @@ class _SccParagraphRegion:
 
     paragraph_extent = self._paragraph.get_extent()
 
-    if paragraph_extent.width.value > region_extent.width.value:
+    # Convert extent cells to percentages
+    paragraph_extent_pct = convert_cells_to_percentages(paragraph_extent, self._doc.get_cell_resolution())
+
+    if paragraph_extent_pct.width.value > region_extent.width.value:
       # Resets the region width on the paragraph line width (up to the right of the safe area)
       # The region height always remains the same (depending on the region origin)
       region_origin: PositionType = region.get_style(StyleProperties.Origin)
 
-      available_width = self._right - int(region_origin.x.value)
+      # Convert right cells coordinate to percentages
+      right_pct = self._right * 100 / self._doc.get_cell_resolution().columns
+      available_width_pct = right_pct - region_origin.x.value
 
-      if int(paragraph_extent.width.value) > available_width:
+      if int(paragraph_extent_pct.width.value) > available_width_pct:
         LOGGER.warning("The paragraph width overflows from the safe area (at %s)", self._paragraph.get_begin())
 
-      max_width = min(paragraph_extent.width.value, available_width)
+      max_width_pct = min(paragraph_extent_pct.width.value, available_width_pct)
 
-      region_extent = get_extent_from_dimensions(max_width, region_extent.height.value)
-
-      region.set_style(StyleProperties.Extent, region_extent)
+      region_extent_pct = get_extent_from_dimensions(max_width_pct, region_extent.height.value, LengthType.Units.pct)
+      region.set_style(StyleProperties.Extent, region_extent_pct)
 
   def _get_region_prefix(self):
     """Returns region prefix based on paragraph style"""
@@ -332,7 +342,10 @@ class _SccParagraphRegion:
 
     paragraph_origin = self._paragraph.get_origin()
     region = Region(self._get_region_prefix() + str(len(doc_regions) + 1), self._doc)
-    region.set_style(StyleProperties.Origin, paragraph_origin)
+
+    # Convert origin cells to percentages
+    paragraph_origin_pct = convert_cells_to_percentages(paragraph_origin, self._doc.get_cell_resolution())
+    region.set_style(StyleProperties.Origin, paragraph_origin_pct)
 
     # The region width is initialized with he paragraph width (up to the right of the safe area)
     available_width = self._right - int(paragraph_origin.x.value)
@@ -341,7 +354,11 @@ class _SccParagraphRegion:
     # The region height extends from its origin to the bottom of the safe area
     region_height = self._bottom - int(paragraph_origin.y.value)
 
-    region.set_style(StyleProperties.Extent, get_extent_from_dimensions(region_width, region_height))
+    region_extent = get_extent_from_dimensions(region_width, region_height)
+
+    # Convert extent cells to percentages
+    region_extent_pct = convert_cells_to_percentages(region_extent, self._doc.get_cell_resolution())
+    region.set_style(StyleProperties.Extent, region_extent_pct)
 
     self._doc.put_region(region)
 

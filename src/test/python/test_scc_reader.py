@@ -28,8 +28,10 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 
 import unittest
+from numbers import Number
+from typing import Union
 
-from ttconv.model import Br, P, ContentElement
+from ttconv.model import Br, P, ContentElement, CellResolutionType
 from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
@@ -150,15 +152,29 @@ class SccReaderTest(unittest.TestCase):
   def check_element_style(self, elem: ContentElement, style_property: StyleProperty, expected_value):
     self.assertEqual(expected_value, elem.get_style(style_property))
 
-  def check_element_origin(self, elem: ContentElement, expected_x_origin: int, expected_y_origin: int, unit=LengthType.Units.c):
+  def check_element_origin(self, elem: ContentElement, expected_x_origin: Union[int, float, Number],
+                           expected_y_origin: Union[int, float, Number], unit=LengthType.Units.c):
     expected_origin = PositionType(x=LengthType(value=expected_x_origin, units=unit),
                                    y=LengthType(value=expected_y_origin, units=unit))
     self.check_element_style(elem, StyleProperties.Origin, expected_origin)
 
-  def check_element_extent(self, elem: ContentElement, width: int, height: int, unit=LengthType.Units.c):
+  def check_element_extent(self, elem: ContentElement, width: Union[int, float, Number], height: Union[int, float, Number],
+                           unit=LengthType.Units.c):
     expected_extent = ExtentType(width=LengthType(value=width, units=unit),
                                  height=LengthType(value=height, units=unit))
     self.check_element_style(elem, StyleProperties.Extent, expected_extent)
+
+  def check_region_origin(self, elem: ContentElement, expected_x_cell_origin: int, expected_y_cell_origin: int,
+                          cell_resolution: CellResolutionType):
+    expected_x_origin = expected_x_cell_origin * 100 / cell_resolution.columns
+    expected_y_origin = expected_y_cell_origin * 100 / cell_resolution.rows
+    self.check_element_origin(elem, expected_x_origin, expected_y_origin, unit=LengthType.Units.pct)
+
+  def check_region_extent(self, elem: ContentElement, expected_cell_width: int, expected_cell_height: int,
+                          cell_resolution: CellResolutionType):
+    width = expected_cell_width * 100 / cell_resolution.columns
+    height = expected_cell_height * 100 / cell_resolution.rows
+    self.check_element_extent(elem, width, height, unit=LengthType.Units.pct)
 
   def test_scc_pop_on_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -183,23 +199,23 @@ class SccReaderTest(unittest.TestCase):
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_element_origin(region_1, 26, 17)
-    self.check_element_extent(region_1, 10, 1)
+    self.check_region_origin(region_1, 26, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 10, 1, doc.get_cell_resolution())
 
     region_2 = doc.get_region("pop2")
     self.assertIsNotNone(region_2)
-    self.check_element_origin(region_2, 8, 17)
-    self.check_element_extent(region_2, 11, 1)
+    self.check_region_origin(region_2, 8, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 11, 1, doc.get_cell_resolution())
 
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
-    self.check_element_origin(region_3, 9, 16)
-    self.check_element_extent(region_3, 18, 2)
+    self.check_region_origin(region_3, 9, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 18, 2, doc.get_cell_resolution())
 
     region_4 = doc.get_region("pop4")
     self.assertIsNotNone(region_4)
-    self.check_element_origin(region_4, 4, 15)
-    self.check_element_extent(region_4, 28, 3)
+    self.check_region_origin(region_4, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 28, 3, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -221,7 +237,8 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", "test", " Captions")
     self.assertEqual(region_3, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", "Lorem ipsum ", Br, "dolor sit amet,", Br, "consectetur adipiscing elit.")
+    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", "Lorem ipsum ", Br, "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
     self.assertEqual(region_4, p_list[3].get_region())
 
     self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
@@ -249,13 +266,13 @@ class SccReaderTest(unittest.TestCase):
 
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
-    self.check_element_origin(region_1, 4, 17)
-    self.check_element_extent(region_1, 27, 1)
+    self.check_region_origin(region_1, 4, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 27, 1, doc.get_cell_resolution())
 
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
-    self.check_element_origin(region_2, 4, 16)
-    self.check_element_extent(region_2, 32, 2)
+    self.check_region_origin(region_2, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 32, 2, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -301,18 +318,18 @@ class SccReaderTest(unittest.TestCase):
 
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
-    self.check_element_origin(region_1, 4, 17)
-    self.check_element_extent(region_1, 27, 1)
+    self.check_region_origin(region_1, 4, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 27, 1, doc.get_cell_resolution())
 
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
-    self.check_element_origin(region_2, 4, 16)
-    self.check_element_extent(region_2, 28, 2)
+    self.check_region_origin(region_2, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
 
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
-    self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 32, 3)
+    self.check_region_origin(region_3, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 32, 3, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -362,23 +379,23 @@ class SccReaderTest(unittest.TestCase):
 
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
-    self.check_element_origin(region_1, 4, 17)
-    self.check_element_extent(region_1, 27, 1)
+    self.check_region_origin(region_1, 4, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 27, 1, doc.get_cell_resolution())
 
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
-    self.check_element_origin(region_2, 4, 16)
-    self.check_element_extent(region_2, 28, 2)
+    self.check_region_origin(region_2, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
 
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
-    self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 32, 3)
+    self.check_region_origin(region_3, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 32, 3, doc.get_cell_resolution())
 
     region_4 = doc.get_region("rollup4")
     self.assertIsNotNone(region_4)
-    self.check_element_origin(region_4, 4, 14)
-    self.check_element_extent(region_4, 32, 4)
+    self.check_region_origin(region_4, 4, 14, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 32, 4, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -457,23 +474,23 @@ class SccReaderTest(unittest.TestCase):
 
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
-    self.check_element_origin(region_1, 4, 17)
-    self.check_element_extent(region_1, 7, 1)
+    self.check_region_origin(region_1, 4, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 7, 1, doc.get_cell_resolution())
 
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
-    self.check_element_origin(region_2, 4, 16)
-    self.check_element_extent(region_2, 31, 2)
+    self.check_region_origin(region_2, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 31, 2, doc.get_cell_resolution())
 
     region_3 = doc.get_region("rollup3")
     self.assertIsNotNone(region_3)
-    self.check_element_origin(region_3, 4, 15)
-    self.check_element_extent(region_3, 29, 3)
+    self.check_region_origin(region_3, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 29, 3, doc.get_cell_resolution())
 
     region_4 = doc.get_region("rollup4")
     self.assertIsNotNone(region_4)
-    self.check_element_origin(region_4, 4, 14)
-    self.check_element_extent(region_4, 30, 4)
+    self.check_region_origin(region_4, 4, 14, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 30, 4, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -560,13 +577,13 @@ class SccReaderTest(unittest.TestCase):
 
     region_1 = doc.get_region("paint1")
     self.assertIsNotNone(region_1)
-    self.check_element_origin(region_1, 8, 16)
-    self.check_element_extent(region_1, 28, 2)
+    self.check_region_origin(region_1, 8, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
 
     region_2 = doc.get_region("paint2")
     self.assertIsNotNone(region_2)
-    self.check_element_origin(region_2, 8, 17)
-    self.check_element_extent(region_2, 28, 1)
+    self.check_region_origin(region_2, 8, 17, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 1, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)

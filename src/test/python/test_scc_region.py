@@ -98,8 +98,8 @@ class SccParagraphRegionTest(unittest.TestCase):
 
     region_extent = region.get_style(StyleProperties.Extent)
 
-    expected_region_width = doc_columns - safe_area_x_offset - origin.x.value
-    expected_region_height = doc_rows - safe_area_y_offset - origin.y.value + 1
+    expected_region_width = (doc_columns - safe_area_x_offset - origin.x.value) * 100 / doc_columns
+    expected_region_height = (doc_rows - safe_area_y_offset - origin.y.value + 1) * 100 / doc_rows
     self.assertEqual(expected_region_width, region_extent.width.value)
     self.assertEqual(expected_region_height, region_extent.height.value)
 
@@ -125,7 +125,7 @@ class SccParagraphRegionTest(unittest.TestCase):
 
     region_extent = region.get_style(StyleProperties.Extent)
 
-    expected_region_width = doc_columns - safe_area_x_offset - origin.x.value
-    expected_region_height = doc_rows - safe_area_y_offset - origin.y.value + 1
+    expected_region_width = (doc_columns - safe_area_x_offset - origin.x.value) * 100 / doc_columns
+    expected_region_height = (doc_rows - safe_area_y_offset - origin.y.value + 1) * 100 / doc_rows
     self.assertEqual(expected_region_width, region_extent.width.value)
     self.assertEqual(expected_region_height, region_extent.height.value)
