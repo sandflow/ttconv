@@ -67,15 +67,18 @@ class _SccContext:
 
   def set_current_to_previous(self):
     """Rotates current caption to previous caption"""
-    if self.current_caption:
+    if self.current_caption and self.current_caption.get_current_text():
+
+      if not self.current_caption.get_id():
+        self.count += 1
+        self.current_caption.set_id("caption" + str(self.count))
+
       self.previous_captions.append(self.current_caption)
       self.current_caption = None
 
   def init_current_caption(self, time_code: SccTimeCode):
-    """Initializes the current caption with id and begin time"""
+    """Initializes the current caption with begin time"""
     if self.current_caption:
-      self.count += 1
-      self.current_caption.set_id("caption" + str(self.count))
       self.current_caption.set_begin(time_code)
 
   def push_previous_caption(self, time_code: SccTimeCode, index: int = 0):
@@ -130,8 +133,9 @@ class _SccContext:
     if not self.current_caption:
       raise ValueError("No current SCC caption initialized")
 
-    self.current_caption.new_caption_text()
-    self.current_caption.apply_current_text_offsets()
+    if self.current_caption.get_current_text() and self.current_caption.get_current_text().get_text():
+      self.current_caption.new_caption_text()
+      self.current_caption.apply_current_text_offsets()
 
     self.current_caption.get_current_text().add_style_property(StyleProperties.Color, mid_row_code.get_color())
     self.current_caption.get_current_text().add_style_property(StyleProperties.FontStyle, mid_row_code.get_font_style())
@@ -154,6 +158,9 @@ class _SccContext:
 
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
+      if self.current_caption and self.current_caption.get_current_text():
+        self.set_current_to_previous()
+
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
     elif control_code is SccControlCode.RDC:
@@ -197,15 +204,25 @@ class _SccContext:
       # Erase displayed caption (Pop-On)
       if len(self.previous_captions) > 0:
         # Set line breaks depending on the position of the content
-        last_text: Optional[SccCaptionText] = None
-        for (index, content) in enumerate(self.previous_captions[0].get_contents()):
+
+        contents = []
+        initial_length = len(self.previous_captions[0].get_contents())
+
+        for index in range(0, initial_length):
+          content = self.previous_captions[0].get_contents()[index - 1]
           if not isinstance(content, SccCaptionText):
             continue
 
-          if last_text and self.previous_captions[0].get_current_text().is_contiguous(last_text):
-            self.previous_captions[0].insert_content(index, SccCaptionLineBreak())
+          next_content = self.previous_captions[0].get_contents()[index]
+          if not isinstance(next_content, SccCaptionText):
+            continue
 
-          last_text = content
+          if next_content.is_contiguous(content):
+            contents.append(SccCaptionLineBreak())
+
+          contents.append(next_content)
+
+        self.previous_captions[0].set_contents(contents)
 
       self.push_previous_caption(time_code)
 
@@ -390,6 +407,10 @@ class SccLine:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
           if pac.get_color():
             debug += "|" + str(pac.get_color())
+          if pac.get_font_style():
+            debug += "|I"
+          if pac.get_text_decoration():
+            debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
           context.process_preamble_address_code(pac, self.time_code)
 

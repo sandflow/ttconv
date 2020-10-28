@@ -27,6 +27,7 @@
 from numbers import Number
 from typing import Union
 
+from ttconv.model import CellResolutionType
 from ttconv.style_properties import LengthType, PositionType, ExtentType
 
 
@@ -44,3 +45,25 @@ def get_extent_from_dimensions(width: Union[int, Number], height: Union[int, Num
   width = LengthType(value=width, units=units)
 
   return ExtentType(height, width)
+
+
+def convert_cells_to_percentages(dimensions: Union[PositionType, ExtentType], cell_resolution: CellResolutionType) -> Union[
+  PositionType, ExtentType]:
+  """Converts dimensions from cell units to percentage units"""
+  if isinstance(dimensions, PositionType):
+    if dimensions.x.units is not LengthType.Units.c or dimensions.y.units is not LengthType.Units.c:
+      raise ValueError("Dimensions to convert must be in cell units")
+
+    x_percent = dimensions.x.value * 100 / cell_resolution.columns
+    y_percent = dimensions.y.value * 100 / cell_resolution.rows
+    return get_position_from_offsets(x_percent, y_percent, LengthType.Units.pct)
+
+  if isinstance(dimensions, ExtentType):
+    if dimensions.width.units is not LengthType.Units.c or dimensions.height.units is not LengthType.Units.c:
+      raise ValueError("Dimensions to convert must be in cell units")
+
+    width_percent = dimensions.width.value * 100 / cell_resolution.columns
+    height_percent = dimensions.height.value * 100 / cell_resolution.rows
+    return get_extent_from_dimensions(width_percent, height_percent, LengthType.Units.pct)
+
+  raise ValueError(f"Unsupported dimensions type: {dimensions.__class__.__name__}")
