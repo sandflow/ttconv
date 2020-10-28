@@ -42,7 +42,7 @@ import ttconv.imsc.style_properties as imsc_styles
 def _get_set_style(imsc_style_prop, model_value):
   e = et.Element("p")
   assert imsc_style_prop.model_prop.validate(model_value)
-  imsc_style_prop.set(e, model_value)
+  imsc_style_prop.from_model(e, model_value)
   return e.attrib.get(f"{{{imsc_style_prop.ns}}}{imsc_style_prop.local_name}")
 
 class ReaderWriterTest(unittest.TestCase):
