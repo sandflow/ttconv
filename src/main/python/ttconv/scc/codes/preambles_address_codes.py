@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""SCC Preamble Access Codes"""
+"""SCC Preamble Address Codes"""
 
 from __future__ import annotations
 
@@ -85,15 +85,15 @@ class _SccPacDescriptionBits:
     return None
 
 
-class SccPreambleAccessCode:
+class SccPreambleAddressCode:
   """SCC PAC definition"""
 
   def __init__(self, byte_1: int, byte_2: int):
-    row = SccPreambleAccessCode._get_row(byte_1, byte_2)
+    row = SccPreambleAddressCode._get_row(byte_1, byte_2)
     if row is None:
       raise ValueError("Failed to extract PAC row from specified bytes:", hex(byte_1), hex(byte_2))
 
-    desc_bits = SccPreambleAccessCode._get_description_bits(byte_2)
+    desc_bits = SccPreambleAddressCode._get_description_bits(byte_2)
     if desc_bits is None:
       raise ValueError("Failed to extract PAC description from specified bytes:", hex(byte_1), hex(byte_2))
 
@@ -130,7 +130,7 @@ class SccPreambleAccessCode:
 
   def __eq__(self, other) -> bool:
     """Overrides default implementation"""
-    return isinstance(other, SccPreambleAccessCode) \
+    return isinstance(other, SccPreambleAddressCode) \
            and self.get_row() == other.get_row() \
            and self.get_indent() == other.get_indent() \
            and self.get_color() == other.get_color() \
@@ -138,10 +138,10 @@ class SccPreambleAccessCode:
            and self.get_text_decoration() == other.get_text_decoration()
 
   @staticmethod
-  def find(byte_1: int, byte_2: int) -> Optional[SccPreambleAccessCode]:
+  def find(byte_1: int, byte_2: int) -> Optional[SccPreambleAddressCode]:
     """Find the SCC PAC corresponding to the specified bytes"""
     try:
-      return SccPreambleAccessCode(byte_1, byte_2)
+      return SccPreambleAddressCode(byte_1, byte_2)
     except ValueError as _e:
       return None
 
