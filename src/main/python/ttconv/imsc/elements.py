@@ -353,6 +353,8 @@ class LayoutElement(TTMLElement):
       if region_element is not None:
         layout_element.append(region_element)
 
+    return layout_element
+
 class StylingElement(TTMLElement):
   '''Process the TTML <styling> element
   '''
@@ -1003,15 +1005,8 @@ class RegionElement(ContentElement):
     return region_ctx
 
   @staticmethod
-  def from_model(model_region: model.Region):
-
-    region_element = et.Element(RegionElement.qn)
-
-    imsc_attr.RegionAttribute.set(region_element, model_region.get_id())
-
-    #ContentElement.from_model_style_properties(region, region_element)
-
-    return region_element
+  def from_model(model_element: model.Region):
+    return ContentElement.from_model(model_element)
 
 class SetElement(ContentElement):
   '''Process TTML <set> element
