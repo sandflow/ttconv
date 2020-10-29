@@ -321,7 +321,7 @@ class _SccParagraphRegion:
       if int(paragraph_extent_pct.width.value) > available_width_pct:
         LOGGER.warning("The paragraph width overflows from the safe area (at %s)", self._paragraph.get_begin())
 
-      max_width_pct = min(paragraph_extent_pct.width.value, available_width_pct)
+      max_width_pct = round(min(paragraph_extent_pct.width.value, available_width_pct))
 
       region_extent_pct = get_extent_from_dimensions(max_width_pct, region_extent.height.value, LengthType.Units.pct)
       region.set_style(StyleProperties.Extent, region_extent_pct)

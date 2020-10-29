@@ -54,16 +54,16 @@ def convert_cells_to_percentages(dimensions: Union[PositionType, ExtentType], ce
     if dimensions.x.units is not LengthType.Units.c or dimensions.y.units is not LengthType.Units.c:
       raise ValueError("Dimensions to convert must be in cell units")
 
-    x_percent = dimensions.x.value * 100 / cell_resolution.columns
-    y_percent = dimensions.y.value * 100 / cell_resolution.rows
+    x_percent = round(dimensions.x.value * 100 / cell_resolution.columns)
+    y_percent = round(dimensions.y.value * 100 / cell_resolution.rows)
     return get_position_from_offsets(x_percent, y_percent, LengthType.Units.pct)
 
   if isinstance(dimensions, ExtentType):
     if dimensions.width.units is not LengthType.Units.c or dimensions.height.units is not LengthType.Units.c:
       raise ValueError("Dimensions to convert must be in cell units")
 
-    width_percent = dimensions.width.value * 100 / cell_resolution.columns
-    height_percent = dimensions.height.value * 100 / cell_resolution.rows
+    width_percent = round(dimensions.width.value * 100 / cell_resolution.columns)
+    height_percent = round(dimensions.height.value * 100 / cell_resolution.rows)
     return get_extent_from_dimensions(width_percent, height_percent, LengthType.Units.pct)
 
   raise ValueError(f"Unsupported dimensions type: {dimensions.__class__.__name__}")

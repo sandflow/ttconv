@@ -166,14 +166,14 @@ class SccReaderTest(unittest.TestCase):
 
   def check_region_origin(self, elem: ContentElement, expected_x_cell_origin: int, expected_y_cell_origin: int,
                           cell_resolution: CellResolutionType):
-    expected_x_origin = expected_x_cell_origin * 100 / cell_resolution.columns
-    expected_y_origin = expected_y_cell_origin * 100 / cell_resolution.rows
+    expected_x_origin = round(expected_x_cell_origin * 100 / cell_resolution.columns)
+    expected_y_origin = round(expected_y_cell_origin * 100 / cell_resolution.rows)
     self.check_element_origin(elem, expected_x_origin, expected_y_origin, unit=LengthType.Units.pct)
 
   def check_region_extent(self, elem: ContentElement, expected_cell_width: int, expected_cell_height: int,
                           cell_resolution: CellResolutionType):
-    width = expected_cell_width * 100 / cell_resolution.columns
-    height = expected_cell_height * 100 / cell_resolution.rows
+    width = round(expected_cell_width * 100 / cell_resolution.columns)
+    height = round(expected_cell_height * 100 / cell_resolution.rows)
     self.check_element_extent(elem, width, height, unit=LengthType.Units.pct)
 
   def test_scc_pop_on_content(self):
