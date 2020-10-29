@@ -81,11 +81,11 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertRaisesRegex(RuntimeError, "Cannot set Roll-Up row offset for SccCaptionStyle.Unknown-styled caption.",
                            caption_paragraph.apply_roll_up_row_offsets)
 
-    caption_paragraph._style = SccCaptionStyle.PopOn
+    caption_paragraph._caption_style = SccCaptionStyle.PopOn
     self.assertRaisesRegex(RuntimeError, "Cannot set Roll-Up row offset for SccCaptionStyle.PopOn-styled caption.",
                            caption_paragraph.apply_roll_up_row_offsets)
 
-    caption_paragraph._style = SccCaptionStyle.RollUp
+    caption_paragraph._caption_style = SccCaptionStyle.RollUp
     caption_paragraph.apply_roll_up_row_offsets()
     self.assertEqual(17, caption_paragraph.get_current_text().get_y_offset())
     self.assertEqual(11, caption_paragraph.get_current_text().get_x_offset())

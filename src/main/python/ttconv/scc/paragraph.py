@@ -54,7 +54,8 @@ class SccCaptionParagraph:
     self._row_offset: int = safe_area_y_offset
     self._current_text: Optional[SccCaptionText] = None
     self._caption_contents: List[SccCaptionContent] = []
-    self._style: SccCaptionStyle = caption_style
+    self._caption_style: SccCaptionStyle = caption_style
+    self._style_properties = {}
 
   def set_id(self, caption_id: str):
     """Sets caption identifier"""
@@ -88,9 +89,9 @@ class SccCaptionParagraph:
     """Returns the safe area y offset"""
     return self._safe_area_y_offset
 
-  def get_style(self) -> SccCaptionStyle:
+  def get_caption_style(self) -> SccCaptionStyle:
     """Returns the caption style"""
-    return self._style
+    return self._caption_style
 
   def set_column_offset(self, indent: Optional[int]):
     """Sets the paragraph x offset"""
@@ -115,6 +116,20 @@ class SccCaptionParagraph:
   def set_contents(self, contents: List[SccCaptionContent]):
     """Sets paragraph contents"""
     self._caption_contents = contents
+
+  def get_style_properties(self) -> dict:
+    """Sets the style properties map"""
+    return self._style_properties
+
+  def add_style_property(self, style_property, value):
+    """Adds a style property"""
+    if value is None:
+      return
+    self._style_properties[style_property] = value
+
+  def get_style_property(self, style_property) -> Optional:
+    """Returns the style property value"""
+    return self._style_properties.get(style_property)
 
   def insert_content(self, index: int, content: SccCaptionContent):
     """Inserts content to paragraph contents at specified index"""
@@ -141,8 +156,8 @@ class SccCaptionParagraph:
 
   def apply_roll_up_row_offsets(self):
     """Applies the row offset in relation to the base row 15 for Roll-Up captions"""
-    if self._style is not SccCaptionStyle.RollUp:
-      raise RuntimeError(f"Cannot set Roll-Up row offset for {self._style}-styled caption.")
+    if self._caption_style is not SccCaptionStyle.RollUp:
+      raise RuntimeError(f"Cannot set Roll-Up row offset for {self._caption_style}-styled caption.")
 
     line_count = 0
     for caption_content in reversed(self._caption_contents):
@@ -167,7 +182,7 @@ class SccCaptionParagraph:
     """Computes and returns the current paragraph extent, based on its content"""
     lines: List[str] = []
     last_line = []
-    separator = " " if self._style is SccCaptionStyle.PaintOn else ""
+    separator = " " if self._caption_style is SccCaptionStyle.PaintOn else ""
     for caption_content in self._caption_contents:
       if isinstance(caption_content, SccCaptionLineBreak):
         lines.append(separator.join(last_line))
@@ -216,6 +231,10 @@ class SccCaptionParagraph:
     # Set the region to current caption
     region = _SccParagraphRegion(self, doc)
     p.set_region(region.get_region())
+
+    # Set the paragraph style
+    for (prop, value) in self.get_style_properties().items():
+      p.set_style(prop, value)
 
     # Add caption content (text and line-breaks)
     for caption_content in self._caption_contents:
@@ -328,11 +347,11 @@ class _SccParagraphRegion:
 
   def _get_region_prefix(self):
     """Returns region prefix based on paragraph style"""
-    if self._paragraph.get_style() is SccCaptionStyle.PaintOn:
+    if self._paragraph.get_caption_style() is SccCaptionStyle.PaintOn:
       return "paint"
-    if self._paragraph.get_style() is SccCaptionStyle.PopOn:
+    if self._paragraph.get_caption_style() is SccCaptionStyle.PopOn:
       return "pop"
-    if self._paragraph.get_style() is SccCaptionStyle.RollUp:
+    if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
       return "rollup"
     return "region"
 
