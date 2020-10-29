@@ -50,6 +50,12 @@ class IMSCAppTest(unittest.TestCase):
   def test_pop_on_scc(self):
     tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.ttml".split())
 
+  def test_paint_on_scc(self):
+    tt.main("convert -i src/test/resources/scc/paint-on.scc -o build/paint-on.ttml".split())
+
+  def test_mix_rows_roll_up_scc(self):
+    tt.main("convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.ttml".split())
+
   def test_bad_function(self):
 
     stdout = io.StringIO()
