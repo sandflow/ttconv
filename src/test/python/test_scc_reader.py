@@ -26,14 +26,13 @@
 """Unit tests for the SCC reader"""
 
 # pylint: disable=R0201,C0115,C0116,W0212
-
 import unittest
 
 from ttconv.model import Br, P, ContentElement
 from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
-  StyleProperty, ExtentType
+  StyleProperty, ExtentType, ColorType
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -216,6 +215,9 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[2])[4], StyleProperties.FontStyle, None)
     self.check_element_style(list(p_list[2])[4], StyleProperties.Color, NamedColors.white.value)
 
+    for p in p_list:
+      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+
   def test_2_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
 
@@ -268,6 +270,9 @@ class SccReaderTest(unittest.TestCase):
 
     self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
     self.assertEqual(region_2, p_list[3].get_region())
+
+    for p in p_list:
+      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -324,6 +329,9 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[3], "caption4", "00:00:21;25", "00:00:22;16", expected_text[1], Br, expected_text[2], Br,
                        expected_text[3])
     self.assertEqual(region_3, p_list[3].get_region())
+
+    for p in p_list:
+      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_4_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -399,6 +407,9 @@ class SccReaderTest(unittest.TestCase):
                        expected_text[4], Br, expected_text[5])
     self.assertEqual(region_4, p_list[5].get_region())
 
+    for p in p_list:
+      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+
   def test_mix_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
 
@@ -426,7 +437,7 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:20;06	9426 9426 94ad 94ad 9470 9470 54c8 4520 4352 4f57 c4ae
 
-00:00:21;24	9426 9426 94ad 94ad 9470 9470 3e3e 2049 5420 57c1 d320 c74f 4fc4 2054 4f20 c245 2049 ce20 54c8 4580
+00:00:21;24	9426 9426 94ad 94ad 9470 9470 3e3e 2049 5420 57c1 d320 902d 902d c74f 4fc4 902e 902e 2054 4f20 c245 2049 ce20 54c8 4580
 
 00:00:34;27	94a7 94ad 9470 c16e 6420 f2e5 73f4 eff2 e520 49ef f761 a773 20ec 616e 642c 20f7 61f4 e5f2
 
@@ -513,20 +524,33 @@ class SccReaderTest(unittest.TestCase):
     self.assertEqual(region_3, p_list[11].get_region())
 
     self.check_caption(p_list[12], "caption13", "00:00:21;25", "00:00:34;28", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
-                       ">> IT WAS GOOD TO BE IN THE")
+                       ">> IT WAS ", "GOOD", " TO BE IN THE")
     self.assertEqual(region_3, p_list[12].get_region())
 
     self.check_caption(p_list[13], "caption14", "00:00:34;28", "00:00:36;13", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
-                       ">> IT WAS GOOD TO BE IN THE", Br, "And restore Iowa's land, water")
+                       ">> IT WAS ", "GOOD", " TO BE IN THE", Br, "And restore Iowa's land, water")
     self.assertEqual(region_4, p_list[13].get_region())
 
-    self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS GOOD TO BE IN THE", Br,
+    self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS ", "GOOD",
+                       " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.")
     self.assertEqual(region_4, p_list[14].get_region())
 
-    self.check_caption(p_list[15], "caption16", "00:00:44;09", "00:00:44;26", ">> IT WAS GOOD TO BE IN THE", Br,
+    self.check_caption(p_list[15], "caption16", "00:00:44;09", "00:00:44;26", ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_4, p_list[15].get_region())
+
+    self.check_element_style(list(p_list[4])[3], StyleProperties.FontStyle, FontStyleType.italic)
+    self.check_element_style(list(p_list[5])[1], StyleProperties.FontStyle, FontStyleType.italic)
+
+    semi_transparent_magenta = ColorType((255, 0, 255, 136))
+    self.check_element_style(list(p_list[12])[5], StyleProperties.BackgroundColor, semi_transparent_magenta)
+    self.check_element_style(list(p_list[13])[5], StyleProperties.BackgroundColor, semi_transparent_magenta)
+    self.check_element_style(list(p_list[14])[3], StyleProperties.BackgroundColor, semi_transparent_magenta)
+    self.check_element_style(list(p_list[15])[1], StyleProperties.BackgroundColor, semi_transparent_magenta)
+
+    for p in p_list:
+      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content(self):
     scc_content = """Scenarist_SCC V1.0
@@ -577,6 +601,9 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
     self.assertEqual(region_2, p_list[3].get_region())
+
+    for p in p_list:
+      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
 
 if __name__ == '__main__':

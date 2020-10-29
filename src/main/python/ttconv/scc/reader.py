@@ -41,7 +41,7 @@ from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptio
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
-from ttconv.style_properties import StyleProperties
+from ttconv.style_properties import StyleProperties, NamedColors
 
 LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +83,10 @@ class _SccContext:
     if len(self.previous_captions) > 0:
       previous_caption = self.previous_captions.pop(index)
       previous_caption.set_end(time_code)
+
+      if not previous_caption.get_style_property(StyleProperties.BackgroundColor):
+        previous_caption.add_style_property(StyleProperties.BackgroundColor, NamedColors.black.value)
+
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SccTimeCode):
@@ -93,7 +97,7 @@ class _SccContext:
     pac_row = pac.get_row()
     pac_indent = pac.get_indent()
 
-    if self.current_caption.get_style() is SccCaptionStyle.PaintOn:
+    if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
       if self.current_caption.get_current_text() and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
         # Creates a new Paragraph if the new caption is contiguous (Paint-On)
         self.set_current_to_previous()
@@ -108,7 +112,7 @@ class _SccContext:
 
     self.current_caption.new_caption_text()
 
-    if self.current_caption.get_style() is SccCaptionStyle.RollUp:
+    if self.current_caption.get_caption_style() is SccCaptionStyle.RollUp:
       # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
       if pac_row in range(5, 12):
         self.current_caption.apply_current_text_offsets()
@@ -141,6 +145,10 @@ class _SccContext:
     """Processes SCC Attribute Code to map it to the model"""
     if not self.current_caption or not self.current_caption.get_current_text():
       raise ValueError("No current SCC caption nor content initialized")
+
+    if self.current_caption.get_current_text() and self.current_caption.get_current_text().get_text():
+      self.current_caption.new_caption_text()
+      self.current_caption.apply_current_text_offsets()
 
     if attribute_code.is_background():
       self.current_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
@@ -234,7 +242,7 @@ class _SccContext:
 
   def process_text(self, word: str, time_code: SccTimeCode):
     """Processes SCC text words"""
-    if self.current_caption.get_style() is SccCaptionStyle.PaintOn:
+    if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
       if word.startswith(" "):
         self.current_caption.new_caption_text()
         self.current_caption.get_current_text().append(word)
