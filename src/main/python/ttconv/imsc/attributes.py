@@ -133,7 +133,7 @@ class CellResolutionAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows}px {res.columns}px")
+    ttml_element.set(CellResolutionAttribute.qn, f"{res.rows} {res.columns}")
 
 class ExtentAttribute:
   '''ttp:extent attribute on \\<tt\\>

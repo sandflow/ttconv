@@ -247,7 +247,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[3])[0], StyleProperties.FontStyle, FontStyleType.italic)
     self.check_element_style(list(p_list[3])[2], StyleProperties.Color, NamedColors.red.value)
     self.check_element_style(list(p_list[3])[4], StyleProperties.FontStyle, FontStyleType.italic)
-
+    
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
