@@ -247,7 +247,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[3])[0], StyleProperties.FontStyle, FontStyleType.italic)
     self.check_element_style(list(p_list[3])[2], StyleProperties.Color, NamedColors.red.value)
     self.check_element_style(list(p_list[3])[4], StyleProperties.FontStyle, FontStyleType.italic)
-    
+
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
@@ -624,16 +624,38 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[0], "caption1", "00:02:53:15", "00:02:56:01", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
     self.assertEqual(region_1, p_list[0].get_region())
 
+    self.assertIsNone(list(p_list[0])[0].get_begin())
+    self.assertAlmostEqual(0.1333, float(list(p_list[0])[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.2333, float(list(p_list[0])[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.3333, float(list(p_list[0])[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.4, float(list(p_list[0])[4].get_begin()), delta=0.0001)
+
     self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:26", "consectetur ", "adipiscing", " elit.")
     self.assertEqual(region_2, p_list[1].get_region())
+
+    self.assertIsNone(list(p_list[1])[0].get_begin())
+    self.assertAlmostEqual(0.2, float(list(p_list[1])[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.4, float(list(p_list[1])[2].get_begin()), delta=0.0001)
 
     self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ",
                        "sollicitudin.")
     self.assertEqual(region_1, p_list[2].get_region())
 
+    self.assertIsNone(list(p_list[2])[0].get_begin())
+    self.assertAlmostEqual(0.2666, float(list(p_list[2])[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.4, float(list(p_list[2])[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.5333, float(list(p_list[2])[3].get_begin()), delta=0.0001)
+
     self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
     self.assertEqual(region_2, p_list[3].get_region())
+
+    self.assertIsNone(list(p_list[3])[0].get_begin())
+    self.assertAlmostEqual(0.1666, float(list(p_list[3])[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.3, float(list(p_list[3])[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.3333, float(list(p_list[3])[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.4666, float(list(p_list[3])[4].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.5, float(list(p_list[3])[5].get_begin()), delta=0.0001)
 
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
