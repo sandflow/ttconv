@@ -32,6 +32,9 @@ def get_color_disassembly(color: ColorType) -> str:
   """Get color disassembly code"""
   disassembly = ""
 
+  if color is None:
+    return disassembly
+
   if color is NamedColors.white.value:
     disassembly = "Wh"
   elif color is NamedColors.green.value:

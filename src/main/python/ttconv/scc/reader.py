@@ -434,7 +434,8 @@ class SccLine:
     for scc_word in self.scc_words:
 
       if scc_word.value == 0x0000:
-        disassembly_line = "{}"
+        disassembly_line += "{}"
+        continue
 
       if scc_word.byte_1 < 0x20:
 
