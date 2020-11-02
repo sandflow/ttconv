@@ -884,4 +884,4 @@ class StyleProperties:
     def validate(value):
       return isinstance(value, WritingModeType)
 
-  ALL = {v for n, v in list(locals().items()) if callable(v)}
+  ALL = {v: StyleProperty for n, v in list(locals().items()) if callable(v)}

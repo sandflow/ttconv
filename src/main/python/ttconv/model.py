@@ -47,9 +47,9 @@ class DiscreteAnimationStep:
   '''Represents a discrete change in the value of a style property over time (see TTML `set` element)
   '''
   style_property: StyleProperty
-  begin: typing.Optional[Fraction]
-  end: typing.Optional[Fraction]
   value: typing.Any
+  begin: typing.Optional[Fraction] = None
+  end: typing.Optional[Fraction] = None
 
   def __post_init__(self):
     if self.style_property is None:
@@ -287,6 +287,11 @@ class ContentElement:
   
   # style properties
 
+  def has_style(self, style_prop: StyleProperty) -> bool:
+    '''Returns whether there is a value for style property `style_prop`.
+    '''
+    return style_prop in self._styles
+
   def get_style(self, style_prop: StyleProperty):
     '''Returns the value for the style property `style_prop`, or None.'''
     return self._styles.get(style_prop)
@@ -312,6 +317,11 @@ class ContentElement:
   def is_style_applicable(self, style_prop: StyleProperty) -> bool:
     '''Whether the style property `style_prop` apply to the element'''
     return style_prop in self._applicableStyles
+
+  def iter_styles(self) -> typing.Iterator[StyleProperty]:
+    '''Returns an iterator over style properties
+    '''
+    return iter(self._styles.keys())
 
   # layout properties
 
@@ -358,6 +368,9 @@ class ContentElement:
     '''
     if not isinstance(step, DiscreteAnimationStep):
       raise TypeError("Must be a discrete animation step")
+
+    if not step.style_property.is_animatable:
+      raise TypeError("The style property is not animatable")
 
     self._sets.append(step)
 
@@ -811,13 +824,10 @@ class ActiveAreaType:
     if self.height < 0  or self.height > 1:
       raise ValueError("height must be in the range [0, 1]")
 
-class Document:
+class Root:
   '''Base class for TTML documents, including ISDs, as specified in TTML2'''
 
   def __init__(self):
-    self._regions = {}
-    self._body = None
-    self._initial_values = {}
     self._cell_resolution = CellResolutionType(rows=15, columns=32)
     self._px_resolution = PixelResolutionType(width=1920, height=1080)
     self._active_area = None
@@ -892,6 +902,15 @@ class Document:
       raise TypeError("Argument must be an instance of PixelResolutionType")
 
     self._px_resolution = px_resolution
+
+class Document(Root):
+  '''TTML document'''
+
+  def __init__(self):
+    self._regions = {}
+    self._body = None
+    self._initial_values = {}
+    super().__init__()
 
   # body
 
