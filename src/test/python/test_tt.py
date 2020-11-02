@@ -47,6 +47,35 @@ class IMSCAppTest(unittest.TestCase):
     #
     tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml".split())
 
+  def test_convert_input_file_type_ttml(self):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype ttml -o build/body_only.out.ttml".split())
+
+  def test_convert_output_file_type_ttml(self):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --otype ttml".split())
+
+  def test_convert_input_file_type_scc(self):
+    tt.main("convert -i src/test/resources/scc/pop-on.scc --itype scc -o build/pop-on.out.ttml".split())
+
+  def test_convert_bad_input_file_name(self):
+    with self.assertRaises(SystemExit):
+      tt.main("convert -i src/test/resources/ttml/body_only.not_ttml -o build/body_only.out.ttml".split())
+
+  def test_convert_bad_output_file_name(self):
+    with self.assertRaises(SystemExit):
+      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml".split())
+
+  def test_convert_bad_input_file_arg(self):
+    with self.assertRaises(SystemExit):
+      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --itype not_ttml".split())
+
+  def test_convert_bad_output_file_arg(self):
+    with self.assertRaises(SystemExit):
+      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml --otype not_ttml".split())
+
+  def test_convert_mismtach_file_type_and_file_name(self):
+    #with self.assertRaises(SystemExit):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype scc -o build/body_only123.out.ttml".split())
+
   def test_pop_on_scc(self):
     tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.ttml".split())
 

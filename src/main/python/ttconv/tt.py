@@ -118,7 +118,7 @@ def subcommand(args=None, parent=subparsers):
   argument("--itype", help="Input file type", required=False),
   argument("--otype", help="Output file type", required=False)
   ])
-def convert(args):
+def convert(args):  
   '''Process input and output through the reader, converter, and writer'''
 
   inputfile = args.input
@@ -152,7 +152,13 @@ def convert(args):
     #
     model = scc_reader.to_model(file_as_str)
   else:
-    LOGGER.warning("Input file is %s is not supported", args.input)
+    if args.itype is not None:
+      exit_str  = f'Input type {args.itype} is not supported'
+    else:
+        exit_str  = f'Input file is {args.input} is not supported'
+    
+    LOGGER.error(exit_str)
+    sys.exit(exit_str)
 
   if writer_type is FileTypes.TTML:
     #
@@ -165,7 +171,13 @@ def convert(args):
     #
     tree_from_model.write(outputfile)
   else:
-    LOGGER.warning("Output file is %s is not supported", args.output)
+    if args.otype is not None:
+      exit_str  = f'Output type {args.otype} is not supported'
+    else:
+        exit_str  = f'Output file is {args.output} is not supported'
+
+    LOGGER.error(exit_str)
+    sys.exit(exit_str)
 
 
 @subcommand([argument("-i", "--input", help="Input file path", required=True)])
