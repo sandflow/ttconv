@@ -303,18 +303,18 @@ class _SccParagraphRegion:
     # Convert paragraph origin units into percentages
     paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
 
-    if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
+    if self._paragraph.get_caption_style() in (SccCaptionStyle.RollUp, SccCaptionStyle.PaintOn):
       return region_origin \
              and region_origin.x.units is paragraph_origin.x.units \
              and region_origin.y.units is paragraph_origin.y.units \
              and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
              and region_origin.y.value <= paragraph_origin.y.value
-    else:
-      return region_origin \
-           and region_origin.x.units is paragraph_origin.x.units \
-           and region_origin.y.units is paragraph_origin.y.units \
-           and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
-           and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
+
+    return region_origin \
+       and region_origin.x.units is paragraph_origin.x.units \
+       and region_origin.y.units is paragraph_origin.y.units \
+       and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
+       and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
 
   def _find_matching_region(self) -> Optional[Region]:
     """Looks for a region that origin matches with the paragraph origin"""

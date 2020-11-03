@@ -563,11 +563,6 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 8, 16, doc.get_cell_resolution())
     self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
 
-    region_2 = doc.get_region("paint2")
-    self.assertIsNotNone(region_2)
-    self.check_region_origin(region_2, 8, 17, doc.get_cell_resolution())
-    self.check_region_extent(region_2, 28, 1, doc.get_cell_resolution())
-
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -584,7 +579,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:26", "consectetur ", "adipiscing", " elit.")
-    self.assertEqual(region_2, p_list[1].get_region())
+    self.assertEqual(region_1, p_list[1].get_region())
 
     self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ",
                        "sollicitudin.")
@@ -592,7 +587,7 @@ class SccReaderTest(unittest.TestCase):
 
     self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
-    self.assertEqual(region_2, p_list[3].get_region())
+    self.assertEqual(region_1, p_list[3].get_region())
 
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
