@@ -247,10 +247,24 @@ class SccCaptionParagraph:
         span = Span(doc)
 
         if caption_content.get_begin():
-          span.set_begin(caption_content.get_begin().to_temporal_offset())
+
+          begin = caption_content.get_begin().to_temporal_offset()
+
+          if self.get_caption_style() is SccCaptionStyle.PaintOn:
+            # Compute paragraph-relative begin time
+            begin -= self._begin.to_temporal_offset()
+
+          span.set_begin(begin)
 
         if caption_content.get_end():
-          span.set_end(caption_content.get_end().to_temporal_offset())
+
+          end = caption_content.get_end().to_temporal_offset()
+
+          if self.get_caption_style() is SccCaptionStyle.PaintOn:
+            # Compute paragraph-relative end time
+            end -= self._end.to_temporal_offset()
+
+          span.set_end(end)
 
         for (prop, value) in caption_content.get_style_properties().items():
           span.set_style(prop, value)

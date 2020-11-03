@@ -38,6 +38,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
+from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
@@ -455,6 +456,67 @@ class SccLine:
 
     return self.time_code
 
+  def to_disassembly(self) -> str:
+    """Converts SCC line into the disassembly format"""
+    disassembly_line = str(self.time_code) + "\t"
+
+    for scc_word in self.scc_words:
+
+      if scc_word.value == 0x0000:
+        disassembly_line += "{}"
+        continue
+
+      if scc_word.byte_1 < 0x20:
+
+        attribute_code = SccAttributeCode.find(scc_word.value)
+        control_code = SccControlCode.find(scc_word.value)
+        mid_row_code = SccMidRowCode.find(scc_word.value)
+        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
+        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
+
+        if pac:
+          disassembly_line += f"{{{pac.get_row():02}"
+          color = pac.get_color()
+          indent = pac.get_indent()
+          if indent and indent > 0:
+            disassembly_line += f"{indent :02}"
+          elif color:
+            disassembly_line += get_color_disassembly(color)
+            disassembly_line += get_font_style_disassembly(pac.get_font_style())
+            disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
+          else:
+            disassembly_line += "00"
+          disassembly_line += "}"
+
+        elif attribute_code:
+          disassembly_line += "{"
+          disassembly_line += "B" if attribute_code.is_background() else ""
+          disassembly_line += get_color_disassembly(attribute_code.get_color())
+          disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
+          disassembly_line += "}"
+
+        elif mid_row_code:
+          disassembly_line += "{"
+          disassembly_line += get_color_disassembly(mid_row_code.get_color())
+          disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
+          disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
+          disassembly_line += "}"
+
+        elif control_code:
+          disassembly_line += "{" + control_code.get_name() + "}"
+
+        elif spec_char:
+          disassembly_line += spec_char.get_unicode_value()
+
+        else:
+          disassembly_line += "{??}"
+          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
+
+      else:
+        disassembly_line += scc_word.to_text()
+
+    return disassembly_line
+
 
 #
 # SCC reader
@@ -493,3 +555,21 @@ def to_model(scc_content: str):
   context.flush(time_code)
 
   return document
+
+
+def to_disassembly(scc_content: str) -> str:
+  """Dumps a SCC document into the disassembly format"""
+  disassembly = ""
+  for line in scc_content.splitlines():
+    LOGGER.debug(line)
+    scc_line = SccLine.from_str(line)
+
+    if not scc_line:
+      continue
+
+    line_to_disassembly = scc_line.to_disassembly()
+    LOGGER.debug(line_to_disassembly)
+
+    disassembly += line_to_disassembly + "\n"
+
+  return disassembly
