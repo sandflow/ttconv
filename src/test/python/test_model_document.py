@@ -304,6 +304,10 @@ class DocumentTest(unittest.TestCase):
       aa
       )
 
+    d.set_active_area(None)
+
+    self.assertIsNone(d.get_active_area())
+
 
   def display_aspect_ratio(self):
 

@@ -165,7 +165,7 @@ class ISD(model.Root):
 
 
   @staticmethod
-  def compute_style(style_property: styles.StyleProperty, value: typing.Any) -> typing.Any:
+  def compute_style(_style_property: styles.StyleProperty, value: typing.Any) -> typing.Any:
     return value
 
   @staticmethod
@@ -210,11 +210,10 @@ class ISD(model.Root):
     # create an ISD element
 
     if isinstance(element, model.Region):
-      isd_element = ISD.Region(isd)
+      isd_element = ISD.Region(element.get_id(), isd)
     else:
       isd_element = element.__class__(isd)
-
-    isd_element.set_id(element.get_id())
+      isd_element.set_id(element.get_id())
 
     isd_element.set_lang(element.get_lang())
 
@@ -268,7 +267,8 @@ class ISD(model.Root):
       if isd_element.has_style(initial_style):
         continue
 
-      initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) else initial_style.make_initial()
+      initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
+                        else initial_style.make_initial_value()
 
       isd_element.set_style(
         initial_style,
@@ -314,9 +314,9 @@ class ISD(model.Root):
 
     # remove styles that are not applicable
 
-    for computed_style_prop in isd_element.iter_styles():
-      if not isd_child_element.is_style_applicable(computed_style_prop):
-        isd_child_element.set_style(computed_style_prop, None)
+    for computed_style_prop in list(isd_element.iter_styles()):
+      if not isd_element.is_style_applicable(computed_style_prop):
+        isd_element.set_style(computed_style_prop, None)
     
     # prune or keep the element
 
@@ -328,7 +328,7 @@ class ISD(model.Root):
 
     if (
         isinstance(isd_element, ISD.Region) and
-        isd_element.get_style(styles.StyleProperties.ShowBackground is styles.ShowBackgroundType.always)
+        isd_element.get_style(styles.StyleProperties.ShowBackground) is styles.ShowBackgroundType.always
       ):
       return isd_element
 
@@ -343,5 +343,4 @@ class ISD(model.Root):
 
 class StyleProperties:
   
-
   ALL = {v for n, v in list(locals().items()) if callable(v)}

@@ -47,9 +47,9 @@ class DiscreteAnimationStep:
   '''Represents a discrete change in the value of a style property over time (see TTML `set` element)
   '''
   style_property: StyleProperty
+  begin: typing.Optional[Fraction]
+  end: typing.Optional[Fraction]
   value: typing.Any
-  begin: typing.Optional[Fraction] = None
-  end: typing.Optional[Fraction] = None
 
   def __post_init__(self):
     if self.style_property is None:
@@ -260,6 +260,15 @@ class ContentElement:
       yield child
       child = child._next_sibling
 
+  def __len__(self) -> int:
+    '''Returns the number of children of the element.'''
+    count = 0
+    child = self._first_child
+    while child is not None:
+      count += 1
+      child = child._next_sibling
+    return count
+
   def dfs_iterator(self) -> typing.Iterator[ContentElement]:
     '''Returns an iterator over all elements in the tree rooted at the element,
     in depth-first search order.'''
@@ -319,9 +328,9 @@ class ContentElement:
     return style_prop in self._applicableStyles
 
   def iter_styles(self) -> typing.Iterator[StyleProperty]:
-    '''Returns an iterator over style properties
+    '''Returns an iterator over all style properties that are not `None`
     '''
-    return iter(self._styles.keys())
+    return iter(self._styles)
 
   # layout properties
 
@@ -754,7 +763,7 @@ class Region(ContentElement):
     StyleProperties.WritingMode
     ])
 
-  def __init__(self, region_id, doc=None):
+  def __init__(self, region_id: str, doc: Document = None):
     super().__init__(doc)
     
     if region_id is None:
@@ -836,7 +845,7 @@ class Root:
 
   # active area
 
-  def get_active_area(self) -> ActiveAreaType:
+  def get_active_area(self) -> typing.Optional[ActiveAreaType]:
     '''Returns the active area of the document.
     '''
     return self._active_area
@@ -844,7 +853,7 @@ class Root:
   def set_active_area(self, active_area: typing.Optional[ActiveAreaType]):
     '''Sets the active area of the document, or clears it if `None` is passed.
     '''
-    if not None and not isinstance(active_area, ActiveAreaType):
+    if active_area is not None and not isinstance(active_area, ActiveAreaType):
       raise TypeError("Argument must be None or an instance of ActiveAreaType")
 
     self._active_area = active_area
@@ -872,7 +881,7 @@ class Root:
     '''Sets the display aspect ratio of the document to `dar`. If `dar` is `None`, the
     document will fill the root container area.
     '''
-    if dar is not None or dar is not isinstance(dar, Fraction):
+    if dar is not None and dar is not isinstance(dar, Fraction):
       raise TypeError("Argument must be an instance of Fraction or None")
 
     self._dar = dar
