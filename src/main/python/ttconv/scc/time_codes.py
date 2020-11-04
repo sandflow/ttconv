@@ -62,7 +62,7 @@ class SccTimeCode:
     non_drop_frame_tc_regex = re.compile(SMPTE_TIME_CODE_NDF_PATTERN)
     match = non_drop_frame_tc_regex.match(time_code)
 
-    if match:
+    if match is not None:
       return SccTimeCode(int(match.group('ndf_h')),
                          int(match.group('ndf_m')),
                          int(match.group('ndf_s')),
@@ -163,7 +163,8 @@ class SccTimeCode:
   def to_temporal_offset(self, frame_rate: typing.Optional[Fraction] = None) -> Fraction:
     """Converts the time code in a second-based fraction"""
 
-    base_frame_rate = frame_rate if frame_rate else DEFAULT_DF_FRAME_RATE if self.is_drop_frame() else DEFAULT_NDF_FRAME_RATE
+    base_frame_rate = frame_rate if frame_rate is not None \
+      else DEFAULT_DF_FRAME_RATE if self.is_drop_frame() else DEFAULT_NDF_FRAME_RATE
 
     return Fraction(self.get_nb_frames(frame_rate), base_frame_rate)
 

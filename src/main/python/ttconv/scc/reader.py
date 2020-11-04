@@ -79,7 +79,7 @@ class _SccContext:
 
   def init_current_caption(self, time_code: SccTimeCode):
     """Initializes the current caption with begin time"""
-    if self.current_caption:
+    if self.current_caption is not None:
       self.current_caption.set_begin(time_code)
 
   def push_previous_caption(self, time_code: SccTimeCode, index: int = 0):
@@ -138,7 +138,7 @@ class _SccContext:
     if not self.current_caption:
       raise ValueError("No current SCC caption initialized")
 
-    if self.current_caption.get_current_text() and self.current_caption.get_current_text().get_text():
+    if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
       self.current_caption.new_caption_text()
       self.current_caption.apply_current_text_offsets()
 
@@ -151,7 +151,7 @@ class _SccContext:
     if not self.current_caption or not self.current_caption.get_current_text():
       raise ValueError("No current SCC caption nor content initialized")
 
-    if self.current_caption.get_current_text() and self.current_caption.get_current_text().get_text():
+    if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
       self.current_caption.new_caption_text()
       self.current_caption.apply_current_text_offsets()
 
@@ -279,7 +279,7 @@ class _SccContext:
 
   def flush(self, time_code: SccTimeCode):
     """Flushes the remaining current caption"""
-    if self.current_caption:
+    if self.current_caption is not None:
       self.set_current_to_previous()
       while len(self.previous_captions) > 0:
         self.push_previous_caption(time_code)
@@ -412,30 +412,30 @@ class SccLine:
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
         spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
 
-        if pac:
+        if pac is not None:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
-          if pac.get_color():
+          if pac.get_color() is not None:
             debug += "|" + str(pac.get_color())
-          if pac.get_font_style():
+          if pac.get_font_style() is not None:
             debug += "|I"
-          if pac.get_text_decoration():
+          if pac.get_text_decoration() is not None:
             debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
           context.process_preamble_address_code(pac, self.time_code)
 
-        elif attribute_code:
+        elif attribute_code is not None:
           debug += "[ATC/" + hex(scc_word.value) + "]"
           context.process_attribute_code(attribute_code)
 
-        elif mid_row_code:
+        elif mid_row_code is not None:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
           context.process_mid_row_code(mid_row_code)
 
-        elif control_code:
+        elif control_code is not None:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
           context.process_control_code(control_code, self.time_code)
 
-        elif spec_char:
+        elif spec_char is not None:
           word = spec_char.get_unicode_value()
           debug += word
           context.process_text(word, self.time_code)
@@ -474,13 +474,13 @@ class SccLine:
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
         spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
 
-        if pac:
+        if pac is not None:
           disassembly_line += f"{{{pac.get_row():02}"
           color = pac.get_color()
           indent = pac.get_indent()
           if indent and indent > 0:
             disassembly_line += f"{indent :02}"
-          elif color:
+          elif color is not None:
             disassembly_line += get_color_disassembly(color)
             disassembly_line += get_font_style_disassembly(pac.get_font_style())
             disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
@@ -488,24 +488,24 @@ class SccLine:
             disassembly_line += "00"
           disassembly_line += "}"
 
-        elif attribute_code:
+        elif attribute_code is not None:
           disassembly_line += "{"
           disassembly_line += "B" if attribute_code.is_background() else ""
           disassembly_line += get_color_disassembly(attribute_code.get_color())
           disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
           disassembly_line += "}"
 
-        elif mid_row_code:
+        elif mid_row_code is not None:
           disassembly_line += "{"
           disassembly_line += get_color_disassembly(mid_row_code.get_color())
           disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
           disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
           disassembly_line += "}"
 
-        elif control_code:
+        elif control_code is not None:
           disassembly_line += "{" + control_code.get_name() + "}"
 
-        elif spec_char:
+        elif spec_char is not None:
           disassembly_line += spec_char.get_unicode_value()
 
         else:

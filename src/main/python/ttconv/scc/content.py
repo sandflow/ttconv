@@ -85,7 +85,7 @@ class SccCaptionText(SccCaptionContent):
 
   def set_x_offset(self, indent: Optional[int]):
     """Sets the x offset"""
-    self._x_offset = indent if indent else 0
+    self._x_offset = indent if indent is not None else 0
 
   def get_x_offset(self) -> int:
     """Returns the x offset"""
@@ -93,7 +93,7 @@ class SccCaptionText(SccCaptionContent):
 
   def set_y_offset(self, row: Optional[int]):
     """Sets the y offset"""
-    self._y_offset = row if row else 0
+    self._y_offset = row if row is not None else 0
 
   def get_y_offset(self) -> int:
     """Returns the y offset"""

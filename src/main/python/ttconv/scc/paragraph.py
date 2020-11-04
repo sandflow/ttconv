@@ -223,9 +223,9 @@ class SccCaptionParagraph:
     p.set_doc(doc)
     p.set_id(self._caption_id)
 
-    if self._begin:
+    if self._begin is not None:
       p.set_begin(self._begin.to_temporal_offset())
-    if self._end:
+    if self._end is not None:
       p.set_end(self._end.to_temporal_offset())
 
     # Set the region to current caption
@@ -246,7 +246,7 @@ class SccCaptionParagraph:
       if isinstance(caption_content, SccCaptionText):
         span = Span(doc)
 
-        if caption_content.get_begin():
+        if caption_content.get_begin() is not None:
 
           begin = caption_content.get_begin().to_temporal_offset()
 
@@ -256,7 +256,7 @@ class SccCaptionParagraph:
 
           span.set_begin(begin)
 
-        if caption_content.get_end():
+        if caption_content.get_end() is not None:
 
           end = caption_content.get_end().to_temporal_offset()
 
@@ -301,12 +301,12 @@ class _SccParagraphRegion:
 
     matching_region = self._find_matching_region()
 
-    if matching_region:
-      # Extend region to paragraph if needed
-      self._extend_region_to_paragraph(matching_region)
-    else:
+    if matching_region is None:
       # Create a new matching region
       matching_region = self._create_matching_region()
+    else:
+      # Extend region to paragraph if needed
+      self._extend_region_to_paragraph(matching_region)
 
     return matching_region
 
