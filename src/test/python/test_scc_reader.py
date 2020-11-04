@@ -188,9 +188,13 @@ class SccReaderTest(unittest.TestCase):
 
 01:11:33:14	942c 942c
 
-01:16:17:15	9420 9420 1370 1370 91ae 91ae 4c6f 7265 6d20 6970 7375 6d20 94c8 94c8 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 9470 91ae 91ae 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942c 942f 942f
+01:16:17:15	9420 9420 9570 9570 91ae 91ae 4c6f 7265 6d20 6970 7375 6d20 96c8 96c8 646f 6c6f 7220 7369 7420 616d 6574 2c80 9670 9670 91ae 91ae 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942c 942f 942f
 
 01:16:19:23	942c 942c
+
+01:20:56:00	9420 9420 9370 9370 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80 942c 942c 942f 942f
+
+01:22:19:23	942c 942c
 """
 
     doc = to_model(scc_content)
@@ -200,21 +204,31 @@ class SccReaderTest(unittest.TestCase):
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 26, 17, doc.get_cell_resolution())
     self.check_region_extent(region_1, 10, 1, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     region_2 = doc.get_region("pop2")
     self.assertIsNotNone(region_2)
     self.check_region_origin(region_2, 8, 17, doc.get_cell_resolution())
     self.check_region_extent(region_2, 11, 1, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
     self.check_region_origin(region_3, 9, 16, doc.get_cell_resolution())
     self.check_region_extent(region_3, 18, 2, doc.get_cell_resolution())
+    self.check_element_style(region_3, StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     region_4 = doc.get_region("pop4")
     self.assertIsNotNone(region_4)
-    self.check_region_origin(region_4, 4, 15, doc.get_cell_resolution())
-    self.check_region_extent(region_4, 28, 3, doc.get_cell_resolution())
+    self.check_region_origin(region_4, 4, 8, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 28, 10, doc.get_cell_resolution())
+    self.check_element_style(region_4, StyleProperties.DisplayAlign, DisplayAlignType.before)
+
+    region_5 = doc.get_region("pop5")
+    self.assertIsNotNone(region_5)
+    self.check_region_origin(region_5, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_5, 32, 3, doc.get_cell_resolution())
+    self.check_element_style(region_5, StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -225,7 +239,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(4, len(p_list))
+    self.assertEqual(5, len(p_list))
 
     self.check_caption(p_list[0], "caption1", "01:02:54:00", "01:02:55:15", "( horn honking )")
     self.assertEqual(region_1, p_list[0].get_region())
@@ -239,6 +253,9 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", "Lorem ipsum ", Br, "dolor sit amet,", Br,
                        "consectetur adipiscing elit.")
     self.assertEqual(region_4, p_list[3].get_region())
+
+    self.check_caption(p_list[4], "caption5", "01:20:56:24", "01:22:19:24", "entesque interdum lacinia sollicitudin.")
+    self.assertEqual(region_5, p_list[4].get_region())
 
     self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
     self.check_element_style(list(p_list[2])[4], StyleProperties.FontStyle, None)
@@ -299,6 +316,9 @@ class SccReaderTest(unittest.TestCase):
 
     self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
+
+    self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
+                             TextDecorationType(underline=TextDecorationType.Action.add))
 
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
@@ -562,6 +582,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 8, 16, doc.get_cell_resolution())
     self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     body = doc.get_body()
     self.assertIsNotNone(body)

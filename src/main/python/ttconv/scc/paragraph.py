@@ -400,7 +400,6 @@ class _SccParagraphRegion:
     available_width = self._right - int(paragraph_origin.x.value)
     region_width = min(paragraph_extent.width.value, available_width)
 
-
     if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
       # The region height extends from the top row to the bottom row of the safe area
       region_height = self._bottom - (self._top + 1)
@@ -408,6 +407,7 @@ class _SccParagraphRegion:
     else:
       # The region height extends from its origin to the bottom of the safe area
       region_height = self._bottom - int(paragraph_origin.y.value)
+      region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     region_extent = get_extent_from_dimensions(region_width, region_height)
 
