@@ -131,18 +131,18 @@ def parse_font_families(attr_value: str) -> typing.List[str]:
   return rslt
 
 
-def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) -> Fraction:
+def parse_time_expression(tick_rate: typing.Optional[int], frame_rate: typing.Optional[Fraction], time_expr: str) -> Fraction:
   '''Parse a TTML time expression in a fractional number in seconds
   '''
 
   m = _OFFSET_FRAME_RE.match(time_expr)
 
-  if m and frame_rate:
+  if m and frame_rate is not None:
     return Fraction(m.group(1)) / frame_rate
 
   m = _OFFSET_TICK_RE.match(time_expr)
 
-  if m and tick_rate:
+  if m and tick_rate is not None:
     return Fraction(m.group(1)) / tick_rate
 
   m = _OFFSET_MS_RE.match(time_expr)
@@ -174,7 +174,7 @@ def parse_time_expression(tick_rate: int, frame_rate: Fraction, time_expr: str) 
   
   m = _CLOCK_TIME_FRAMES_RE.match(time_expr)
 
-  if m and frame_rate:
+  if m and frame_rate is not None:
     frames = Fraction(m.group(4)) if m.group(4) else 0
 
     if frames >= frame_rate:

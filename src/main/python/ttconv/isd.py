@@ -96,9 +96,11 @@ class ISD(model.Root):
         parent_end: typing.Optional[Fraction]
       ) -> typing.Tuple[Fraction, Fraction]:
       
-      begin_time = (parent_begin or Fraction(0)) + (begin_offset or Fraction(0))
+      begin_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
+                    (begin_offset if begin_offset is not None else Fraction(0))
 
-      end_time = (parent_begin or Fraction(0)) + end_offset if end_offset is not None else None
+      end_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
+                end_offset if end_offset is not None else None
 
       if end_time is None:
 
@@ -173,7 +175,7 @@ class ISD(model.Root):
                       offset: Fraction,
                       selected_region: model.Region,
                       inherited_region: typing.Optional[model.Region],
-                      parent: model.ContentElement,
+                      parent: typing.Optional[model.ContentElement],
                       element: model.ContentElement
                       ) -> typing.Optional[model.ContentElement]:
 
@@ -181,20 +183,20 @@ class ISD(model.Root):
 
     # convert offset to local temporal coordinates
 
-    if not isinstance(element, (model.Region, model.Body)):
-      offset = offset - (parent.get_begin() or 0)
+    if parent is not None:
+      offset = offset - (parent.get_begin() if parent.get_begin() is not None else 0)
 
     # prune if temporally inactive
     
     if element.get_begin() is not None and element.get_begin() > offset:
       return None
 
-    if element.get_end() is not None and element.get_end() > offset:
+    if element.get_end() is not None and element.get_end() < offset:
       return None
 
     # associated region is that associated with the element, or inherited otherwise
 
-    associated_region = element.get_region() or inherited_region
+    associated_region = element.get_region() if element.get_region() is not None else inherited_region
 
     # prune the element if either:
     # * the element has children and the associated region is neither the default nor the root region
@@ -226,7 +228,7 @@ class ISD(model.Root):
       if animation_step.get_begin() is not None and animation_step.get_begin() > offset:
         continue
 
-      if animation_step.get_end() is not None and animation_step.get_end() > offset:
+      if animation_step.get_end() is not None and animation_step.get_end() < offset:
         continue
 
       isd_element.set_style(

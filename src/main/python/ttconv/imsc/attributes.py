@@ -307,7 +307,7 @@ class BeginAttribute:
 
     try:
 
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw is not None else None
 
     except ValueError:
 
@@ -335,7 +335,7 @@ class EndAttribute:
 
     try:
 
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw is not None else None
 
     except ValueError:
 
@@ -360,7 +360,7 @@ class DurAttribute:
 
     try:
 
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw is not None else None
 
     except ValueError:
 
@@ -396,7 +396,7 @@ class TimeContainerAttribute:
 
     try:
 
-      return TimeContainer(time_container_raw) if time_container_raw else TimeContainer.par
+      return TimeContainer(time_container_raw) if time_container_raw is not None else TimeContainer.par
 
     except ValueError:
 
