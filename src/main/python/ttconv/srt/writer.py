@@ -28,6 +28,7 @@
 import logging
 
 import ttconv.model as model
+import ttconv.srt.style as style
 from ttconv.srt.time_code import SrtTimeCode
 
 LOGGER = logging.getLogger(__name__)
@@ -46,10 +47,9 @@ class SrtContext:
 
   def write_element(self, element: model.ContentElement):
     """Converts model element to SRT content"""
-    self._content = ""
     if isinstance(element, model.Div):
       for elem in list(element):
-        self._content += self.write_element(elem)
+        self.write_element(elem)
 
     if isinstance(element, model.P):
 
@@ -73,11 +73,35 @@ class SrtContext:
       self._content += str(SrtTimeCode.from_time_offset(begin)) + " --> " + str(SrtTimeCode.from_time_offset(end)) + "\n"
 
       for elem in list(element):
-        self._content += self.write_element(elem)
+        self.write_element(elem)
 
     if isinstance(element, model.Span):
+      is_bold = style.is_element_bold(element)
+      is_italic = style.is_element_italic(element)
+      is_underlined = style.is_element_underlined(element)
+      font_color = style.get_font_color(element)
+
+      if font_color is not None:
+        self._content += style.FONT_COLOR_TAG_IN.format(font_color)
+
+      if is_bold:
+        self._content += style.BOLD_TAG_IN
+      if is_italic:
+        self._content += style.ITALIC_TAG_IN
+      if is_underlined:
+        self._content += style.UNDERLINE_TAG_IN
+
       for elem in list(element):
-        self._content += self.write_element(elem)
+        self.write_element(elem)
+
+      if is_underlined:
+        self._content += style.UNDERLINE_TAG_OUT
+      if is_italic:
+        self._content += style.ITALIC_TAG_OUT
+      if is_bold:
+        self._content += style.BOLD_TAG_OUT
+      if font_color is not None:
+        self._content += style.FONT_COLOR_TAG_OUT
 
     if isinstance(element, model.Br):
       self._content += "\n"
@@ -85,7 +109,7 @@ class SrtContext:
     if isinstance(element, model.Text):
       self._content += element.get_text()
 
-    # TODO: handle element style
+    # TODO: handle element alignment
     # TODO: handle region style
 
 
