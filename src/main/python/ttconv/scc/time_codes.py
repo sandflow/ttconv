@@ -95,6 +95,7 @@ class SccTimeCode:
       nb_of_drop_frames_in_tens = drop_frames_per_minute * 9 * nb_of_minute_tens
 
       nb_of_remaining_minutes = floor((nb_of_remaining_frames - drop_frames_per_minute) / round(nb_frames_in_one_minute))
+
       if nb_of_remaining_minutes < 0:
         nb_of_remaining_minutes = 0
 
@@ -102,7 +103,7 @@ class SccTimeCode:
 
       nb_frames += nb_of_drop_frames_in_tens + nb_of_drop_frames_in_minutes
 
-    frame_rate = frame_rate if frame_rate else DEFAULT_NDF_FRAME_RATE
+    frame_rate = frame_rate if frame_rate is not None else DEFAULT_NDF_FRAME_RATE
 
     h = floor(nb_frames / (60 * 60 * frame_rate))
     m = floor(nb_frames / (60 * frame_rate)) % 60
@@ -121,7 +122,7 @@ class SccTimeCode:
   def from_fraction(fraction: Fraction, frame_rate: typing.Optional[Fraction] = None) -> SccTimeCode:
     """Creates a SCC time code instance from the specified fraction"""
     # Do not consider drop frame in the conversion
-    base_frame_rate = frame_rate if frame_rate else DEFAULT_NDF_FRAME_RATE
+    base_frame_rate = frame_rate if frame_rate is not None else DEFAULT_NDF_FRAME_RATE
 
     frames = fraction * base_frame_rate
     return SccTimeCode.from_frames(frames, base_frame_rate)
@@ -146,7 +147,7 @@ class SccTimeCode:
     """Returns the time code in number of frames"""
     dropped_frames = 0
     if self.is_drop_frame():
-      selected_frame_rate = frame_rate if frame_rate else DEFAULT_DF_FRAME_RATE
+      selected_frame_rate = frame_rate if frame_rate is not None else DEFAULT_DF_FRAME_RATE
 
       drop_frames_per_minute = round(60 * (DEFAULT_NDF_FRAME_RATE - selected_frame_rate))  # 2 at 29.97 fps
 
@@ -157,7 +158,7 @@ class SccTimeCode:
 
       dropped_frames = nb_of_drop_frames_in_tens + nb_of_drop_frames_in_remaining
 
-    frame_rate = frame_rate if frame_rate else DEFAULT_NDF_FRAME_RATE
+    frame_rate = frame_rate if frame_rate is not None else DEFAULT_NDF_FRAME_RATE
     return (self._hours * 3600 + self._minutes * 60 + self._seconds) * frame_rate + self._frames - dropped_frames
 
   def to_temporal_offset(self, frame_rate: typing.Optional[Fraction] = None) -> Fraction:

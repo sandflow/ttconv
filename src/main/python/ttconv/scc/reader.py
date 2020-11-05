@@ -68,7 +68,7 @@ class _SccContext:
 
   def set_current_to_previous(self):
     """Rotates current caption to previous caption"""
-    if self.current_caption and self.current_caption.get_current_text():
+    if self.current_caption is not None and self.current_caption.get_current_text():
 
       if not self.current_caption.get_id():
         self.count += 1
@@ -88,28 +88,29 @@ class _SccContext:
       previous_caption = self.previous_captions.pop(index)
       previous_caption.set_end(time_code)
 
-      if not previous_caption.get_style_property(StyleProperties.BackgroundColor):
+      if previous_caption.get_style_property(StyleProperties.BackgroundColor) is None:
         previous_caption.add_style_property(StyleProperties.BackgroundColor, NamedColors.black.value)
 
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SccTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
-    if not self.current_caption:
+    if self.current_caption is None:
       raise ValueError("No current SCC caption initialized")
 
     pac_row = pac.get_row()
     pac_indent = pac.get_indent()
 
     if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
-      if self.current_caption.get_current_text() and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
+      if self.current_caption.get_current_text() is not None \
+          and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
         # Creates a new Paragraph if the new caption is contiguous (Paint-On)
         self.set_current_to_previous()
 
         self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
         self.init_current_caption(time_code)
 
-      elif len(self.previous_captions) > 0 and self.previous_captions[0].get_current_text() \
+      elif len(self.previous_captions) > 0 and self.previous_captions[0].get_current_text() is not None \
           and self.safe_area_y_offset + pac_row == self.previous_captions[0].get_row_offset():
         # Pushes and erases displayed row so that it can be replaced by current row (Paint-On)
         self.push_previous_caption(self.current_caption.get_begin())
@@ -135,7 +136,7 @@ class _SccContext:
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode):
     """Processes SCC Mid-Row Code to map it to the model"""
-    if not self.current_caption:
+    if self.current_caption is None:
       raise ValueError("No current SCC caption initialized")
 
     if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
@@ -148,7 +149,7 @@ class _SccContext:
 
   def process_attribute_code(self, attribute_code: SccAttributeCode):
     """Processes SCC Attribute Code to map it to the model"""
-    if not self.current_caption or not self.current_caption.get_current_text():
+    if self.current_caption is None or self.current_caption.get_current_text() is None:
       raise ValueError("No current SCC caption nor content initialized")
 
     if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
@@ -167,7 +168,7 @@ class _SccContext:
 
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
-      if self.current_caption and self.current_caption.get_current_text():
+      if self.current_caption is not None and self.current_caption.get_current_text() is not None:
         self.set_current_to_previous()
 
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
@@ -360,7 +361,7 @@ class SccLine:
     regex = re.compile(SCC_LINE_PATTERN)
     match = regex.match(line)
 
-    if not match:
+    if match is None:
       return None
 
     time_code = match.group(1)
@@ -478,7 +479,7 @@ class SccLine:
           disassembly_line += f"{{{pac.get_row():02}"
           color = pac.get_color()
           indent = pac.get_indent()
-          if indent and indent > 0:
+          if indent is not None and indent > 0:
             disassembly_line += f"{indent :02}"
           elif color is not None:
             disassembly_line += get_color_disassembly(color)
@@ -547,7 +548,7 @@ def to_model(scc_content: str):
     LOGGER.debug(line)
     scc_line = SccLine.from_str(line)
 
-    if not scc_line:
+    if scc_line is None:
       continue
 
     time_code = scc_line.to_model(context)
@@ -564,7 +565,7 @@ def to_disassembly(scc_content: str) -> str:
     LOGGER.debug(line)
     scc_line = SccLine.from_str(line)
 
-    if not scc_line:
+    if scc_line is None:
       continue
 
     line_to_disassembly = scc_line.to_disassembly()

@@ -95,7 +95,7 @@ class SccCaptionParagraph:
 
   def set_column_offset(self, indent: Optional[int]):
     """Sets the paragraph x offset"""
-    self._column_offset = self._safe_area_x_offset + (indent if indent else 0)
+    self._column_offset = self._safe_area_x_offset + (indent if indent is not None else 0)
 
   def get_column_offset(self) -> int:
     """Returns the paragraph x offset"""
@@ -103,7 +103,7 @@ class SccCaptionParagraph:
 
   def set_row_offset(self, row: Optional[int]):
     """Sets the paragraph y offset"""
-    self._row_offset = self._safe_area_y_offset + (row if row else 0)
+    self._row_offset = self._safe_area_y_offset + (row if row is not None else 0)
 
   def get_row_offset(self) -> int:
     """Returns the paragraph y offset"""
