@@ -355,7 +355,7 @@ class SccLine:
   @staticmethod
   def from_str(line: str) -> Optional[SccLine]:
     """Creates a SCC line instance from the specified string"""
-    if line == "":
+    if not line:
       return None
 
     regex = re.compile(SCC_LINE_PATTERN)
@@ -368,13 +368,13 @@ class SccLine:
     time_offset = SccTimeCode.parse(time_code)
 
     hex_words = line.split('\t')[1].split(' ')
-    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if len(hex_word)]
+    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
     return SccLine(time_offset, scc_words)
 
   def get_style(self) -> SccCaptionStyle:
     """Analyses the line words ordering to get the caption style"""
     scc_words = self.scc_words
-    if scc_words == "":
+    if not scc_words:
       return SccCaptionStyle.Unknown
 
     prefix = SccControlCode.find(scc_words[0].value)
