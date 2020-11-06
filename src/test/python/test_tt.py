@@ -57,23 +57,22 @@ class IMSCAppTest(unittest.TestCase):
     tt.main("convert -i src/test/resources/scc/pop-on.scc --itype scc -o build/pop-on.out.ttml".split())
 
   def test_convert_bad_input_file_name(self):
-    with self.assertRaises(SystemExit):
+    with self.assertRaises(ValueError):
       tt.main("convert -i src/test/resources/ttml/body_only.not_ttml -o build/body_only.out.ttml".split())
 
   def test_convert_bad_output_file_name(self):
-    with self.assertRaises(SystemExit):
+    with self.assertRaises(ValueError):
       tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml".split())
 
   def test_convert_bad_input_file_arg(self):
-    with self.assertRaises(SystemExit):
+    with self.assertRaises(ValueError):
       tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --itype not_ttml".split())
 
   def test_convert_bad_output_file_arg(self):
-    with self.assertRaises(SystemExit):
+    with self.assertRaises(ValueError):
       tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml --otype not_ttml".split())
 
   def test_convert_mismtach_file_type_and_file_name(self):
-    #with self.assertRaises(SystemExit):
     tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype scc -o build/body_only123.out.ttml".split())
 
   def test_pop_on_scc(self):
@@ -102,29 +101,12 @@ class IMSCAppTest(unittest.TestCase):
     #
     tt.main("validate -i src/test/resources/ttml/body_only.ttml".split())
 
-  def test_file_types_by_type(self):
-    self.assertEqual(None, tt.FileTypes.type_to_str(""))
-    self.assertEqual(None, tt.FileTypes.type_to_str("asdf"))
-
-    self.assertEqual(tt.FileTypes.TTML.value, tt.FileTypes.type_to_str(tt.FileTypes.TTML))
-
-    self.assertEqual(tt.FileTypes.SCC.value, tt.FileTypes.type_to_str(tt.FileTypes.SCC))
-
-  def test_file_types_by_str(self):
-    self.assertEqual(None, tt.FileTypes.str_to_type(""))
-    self.assertEqual(None, tt.FileTypes.str_to_type("asdf"))
-
-    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.str_to_type("ttml"))
-    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.str_to_type("TTML"))
-    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.str_to_type("TTml"))
-
-    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.str_to_type("scc"))
-    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.str_to_type("SCC"))
-    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.str_to_type("Scc"))
-
   def test_file_types_by_type_and_string(self):
-    self.assertEqual(None, tt.FileTypes.get_file_type(None, ""))
-    self.assertEqual(None, tt.FileTypes.get_file_type(None, "asdf"))
+    with self.assertRaises(ValueError):
+      tt.FileTypes.get_file_type(None, "")
+
+    with self.assertRaises(ValueError):
+      tt.FileTypes.get_file_type(None, "asdf")
 
     self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(tt.FileTypes.TTML.value, "asdf"))
     self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(None, "ttml"))

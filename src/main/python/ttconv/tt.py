@@ -45,28 +45,14 @@ class FileTypes(Enum):
   SCC = "scc"
 
   @staticmethod
-  def str_to_type(file_type_str: str):
-    return {
-          'ttml': FileTypes.TTML,
-          'scc': FileTypes.SCC
-          }.get(file_type_str.lower(), None)    # None is default
-
-  @staticmethod
-  def type_to_str(file_type) -> str:
-    return {
-          FileTypes.TTML : 'ttml',
-          FileTypes.SCC : 'scc'
-          }.get(file_type, None)    # None is default
-
-  @staticmethod
   def get_file_type(file_type: str, file_extension: str):
     if file_type is None:
       if len(file_extension) > 0 and file_extension[0] is '.':
         file_extension = file_extension[1:len(file_extension)]
 
-      return FileTypes.str_to_type(file_extension)
+      return FileTypes(file_extension)
     else:
-      return FileTypes.str_to_type(file_type)
+      return FileTypes(file_type)
 
     return None
 
@@ -155,7 +141,7 @@ def convert(args):
     if args.itype is not None:
       exit_str  = f'Input type {args.itype} is not supported'
     else:
-        exit_str  = f'Input file is {args.input} is not supported'
+      exit_str  = f'Input file is {args.input} is not supported'
     
     LOGGER.error(exit_str)
     sys.exit(exit_str)
@@ -174,7 +160,7 @@ def convert(args):
     if args.otype is not None:
       exit_str  = f'Output type {args.otype} is not supported'
     else:
-        exit_str  = f'Output file is {args.output} is not supported'
+      exit_str  = f'Output file is {args.output} is not supported'
 
     LOGGER.error(exit_str)
     sys.exit(exit_str)
