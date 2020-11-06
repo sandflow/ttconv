@@ -77,7 +77,7 @@ class _SccPacDescriptionBits:
 
     return SCC_COLOR_MAPPING.get(self._bits, None)
 
-  def get_indent(self) -> int:
+  def get_indent(self) -> Optional[int]:
     """Returns the column offset from the PAC description bits"""
     if self._bits in list(range(0x10, 0x20)):
       return ((self._bits - 0x10) - (self._bits % 2)) * 2
@@ -98,17 +98,18 @@ class SccPreambleAddressCode:
       raise ValueError("Failed to extract PAC description from specified bytes:", hex(byte_1), hex(byte_2))
 
     self._row = row
-    self._color = desc_bits.get_color()
-    self._indent = desc_bits.get_indent()
-    self._font_style = FontStyleType.italic if desc_bits.get_italic() else None
-    self._text_decoration: Optional[TextDecorationType] = TextDecorationType(underline=TextDecorationType.Action.add) if desc_bits.get_underline() else None
+    self._color: Optional[ColorType] = desc_bits.get_color()
+    self._indent: Optional[int] = desc_bits.get_indent()
+    self._font_style: Optional[bool] = FontStyleType.italic if desc_bits.get_italic() else None
+    self._text_decoration: Optional[TextDecorationType] = \
+      TextDecorationType(underline=TextDecorationType.Action.add) if desc_bits.get_underline() else None
     self._channel = 2 if byte_1 & 0x08 else 1
 
   def get_row(self) -> int:
     """Returns the PAC row"""
     return self._row
 
-  def get_indent(self) -> int:
+  def get_indent(self) -> Optional[int]:
     """Returns PAC column offset"""
     return self._indent
 

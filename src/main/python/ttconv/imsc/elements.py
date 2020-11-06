@@ -51,9 +51,9 @@ class TTMLElement:
 
       self.doc = parent_ctx.doc if parent_ctx is not None else model.Document()
 
-      self.style_elements: typing.Dict[str, StyleElement] = parent_ctx.style_elements if parent_ctx else {}
+      self.style_elements: typing.Dict[str, StyleElement] = parent_ctx.style_elements if parent_ctx is not None else {}
 
-      self.temporal_context = parent_ctx.temporal_context if parent_ctx else imsc_attr.TemporalAttributeParsingContext()
+      self.temporal_context = parent_ctx.temporal_context if parent_ctx is not None else imsc_attr.TemporalAttributeParsingContext()
 
       self.ttml_class: TTMLElement = ttml_class
 
@@ -80,12 +80,14 @@ class TTMLElement:
     def process_lang_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       '''Processes the xml:lang attribute, including inheritance from the parent
       '''
-      self.lang = imsc_attr.XMLLangAttribute.extract(xml_elem) or parent_ctx.lang
+      lang_attr_value = imsc_attr.XMLLangAttribute.extract(xml_elem)
+      self.lang = lang_attr_value if lang_attr_value is not None else parent_ctx.lang
 
     def process_space_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       '''Processes the xml:space attribute, including inheritance from the parent
       '''
-      self.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or parent_ctx.space
+      space_attr_value = imsc_attr.XMLSpaceAttribute.extract(xml_elem)
+      self.space = space_attr_value if space_attr_value is not None else parent_ctx.space
 
   @staticmethod
   def is_instance(xml_elem) -> bool:
@@ -123,7 +125,9 @@ class TTElement(TTMLElement):
 
     # process attributes
 
-    tt_ctx.space = imsc_attr.XMLSpaceAttribute.extract(xml_elem) or model.WhiteSpaceHandling.DEFAULT
+    space_attr = imsc_attr.XMLSpaceAttribute.extract(xml_elem)
+
+    tt_ctx.space = space_attr if space_attr is not None else model.WhiteSpaceHandling.DEFAULT
 
     lang_attr = imsc_attr.XMLLangAttribute.extract(xml_elem)
 
@@ -473,7 +477,7 @@ class StyleElement(TTMLElement):
     for attr in xml_elem.attrib:
       prop = StyleProperties.BY_QNAME.get(attr)
 
-      if not prop:
+      if prop is None:
         continue
 
       try:
@@ -535,7 +539,7 @@ class InitialElement(TTMLElement):
 
       prop = StyleProperties.BY_QNAME.get(attr)
 
-      if not prop:
+      if prop is None:
 
         continue
 
@@ -612,7 +616,7 @@ class ContentElement(TTMLElement):
           continue
 
         for model_prop, value in style_element.styles.items():
-          if self.model_element.get_style(model_prop) is None:
+          if not self.model_element.has_style(model_prop):
             self.model_element.set_style(model_prop, value)
 
     def process_specified_styling(self, xml_elem):

@@ -215,7 +215,7 @@ class TickRateAttribute:
   '''ttp:tickRate attribute
   '''
 
-  qn = f"{ns.TTP}tickRate"
+  qn = f"{{{ns.TTP}}}tickRate"
 
   _TICK_RATE_RE = re.compile(r"(\d+)")
 
@@ -243,9 +243,9 @@ class FrameRateAttribute:
   '''ttp:frameRate and ttp:frameRateMultiplier attribute
   '''
 
-  frame_rate_qn = f"{ns.TTP}frameRate"
+  frame_rate_qn = f"{{{ns.TTP}}}frameRate"
 
-  frame_rate_multiplier_qn = f"{ns.TTP}frameRateMultiplier"
+  frame_rate_multiplier_qn = f"{{{ns.TTP}}}frameRateMultiplier"
 
   _FRAME_RATE_RE = re.compile(r"(\d+)")
 
@@ -266,15 +266,17 @@ class FrameRateAttribute:
 
       if m is not None:
 
-        fr = Fraction(int(m.group(1)))
+        fr = Fraction(m.group(1))
 
-      LOGGER.error("ttp:frameRate invalid syntax")
+      else:
+
+        LOGGER.error("ttp:frameRate invalid syntax")
 
     # process ttp:frameRateMultiplier
     
     frm = Fraction(1, 1)
 
-    frm_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_qn)
+    frm_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_multiplier_qn)
 
     if frm_raw is not None:
 
@@ -284,7 +286,9 @@ class FrameRateAttribute:
 
         frm = Fraction(int(m.group(1)), int(m.group(2)))
 
-      LOGGER.error("ttp:frameRateMultiplier invalid syntax")
+      else:
+
+        LOGGER.error("ttp:frameRateMultiplier invalid syntax")
 
     return fr * frm
 
@@ -307,7 +311,7 @@ class BeginAttribute:
 
     try:
 
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw is not None else None
 
     except ValueError:
 
@@ -335,7 +339,7 @@ class EndAttribute:
 
     try:
 
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw is not None else None
 
     except ValueError:
 
@@ -360,7 +364,7 @@ class DurAttribute:
 
     try:
 
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw else None
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw is not None else None
 
     except ValueError:
 
@@ -396,7 +400,7 @@ class TimeContainerAttribute:
 
     try:
 
-      return TimeContainer(time_container_raw) if time_container_raw else TimeContainer.par
+      return TimeContainer(time_container_raw) if time_container_raw is not None else TimeContainer.par
 
     except ValueError:
 

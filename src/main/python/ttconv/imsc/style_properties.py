@@ -235,7 +235,7 @@ class StyleProperties:
 
     @classmethod
     def from_model(cls, xml_element, model_value: bool):
-      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value else "false")
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value is not None else "false")
 
 
   class FontFamily(StyleProperty):

@@ -195,5 +195,14 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(doc.get_initial_value(styles.StyleProperties.Color), styles.NamedColors.green.value)
     self.assertEqual(doc.get_initial_value(styles.StyleProperties.FontStyle), styles.FontStyleType.italic)
 
+  def test_frame_rate(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/TimeExpressions001.ttml')
+    doc = imsc_reader.to_model(tree)
+
+    # <p begin="0s" end="24f">24f = 1.001s</p>
+    p = list(list(doc.get_body())[0])[3]
+
+    self.assertEqual(p.get_end(), Fraction(4394201, 1000))
+
 if __name__ == '__main__':
   unittest.main()
