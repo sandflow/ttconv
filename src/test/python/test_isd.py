@@ -70,6 +70,13 @@ class ISDTest(unittest.TestCase):
       value=styles.NamedColors.green.value
     )
 
+    a3 = model.DiscreteAnimationStep(
+      style_property=styles.StyleProperties.Color,
+      begin=Fraction(2),
+      end=None,
+      value=styles.NamedColors.blue.value
+    )
+
     r1 = model.Region("r1", self.doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
     self.doc.put_region(r1)
@@ -101,22 +108,24 @@ class ISDTest(unittest.TestCase):
 
     div2 = model.Div(self.doc)
     div2.set_end(Fraction(12))
-    div1.set_region(r2)
+    div2.set_region(r2)
     b.push_child(div2)
 
-    # p1: offset = 0, sig times = {}
+    # p1: offset = 1, sig times = {}
 
     p1 = model.P(self.doc)
     div2.push_child(p1)
 
+    # span1: offset = 1, sig times = {3}
     span1 = model.Span(self.doc)
+    span1.add_animation_step(a3)
     p1.push_child(span1)
 
     t1 = model.Text(self.doc, "hello")
     span1.push_child(t1)
 
   def test_significant_times(self):
-    self.assertEqual(ISD.significant_times(self.doc), set((0, 2, 9, 1, 10, 4)))
+    self.assertEqual(ISD.significant_times(self.doc), set((0, 2, 3, 9, 1, 10, 4)))
 
   def test_isd_0(self):
     isd = ISD.from_model(self.doc, 0)
@@ -131,7 +140,52 @@ class ISDTest(unittest.TestCase):
 
     self.assertEqual(len(r1), 0)
 
+  def test_isd_2(self):
+    isd = ISD.from_model(self.doc, 2)
 
+    regions = list(isd.iter_regions())
+
+    self.assertEqual(len(regions), 2)
+
+    r1 = regions[0]
+
+    self.assertEqual(r1.get_id(), "r1")
+
+    self.assertEqual(len(r1), 0)
+
+    r2 = regions[1]
+
+    self.assertEqual(r2.get_id(), "r2")
+
+    r2_children = list(r2)
+
+    self.assertEqual(len(r2_children), 1)
+
+    body = r2_children[0]
+
+    self.assertIsInstance(body, model.Body)
+
+    self.assertEqual(len(body), 1)
+
+    div = list(body)[0]
+
+    self.assertIsInstance(div, model.Div)
+
+    self.assertEqual(len(div), 1)
+
+    p = list(div)[0]
+
+    self.assertIsInstance(p, model.P)
+
+    self.assertEqual(len(p), 1)
+
+    span = list(p)[0]
+
+    self.assertIsInstance(span, model.Span)
+
+    self.assertEqual(len(span), 1)
+
+    self.assertEqual(span.get_style(styles.StyleProperties.Color), styles.NamedColors.blue.value)
 
 if __name__ == '__main__':
   unittest.main()

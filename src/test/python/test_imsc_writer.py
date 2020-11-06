@@ -109,11 +109,11 @@ class FromModelBodyWriterTest(unittest.TestCase):
   def test_body_only(self):
 
     doc = model.Document()
-    body = model.Body()
-    div = model.Div()
-    p = model.P()
-    span = model.Span()
-    text = model.Text()
+    body = model.Body(doc)
+    div = model.Div(doc)
+    p = model.P(doc)
+    span = model.Span(doc)
+    text = model.Text(doc)
     text.set_text("asdf")
     
     span.push_child(text)

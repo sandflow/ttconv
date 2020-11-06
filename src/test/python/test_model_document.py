@@ -48,7 +48,7 @@ class DocumentTest(unittest.TestCase):
     self.assertEqual(d.get_cell_resolution(), model.CellResolutionType(rows=15, columns=32))
   
   
-  def set_body(self):
+  def test_set_body(self):
     d = model.Document()
 
     b = model.Body(d)
@@ -61,7 +61,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIsNone(d.get_body())
 
-  def set_bad_body(self):
+  def test_set_bad_body(self):
     d = model.Document()
 
     b = model.Body()
@@ -69,7 +69,7 @@ class DocumentTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       d.set_body(b)
   
-  def add_region(self):
+  def test_add_region(self):
     d = model.Document()
 
     r = model.Region("hello", d)
@@ -78,7 +78,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIs(d.get_region(r.get_id()), r)
 
-  def remove_region(self):
+  def test_remove_region(self):
     d = model.Document()
 
     r = model.Region("hello", d)
@@ -94,7 +94,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIsNone(d.get_region(r.get_id()))
 
 
-  def add_detached_region(self):
+  def test_add_detached_region(self):
     d = model.Document()
 
     r = model.Region("hello")
@@ -103,7 +103,7 @@ class DocumentTest(unittest.TestCase):
       d.put_region(r)
 
 
-  def add_dup_region(self):
+  def test_add_dup_region(self):
     d = model.Document()
 
     r1 = model.Region("hello", d)
@@ -116,7 +116,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIs(d.get_region(r2.get_id()), r2)
 
-  def iter_region(self):
+  def test_iter_region(self):
     d = model.Document()
 
     r1 = model.Region("hello1", d)
@@ -130,7 +130,7 @@ class DocumentTest(unittest.TestCase):
     self.assertCountEqual(d.iter_regions(), [r1, r2])
 
 
-  def add_initial_value(self):
+  def test_add_initial_value(self):
     d = model.Document()
 
     c = styles.ColorType((12, 23, 43, 56))
@@ -141,7 +141,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertEqual(c, c2)
 
-  def remove_initial_value(self):
+  def test_remove_initial_value(self):
     d = model.Document()
 
     c = styles.ColorType((12, 23, 43, 56))
@@ -158,7 +158,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIsNone(d.get_initial_value(styles.StyleProperties.Color))
 
-  def add_null_initial_value(self):
+  def test_add_null_initial_value(self):
     d = model.Document()
 
     c = styles.ColorType((12, 23, 43, 56))
@@ -175,7 +175,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIsNone(d.get_initial_value(styles.StyleProperties.Color))
 
-  def add_dup_initial_value(self):
+  def test_add_dup_initial_value(self):
     d = model.Document()
 
     c1 = styles.ColorType((12, 23, 43, 56))
@@ -190,7 +190,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIs(d.get_initial_value(styles.StyleProperties.Color), c2)
 
-  def add_bad_initial_value(self):
+  def test_add_bad_initial_value(self):
     d = model.Document()
 
     c1 = styles.ColorType((12, 23, 43, 56))
@@ -198,7 +198,7 @@ class DocumentTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       d.put_initial_value(styles.StyleProperties.Extent, c1)
 
-  def iter_initial_values(self):
+  def test_iter_initial_values(self):
     d = model.Document()
 
     c1 = styles.ColorType((12, 23, 43, 56))
@@ -214,7 +214,7 @@ class DocumentTest(unittest.TestCase):
       d.iter_initial_values()
     )
 
-  def cell_resolution(self):
+  def test_cell_resolution(self):
 
     cr = model.CellResolutionType(rows=10, columns=20)
 
@@ -225,7 +225,7 @@ class DocumentTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       cr = model.CellResolutionType(rows=0, columns=20)
 
-  def language(self):
+  def test_language(self):
 
     d = model.Document()
 
@@ -240,7 +240,7 @@ class DocumentTest(unittest.TestCase):
     with self.assertRaises(TypeError):
       d.set_lang(1)
 
-  def pixel_resolution(self):
+  def test_pixel_resolution(self):
 
     cr = model.PixelResolutionType(height=480, width=640)
 
@@ -252,7 +252,7 @@ class DocumentTest(unittest.TestCase):
       cr = model.PixelResolutionType(height=0, width=640)
 
 
-  def active_area_default(self):
+  def test_active_area_default(self):
 
     aa = model.ActiveAreaType()
 
@@ -265,7 +265,7 @@ class DocumentTest(unittest.TestCase):
     self.assertEqual(aa.width, 1)
 
 
-  def active_area(self):
+  def test_active_area(self):
 
     aa = model.ActiveAreaType(0.1, 0.15, 0.8, 0.7)
 
@@ -284,14 +284,14 @@ class DocumentTest(unittest.TestCase):
       model.ActiveAreaType(0.1, 0.15, -0.8, 0.7)
 
 
-  def document_active_area_default(self):
+  def test_document_active_area_default(self):
 
     d = model.Document()
 
     self.assertIsNone(d.get_active_area())
 
 
-  def document_active_area(self):
+  def test_document_active_area(self):
 
     d = model.Document()
 
@@ -309,7 +309,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIsNone(d.get_active_area())
 
 
-  def display_aspect_ratio(self):
+  def test_display_aspect_ratio(self):
 
     d = model.Document()
 
@@ -323,7 +323,7 @@ class DocumentTest(unittest.TestCase):
 
     self.assertIsNone(d.get_display_aspect_ratio())
 
-    with self.assertRaises(ValueError):
+    with self.assertRaises(TypeError):
       d.set_display_aspect_ratio("hello")
 
 

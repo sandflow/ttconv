@@ -215,7 +215,7 @@ class TickRateAttribute:
   '''ttp:tickRate attribute
   '''
 
-  qn = f"{ns.TTP}tickRate"
+  qn = f"{{{ns.TTP}}}tickRate"
 
   _TICK_RATE_RE = re.compile(r"(\d+)")
 
@@ -243,9 +243,9 @@ class FrameRateAttribute:
   '''ttp:frameRate and ttp:frameRateMultiplier attribute
   '''
 
-  frame_rate_qn = f"{ns.TTP}frameRate"
+  frame_rate_qn = f"{{{ns.TTP}}}frameRate"
 
-  frame_rate_multiplier_qn = f"{ns.TTP}frameRateMultiplier"
+  frame_rate_multiplier_qn = f"{{{ns.TTP}}}frameRateMultiplier"
 
   _FRAME_RATE_RE = re.compile(r"(\d+)")
 
@@ -266,15 +266,17 @@ class FrameRateAttribute:
 
       if m is not None:
 
-        fr = Fraction(int(m.group(1)))
+        fr = Fraction(m.group(1))
 
-      LOGGER.error("ttp:frameRate invalid syntax")
+      else:
+
+        LOGGER.error("ttp:frameRate invalid syntax")
 
     # process ttp:frameRateMultiplier
     
     frm = Fraction(1, 1)
 
-    frm_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_qn)
+    frm_raw = ttml_element.attrib.get(FrameRateAttribute.frame_rate_multiplier_qn)
 
     if frm_raw is not None:
 
@@ -284,7 +286,9 @@ class FrameRateAttribute:
 
         frm = Fraction(int(m.group(1)), int(m.group(2)))
 
-      LOGGER.error("ttp:frameRateMultiplier invalid syntax")
+      else:
+
+        LOGGER.error("ttp:frameRateMultiplier invalid syntax")
 
     return fr * frm
 

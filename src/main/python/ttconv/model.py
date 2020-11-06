@@ -710,25 +710,32 @@ class Text(ContentElement):
     raise RuntimeError("Text nodes cannot have children")
 
   def set_style(self, style_prop, value):
-    raise RuntimeError("Text nodes cannot have style properties")
+    if value is not None:
+      raise RuntimeError("Text nodes cannot have style properties")
 
   def set_begin(self, time_offset):
-    raise RuntimeError("Text nodes do not have temporeal properties")
+    if time_offset is not None:
+      raise RuntimeError("Text nodes do not have temporeal properties")
 
   def set_end(self, time_offset):
-    raise RuntimeError("Text nodes do not have temporal properties")
+    if time_offset is not None:
+      raise RuntimeError("Text nodes do not have temporal properties")
 
   def set_id(self, element_id):
-    raise RuntimeError("Text nodes do not have an id")
+    if element_id is not None:
+      raise RuntimeError("Text nodes do not have an id")
 
   def set_region(self, region):
-    raise RuntimeError("Text nodes are not associated with a region")
+    if region is not None:
+      raise RuntimeError("Text nodes are not associated with a region")
 
   def set_lang(self, language):
-    raise RuntimeError("Text nodes are not associated with a language")
+    if language is not None and language != "":
+      raise RuntimeError("Text nodes are not associated with a language")
 
   def set_space(self, wsh):
-    raise RuntimeError("Text nodes are not associated with space handling")
+    if wsh is not None and wsh is not WhiteSpaceHandling.DEFAULT:
+      raise RuntimeError("Text nodes are not associated with space handling")
 
   # text contents
 
@@ -881,7 +888,7 @@ class Root:
     '''Sets the display aspect ratio of the document to `dar`. If `dar` is `None`, the
     document will fill the root container area.
     '''
-    if dar is not None and dar is not isinstance(dar, Fraction):
+    if dar is not None and not isinstance(dar, Fraction):
       raise TypeError("Argument must be an instance of Fraction or None")
 
     self._dar = dar
@@ -929,11 +936,15 @@ class Document(Root):
 
   def set_body(self, body: typing.Optional[Body]):
     '''Sets the body element of the document, which may be None'''
-    if not isinstance(body, Body):
-      raise TypeError("Argument must be an instance of Body")
+    if body is not None:
+      if not isinstance(body, Body):
+        raise TypeError("Argument must be an instance of Body")
 
-    if body.parent() is not None:
-      raise ValueError("Body must be a root element")
+      if body.parent() is not None:
+        raise ValueError("Body must be a root element")
+
+      if body.get_doc() is not self:
+        raise ValueError("Body does not belongs to this document")
 
     self._body = body
 

@@ -43,7 +43,7 @@ class ISD(model.Root):
       if self.has_children():
         raise ValueError("ISD regions must contain at most on body instance")
 
-      super().push_child(child)
+      model.ContentElement.push_child(self, child)
 
   def __init__(self, doc: typing.Optional[model.Document]):
     super().__init__()
@@ -217,18 +217,18 @@ class ISD(model.Root):
       isd_element = element.__class__(isd)
       isd_element.set_id(element.get_id())
 
-    isd_element.set_lang(element.get_lang())
-
-    isd_element.set_space(element.get_space())
+    if not isinstance(element, (model.Br, model.Text)): 
+      isd_element.set_lang(element.get_lang())
+      isd_element.set_space(element.get_space())
 
     # apply animation
 
     for animation_step in element.iter_animation_steps():
 
-      if animation_step.get_begin() is not None and animation_step.get_begin() > offset:
+      if animation_step.begin is not None and animation_step.begin > offset:
         continue
 
-      if animation_step.get_end() is not None and animation_step.get_end() < offset:
+      if animation_step.end is not None and animation_step.end < offset:
         continue
 
       isd_element.set_style(
@@ -237,7 +237,7 @@ class ISD(model.Root):
       )
 
     # copy specified styles
-    
+
     for spec_style_prop in element.iter_styles():
 
       if isd_element.has_style(spec_style_prop):
@@ -251,7 +251,8 @@ class ISD(model.Root):
 
     # inherited styling
 
-    if parent is not None:
+    if not isinstance(element, (model.Br, model.Text, model.Region)):
+
       for inherited_style_prop in parent.iter_styles():
 
         if not inherited_style_prop.is_inherited or isd_element.has_style(inherited_style_prop):
@@ -264,18 +265,20 @@ class ISD(model.Root):
 
     # initial value styling
 
-    for initial_style in styles.StyleProperties.ALL:
+    if not isinstance(element, (model.Br, model.Text)):
 
-      if isd_element.has_style(initial_style):
-        continue
+      for initial_style in styles.StyleProperties.ALL:
 
-      initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
-                        else initial_style.make_initial_value()
+        if isd_element.has_style(initial_style):
+          continue
 
-      isd_element.set_style(
-        initial_style,
-        isd.compute_style(initial_style, initial_value)
-      )
+        initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
+                          else initial_style.make_initial_value()
+
+        isd_element.set_style(
+          initial_style,
+          isd.compute_style(initial_style, initial_value)
+        )
     
     # prune element is display is "none"
 
