@@ -102,15 +102,20 @@ class IMSCAppTest(unittest.TestCase):
     tt.main("validate -i src/test/resources/ttml/body_only.ttml".split())
 
   def test_file_types_by_type_and_string(self):
+    
+    self.assertEqual(None, tt.FileTypes.get_file_type(None, None))
+
     with self.assertRaises(ValueError):
       tt.FileTypes.get_file_type(None, "")
 
     with self.assertRaises(ValueError):
       tt.FileTypes.get_file_type(None, "asdf")
 
+    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(tt.FileTypes.TTML.value, None))
     self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(tt.FileTypes.TTML.value, "asdf"))
     self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(None, "ttml"))
 
+    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(tt.FileTypes.SCC.value, None))
     self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(tt.FileTypes.SCC.value, "asdf"))
     self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(None, "scc"))
 

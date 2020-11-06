@@ -32,7 +32,6 @@ from argparse import ArgumentParser
 import xml.etree.ElementTree as et
 from pathlib import Path
 from enum import Enum
-import typing
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
@@ -46,15 +45,19 @@ class FileTypes(Enum):
 
   @staticmethod
   def get_file_type(file_type: str, file_extension: str):
+    """Convenience function to convert string ased file type 
+    and extension to FileTypes."""
+
+    if file_type is None and file_extension is None:
+      return None
+
     if file_type is None:
-      if len(file_extension) > 0 and file_extension[0] is '.':
+      if len(file_extension) > 0 and file_extension[0] == '.':
         file_extension = file_extension[1:len(file_extension)]
 
       return FileTypes(file_extension)
-    else:
-      return FileTypes(file_type)
 
-    return None
+    return FileTypes(file_type)
 
 # Argument parsing setup
 #
