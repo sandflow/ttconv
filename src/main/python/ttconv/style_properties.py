@@ -356,7 +356,7 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return NamedColors.transparent
+      return NamedColors.transparent.value
 
     @staticmethod
     def validate(value):
@@ -371,7 +371,7 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return NamedColors.white
+      return NamedColors.white.value
 
     @staticmethod
     def validate(value):
@@ -445,7 +445,7 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return LengthType()
+      return ExtentType()
 
     @staticmethod
     def validate(value: ExtentType):
@@ -550,7 +550,7 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return LengthType()
+      return LengthType(value=1, units=LengthType.Units.c)
 
     @staticmethod
     def validate(value: LengthType):
@@ -884,4 +884,4 @@ class StyleProperties:
     def validate(value):
       return isinstance(value, WritingModeType)
 
-  ALL = {v for n, v in list(locals().items()) if callable(v)}
+  ALL = {v: StyleProperty for n, v in list(locals().items()) if callable(v)}

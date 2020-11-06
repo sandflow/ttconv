@@ -38,6 +38,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
+from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
@@ -67,7 +68,7 @@ class _SccContext:
 
   def set_current_to_previous(self):
     """Rotates current caption to previous caption"""
-    if self.current_caption and self.current_caption.get_current_text():
+    if self.current_caption is not None and self.current_caption.get_current_text():
 
       if not self.current_caption.get_id():
         self.count += 1
@@ -78,7 +79,7 @@ class _SccContext:
 
   def init_current_caption(self, time_code: SccTimeCode):
     """Initializes the current caption with begin time"""
-    if self.current_caption:
+    if self.current_caption is not None:
       self.current_caption.set_begin(time_code)
 
   def push_previous_caption(self, time_code: SccTimeCode, index: int = 0):
@@ -87,28 +88,29 @@ class _SccContext:
       previous_caption = self.previous_captions.pop(index)
       previous_caption.set_end(time_code)
 
-      if not previous_caption.get_style_property(StyleProperties.BackgroundColor):
+      if previous_caption.get_style_property(StyleProperties.BackgroundColor) is None:
         previous_caption.add_style_property(StyleProperties.BackgroundColor, NamedColors.black.value)
 
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SccTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
-    if not self.current_caption:
+    if self.current_caption is None:
       raise ValueError("No current SCC caption initialized")
 
     pac_row = pac.get_row()
     pac_indent = pac.get_indent()
 
     if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
-      if self.current_caption.get_current_text() and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
+      if self.current_caption.get_current_text() is not None \
+          and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
         # Creates a new Paragraph if the new caption is contiguous (Paint-On)
         self.set_current_to_previous()
 
         self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
         self.init_current_caption(time_code)
 
-      elif len(self.previous_captions) > 0 and self.previous_captions[0].get_current_text() \
+      elif len(self.previous_captions) > 0 and self.previous_captions[0].get_current_text() is not None \
           and self.safe_area_y_offset + pac_row == self.previous_captions[0].get_row_offset():
         # Pushes and erases displayed row so that it can be replaced by current row (Paint-On)
         self.push_previous_caption(self.current_caption.get_begin())
@@ -134,10 +136,10 @@ class _SccContext:
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode):
     """Processes SCC Mid-Row Code to map it to the model"""
-    if not self.current_caption:
+    if self.current_caption is None:
       raise ValueError("No current SCC caption initialized")
 
-    if self.current_caption.get_current_text() and self.current_caption.get_current_text().get_text():
+    if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
       self.current_caption.new_caption_text()
       self.current_caption.apply_current_text_offsets()
 
@@ -147,10 +149,10 @@ class _SccContext:
 
   def process_attribute_code(self, attribute_code: SccAttributeCode):
     """Processes SCC Attribute Code to map it to the model"""
-    if not self.current_caption or not self.current_caption.get_current_text():
+    if self.current_caption is None or self.current_caption.get_current_text() is None:
       raise ValueError("No current SCC caption nor content initialized")
 
-    if self.current_caption.get_current_text() and self.current_caption.get_current_text().get_text():
+    if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
       self.current_caption.new_caption_text()
       self.current_caption.apply_current_text_offsets()
 
@@ -166,7 +168,7 @@ class _SccContext:
 
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
-      if self.current_caption and self.current_caption.get_current_text():
+      if self.current_caption is not None and self.current_caption.get_current_text() is not None:
         self.set_current_to_previous()
 
       self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
@@ -278,7 +280,7 @@ class _SccContext:
 
   def flush(self, time_code: SccTimeCode):
     """Flushes the remaining current caption"""
-    if self.current_caption:
+    if self.current_caption is not None:
       self.set_current_to_previous()
       while len(self.previous_captions) > 0:
         self.push_previous_caption(time_code)
@@ -353,26 +355,26 @@ class SccLine:
   @staticmethod
   def from_str(line: str) -> Optional[SccLine]:
     """Creates a SCC line instance from the specified string"""
-    if line == "":
+    if not line:
       return None
 
     regex = re.compile(SCC_LINE_PATTERN)
     match = regex.match(line)
 
-    if not match:
+    if match is None:
       return None
 
     time_code = match.group(1)
     time_offset = SccTimeCode.parse(time_code)
 
     hex_words = line.split('\t')[1].split(' ')
-    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if len(hex_word)]
+    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
     return SccLine(time_offset, scc_words)
 
   def get_style(self) -> SccCaptionStyle:
     """Analyses the line words ordering to get the caption style"""
     scc_words = self.scc_words
-    if scc_words == "":
+    if not scc_words:
       return SccCaptionStyle.Unknown
 
     prefix = SccControlCode.find(scc_words[0].value)
@@ -411,30 +413,30 @@ class SccLine:
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
         spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
 
-        if pac:
+        if pac is not None:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
-          if pac.get_color():
+          if pac.get_color() is not None:
             debug += "|" + str(pac.get_color())
-          if pac.get_font_style():
+          if pac.get_font_style() is not None:
             debug += "|I"
-          if pac.get_text_decoration():
+          if pac.get_text_decoration() is not None:
             debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
           context.process_preamble_address_code(pac, self.time_code)
 
-        elif attribute_code:
+        elif attribute_code is not None:
           debug += "[ATC/" + hex(scc_word.value) + "]"
           context.process_attribute_code(attribute_code)
 
-        elif mid_row_code:
+        elif mid_row_code is not None:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
           context.process_mid_row_code(mid_row_code)
 
-        elif control_code:
+        elif control_code is not None:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
           context.process_control_code(control_code, self.time_code)
 
-        elif spec_char:
+        elif spec_char is not None:
           word = spec_char.get_unicode_value()
           debug += word
           context.process_text(word, self.time_code)
@@ -454,6 +456,67 @@ class SccLine:
     LOGGER.debug(debug)
 
     return self.time_code
+
+  def to_disassembly(self) -> str:
+    """Converts SCC line into the disassembly format"""
+    disassembly_line = str(self.time_code) + "\t"
+
+    for scc_word in self.scc_words:
+
+      if scc_word.value == 0x0000:
+        disassembly_line += "{}"
+        continue
+
+      if scc_word.byte_1 < 0x20:
+
+        attribute_code = SccAttributeCode.find(scc_word.value)
+        control_code = SccControlCode.find(scc_word.value)
+        mid_row_code = SccMidRowCode.find(scc_word.value)
+        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
+        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
+
+        if pac is not None:
+          disassembly_line += f"{{{pac.get_row():02}"
+          color = pac.get_color()
+          indent = pac.get_indent()
+          if indent is not None and indent > 0:
+            disassembly_line += f"{indent :02}"
+          elif color is not None:
+            disassembly_line += get_color_disassembly(color)
+            disassembly_line += get_font_style_disassembly(pac.get_font_style())
+            disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
+          else:
+            disassembly_line += "00"
+          disassembly_line += "}"
+
+        elif attribute_code is not None:
+          disassembly_line += "{"
+          disassembly_line += "B" if attribute_code.is_background() else ""
+          disassembly_line += get_color_disassembly(attribute_code.get_color())
+          disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
+          disassembly_line += "}"
+
+        elif mid_row_code is not None:
+          disassembly_line += "{"
+          disassembly_line += get_color_disassembly(mid_row_code.get_color())
+          disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
+          disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
+          disassembly_line += "}"
+
+        elif control_code is not None:
+          disassembly_line += "{" + control_code.get_name() + "}"
+
+        elif spec_char is not None:
+          disassembly_line += spec_char.get_unicode_value()
+
+        else:
+          disassembly_line += "{??}"
+          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
+
+      else:
+        disassembly_line += scc_word.to_text()
+
+    return disassembly_line
 
 
 #
@@ -485,7 +548,7 @@ def to_model(scc_content: str):
     LOGGER.debug(line)
     scc_line = SccLine.from_str(line)
 
-    if not scc_line:
+    if scc_line is None:
       continue
 
     time_code = scc_line.to_model(context)
@@ -493,3 +556,21 @@ def to_model(scc_content: str):
   context.flush(time_code)
 
   return document
+
+
+def to_disassembly(scc_content: str) -> str:
+  """Dumps a SCC document into the disassembly format"""
+  disassembly = ""
+  for line in scc_content.splitlines():
+    LOGGER.debug(line)
+    scc_line = SccLine.from_str(line)
+
+    if scc_line is None:
+      continue
+
+    line_to_disassembly = scc_line.to_disassembly()
+    LOGGER.debug(line_to_disassembly)
+
+    disassembly += line_to_disassembly + "\n"
+
+  return disassembly

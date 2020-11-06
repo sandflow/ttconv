@@ -260,6 +260,15 @@ class ContentElement:
       yield child
       child = child._next_sibling
 
+  def __len__(self) -> int:
+    '''Returns the number of children of the element.'''
+    count = 0
+    child = self._first_child
+    while child is not None:
+      count += 1
+      child = child._next_sibling
+    return count
+
   def dfs_iterator(self) -> typing.Iterator[ContentElement]:
     '''Returns an iterator over all elements in the tree rooted at the element,
     in depth-first search order.'''
@@ -287,6 +296,11 @@ class ContentElement:
   
   # style properties
 
+  def has_style(self, style_prop: StyleProperty) -> bool:
+    '''Returns whether there is a value for style property `style_prop`.
+    '''
+    return style_prop in self._styles
+
   def get_style(self, style_prop: StyleProperty):
     '''Returns the value for the style property `style_prop`, or None.'''
     return self._styles.get(style_prop)
@@ -312,6 +326,11 @@ class ContentElement:
   def is_style_applicable(self, style_prop: StyleProperty) -> bool:
     '''Whether the style property `style_prop` apply to the element'''
     return style_prop in self._applicableStyles
+
+  def iter_styles(self) -> typing.Iterator[StyleProperty]:
+    '''Returns an iterator over all style properties that are not `None`
+    '''
+    return iter(self._styles)
 
   # layout properties
 
@@ -358,6 +377,9 @@ class ContentElement:
     '''
     if not isinstance(step, DiscreteAnimationStep):
       raise TypeError("Must be a discrete animation step")
+
+    if not step.style_property.is_animatable:
+      raise TypeError("The style property is not animatable")
 
     self._sets.append(step)
 
@@ -493,7 +515,7 @@ class Br(ContentElement):
     raise TypeError("Br elements cannot have children")
 
   def set_begin(self, time_offset):
-    raise RuntimeError("Br elements do not have temporeal properties")
+    raise RuntimeError("Br elements do not have temporal properties")
 
   def set_end(self, time_offset):
     raise RuntimeError("Br elements do not have temporal properties")
@@ -688,25 +710,32 @@ class Text(ContentElement):
     raise RuntimeError("Text nodes cannot have children")
 
   def set_style(self, style_prop, value):
-    raise RuntimeError("Text nodes cannot have style properties")
+    if value is not None:
+      raise RuntimeError("Text nodes cannot have style properties")
 
   def set_begin(self, time_offset):
-    raise RuntimeError("Text nodes do not have temporeal properties")
+    if time_offset is not None:
+      raise RuntimeError("Text nodes do not have temporal properties")
 
   def set_end(self, time_offset):
-    raise RuntimeError("Text nodes do not have temporal properties")
+    if time_offset is not None:
+      raise RuntimeError("Text nodes do not have temporal properties")
 
   def set_id(self, element_id):
-    raise RuntimeError("Text nodes do not have an id")
+    if element_id is not None:
+      raise RuntimeError("Text nodes do not have an id")
 
   def set_region(self, region):
-    raise RuntimeError("Text nodes are not associated with a region")
+    if region is not None:
+      raise RuntimeError("Text nodes are not associated with a region")
 
   def set_lang(self, language):
-    raise RuntimeError("Text nodes are not associated with a language")
+    if language is not None and language != "":
+      raise RuntimeError("Text nodes are not associated with a language")
 
   def set_space(self, wsh):
-    raise RuntimeError("Text nodes are not associated with space handling")
+    if wsh is not None and wsh is not WhiteSpaceHandling.DEFAULT:
+      raise RuntimeError("Text nodes are not associated with space handling")
 
   # text contents
 
@@ -741,7 +770,7 @@ class Region(ContentElement):
     StyleProperties.WritingMode
     ])
 
-  def __init__(self, region_id, doc=None):
+  def __init__(self, region_id: str, doc: Document = None):
     super().__init__(doc)
     
     if region_id is None:
@@ -811,13 +840,10 @@ class ActiveAreaType:
     if self.height < 0  or self.height > 1:
       raise ValueError("height must be in the range [0, 1]")
 
-class Document:
+class Root:
   '''Base class for TTML documents, including ISDs, as specified in TTML2'''
 
   def __init__(self):
-    self._regions = {}
-    self._body = None
-    self._initial_values = {}
     self._cell_resolution = CellResolutionType(rows=15, columns=32)
     self._px_resolution = PixelResolutionType(width=1920, height=1080)
     self._active_area = None
@@ -826,7 +852,7 @@ class Document:
 
   # active area
 
-  def get_active_area(self) -> ActiveAreaType:
+  def get_active_area(self) -> typing.Optional[ActiveAreaType]:
     '''Returns the active area of the document.
     '''
     return self._active_area
@@ -834,7 +860,7 @@ class Document:
   def set_active_area(self, active_area: typing.Optional[ActiveAreaType]):
     '''Sets the active area of the document, or clears it if `None` is passed.
     '''
-    if not None and not isinstance(active_area, ActiveAreaType):
+    if active_area is not None and not isinstance(active_area, ActiveAreaType):
       raise TypeError("Argument must be None or an instance of ActiveAreaType")
 
     self._active_area = active_area
@@ -862,7 +888,7 @@ class Document:
     '''Sets the display aspect ratio of the document to `dar`. If `dar` is `None`, the
     document will fill the root container area.
     '''
-    if dar is not None or dar is not isinstance(dar, Fraction):
+    if dar is not None and not isinstance(dar, Fraction):
       raise TypeError("Argument must be an instance of Fraction or None")
 
     self._dar = dar
@@ -893,6 +919,15 @@ class Document:
 
     self._px_resolution = px_resolution
 
+class Document(Root):
+  '''TTML document'''
+
+  def __init__(self):
+    self._regions = {}
+    self._body = None
+    self._initial_values = {}
+    super().__init__()
+
   # body
 
   def get_body(self) -> typing.Optional[Body]:
@@ -901,11 +936,15 @@ class Document:
 
   def set_body(self, body: typing.Optional[Body]):
     '''Sets the body element of the document, which may be None'''
-    if not isinstance(body, Body):
-      raise TypeError("Argument must be an instance of Body")
+    if body is not None:
+      if not isinstance(body, Body):
+        raise TypeError("Argument must be an instance of Body")
 
-    if body.parent() is not None:
-      raise ValueError("Body must be a root element")
+      if body.parent() is not None:
+        raise ValueError("Body must be a root element")
+
+      if body.get_doc() is not self:
+        raise ValueError("Body does not belongs to this document")
 
     self._body = body
 

@@ -35,7 +35,7 @@ from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_R
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
-from ttconv.style_properties import PositionType, ExtentType, StyleProperties, LengthType
+from ttconv.style_properties import PositionType, ExtentType, StyleProperties, LengthType, DisplayAlignType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ class SccCaptionParagraph:
 
   def set_column_offset(self, indent: Optional[int]):
     """Sets the paragraph x offset"""
-    self._column_offset = self._safe_area_x_offset + (indent if indent else 0)
+    self._column_offset = self._safe_area_x_offset + (indent if indent is not None else 0)
 
   def get_column_offset(self) -> int:
     """Returns the paragraph x offset"""
@@ -103,7 +103,7 @@ class SccCaptionParagraph:
 
   def set_row_offset(self, row: Optional[int]):
     """Sets the paragraph y offset"""
-    self._row_offset = self._safe_area_y_offset + (row if row else 0)
+    self._row_offset = self._safe_area_y_offset + (row if row is not None else 0)
 
   def get_row_offset(self) -> int:
     """Returns the paragraph y offset"""
@@ -223,9 +223,9 @@ class SccCaptionParagraph:
     p.set_doc(doc)
     p.set_id(self._caption_id)
 
-    if self._begin:
+    if self._begin is not None:
       p.set_begin(self._begin.to_temporal_offset())
-    if self._end:
+    if self._end is not None:
       p.set_end(self._end.to_temporal_offset())
 
     # Set the region to current caption
@@ -246,11 +246,25 @@ class SccCaptionParagraph:
       if isinstance(caption_content, SccCaptionText):
         span = Span(doc)
 
-        if caption_content.get_begin():
-          span.set_begin(caption_content.get_begin().to_temporal_offset())
+        if caption_content.get_begin() is not None:
 
-        if caption_content.get_end():
-          span.set_end(caption_content.get_end().to_temporal_offset())
+          begin = caption_content.get_begin().to_temporal_offset()
+
+          if self.get_caption_style() is SccCaptionStyle.PaintOn:
+            # Compute paragraph-relative begin time
+            begin -= self._begin.to_temporal_offset()
+
+          span.set_begin(begin)
+
+        if caption_content.get_end() is not None:
+
+          end = caption_content.get_end().to_temporal_offset()
+
+          if self.get_caption_style() is SccCaptionStyle.PaintOn:
+            # Compute paragraph-relative end time
+            end -= self._end.to_temporal_offset()
+
+          span.set_end(end)
 
         for (prop, value) in caption_content.get_style_properties().items():
           span.set_style(prop, value)
@@ -287,12 +301,12 @@ class _SccParagraphRegion:
 
     matching_region = self._find_matching_region()
 
-    if matching_region:
-      # Extend region to paragraph if needed
-      self._extend_region_to_paragraph(matching_region)
-    else:
+    if matching_region is None:
       # Create a new matching region
       matching_region = self._create_matching_region()
+    else:
+      # Extend region to paragraph if needed
+      self._extend_region_to_paragraph(matching_region)
 
     return matching_region
 
@@ -303,11 +317,18 @@ class _SccParagraphRegion:
     # Convert paragraph origin units into percentages
     paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
 
+    if self._paragraph.get_caption_style() in (SccCaptionStyle.RollUp, SccCaptionStyle.PaintOn):
+      return region_origin \
+             and region_origin.x.units is paragraph_origin.x.units \
+             and region_origin.y.units is paragraph_origin.y.units \
+             and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
+             and region_origin.y.value <= paragraph_origin.y.value
+
     return region_origin \
-           and region_origin.x.units is paragraph_origin.x.units \
-           and region_origin.y.units is paragraph_origin.y.units \
-           and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
-           and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
+       and region_origin.x.units is paragraph_origin.x.units \
+       and region_origin.y.units is paragraph_origin.y.units \
+       and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
+       and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
 
   def _find_matching_region(self) -> Optional[Region]:
     """Looks for a region that origin matches with the paragraph origin"""
@@ -363,15 +384,30 @@ class _SccParagraphRegion:
     region = Region(self._get_region_prefix() + str(len(doc_regions) + 1), self._doc)
 
     # Convert origin cells to percentages
-    paragraph_origin_pct = convert_cells_to_percentages(paragraph_origin, self._doc.get_cell_resolution())
-    region.set_style(StyleProperties.Origin, paragraph_origin_pct)
+    if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
+      # The region origin x offset
+      region_origin = get_position_from_offsets(paragraph_origin.x.value, self._top)
+      region_origin_pct = convert_cells_to_percentages(region_origin, self._doc.get_cell_resolution())
+    else:
+      # The region origin matches with paragraph origin
+      region_origin_pct = convert_cells_to_percentages(paragraph_origin, self._doc.get_cell_resolution())
+
+    region.set_style(StyleProperties.Origin, region_origin_pct)
 
     # The region width is initialized with he paragraph width (up to the right of the safe area)
-    available_width = self._right - int(paragraph_origin.x.value)
-    region_width = min(self._paragraph.get_extent().width.value, available_width)
+    paragraph_extent = self._paragraph.get_extent()
 
-    # The region height extends from its origin to the bottom of the safe area
-    region_height = self._bottom - int(paragraph_origin.y.value)
+    available_width = self._right - int(paragraph_origin.x.value)
+    region_width = min(paragraph_extent.width.value, available_width)
+
+    if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
+      # The region height extends from the top row to the bottom row of the safe area
+      region_height = self._bottom - (self._top + 1)
+      region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.after)
+    else:
+      # The region height extends from its origin to the bottom of the safe area
+      region_height = self._bottom - int(paragraph_origin.y.value)
+      region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     region_extent = get_extent_from_dimensions(region_width, region_height)
 
