@@ -147,7 +147,8 @@ class ISD(model.Root):
 
     # add significant times for body and its descendents
 
-    sig_times(doc.get_body(), 0, None) 
+    if doc.get_body() is not None:
+      sig_times(doc.get_body(), 0, None) 
 
     return s_times
 

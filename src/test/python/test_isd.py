@@ -28,7 +28,11 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
+import os
+import logging
+import xml.etree.ElementTree as et
 from fractions import Fraction
+import ttconv.imsc.reader as imsc_reader
 import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.isd import ISD
@@ -186,6 +190,40 @@ class ISDTest(unittest.TestCase):
     self.assertEqual(len(span), 1)
 
     self.assertEqual(span.get_style(styles.StyleProperties.Color), styles.NamedColors.blue.value)
+
+  def test_imsc_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            m = imsc_reader.to_model(tree)
+            self.assertIsNotNone(m)
+            sig_times = ISD.significant_times(m)
+            for t in sig_times:
+              isd = ISD.from_model(m, t)
+              self.assertIsNotNone(isd)
+            if len(logs.output) > 1:
+              self.fail(logs.output)
+
+  def test_imsc_1_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            m = imsc_reader.to_model(tree)
+            self.assertIsNotNone(m)
+            sig_times = ISD.significant_times(m)
+            for t in sig_times:
+              isd = ISD.from_model(m, t)
+              self.assertIsNotNone(isd)
+            if len(logs.output) > 1:
+              self.fail(logs.output)
 
 if __name__ == '__main__':
   unittest.main()
