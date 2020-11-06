@@ -515,7 +515,7 @@ class Br(ContentElement):
     raise TypeError("Br elements cannot have children")
 
   def set_begin(self, time_offset):
-    raise RuntimeError("Br elements do not have temporeal properties")
+    raise RuntimeError("Br elements do not have temporal properties")
 
   def set_end(self, time_offset):
     raise RuntimeError("Br elements do not have temporal properties")
@@ -715,7 +715,7 @@ class Text(ContentElement):
 
   def set_begin(self, time_offset):
     if time_offset is not None:
-      raise RuntimeError("Text nodes do not have temporeal properties")
+      raise RuntimeError("Text nodes do not have temporal properties")
 
   def set_end(self, time_offset):
     if time_offset is not None:

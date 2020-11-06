@@ -183,7 +183,7 @@ class ISD(model.Root):
 
     # convert offset to local temporal coordinates
 
-    if parent is not None:
+    if not isinstance(element, (model.Body, model.Region)):
       offset = offset - (parent.get_begin() if parent.get_begin() is not None else 0)
 
     # prune if temporally inactive
@@ -203,7 +203,7 @@ class ISD(model.Root):
     # * the element has no children and the associated region is not the root region
 
     if (
-        parent is not None and
+        not isinstance(element, model.Region) and
         associated_region is not selected_region and
         (not element.has_children() or associated_region is not None)
       ):
@@ -289,7 +289,7 @@ class ISD(model.Root):
 
     isd_element_children = []
 
-    if parent is None:
+    if isinstance(element, model.Region):
 
       isd_body_element = ISD.process_element(isd,
                                              offset,
