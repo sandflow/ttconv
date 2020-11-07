@@ -38,6 +38,7 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.style_properties as imsc_styles
+from ttconv.scc.utils import get_extent_from_dimensions
 
 def _get_set_style(imsc_style_prop, model_value):
   e = et.Element("p")
@@ -336,6 +337,24 @@ class StylePropertyWriterTest(unittest.TestCase):
       "tbrl"
     )
 
+  def test_tts_writing_extent(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.Extent,
+      get_extent_from_dimensions(123, 456, styles.LengthType.Units.px)),
+      '123px 456px'
+    )
+
+  def test_tts_writing_no_extent(self):
+
+    d = model.Document()
+
+    tree_from_model = imsc_writer.from_model(d)
+
+    extent = tree_from_model.getroot().attrib.get(
+      f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
+    
+    #self.assertEqual(extent, None)
+  
     
 if __name__ == '__main__':
   unittest.main()

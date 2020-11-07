@@ -201,6 +201,12 @@ class TTElement(TTMLElement):
       imsc_attr.CellResolutionAttribute.set(tt_element, model_doc.get_cell_resolution())
 
     if model_doc.get_px_resolution() is not None:
+      # only set the extent if at least one property has the px attribute set
+      #prop = StyleProperties.BY_QNAME.get(attr)
+      #imsc_style_prop = imsc_styles.StyleProperties.BY_MODEL_PROP.get(imsc_styles.StyleProperties.Extent)
+      #for style_prop, value in self.style_elements[style_ref].styles.items():
+      #  style_element.styles.setdefault(style_prop, value)
+
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
     
     if model_doc.get_active_area() is not None:
