@@ -257,7 +257,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
     to2 = styles.TextOutlineType(
       color=styles.NamedColors.red.value,
-      thickness=styles.LengthType(value="5")
+      thickness=styles.LengthType(value=5)
     )
     self.assertEqual(
       _get_set_style(
@@ -280,13 +280,13 @@ class StylePropertyWriterTest(unittest.TestCase):
     ts2 = styles.TextShadowType(
       (
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+          x_offset=styles.LengthType(value=1, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=1.2, units=styles.LengthType.Units.em)
         ),
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
-          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          x_offset=styles.LengthType(value=0.5, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=0.7, units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value=1, units=styles.LengthType.Units.em),
           color=styles.NamedColors.red.value
         )
       )

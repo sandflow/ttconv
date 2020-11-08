@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+import inspect
 import typing
 from fractions import Fraction
 
@@ -80,7 +81,7 @@ class ISD(model.Root):
 
   def iter_regions(self) -> typing.Iterator[ISD.Region]:
     '''Returns an iterator over regions.'''
-    return self._regions.values()
+    return self._regions.values()  
 
   # creating an ISD from a document
 
@@ -168,8 +169,19 @@ class ISD(model.Root):
 
 
   @staticmethod
-  def compute_style(_style_property: styles.StyleProperty, value: typing.Any) -> typing.Any:
-    return value
+  def set_and_compute_style(
+      parent: model.ContentElement,
+      element: model.ContentElement,
+      style_property: styles.StyleProperty,
+      style_value: typing.Any
+    ):
+    
+    computer: ComputedStyleGenerator = ComputedStyleGenerators.BY_STYLE_PROP.get(style_property)
+
+    if computer is not None:
+      style_value = computer.compute(parent, element, style_value)
+
+    element.set_style(style_property, style_value)
 
   @staticmethod
   def process_element(isd: ISD,
@@ -232,10 +244,7 @@ class ISD(model.Root):
       if animation_step.end is not None and animation_step.end < offset:
         continue
 
-      isd_element.set_style(
-        animation_step.style_property,
-        isd.compute_style(animation_step.style_property, animation_step.value)
-      )
+      isd.set_and_compute_style(parent, isd_element, animation_step.style_property, animation_step.value)
 
     # copy specified styles
 
@@ -245,10 +254,7 @@ class ISD(model.Root):
         # skip if the style has already been set
         continue
 
-      isd_element.set_style(
-        spec_style_prop,
-        isd.compute_style(spec_style_prop, element.get_style(spec_style_prop))
-      )
+      isd.set_and_compute_style(parent, isd_element, spec_style_prop, element.get_style(spec_style_prop))
 
     # inherited styling
 
@@ -276,10 +282,7 @@ class ISD(model.Root):
         initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
                           else initial_style.make_initial_value()
 
-        isd_element.set_style(
-          initial_style,
-          isd.compute_style(initial_style, initial_value)
-        )
+        isd.set_and_compute_style(parent, isd_element, initial_style, initial_value)
     
     # prune element is display is "none"
 
@@ -340,13 +343,40 @@ class ISD(model.Root):
 
     return None
 
-    
+class ComputedStyleGenerator:
+  @classmethod
+  def compute(cls, parent: model.ContentElement, element: model.ContentElement, style_value: typing.Any):
+    pass
 
-#
-# Style properties
-#
+class ComputedStyleGenerators:
 
+  class FontSize(ComputedStyleGenerator):
 
-class StyleProperties:
+    style_prop = styles.StyleProperties.FontSize
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement, style_value: styles.LengthType):
+
+      if style_value.units is styles.LengthType.Units.pct:
+        if parent is not None:
+          parent_length = parent.get_style(cls.style_prop)
+          if parent_length is None:
+            raise ValueError("Attempting to compute a relative length for style"
+                             f" property {cls.style_prop.__name__} whose parent is None")
+          style_value = styles.LengthType(
+            value=parent_length.value * style_value.value / 100,
+            units=parent_length.units
+          )
+        else:
+          style_value = styles.LengthType(
+            value=style_value.value / 100,
+            units=styles.LengthType.Units.c
+          )
+      
+      return style_value
+        
   
-  ALL = {v for n, v in list(locals().items()) if callable(v)}
+  BY_STYLE_PROP = {
+    computer.style_prop : computer
+    for computer_name, computer in list(locals().items()) if inspect.isclass(computer) and computer.style_prop is not None
+    }

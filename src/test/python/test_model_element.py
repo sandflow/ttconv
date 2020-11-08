@@ -217,6 +217,27 @@ class ContentElementTest(unittest.TestCase):
 
     self.assertFalse(p.has_children())
 
+  def test_children_accessors(self):
+    p = model.ContentElement()
+
+    c1 = model.ContentElement()
+
+    c2 = model.ContentElement()
+
+    c3 = model.ContentElement()
+
+    p.push_child(c1)
+
+    p.push_child(c2)
+
+    p.push_child(c3)
+
+    self.assertEqual(len(p), 3)
+
+    self.assertEqual(p[0], c1)
+
+    self.assertRaises(IndexError, lambda key: p[key], 5)
+
   def test_id(self):
     p = model.ContentElement()
 

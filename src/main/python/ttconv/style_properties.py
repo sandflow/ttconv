@@ -61,6 +61,12 @@ class LengthType:
   value: numbers.Number = 0
   units: Units = Units.pct
 
+  def __post_init__(self):
+    if not isinstance(self.value, numbers.Number):
+      raise ValueError("The length value must be a number")
+
+    if not isinstance(self.units, LengthType.Units):
+      raise ValueError("Invalid units")
 
 @dataclass(frozen=True)
 class ColorType:

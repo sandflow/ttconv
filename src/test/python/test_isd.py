@@ -225,5 +225,44 @@ class ISDTest(unittest.TestCase):
             if len(logs.output) > 1:
               self.fail(logs.output)
 
+class ISDComputeStyleTest(unittest.TestCase):
+
+  def test_compute_style_property(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.FontSize, styles.LengthType(value=50, units=styles.LengthType.Units.pct))
+    doc.put_region(r1)
+
+    b = model.Body(doc)
+    b.set_style(styles.StyleProperties.FontSize, styles.LengthType(value=50, units=styles.LengthType.Units.pct))
+    b.set_region(r1)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    p1.push_child(span1)
+
+    t1 = model.Text(doc, "hello")
+    span1.push_child(t1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    span = region[0][0][0][0]
+
+    self.assertEqual(
+      span.get_style(styles.StyleProperties.FontSize),
+      styles.LengthType(value=0.25, units=styles.LengthType.Units.c)
+      )
+
+
+
 if __name__ == '__main__':
   unittest.main()
