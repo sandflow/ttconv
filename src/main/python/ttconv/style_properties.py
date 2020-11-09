@@ -567,7 +567,8 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: LengthType):
-      return isinstance(value, LengthType) and value.units == LengthType.Units.c
+      return isinstance(value, LengthType) and \
+        value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw)
 
 
   class LuminanceGain(StyleProperty):

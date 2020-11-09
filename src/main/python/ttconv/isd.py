@@ -177,11 +177,18 @@ class ISD(model.Root):
     '''Compute style property values. This needs to be done in a specific order since the computed
     value of some style properties depend on the computed values of others'''
 
-    if styles.StyleProperties.FontSize in styles_to_be_computed:
-      StyleProcessors.BY_STYLE_PROP[styles.StyleProperties.FontSize].compute(isd_parent, isd_element)
+    ordered_style_props = (
+      styles.StyleProperties.FontSize,
+      styles.StyleProperties.Extent,
+      styles.StyleProperties.Origin,
+      styles.StyleProperties.LineHeight,
+      styles.StyleProperties.LinePadding,
+      styles.StyleProperties.RubyReserve
+    )
 
-    if styles.StyleProperties.Extent in styles_to_be_computed:
-      StyleProcessors.BY_STYLE_PROP[styles.StyleProperties.Extent].compute(isd_parent, isd_element)
+    for style_prop in ordered_style_props:
+      if style_prop in styles_to_be_computed:
+        StyleProcessors.BY_STYLE_PROP[style_prop].compute(isd_parent, isd_element)
 
   @staticmethod
   def process_element(isd: ISD,
@@ -480,7 +487,7 @@ class StyleProcessors:
           height=height,
           width=width
         )
-      )    
+      )
 
   class FillLineGap(StyleProcessor):
     style_prop = styles.StyleProperties.FillLineGap
@@ -517,20 +524,8 @@ class StyleProcessors:
       style_value = element.get_style(cls.style_prop)
       parent_value = parent.get_style(cls.style_prop) if parent is not None else None
 
-      pct_ref = styles.LengthType(
-        value=parent_value.value if parent_value is not None else 100/element.get_doc().get_cell_resolution().rows,
-        units=styles.LengthType.Units.rh
-      )
-
-      c_ref = styles.LengthType(
-        value=100/element.get_doc().get_cell_resolution().rows,
-        units=styles.LengthType.Units.rh
-      )
-
-      px_ref = styles.LengthType(
-        value=100/element.get_doc().get_px_resolution().height,
-        units=styles.LengthType.Units.rh
-      )
+      pct_ref = parent_value if parent_value is not None \
+         else _make_rh_length(100/element.get_doc().get_cell_resolution().rows)
 
       element.set_style(
         cls.style_prop,
@@ -538,8 +533,8 @@ class StyleProcessors:
           style_value,
           pct_ref,
           pct_ref,
-          c_ref,
-          px_ref
+          _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+          _make_rh_length(100 / element.get_doc().get_px_resolution().height)
         )
       )      
 
@@ -552,8 +547,40 @@ class StyleProcessors:
   class LineHeight(StyleProcessor):
     style_prop = styles.StyleProperties.LineHeight
 
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+      value = element.get_style(cls.style_prop)
+
+      if value is styles.SpecialValues.normal:
+
+        computed_value = value
+
+      else:
+        computed_value = _compute_length(
+          value,
+          element.get_style(styles.StyleProperties.FontSize),
+          element.get_style(styles.StyleProperties.FontSize),
+          _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+          _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+        )
+
+      element.set_style(cls.style_prop, computed_value)
+
   class LinePadding(StyleProcessor):
     style_prop = styles.StyleProperties.LinePadding
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+      element.set_style(
+        cls.style_prop,
+        _compute_length(
+          element.get_style(cls.style_prop),
+          element.get_style(styles.StyleProperties.FontSize),
+          element.get_style(styles.StyleProperties.FontSize),
+          _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+          _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+        )
+      )
 
   class LuminanceGain(StyleProcessor):
     style_prop = styles.StyleProperties.LuminanceGain
@@ -566,6 +593,39 @@ class StyleProcessors:
 
   class Origin(StyleProcessor):
     style_prop = styles.StyleProperties.Origin
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+
+      style_value: styles.PositionType = element.get_style(cls.style_prop)
+
+      # height
+
+      y = _compute_length(
+        style_value.y,
+        _make_rh_length(100),
+        element.get_style(styles.StyleProperties.FontSize),
+        _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+        _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+      )
+
+      # width
+
+      x = _compute_length(
+        style_value.y,
+        _make_rw_length(100),
+        element.get_style(styles.StyleProperties.FontSize),
+        _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
+        _make_rw_length(100 / element.get_doc().get_px_resolution().width)
+      )
+
+      element.set_style(
+        cls.style_prop,
+        styles.PositionType(
+          x=x,
+          y=y
+        )
+      )    
 
   class Overflow(StyleProcessor):
     style_prop = styles.StyleProperties.Overflow
@@ -581,6 +641,28 @@ class StyleProcessors:
 
   class RubyReserve(StyleProcessor):
     style_prop = styles.StyleProperties.RubyReserve
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+      value: typing.Union[styles.SpecialValues.none, styles.RubyReserveType] = element.get_style(cls.style_prop)
+
+      if value is styles.SpecialValues.none:
+
+        computed_value = value
+
+      else:
+        computed_value = styles.RubyReserveType(
+          position=value.position,
+          length=_compute_length(
+            value.length,
+            element.get_style(styles.StyleProperties.FontSize),
+            element.get_style(styles.StyleProperties.FontSize),
+            _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+            _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+          )
+        )
+        
+      element.set_style(cls.style_prop, computed_value)
 
   class Shear(StyleProcessor):
     style_prop = styles.StyleProperties.Shear
