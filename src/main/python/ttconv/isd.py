@@ -167,21 +167,17 @@ class ISD(model.Root):
 
     return isd
 
-
   @staticmethod
-  def set_and_compute_style(
-      parent: model.ContentElement,
-      element: model.ContentElement,
-      style_property: styles.StyleProperty,
-      style_value: typing.Any
+  def _compute_styles(
+      styles_to_be_computed: typing.Set[model.StyleProperty],
+      isd_parent: typing.Optional[model.ContentElement],
+      isd_element: model.ContentElement
     ):
-    
-    computer: ComputedStyleGenerator = ComputedStyleGenerators.BY_STYLE_PROP.get(style_property)
+    '''Compute style property values. This needs to be done in a specific order since the computed
+    value of some style properties depend on the computed values of others'''
 
-    if computer is not None:
-      style_value = computer.compute(parent, element, style_value)
-
-    element.set_style(style_property, style_value)
+    if styles.StyleProperties.FontSize in styles_to_be_computed:
+      StyleProcessors.BY_STYLE_PROP[styles.StyleProperties.FontSize].compute(isd_parent, isd_element)
 
   @staticmethod
   def process_element(isd: ISD,
@@ -234,6 +230,10 @@ class ISD(model.Root):
       isd_element.set_lang(element.get_lang())
       isd_element.set_space(element.get_space())
 
+    # keep track of specified style properties
+
+    styles_to_be_computed: typing.Set[model.StyleProperty] = set()
+
     # apply animation
 
     for animation_step in element.iter_animation_steps():
@@ -244,7 +244,8 @@ class ISD(model.Root):
       if animation_step.end is not None and animation_step.end < offset:
         continue
 
-      isd.set_and_compute_style(parent, isd_element, animation_step.style_property, animation_step.value)
+      styles_to_be_computed.add(animation_step.style_property)
+      isd_element.set_style(animation_step.style_property, animation_step.value)
 
     # copy specified styles
 
@@ -254,7 +255,8 @@ class ISD(model.Root):
         # skip if the style has already been set
         continue
 
-      isd.set_and_compute_style(parent, isd_element, spec_style_prop, element.get_style(spec_style_prop))
+      styles_to_be_computed.add(spec_style_prop)
+      isd_element.set_style(spec_style_prop, element.get_style(spec_style_prop))
 
     # inherited styling
 
@@ -262,13 +264,8 @@ class ISD(model.Root):
 
       for inherited_style_prop in parent.iter_styles():
 
-        if not inherited_style_prop.is_inherited or isd_element.has_style(inherited_style_prop):
-          continue
+        StyleProcessors.BY_STYLE_PROP[inherited_style_prop].inherit(parent, isd_element)
 
-        isd_element.set_style(
-          inherited_style_prop,
-          parent.get_style(inherited_style_prop)
-        )
 
     # initial value styling
 
@@ -282,8 +279,13 @@ class ISD(model.Root):
         initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
                           else initial_style.make_initial_value()
 
-        isd.set_and_compute_style(parent, isd_element, initial_style, initial_value)
-    
+        styles_to_be_computed.add(initial_style)
+        isd_element.set_style(initial_style, initial_value)
+
+    # compute style properties
+
+    ISD._compute_styles(styles_to_be_computed, parent, isd_element)
+
     # prune element is display is "none"
 
     if isd_element.get_style(styles.StyleProperties.Display) is styles.SpecialValues.none:
@@ -343,19 +345,55 @@ class ISD(model.Root):
 
     return None
 
-class ComputedStyleGenerator:
+class StyleProcessor:
+
+  style_prop: styles.StyleProperty = None
+
   @classmethod
-  def compute(cls, parent: model.ContentElement, element: model.ContentElement, style_value: typing.Any):
+  def compute(cls, parent: model.ContentElement, element: model.ContentElement):
     pass
 
-class ComputedStyleGenerators:
+  @classmethod
+  def inherit(cls, parent: model.ContentElement, element: model.ContentElement):
+    if cls.style_prop.is_inherited and not element.has_style(cls.style_prop):
+      element.set_style(cls.style_prop, parent.get_style(cls.style_prop))
 
-  class FontSize(ComputedStyleGenerator):
+class StyleProcessors:
 
+  class BackgroundColor(StyleProcessor):
+    style_prop = styles.StyleProperties.BackgroundColor
+
+  class Color(StyleProcessor):
+    style_prop = styles.StyleProperties.Color
+
+  class Direction(StyleProcessor):
+    style_prop = styles.StyleProperties.Direction
+
+  class Disparity(StyleProcessor):
+    style_prop = styles.StyleProperties.Disparity
+
+  class Display(StyleProcessor):
+    style_prop = styles.StyleProperties.Display
+
+  class DisplayAlign(StyleProcessor):
+    style_prop = styles.StyleProperties.DisplayAlign
+
+  class Extent(StyleProcessor):
+    style_prop = styles.StyleProperties.Extent
+
+  class FillLineGap(StyleProcessor):
+    style_prop = styles.StyleProperties.FillLineGap
+
+  class FontFamily(StyleProcessor):
+    style_prop = styles.StyleProperties.FontFamily
+
+  class FontSize(StyleProcessor):
     style_prop = styles.StyleProperties.FontSize
 
     @classmethod
-    def compute(cls, parent: model.ContentElement, element: model.ContentElement, style_value: styles.LengthType):
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+
+      style_value = element.get_style(cls.style_prop)
 
       if style_value.units is styles.LengthType.Units.pct:
         if parent is not None:
@@ -372,11 +410,106 @@ class ComputedStyleGenerators:
             value=style_value.value / 100,
             units=styles.LengthType.Units.c
           )
+
+        element.set_style(cls.style_prop, style_value)
       
-      return style_value
-        
-  
+
+  class FontStyle(StyleProcessor):
+    style_prop = styles.StyleProperties.FontStyle
+
+  class FontWeight(StyleProcessor):
+    style_prop = styles.StyleProperties.FontWeight
+
+  class LineHeight(StyleProcessor):
+    style_prop = styles.StyleProperties.LineHeight
+
+  class LinePadding(StyleProcessor):
+    style_prop = styles.StyleProperties.LinePadding
+
+  class LuminanceGain(StyleProcessor):
+    style_prop = styles.StyleProperties.LuminanceGain
+
+  class MultiRowAlign(StyleProcessor):
+    style_prop = styles.StyleProperties.MultiRowAlign
+
+  class Opacity(StyleProcessor):
+    style_prop = styles.StyleProperties.Opacity
+
+  class Origin(StyleProcessor):
+    style_prop = styles.StyleProperties.Origin
+
+  class Overflow(StyleProcessor):
+    style_prop = styles.StyleProperties.Overflow
+
+  class Padding(StyleProcessor):
+    style_prop = styles.StyleProperties.Padding
+
+  class RubyAlign(StyleProcessor):
+    style_prop = styles.StyleProperties.RubyAlign
+
+  class RubyPosition(StyleProcessor):
+    style_prop = styles.StyleProperties.RubyPosition
+
+  class RubyReserve(StyleProcessor):
+    style_prop = styles.StyleProperties.RubyReserve
+
+  class Shear(StyleProcessor):
+    style_prop = styles.StyleProperties.Shear
+
+  class ShowBackground(StyleProcessor):
+    style_prop = styles.StyleProperties.ShowBackground
+
+  class TextAlign(StyleProcessor):
+    style_prop = styles.StyleProperties.TextAlign
+
+  class TextCombine(StyleProcessor):
+    style_prop = styles.StyleProperties.TextCombine
+
+  class TextDecoration(StyleProcessor):
+    style_prop = styles.StyleProperties.TextDecoration
+
+    @classmethod
+    def inherit(cls, parent: model.ContentElement, element: model.ContentElement):
+      parent_value: styles.TextDecorationType = parent.get_style(cls.style_prop)
+
+      spec_value: styles.TextDecorationType = element.get_style(cls.style_prop)
+
+      if spec_value is None:
+
+        style_value = parent_value
+
+      else:
+        style_value = styles.TextDecorationType(
+          underline=spec_value.underline if spec_value.underline is not None else parent_value.underline,
+          line_through=spec_value.line_through if spec_value.line_through is not None else parent_value.line_through,
+          overline=spec_value.overline if spec_value.overline is not None else parent_value.overline
+        )
+
+      element.set_style(cls.style_prop, style_value)
+
+  class TextEmphasis(StyleProcessor):
+    style_prop = styles.StyleProperties.TextEmphasis
+
+  class TextOutline(StyleProcessor):
+    style_prop = styles.StyleProperties.TextOutline
+
+  class TextShadow(StyleProcessor):
+    style_prop = styles.StyleProperties.TextShadow
+
+  class UnicodeBidi(StyleProcessor):
+    style_prop = styles.StyleProperties.UnicodeBidi
+
+  class Visibility(StyleProcessor):
+    style_prop = styles.StyleProperties.Visibility
+
+  class WrapOption(StyleProcessor):
+    style_prop = styles.StyleProperties.WrapOption
+
+  class WritingMode(StyleProcessor):
+    style_prop = styles.StyleProperties.WritingMode
+
   BY_STYLE_PROP = {
-    computer.style_prop : computer
-    for computer_name, computer in list(locals().items()) if inspect.isclass(computer) and computer.style_prop is not None
+    processor.style_prop : processor
+    for processor_name, processor in list(locals().items()) if inspect.isclass(processor) and processor.style_prop is not None
     }
+

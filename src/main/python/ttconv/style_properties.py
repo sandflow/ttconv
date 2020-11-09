@@ -230,14 +230,9 @@ class TextDecorationType:
   '''TTML \\<text-decoration\\>
   '''
 
-  class Action(Enum):
-    none = "none"
-    add = "add"
-    remove = "remove"
-
-  underline: Action = Action.none
-  line_through: Action = Action.none
-  overline: Action = Action.none
+  underline: typing.Optional[bool] = None
+  line_through: typing.Optional[bool] = None
+  overline: typing.Optional[bool] = None
 
 
 @dataclass(frozen=True)
@@ -336,15 +331,27 @@ class PositionType:
 class StyleProperty:
   '''Abstract base class for all style properties'''
 
+  @classmethod
+  def is_inherited(cls) -> bool:
+    '''True if a child element inherits the value of the property from its parent
+    '''
+    raise NotImplementedError
+
+  @classmethod
+  def is_animatable(cls) -> bool:
+    '''True if the property can be use in a `DiscreteAnimationStep` instance
+    '''
+    raise NotImplementedError
+
   @staticmethod
   def validate(value: typing.Any) -> bool:
     '''Returns whether the value is valid for the style property.'''
-    raise Exception("Not implemented in the base class")
+    raise NotImplementedError
 
   @staticmethod
   def make_initial_value() -> typing.Any:
     '''Creates an instance of the initial value of the style property.'''
-    raise Exception("Not implemented in the base class")
+    raise NotImplementedError
 
 class StyleProperties:
   '''Container for all style properties
@@ -772,11 +779,15 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return SpecialValues.none
+      return TextDecorationType(
+        underline=False,
+        overline=False,
+        line_through=False
+      )
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.none or isinstance(value, TextDecorationType)
+      return isinstance(value, TextDecorationType)
 
 
   class TextEmphasis(StyleProperty):

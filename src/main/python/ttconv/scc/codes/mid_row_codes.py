@@ -77,7 +77,7 @@ class SccMidRowCode(SccCode, Enum):
     style_bits = self._channel_1 & 0x000F
 
     if style_bits % 2 == 1:
-      return TextDecorationType(underline=TextDecorationType.Action.add)
+      return TextDecorationType(underline=True)
 
     return None
 

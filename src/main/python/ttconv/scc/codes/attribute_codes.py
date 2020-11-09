@@ -73,10 +73,10 @@ class SccAttributeCode(SccCode, Enum):
     """Returns whether the current code is a background or foreground code"""
     return self._background
 
-  def get_text_decoration(self) -> Optional[TextDecorationType]:
+  def get_text_decoration(self) -> Optional[bool]:
     """Returns the corresponding text decoration"""
     if self is SccAttributeCode.FAU:
-      return TextDecorationType.underline.value
+      return TextDecorationType(underline=True)
     return None
 
   @staticmethod

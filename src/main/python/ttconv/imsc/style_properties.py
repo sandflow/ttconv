@@ -703,29 +703,35 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      
       if xml_attrib == "none":
-        return styles.SpecialValues.none
 
-      s = xml_attrib.split(" ")
+        underline = False
+        line_through = False
+        overline = False
 
-      underline = styles.TextDecorationType.Action.none
-      line_through = styles.TextDecorationType.Action.none
-      overline = styles.TextDecorationType.Action.none
+      else:
 
-      if "underline" in s:
-        underline = styles.TextDecorationType.Action.add
-      elif "noUnderline" in s:
-        underline = styles.TextDecorationType.Action.remove
-        
-      if "lineThrough" in s:
-        line_through = styles.TextDecorationType.Action.add
-      elif "noLineThrough" in s:
-        line_through = styles.TextDecorationType.Action.remove
+        s = xml_attrib.split(" ")
 
-      if "overline" in s:
-        overline = styles.TextDecorationType.Action.add
-      elif "noOverline" in s:
-        overline = styles.TextDecorationType.Action.remove
+        underline = None
+        line_through = None
+        overline = None
+
+        if "underline" in s:
+          underline = True
+        elif "noUnderline" in s:
+          underline = False
+          
+        if "lineThrough" in s:
+          line_through = True
+        elif "noLineThrough" in s:
+          line_through = False
+
+        if "overline" in s:
+          overline = True
+        elif "noOverline" in s:
+          overline = False
 
       return styles.TextDecorationType(
         underline=underline,
@@ -736,27 +742,24 @@ class StyleProperties:
     @classmethod
     def from_model(cls, xml_element, model_value: styles.TextDecorationType):
       
-      if model_value == styles.SpecialValues.none:
-        attrib_value = "none"
-      else:
-        actual_values = []
+      actual_values = []
 
-        if model_value.underline == styles.TextDecorationType.Action.add:
-          actual_values.append("underline")
-        elif model_value.underline == styles.TextDecorationType.Action.remove:
-          actual_values.append("noUnderline")
+      if model_value.underline is True:
+        actual_values.append("underline")
+      elif model_value.underline is False:
+        actual_values.append("noUnderline")
 
-        if model_value.line_through == styles.TextDecorationType.Action.add:
-          actual_values.append("lineThrough")
-        elif model_value.line_through == styles.TextDecorationType.Action.remove:
-          actual_values.append("noLineThrough")
+      if model_value.line_through is True:
+        actual_values.append("lineThrough")
+      elif model_value.line_through is False:
+        actual_values.append("noLineThrough")
 
-        if model_value.overline == styles.TextDecorationType.Action.add:
-          actual_values.append("overline")
-        elif model_value.overline == styles.TextDecorationType.Action.remove:
-          actual_values.append("noOverline")
+      if model_value.overline is True:
+        actual_values.append("overline")
+      elif model_value.overline is False:
+        actual_values.append("noOverline")
 
-        attrib_value = " ".join(actual_values)
+      attrib_value = " ".join(actual_values)
 
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib_value)
 

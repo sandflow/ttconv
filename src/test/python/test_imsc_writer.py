@@ -225,8 +225,8 @@ class StylePropertyWriterTest(unittest.TestCase):
       _get_set_style(
         imsc_styles.StyleProperties.TextDecoration,
         styles.TextDecorationType(
-          underline=styles.TextDecorationType.Action.remove,
-          line_through=styles.TextDecorationType.Action.add
+          underline=False,
+          line_through=True
         )
       ),
       "noUnderline lineThrough"
