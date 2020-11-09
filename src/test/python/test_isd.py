@@ -262,7 +262,58 @@ class ISDComputeStyleTest(unittest.TestCase):
       styles.LengthType(value=0.25, units=styles.LengthType.Units.c)
       )
 
+class ISDInheritanceStyleTest(unittest.TestCase):
 
+  def test_text_decoration_inheritance(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(
+      styles.StyleProperties.TextDecoration,
+      styles.TextDecorationType(
+        line_through=False,
+        underline=True,
+        overline=True
+      )
+    )
+    doc.put_region(r1)
+
+    b = model.Body(doc)
+    b.set_style(
+      styles.StyleProperties.TextDecoration,
+      styles.TextDecorationType(
+        overline=False
+      )
+    )
+    b.set_region(r1)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    p1.push_child(span1)
+
+    t1 = model.Text(doc, "hello")
+    span1.push_child(t1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    span = region[0][0][0][0]
+
+    self.assertEqual(
+      span.get_style(styles.StyleProperties.TextDecoration),
+      styles.TextDecorationType(
+        line_through=False,
+        underline=True,
+        overline=False
+      )
+    )
 
 if __name__ == '__main__':
   unittest.main()
