@@ -345,6 +345,52 @@ class ISD(model.Root):
 
     return None
 
+def _compute_length(
+    source_length: styles.LengthType,
+    pct_ref: typing.Optional[styles.LengthType],
+    em_ref: typing.Optional[styles.LengthType],
+    c_ref: typing.Optional[styles.LengthType],
+    px_ref: typing.Optional[styles.LengthType]
+  ):
+
+  if source_length.units is styles.LengthType.Units.pct:
+    if pct_ref is None:
+      raise ValueError("Percent length computed without pct reference")
+
+    return styles.LengthType(
+      value=source_length.value * pct_ref.value / 100,
+      units=pct_ref.units
+    )
+
+  if source_length.units is styles.LengthType.Units.em:
+    if em_ref is None:
+      raise ValueError("Em length computed without em reference")
+
+    return styles.LengthType(
+      value=source_length.value * em_ref.value,
+      units=em_ref.units
+    )
+
+  if source_length.units is styles.LengthType.Units.c:
+    if c_ref is None:
+      raise ValueError("C length computed without c reference")
+
+    return styles.LengthType(
+      value=source_length.value * c_ref.value,
+      units=c_ref.units
+    )
+
+  if source_length.units is styles.LengthType.Units.px:
+    if px_ref is None:
+      raise ValueError("px length computed without px reference")
+
+    return styles.LengthType(
+      value=source_length.value * px_ref.value,
+      units=px_ref.units
+    )
+
+  return source_length
+
 class StyleProcessor:
 
   style_prop: styles.StyleProperty = None
@@ -391,28 +437,56 @@ class StyleProcessors:
     style_prop = styles.StyleProperties.FontSize
 
     @classmethod
+    def inherit(cls, parent: model.ContentElement, element: model.ContentElement):
+      if element.has_style(cls.style_prop):
+        return
+
+      parent_value: styles.LengthType = parent.get_style(cls.style_prop)
+
+      if (
+          isinstance(element, model.Rtc) or
+          (isinstance(element, model.Rt) and not isinstance(parent, model.Rtc))
+      ):
+        style_value = styles.LengthType(
+          value=parent_value.value/2,
+          units=parent_value.units
+        )
+      else:
+        style_value = parent_value
+
+      element.set_style(cls.style_prop, style_value)
+
+    @classmethod
     def compute(cls, parent: model.ContentElement, element: model.ContentElement):
 
       style_value = element.get_style(cls.style_prop)
+      parent_value = parent.get_style(cls.style_prop) if parent is not None else None
 
-      if style_value.units is styles.LengthType.Units.pct:
-        if parent is not None:
-          parent_length = parent.get_style(cls.style_prop)
-          if parent_length is None:
-            raise ValueError("Attempting to compute a relative length for style"
-                             f" property {cls.style_prop.__name__} whose parent is None")
-          style_value = styles.LengthType(
-            value=parent_length.value * style_value.value / 100,
-            units=parent_length.units
-          )
-        else:
-          style_value = styles.LengthType(
-            value=style_value.value / 100,
-            units=styles.LengthType.Units.c
-          )
+      pct_ref = styles.LengthType(
+        value=parent_value.value if parent_value is not None else 100/element.get_doc().get_cell_resolution().rows,
+        units=styles.LengthType.Units.rh
+      )
 
-        element.set_style(cls.style_prop, style_value)
-      
+      c_ref = styles.LengthType(
+        value=100/element.get_doc().get_cell_resolution().rows,
+        units=styles.LengthType.Units.rh
+      )
+
+      px_ref = styles.LengthType(
+        value=100/element.get_doc().get_px_resolution().height,
+        units=styles.LengthType.Units.rh
+      )
+
+      element.set_style(
+        cls.style_prop,
+        _compute_length(
+          style_value,
+          pct_ref,
+          pct_ref,
+          c_ref,
+          px_ref
+        )
+      )      
 
   class FontStyle(StyleProcessor):
     style_prop = styles.StyleProperties.FontStyle

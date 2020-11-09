@@ -257,10 +257,11 @@ class ISDComputeStyleTest(unittest.TestCase):
 
     span = region[0][0][0][0]
 
-    self.assertEqual(
-      span.get_style(styles.StyleProperties.FontSize),
-      styles.LengthType(value=0.25, units=styles.LengthType.Units.c)
-      )
+    fs: styles.LengthType = span.get_style(styles.StyleProperties.FontSize)
+
+    self.assertAlmostEqual(fs.value, 25 / doc.get_cell_resolution().rows)
+
+    self.assertEqual(fs.units, styles.LengthType.Units.rh)
 
 class ISDInheritanceStyleTest(unittest.TestCase):
 
