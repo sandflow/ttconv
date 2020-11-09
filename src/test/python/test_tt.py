@@ -47,6 +47,34 @@ class IMSCAppTest(unittest.TestCase):
     #
     tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml".split())
 
+  def test_convert_input_file_type_ttml(self):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype ttml -o build/body_only.out.ttml".split())
+
+  def test_convert_output_file_type_ttml(self):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --otype ttml".split())
+
+  def test_convert_input_file_type_scc(self):
+    tt.main("convert -i src/test/resources/scc/pop-on.scc --itype scc -o build/pop-on.out.ttml".split())
+
+  def test_convert_bad_input_file_name(self):
+    with self.assertRaises(ValueError):
+      tt.main("convert -i src/test/resources/ttml/body_only.not_ttml -o build/body_only.out.ttml".split())
+
+  def test_convert_bad_output_file_name(self):
+    with self.assertRaises(ValueError):
+      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml".split())
+
+  def test_convert_bad_input_file_arg(self):
+    with self.assertRaises(ValueError):
+      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --itype not_ttml".split())
+
+  def test_convert_bad_output_file_arg(self):
+    with self.assertRaises(ValueError):
+      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml --otype not_ttml".split())
+
+  def test_convert_mismtach_file_type_and_file_name(self):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype scc -o build/body_only123.out.ttml".split())
+
   def test_pop_on_scc(self):
     tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.ttml".split())
 
@@ -72,6 +100,25 @@ class IMSCAppTest(unittest.TestCase):
     # the main function
     #
     tt.main("validate -i src/test/resources/ttml/body_only.ttml".split())
+
+  def test_file_types_by_type_and_string(self):
+    
+    self.assertEqual(None, tt.FileTypes.get_file_type(None, None))
+
+    with self.assertRaises(ValueError):
+      tt.FileTypes.get_file_type(None, "")
+
+    with self.assertRaises(ValueError):
+      tt.FileTypes.get_file_type(None, "asdf")
+
+    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(tt.FileTypes.TTML.value, None))
+    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(tt.FileTypes.TTML.value, "asdf"))
+    self.assertEqual(tt.FileTypes.TTML, tt.FileTypes.get_file_type(None, "ttml"))
+
+    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(tt.FileTypes.SCC.value, None))
+    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(tt.FileTypes.SCC.value, "asdf"))
+    self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(None, "scc"))
+
 
 if __name__ == '__main__':
   unittest.main()
