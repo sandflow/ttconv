@@ -227,6 +227,110 @@ class ISDTest(unittest.TestCase):
 
 class ISDComputeStyleTest(unittest.TestCase):
 
+  def test_compute_extent_pct(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.pct),
+        height=styles.LengthType(25, styles.LengthType.Units.pct)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertEqual(extent.height.value, 25)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+    self.assertEqual(extent.width.value, 50)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
+
+  def test_compute_extent_px(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.px),
+        height=styles.LengthType(25, styles.LengthType.Units.px)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertAlmostEqual(extent.width.value, 100*50/doc.get_px_resolution().width)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
+
+    self.assertAlmostEqual(extent.height.value, 100*25/doc.get_px_resolution().height)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+  def test_compute_extent_c(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(10, styles.LengthType.Units.c),
+        height=styles.LengthType(20, styles.LengthType.Units.c)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertAlmostEqual(extent.width.value, 100*10/doc.get_cell_resolution().columns)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
+
+    self.assertAlmostEqual(extent.height.value, 100*20/doc.get_cell_resolution().rows)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+  def test_compute_extent_em(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(20, styles.LengthType.Units.em),
+        height=styles.LengthType(3, styles.LengthType.Units.em)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertAlmostEqual(extent.width.value, 100*20/doc.get_cell_resolution().rows)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rh)
+
+    self.assertAlmostEqual(extent.height.value, 100*3/doc.get_cell_resolution().rows)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
   def test_compute_style_property(self):
     doc = model.Document()
 

@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import inspect
 import typing
+import numbers
 from fractions import Fraction
 
 import ttconv.model as model
@@ -179,6 +180,9 @@ class ISD(model.Root):
     if styles.StyleProperties.FontSize in styles_to_be_computed:
       StyleProcessors.BY_STYLE_PROP[styles.StyleProperties.FontSize].compute(isd_parent, isd_element)
 
+    if styles.StyleProperties.Extent in styles_to_be_computed:
+      StyleProcessors.BY_STYLE_PROP[styles.StyleProperties.Extent].compute(isd_parent, isd_element)
+
   @staticmethod
   def process_element(isd: ISD,
                       offset: Fraction,
@@ -187,6 +191,8 @@ class ISD(model.Root):
                       parent: typing.Optional[model.ContentElement],
                       element: model.ContentElement
                       ) -> typing.Optional[model.ContentElement]:
+    if element is None:
+      return None
 
     doc = element.get_doc()
 
@@ -391,6 +397,22 @@ def _compute_length(
 
   return source_length
 
+def _make_rh_length(value: numbers.Number) -> styles.LengthType:
+  '''Creates a length expressed in `rh` units
+  '''
+  return styles.LengthType(
+    value=value,
+    units=styles.LengthType.Units.rh
+  )
+
+def _make_rw_length(value: numbers.Number) -> styles.LengthType:
+  '''Creates a length expressed in `rw` units
+  '''
+  return styles.LengthType(
+    value=value,
+    units=styles.LengthType.Units.rw
+  )
+
 class StyleProcessor:
 
   style_prop: styles.StyleProperty = None
@@ -426,6 +448,39 @@ class StyleProcessors:
 
   class Extent(StyleProcessor):
     style_prop = styles.StyleProperties.Extent
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+
+      style_value: styles.ExtentType = element.get_style(cls.style_prop)
+
+      # height
+
+      height = _compute_length(
+        style_value.height,
+        _make_rh_length(100),
+        element.get_style(styles.StyleProperties.FontSize),
+        _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+        _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+      )
+
+      # width
+
+      width = _compute_length(
+        style_value.width,
+        _make_rw_length(100),
+        element.get_style(styles.StyleProperties.FontSize),
+        _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
+        _make_rw_length(100 / element.get_doc().get_px_resolution().width)
+      )
+
+      element.set_style(
+        cls.style_prop,
+        styles.ExtentType(
+          height=height,
+          width=width
+        )
+      )    
 
   class FillLineGap(StyleProcessor):
     style_prop = styles.StyleProperties.FillLineGap
