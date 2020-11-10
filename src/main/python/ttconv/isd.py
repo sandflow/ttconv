@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''Intermediate Synchronic Document'''
+'''Intermediate Synchronic Document (ISD)'''
 
 from __future__ import annotations
 
@@ -36,8 +36,15 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 
 class ISD(model.Root):
+  '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
+  of a `model.Document` taken at a given point in time
+  '''
 
   class Region(model.Region):
+    '''Represents an ISD Region, which, in contrast to a document region, can contain
+    children element.
+    '''
+
     def push_child(self, child):
       if not isinstance(child, model.Body):
         raise TypeError("Children of ISD regions must be body instances")
@@ -161,7 +168,7 @@ class ISD(model.Root):
     isd = ISD(doc)
 
     for region in doc.iter_regions():
-      root_region = ISD.process_element(isd, offset, region, None, None, region)
+      root_region = ISD._process_element(isd, offset, region, None, None, region)
 
       if root_region is not None:
         isd.put_region(root_region)
@@ -195,13 +202,14 @@ class ISD(model.Root):
         StyleProcessors.BY_STYLE_PROP[style_prop].compute(isd_parent, isd_element)
 
   @staticmethod
-  def process_element(isd: ISD,
-                      offset: Fraction,
-                      selected_region: model.Region,
-                      inherited_region: typing.Optional[model.Region],
-                      parent: typing.Optional[model.ContentElement],
-                      element: model.ContentElement
-                      ) -> typing.Optional[model.ContentElement]:
+  def _process_element(
+      isd: ISD,
+      offset: Fraction,
+      selected_region: model.Region,
+      inherited_region: typing.Optional[model.Region],
+      parent: typing.Optional[model.ContentElement],
+      element: model.ContentElement
+  ) -> typing.Optional[model.ContentElement]:
     if element is None:
       return None
 
@@ -314,26 +322,30 @@ class ISD(model.Root):
 
     if isinstance(element, model.Region):
 
-      isd_body_element = ISD.process_element(isd,
-                                             offset,
-                                             selected_region,
-                                             associated_region,
-                                             isd_element,
-                                             doc.get_body()
-                                            )
+      isd_body_element = ISD._process_element(
+        isd,
+        offset,
+        selected_region,
+        associated_region,
+        isd_element,
+        doc.get_body()
+      )
+
       if isd_body_element is not None:
         isd_element_children.append(isd_body_element)
 
     else:
 
       for child_element in iter(element):
-        isd_child_element = ISD.process_element(isd,
-                                                offset,
-                                                selected_region,
-                                                associated_region,
-                                                isd_element,
-                                                child_element
-                                                )
+        isd_child_element = ISD._process_element(
+          isd,
+          offset,
+          selected_region,
+          associated_region,
+          isd_element,
+          child_element
+        )
+
         if isd_child_element is not None:
           isd_element_children.append(isd_child_element)
 
@@ -432,7 +444,11 @@ def _get_writing_mode(isd_element: model.ContentElement) -> styles.WritingModeTy
   return isd_element.get_style(styles.StyleProperties.WritingMode)
 
 class StyleProcessor:
-  '''Processes style properties during the style resolution process
+  '''Processes style properties during the style resolution process.
+  
+  Class variables:
+
+  * `style_prop`: reference to the style property that the processor handles
   '''
 
   style_prop: styles.StyleProperty = None
@@ -450,6 +466,14 @@ class StyleProcessor:
       element.set_style(cls.style_prop, parent.get_style(cls.style_prop))
 
 class StyleProcessors:
+  '''Processes style properties during the style resolution process
+  
+  Class variables:
+
+  * `BY_STYLE_PROP`: maps a style property to a processor
+  '''
+
+  # pylint: disable=missing-class-docstring
 
   class BackgroundColor(StyleProcessor):
     style_prop = styles.StyleProperties.BackgroundColor
@@ -906,3 +930,5 @@ class StyleProcessors:
     processor.style_prop : processor
     for processor_name, processor in list(locals().items()) if inspect.isclass(processor) and processor.style_prop is not None
     }
+
+# pylint: enable=missing-class-docstring

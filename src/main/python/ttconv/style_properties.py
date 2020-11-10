@@ -241,6 +241,8 @@ class TextEmphasisType:
   '''
 
   class Style(Enum):
+    '''Combines \\<emphasis-style\\> and \\<emphasis-symbol\\>
+    '''
     auto = "auto"
     filled_circle = "filled circle"
     filled_dot = "filled dot"
@@ -250,6 +252,8 @@ class TextEmphasisType:
     open_sesame = "open sesame"
 
   class Position(Enum):
+    ''' \\<emphasis-position\\>
+    '''
     outside = "outside"
     before = "before"
     after = "after"
@@ -291,6 +295,8 @@ class TextShadowType:
 
   @dataclass(frozen=True)
   class Shadow:
+    '''Represents one shadow value
+    '''
     x_offset: LengthType
     y_offset: LengthType
     blur_radius: typing.Optional[LengthType] = None
