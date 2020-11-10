@@ -612,7 +612,7 @@ class StyleProcessors:
       # width
 
       x = _compute_length(
-        style_value.y,
+        style_value.x,
         _make_rw_length(100),
         element.get_style(styles.StyleProperties.FontSize),
         _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
@@ -650,7 +650,7 @@ class StyleProcessors:
 
         computed_value = value
 
-      else:
+      elif value.length is not None:
         computed_value = styles.RubyReserveType(
           position=value.position,
           length=_compute_length(
@@ -659,6 +659,16 @@ class StyleProcessors:
             element.get_style(styles.StyleProperties.FontSize),
             _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
             _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+          )
+        )
+
+      else:
+        fs = element.get_style(styles.StyleProperties.FontSize)
+        computed_value = styles.RubyReserveType(
+          position=value.position,
+          length=styles.LengthType(
+            fs.value/2,
+            fs.units
           )
         )
         
