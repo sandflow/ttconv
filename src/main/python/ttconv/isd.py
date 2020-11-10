@@ -186,7 +186,8 @@ class ISD(model.Root):
       styles.StyleProperties.RubyReserve,
       styles.StyleProperties.TextOutline,
       styles.StyleProperties.TextShadow,
-      styles.StyleProperties.TextEmphasis
+      styles.StyleProperties.TextEmphasis,
+      styles.StyleProperties.Padding
     )
 
     for style_prop in ordered_style_props:
@@ -423,6 +424,13 @@ def _make_rw_length(value: numbers.Number) -> styles.LengthType:
     units=styles.LengthType.Units.rw
   )
 
+def _get_writing_mode(isd_element: model.ContentElement) -> styles.WritingModeType:
+
+  while not isinstance(isd_element, ISD.Region):
+    isd_element = isd_element.get_parent()
+
+  return isd_element.get_style(styles.StyleProperties.WritingMode)
+
 class StyleProcessor:
   '''Processes style properties during the style resolution process
   '''
@@ -633,13 +641,66 @@ class StyleProcessors:
           x=x,
           y=y
         )
-      )    
+      )
 
   class Overflow(StyleProcessor):
     style_prop = styles.StyleProperties.Overflow
 
   class Padding(StyleProcessor):
     style_prop = styles.StyleProperties.Padding
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+
+      padding_value: styles.PaddingType = element.get_style(cls.style_prop)
+
+      wm: styles.WritingModeType = element.get_style(styles.StyleProperties.WritingMode)
+
+      extent: styles.LengthType = element.get_style(styles.StyleProperties.Extent)
+
+      is_vertical = wm in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl)
+
+      c_h = _make_rh_length(100 / element.get_doc().get_cell_resolution().rows)
+      px_h = _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+      c_w = _make_rw_length(100 / element.get_doc().get_cell_resolution().columns)
+      px_w = _make_rw_length(100 / element.get_doc().get_px_resolution().width)
+
+      c_before = _compute_length(
+        padding_value.before,
+        extent.width if is_vertical else extent.height,
+        element.get_style(styles.StyleProperties.FontSize),
+        c_w if is_vertical else c_h,
+        px_w if is_vertical else px_h
+      )
+
+      c_after = _compute_length(
+        padding_value.after,
+        extent.width if is_vertical else extent.height,
+        element.get_style(styles.StyleProperties.FontSize),
+        c_w if is_vertical else c_h,
+        px_w if is_vertical else px_h
+      )
+
+      c_start = _compute_length(
+        padding_value.start,
+        extent.width if not is_vertical else extent.height,
+        element.get_style(styles.StyleProperties.FontSize),
+        c_w if not is_vertical else c_h,
+        px_w if not is_vertical else px_h
+      )
+
+      c_end = _compute_length(
+        padding_value.end,
+        extent.width if not is_vertical else extent.height,
+        element.get_style(styles.StyleProperties.FontSize),
+        c_w if not is_vertical else c_h,
+        px_w if not is_vertical else px_h
+      )
+
+      element.set_style(
+        cls.style_prop,
+        styles.PaddingType(c_before, c_end, c_after, c_start)
+      )    
 
   class RubyAlign(StyleProcessor):
     style_prop = styles.StyleProperties.RubyAlign
@@ -725,20 +786,15 @@ class StyleProcessors:
 
       if value is styles.SpecialValues.none:
 
-         computed_value = value
+        computed_value = value
 
       else:
         
         color = value.color if value.color is not None else element.get_style(styles.StyleProperties.Color)
 
         if value.style is styles.TextEmphasisType.Style.auto:
-        
-          region = parent
 
-          while not isinstance(region, ISD.Region):
-            region = region.get_parent()
-
-          wm: styles.WritingModeType = region.get_style(styles.StyleProperties.WritingMode)
+          wm: styles.WritingModeType = _get_writing_mode(parent)
 
           if wm in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
 
@@ -850,4 +906,3 @@ class StyleProcessors:
     processor.style_prop : processor
     for processor_name, processor in list(locals().items()) if inspect.isclass(processor) and processor.style_prop is not None
     }
-

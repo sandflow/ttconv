@@ -331,6 +331,40 @@ class ISDComputeStyleTest(unittest.TestCase):
     self.assertAlmostEqual(extent.height.value, 100*3/doc.get_cell_resolution().rows)
     self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
+  def test_compute_padding(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.pct),
+        height=styles.LengthType(25, styles.LengthType.Units.pct)
+      )
+    )
+    r1.set_style(
+      styles.StyleProperties.Padding,
+      styles.PaddingType(
+        before=styles.LengthType(5, styles.LengthType.Units.pct),
+        after=styles.LengthType(10, styles.LengthType.Units.pct),
+        start=styles.LengthType(15, styles.LengthType.Units.pct),
+        end=styles.LengthType(20, styles.LengthType.Units.pct)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    padding: styles.PaddingType = region.get_style(styles.StyleProperties.Padding)
+
+    self.assertAlmostEqual(padding.before.value, 25 * 0.05)
+    self.assertAlmostEqual(padding.after.value, 25 * 0.10)
+    self.assertAlmostEqual(padding.start.value, 50 * 0.15)
+    self.assertAlmostEqual(padding.end.value, 50 * 0.2)
+
   def test_compute_style_property(self):
     doc = model.Document()
 
