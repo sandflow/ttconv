@@ -183,7 +183,10 @@ class ISD(model.Root):
       styles.StyleProperties.Origin,
       styles.StyleProperties.LineHeight,
       styles.StyleProperties.LinePadding,
-      styles.StyleProperties.RubyReserve
+      styles.StyleProperties.RubyReserve,
+      styles.StyleProperties.TextOutline,
+      styles.StyleProperties.TextShadow,
+      styles.StyleProperties.TextEmphasis
     )
 
     for style_prop in ordered_style_props:
@@ -421,15 +424,20 @@ def _make_rw_length(value: numbers.Number) -> styles.LengthType:
   )
 
 class StyleProcessor:
+  '''Processes style properties during the style resolution process
+  '''
 
   style_prop: styles.StyleProperty = None
 
   @classmethod
   def compute(cls, parent: model.ContentElement, element: model.ContentElement):
-    pass
+    '''Reads the (specified) style property value and computes it
+    '''
 
   @classmethod
   def inherit(cls, parent: model.ContentElement, element: model.ContentElement):
+    '''Inherit the style property from the parent to the element
+    '''
     if cls.style_prop.is_inherited and not element.has_style(cls.style_prop):
       element.set_style(cls.style_prop, parent.get_style(cls.style_prop))
 
@@ -711,11 +719,120 @@ class StyleProcessors:
   class TextEmphasis(StyleProcessor):
     style_prop = styles.StyleProperties.TextEmphasis
 
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+      value: styles.TextEmphasisType = element.get_style(cls.style_prop)
+
+      if value is styles.SpecialValues.none:
+
+         computed_value = value
+
+      else:
+        
+        color = value.color if value.color is not None else element.get_style(styles.StyleProperties.Color)
+
+        if value.style is styles.TextEmphasisType.Style.auto:
+        
+          region = parent
+
+          while not isinstance(region, ISD.Region):
+            region = region.get_parent()
+
+          wm: styles.WritingModeType = region.get_style(styles.StyleProperties.WritingMode)
+
+          if wm in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
+
+            style = styles.TextEmphasisType.Style.filled_sesame
+
+          else:
+
+            style = styles.TextEmphasisType.Style.filled_circle
+
+        else:
+
+          style = value.style
+
+        computed_value = styles.TextEmphasisType(
+          color=color,
+          position=value.position,
+          style=style
+        )
+        
+      element.set_style(cls.style_prop, computed_value)
+
+
   class TextOutline(StyleProcessor):
     style_prop = styles.StyleProperties.TextOutline
 
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+      value: typing.Union[styles.SpecialValues.none, styles.TextOutlineType] = element.get_style(cls.style_prop)
+
+      if value is styles.SpecialValues.none:
+
+        computed_value = value
+
+      else:
+
+        computed_value = styles.TextOutlineType(
+          color=value.color if value.color is not None else element.get_style(styles.StyleProperties.Color),
+          thickness=_compute_length(
+            value.thickness,
+            element.get_style(styles.StyleProperties.FontSize),
+            element.get_style(styles.StyleProperties.FontSize),
+            _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+            _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+          )
+        )
+        
+      element.set_style(cls.style_prop, computed_value)
+
   class TextShadow(StyleProcessor):
     style_prop = styles.StyleProperties.TextShadow
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+      value: typing.Union[styles.SpecialValues.none, styles.TextShadowType] = element.get_style(cls.style_prop)
+
+      if value is styles.SpecialValues.none:
+
+        computed_value = value
+
+      else:
+
+        shadows = []
+
+        for shadow in value.shadows:
+          shadows.append(
+            styles.TextShadowType.Shadow(
+              color=shadow.color if shadow.color is not None else element.get_style(styles.StyleProperties.Color),
+              x_offset=_compute_length(
+                shadow.x_offset,
+                element.get_style(styles.StyleProperties.FontSize),
+                element.get_style(styles.StyleProperties.FontSize),
+                _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+                _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+              ),
+              y_offset=_compute_length(
+                shadow.y_offset,
+                element.get_style(styles.StyleProperties.FontSize),
+                element.get_style(styles.StyleProperties.FontSize),
+                _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+                _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+              ),
+              blur_radius=None if shadow.blur_radius is None else _compute_length(
+                shadow.blur_radius,
+                element.get_style(styles.StyleProperties.FontSize),
+                element.get_style(styles.StyleProperties.FontSize),
+                _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+                _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+              )
+            )
+          )
+
+        computed_value = styles.TextShadowType(tuple(shadows))
+        
+      element.set_style(cls.style_prop, computed_value)
 
   class UnicodeBidi(StyleProcessor):
     style_prop = styles.StyleProperties.UnicodeBidi

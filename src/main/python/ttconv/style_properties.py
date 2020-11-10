@@ -241,25 +241,32 @@ class TextEmphasisType:
   '''
 
   class Style(Enum):
-    none = "none"
     auto = "auto"
-    filled = "filled"
-    open = "open"
-
-  class Symbol(Enum):
-    circle = "circle"
-    dot = "dot"
-    sesame = "sesame"
+    filled_circle = "filled circle"
+    filled_dot = "filled dot"
+    filled_sesame = "filled sesame"
+    open_circle = "open circle"
+    open_dot = "open dot"
+    open_sesame = "open sesame"
 
   class Position(Enum):
     outside = "outside"
     before = "before"
     after = "after"
 
-  style: Style = Style.none
-  symbol: Symbol = None
+  style: Style = Style.auto
   color: ColorType = None
-  position: Position = None
+  position: Position = Position.outside
+
+  def __post_init__(self):
+    if not isinstance(self.style, TextEmphasisType.Style):
+      raise ValueError("Style must be a text emphasis style enumeration value")
+
+    if not (self.color is None or isinstance(self.color, ColorType)):
+      raise ValueError("The color must be None or a valid color")
+
+    if not isinstance(self.position, TextEmphasisType.Position):
+      raise ValueError("Position must be a text emphasis position enumeration value")
 
 
 @dataclass(frozen=True)
@@ -270,6 +277,12 @@ class TextOutlineType:
   thickness: LengthType
   color: ColorType = None
 
+  def __post_init__(self):
+    if self.thickness is None or not isinstance(self.thickness, LengthType):
+      raise ValueError("The thickness value must be a length")
+
+    if not (self.color is None or isinstance(self.color, ColorType)):
+      raise ValueError("The color must be None or a valid color")
 
 @dataclass(frozen=True)
 class TextShadowType:
@@ -800,11 +813,11 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return TextEmphasisType()
+      return SpecialValues.none
 
     @staticmethod
     def validate(value):
-      return isinstance(value, TextEmphasisType)
+      return value is SpecialValues.none or isinstance(value, TextEmphasisType)
 
 
   class TextOutline(StyleProperty):

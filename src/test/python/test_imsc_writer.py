@@ -237,12 +237,12 @@ class StylePropertyWriterTest(unittest.TestCase):
       _get_set_style(
         imsc_styles.StyleProperties.TextEmphasis,
         styles.TextEmphasisType(
-          style=styles.TextEmphasisType.Style.filled,
+          style=styles.TextEmphasisType.Style.filled_circle,
           color=styles.NamedColors.red.value,
           position=styles.TextEmphasisType.Position.after
         )
       ),
-      "filled #ff0000 after"
+      "filled circle #ff0000 after"
     )
 
   def test_tts_text_outline(self):
