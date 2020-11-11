@@ -344,7 +344,7 @@ class StylePropertyWriterTest(unittest.TestCase):
       '123px 456px'
     )
 
-  def test_tts_writing_no_extent(self):
+  def test_tts_writing_no_extent_when_no_body(self):
 
     d = model.Document()
 
@@ -353,8 +353,63 @@ class StylePropertyWriterTest(unittest.TestCase):
     extent = tree_from_model.getroot().attrib.get(
       f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
     
-    #self.assertEqual(extent, None)
+    self.assertEqual(extent, None)
   
+  def test_tts_writing_no_extent_when_body_has_no_extents(self):
+
+    doc = model.Document()
+    body = model.Body(doc)
+    div = model.Div(doc)
+    p = model.P(doc)
+    span = model.Span(doc)
+    text = model.Text(doc)
+    text.set_text("asdf")
     
+    span.push_child(text)
+    p.push_child(span)
+    div.push_child(p)
+    body.push_child(div)
+    doc.set_body(body)
+
+    tree_from_model = imsc_writer.from_model(doc)
+
+    extent = tree_from_model.getroot().attrib.get(
+      f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
+    
+    self.assertEqual(extent, None)
+
+  def test_tts_writing_extent_when_body_has_extents(self):
+
+    doc = model.Document()
+    body = model.Body(doc)
+    div = model.Div(doc)
+
+    div.set_style(styles.StyleProperties.Extent,
+      get_extent_from_dimensions(123, 456, styles.LengthType.Units.px))
+
+    p = model.P(doc)
+    span = model.Span(doc)
+    text = model.Text(doc)
+    text.set_text("asdf")
+    
+    span.push_child(text)
+    p.push_child(span)
+    div.push_child(p)
+    body.push_child(div)
+    doc.set_body(body)
+
+    r = model.Region("hello", doc)
+    r.set_style(styles.StyleProperties.Extent,
+      get_extent_from_dimensions(123, 456, styles.LengthType.Units.px))
+
+    doc.put_region(r)
+
+    tree_from_model = imsc_writer.from_model(doc)
+
+    extent = tree_from_model.getroot().attrib.get(
+      f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
+    
+    self.assertEqual(extent, '123px 456px')
+
 if __name__ == '__main__':
   unittest.main()
