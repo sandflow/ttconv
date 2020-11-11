@@ -55,6 +55,10 @@ class StyleProperty:
     raise NotImplementedError
 
   @classmethod
+  def has_px(cls, attrib_value: typing.Any) -> bool:
+    return False
+
+  @classmethod
   def extract(cls, context: StyleParsingContext, xml_attrib: str):
     '''Converts an IMSC style property to a data model value'''
     raise NotImplementedError
@@ -467,6 +471,13 @@ class StyleProperties:
     model_prop = styles.StyleProperties.Padding
 
     @classmethod
+    def has_px(cls, attrib_value: styles.PaddingType) -> bool:
+      return attrib_value.after.units == styles.LengthType.Units.px or \
+        attrib_value.before.units == styles.LengthType.Units.px or \
+        attrib_value.start.units == styles.LengthType.Units.px or \
+        attrib_value.end.units == styles.LengthType.Units.px
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       s = xml_attrib.split(" ")
 
@@ -700,6 +711,9 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "textDecoration"
     model_prop = styles.StyleProperties.TextDecoration
+
+
+
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
