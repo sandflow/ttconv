@@ -208,8 +208,8 @@ class TTElement(TTMLElement):
       all_elements.append(model_doc.get_body().dfs_iterator())
 
     for element in all_elements:
-      for model_style_prop, imsc_style_prop in StyleProperties.BY_MODEL_PROP.items():
-        if imsc_style_prop.has_px(element.get_style(model_style_prop)):
+      for model_style_prop in element.iter_styles():
+        if StyleProperties.BY_MODEL_PROP[model_style_prop].has_px(element.get_style(model_style_prop)):
           has_px = True
           break
       if has_px:
