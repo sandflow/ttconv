@@ -88,8 +88,6 @@ class ReaderWriterTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-#            if filename == "Animation014.ttml":
-#              print(filename)
             tree = et.parse(os.path.join(root, filename))
             test_model = imsc_reader.to_model(tree)
             tree_from_model = imsc_writer.from_model(test_model)
