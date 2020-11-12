@@ -192,7 +192,7 @@ class ISD(model.Root):
     if element.get_begin() is not None and element.get_begin() > offset:
       return None
 
-    if element.get_end() is not None and element.get_end() < offset:
+    if element.get_end() is not None and element.get_end() <= offset:
       return None
 
     # associated region is that associated with the element, or inherited otherwise
@@ -232,7 +232,7 @@ class ISD(model.Root):
       if animation_step.begin is not None and animation_step.begin > offset:
         continue
 
-      if animation_step.end is not None and animation_step.end < offset:
+      if animation_step.end is not None and animation_step.end <= offset:
         continue
 
       isd_element.set_style(
