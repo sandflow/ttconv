@@ -41,7 +41,7 @@ class ISD(model.Root):
         raise TypeError("Children of ISD regions must be body instances")
       
       if self.has_children():
-        raise ValueError("ISD regions must contain at most on body instance")
+        raise ValueError("ISD regions must contain at most one body instance")
 
       model.ContentElement.push_child(self, child)
 
@@ -65,7 +65,7 @@ class ISD(model.Root):
       raise TypeError("Argument must be an instance of Region")
 
     if region.get_doc() != self:
-      raise ValueError("Region does not belongs to this document")
+      raise ValueError("Region does not belong to this document")
 
     self._regions[region.get_id()] = region
 
