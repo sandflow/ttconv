@@ -222,6 +222,9 @@ class ISD(model.Root):
       isd_element.set_lang(element.get_lang())
       isd_element.set_space(element.get_space())
 
+    if isinstance(element, model.Text):
+      isd_element.set_text(element.get_text())
+
     # apply animation
 
     for animation_step in element.iter_animation_steps():
