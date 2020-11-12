@@ -205,7 +205,7 @@ class TTElement(TTMLElement):
     all_elements = list(model_doc.iter_regions())
 
     if model_doc.get_body() is not None:
-      all_elements.append(model_doc.get_body().dfs_iterator())
+      all_elements.extend(model_doc.get_body().dfs_iterator())
 
     for element in all_elements:
       for model_style_prop in element.iter_styles():

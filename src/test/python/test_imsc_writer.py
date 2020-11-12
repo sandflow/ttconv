@@ -88,6 +88,8 @@ class ReaderWriterTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
+#            if filename == "Animation014.ttml":
+#              print(filename)
             tree = et.parse(os.path.join(root, filename))
             test_model = imsc_reader.to_model(tree)
             tree_from_model = imsc_writer.from_model(test_model)
@@ -409,7 +411,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     extent = tree_from_model.getroot().attrib.get(
       f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
     
-    self.assertEqual(extent, '123px 456px')
+    self.assertEqual(extent, '1920px 1080px')
 
 if __name__ == '__main__':
   unittest.main()

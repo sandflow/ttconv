@@ -199,6 +199,11 @@ class StyleProperties:
     model_prop = styles.StyleProperties.Extent
 
     @classmethod
+    def has_px(cls, attrib_value: styles.ExtentType) -> bool:
+      return attrib_value.height.units == styles.LengthType.Units.px or \
+        attrib_value.height.units == styles.LengthType.Units.px
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       if xml_attrib == "auto":
 
@@ -605,6 +610,10 @@ class StyleProperties:
     model_prop = styles.StyleProperties.RubyReserve
 
     @classmethod
+    def has_px(cls, attrib_value: styles.RubyReserveType) -> bool:
+      return attrib_value.length.units == styles.LengthType.Units.px
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       
       if xml_attrib == "none":
@@ -859,6 +868,11 @@ class StyleProperties:
     model_prop = styles.StyleProperties.TextOutline
 
     @classmethod
+    def has_px(cls, attrib_value: styles.TextOutlineType) -> bool:
+      #return attrib_value.thickness.units == styles.LengthType.Units.px
+      return False
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
       
       if xml_attrib == "none":
@@ -903,6 +917,17 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "textShadow"
     model_prop = styles.StyleProperties.TextShadow
+
+    @classmethod
+    def has_px(cls, attrib_value: styles.TextShadowType) -> bool:
+      blur_is_px = False
+      if attrib_value.shadows[3] is not None and \
+        attrib_value.shadows[3].units == styles.LengthType.Units.px:
+        blur_is_px = True
+
+      return attrib_value.shadows[0].units == styles.LengthType.Units.px or \
+        attrib_value.shadows[1].units == styles.LengthType.Units.px or \
+        blur_is_px
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
