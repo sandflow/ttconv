@@ -130,7 +130,7 @@ class Document0Test(unittest.TestCase):
     span1.push_child(t1)
 
   def test_significant_times(self):
-    self.assertEqual(ISD.significant_times(self.doc), set((0, 2, 3, 9, 1, 10, 4)))
+    self.assertEqual(ISD.significant_times(self.doc), sorted((0, 2, 3, 9, 1, 10, 4)))
 
   def test_isd_0(self):
     isd = ISD.from_model(self.doc, 0)
@@ -524,7 +524,7 @@ class Document1Test(unittest.TestCase):
 
   def test_sig_times(self):
   
-    self.assertEqual(ISD.significant_times(self.doc), set((0, 1, 2, 3)))
+    self.assertEqual(ISD.significant_times(self.doc), sorted((0, 1, 2, 3)))
 
   def test_isd_0(self):
 

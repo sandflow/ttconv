@@ -120,9 +120,9 @@ class ISD(model.Root):
     return (begin_time, end_time)
 
   @staticmethod
-  def significant_times(doc: model.Document) -> typing.Set[Fraction]:
-    '''Returns the temporal offsets at which the document `doc` changes
-    '''
+  def significant_times(doc: model.Document) -> typing.List[Fraction]:
+    '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
+    increasing order'''
 
     def sig_times(element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
 
@@ -162,7 +162,7 @@ class ISD(model.Root):
     if doc.get_body() is not None:
       sig_times(doc.get_body(), 0, None) 
 
-    return s_times
+    return sorted(s_times)
 
   @staticmethod
   def from_model(doc: model.Document, offset: Fraction) -> typing.Optional[ISD]:
