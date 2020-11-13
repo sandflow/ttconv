@@ -37,10 +37,10 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.isd import ISD
 
-class ISDTest(unittest.TestCase):
+class Document0Test(unittest.TestCase):
 
   '''
-  <region xml:id="r1" tts:showBackground="always"/>
+  <region xml:id="r1"/>
   <region xml:id="r2" begin="2s" end="9s">
     <set tts:color="red"/>
   </region>
@@ -51,7 +51,9 @@ class ISDTest(unittest.TestCase):
     </div>
     <div end="12s" region="r2">
       <p>
-        <span>hello</span>
+        <span>
+        hello
+        </span>
       </p>
     </div>
   </body>
@@ -82,7 +84,6 @@ class ISDTest(unittest.TestCase):
     )
 
     r1 = model.Region("r1", self.doc)
-    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
     self.doc.put_region(r1)
 
     # r2: sig times = {2, 9}
@@ -189,8 +190,6 @@ class ISDTest(unittest.TestCase):
 
     self.assertEqual(len(span), 1)
 
-    self.assertEqual(span.get_style(styles.StyleProperties.Color), styles.NamedColors.blue.value)
-
     text = list(span)[0]
 
     self.assertIsInstance(text, model.Text)
@@ -209,6 +208,9 @@ class ISDTest(unittest.TestCase):
     self.assertEqual(r1.get_id(), "r1")
 
     self.assertEqual(len(r1), 0)
+
+
+class IMSCTestSuiteTest(unittest.TestCase):
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
@@ -244,7 +246,7 @@ class ISDTest(unittest.TestCase):
             if len(logs.output) > 1:
               self.fail(logs.output)
 
-class ISDComputeStyleTest(unittest.TestCase):
+class ComputeStyleTest(unittest.TestCase):
 
   def test_compute_extent_pct(self):
     doc = model.Document()
@@ -420,7 +422,7 @@ class ISDComputeStyleTest(unittest.TestCase):
 
     self.assertEqual(fs.units, styles.LengthType.Units.rh)
 
-class ISDInheritanceStyleTest(unittest.TestCase):
+class InheritanceStyleTest(unittest.TestCase):
 
   def test_text_decoration_inheritance(self):
     doc = model.Document()
@@ -472,6 +474,95 @@ class ISDInheritanceStyleTest(unittest.TestCase):
         overline=False
       )
     )
+
+class Document1Test(unittest.TestCase):
+
+  """
+    <region xml:id="r1"/>
+
+    <body region="r1">
+      <div>
+        <p begin="1s" end="3s">
+          <span>
+          hello
+          </span>
+          <span begin="1s">
+          bye
+          </span>
+        </p>
+      </div>
+    </body>
+  """
+
+  def setUp(self):
+    self.doc = model.Document()
+
+    r1 = model.Region("r1", self.doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.whenActive)
+    self.doc.put_region(r1)
+
+    b = model.Body(self.doc)
+    b.set_region(r1)
+    self.doc.set_body(b)
+
+    div1 = model.Div(self.doc)
+    b.push_child(div1)
+
+    p1 = model.P(self.doc)
+    p1.set_begin(1)
+    p1.set_end(3)
+    div1.push_child(p1)
+
+    span1 = model.Span(self.doc)
+    span1.push_child(model.Text(self.doc, "hello"))
+    p1.push_child(span1)
+
+    span2 = model.Span(self.doc)
+    span2.set_begin(1)
+    span2.push_child(model.Text(self.doc, "bye"))
+    p1.push_child(span2)
+
+  def test_sig_times(self):
+  
+    self.assertEqual(ISD.significant_times(self.doc), set((0, 1, 2, 3)))
+
+  def test_isd_0(self):
+
+    isd = ISD.from_model(self.doc, 0)
+
+    self.assertEqual(len(isd), 0)
+
+  def test_isd_1(self):
+
+    isd = ISD.from_model(self.doc, 1)
+
+    self.assertEqual(len(isd), 1)
+
+    p = list(isd.iter_regions())[0][0][0][0]
+
+    self.assertEqual(len(p), 1)
+
+    self.assertEqual(p[0][0].get_text(), "hello")
+
+  def test_isd_2(self):
+
+    isd = ISD.from_model(self.doc, 2)
+
+    self.assertEqual(len(isd), 1)
+
+    p = list(isd.iter_regions())[0][0][0][0]
+
+    self.assertEqual(len(p), 2)
+
+    self.assertEqual(p[0][0].get_text(), "hello")
+
+    self.assertEqual(p[1][0].get_text(), "bye")
+
+  def test_isd_3(self):
+
+    isd = ISD.from_model(self.doc, 0)
+
+    self.assertEqual(len(isd), 0)
 
 if __name__ == '__main__':
   unittest.main()

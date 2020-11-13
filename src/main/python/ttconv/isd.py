@@ -89,43 +89,46 @@ class ISD(model.Root):
 
   def iter_regions(self) -> typing.Iterator[ISD.Region]:
     '''Returns an iterator over regions.'''
-    return self._regions.values()  
+    return self._regions.values()
 
-  # creating an ISD from a document
+  def __len__(self) -> int:
+    '''Returns the number of regions of the ISD.'''
+    return len(self._regions)
+
+  @staticmethod
+  def _make_absolute(
+      begin_offset: typing.Optional[Fraction],
+      end_offset: typing.Optional[Fraction],
+      parent_begin: typing.Optional[Fraction],
+      parent_end: typing.Optional[Fraction]
+    ) -> typing.Tuple[Fraction, Fraction]:
+    
+    begin_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
+                  (begin_offset if begin_offset is not None else Fraction(0))
+
+    end_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
+              end_offset if end_offset is not None else None
+
+    if end_time is None:
+
+      end_time = parent_end
+
+    elif parent_end is not None:
+
+      end_time = min(end_time, parent_end)
+
+    return (begin_time, end_time)
 
   @staticmethod
   def significant_times(doc: model.Document) -> typing.Set[Fraction]:
     '''Returns the temporal offsets at which the document `doc` changes
     '''
 
-    def make_absolute(
-        begin_offset: typing.Optional[Fraction],
-        end_offset: typing.Optional[Fraction],
-        parent_begin: typing.Optional[Fraction],
-        parent_end: typing.Optional[Fraction]
-      ) -> typing.Tuple[Fraction, Fraction]:
-      
-      begin_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
-                    (begin_offset if begin_offset is not None else Fraction(0))
-
-      end_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
-                end_offset if end_offset is not None else None
-
-      if end_time is None:
-
-        end_time = parent_end
-
-      elif parent_end is not None:
-
-        end_time = min(end_time, parent_end)
-
-      return (begin_time, end_time)
-
     def sig_times(element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
 
       # add signficant times for the element
 
-      begin_time, end_time = make_absolute(element.get_begin(), element.get_end(), parent_begin, parent_end)
+      begin_time, end_time = ISD._make_absolute(element.get_begin(), element.get_end(), parent_begin, parent_end)
 
       s_times.add(begin_time)
 
@@ -135,7 +138,7 @@ class ISD(model.Root):
       # add signficant times for any animation step 
 
       for anim_step in element.iter_animation_steps():
-        anim_begin_time, anim_end_time = make_absolute(anim_step.begin, anim_step.end, parent_begin, parent_end)
+        anim_begin_time, anim_end_time = ISD._make_absolute(anim_step.begin, anim_step.end, parent_begin, parent_end)
 
         s_times.add(anim_begin_time)
 
@@ -168,7 +171,7 @@ class ISD(model.Root):
     isd = ISD(doc)
 
     for region in doc.iter_regions():
-      root_region = ISD._process_element(isd, offset, region, None, None, region)
+      root_region = ISD._process_element(isd, offset, region, None, None, None, None, region)
 
       if root_region is not None:
         isd.put_region(root_region)
@@ -204,10 +207,12 @@ class ISD(model.Root):
   @staticmethod
   def _process_element(
       isd: ISD,
-      offset: Fraction,
+      absolute_offset: Fraction,
       selected_region: model.Region,
       inherited_region: typing.Optional[model.Region],
       parent: typing.Optional[model.ContentElement],
+      parent_computed_begin: typing.Optional[Fraction],
+      parent_computed_end: typing.Optional[Fraction],
       element: model.ContentElement
   ) -> typing.Optional[model.ContentElement]:
     if element is None:
@@ -215,17 +220,19 @@ class ISD(model.Root):
 
     doc = element.get_doc()
 
-    # convert offset to local temporal coordinates
-
-    if not isinstance(element, (model.Body, model.Region)):
-      offset = offset - (parent.get_begin() if parent.get_begin() is not None else 0)
+    begin_time, end_time = ISD._make_absolute(
+      element.get_begin(),
+      element.get_end(),
+      parent_computed_begin,
+      parent_computed_end
+    )
 
     # prune if temporally inactive
     
-    if element.get_begin() is not None and element.get_begin() > offset:
+    if begin_time is not None and begin_time > absolute_offset:
       return None
 
-    if element.get_end() is not None and element.get_end() <= offset:
+    if end_time is not None and end_time <= absolute_offset:
       return None
 
     # associated region is that associated with the element, or inherited otherwise
@@ -266,16 +273,23 @@ class ISD(model.Root):
 
     # apply animation
 
-    for animation_step in element.iter_animation_steps():
+    for anim_step in element.iter_animation_steps():
 
-      if animation_step.begin is not None and animation_step.begin > offset:
+      anim_begin_time, anim_end_time = ISD._make_absolute(
+        anim_step.begin,
+        anim_step.end,
+        begin_time,
+        end_time
+      )
+
+      if anim_begin_time is not None and anim_begin_time > absolute_offset:
         continue
 
-      if animation_step.end is not None and animation_step.end <= offset:
+      if anim_end_time is not None and anim_end_time <= absolute_offset:
         continue
 
-      styles_to_be_computed.add(animation_step.style_property)
-      isd_element.set_style(animation_step.style_property, animation_step.value)
+      styles_to_be_computed.add(anim_step.style_property)
+      isd_element.set_style(anim_step.style_property, anim_step.value)
 
     # copy specified styles
 
@@ -329,10 +343,12 @@ class ISD(model.Root):
 
       isd_body_element = ISD._process_element(
         isd,
-        offset,
+        absolute_offset,
         selected_region,
         associated_region,
         isd_element,
+        None,
+        None,
         doc.get_body()
       )
 
@@ -344,10 +360,12 @@ class ISD(model.Root):
       for child_element in iter(element):
         isd_child_element = ISD._process_element(
           isd,
-          offset,
+          absolute_offset,
           selected_region,
           associated_region,
           isd_element,
+          begin_time,
+          end_time,
           child_element
         )
 
