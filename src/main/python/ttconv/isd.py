@@ -50,7 +50,7 @@ class ISD(model.Root):
         raise TypeError("Children of ISD regions must be body instances")
       
       if self.has_children():
-        raise ValueError("ISD regions must contain at most on body instance")
+        raise ValueError("ISD regions must contain at most one body instance")
 
       model.ContentElement.push_child(self, child)
 
@@ -74,7 +74,7 @@ class ISD(model.Root):
       raise TypeError("Argument must be an instance of Region")
 
     if region.get_doc() != self:
-      raise ValueError("Region does not belongs to this document")
+      raise ValueError("Region does not belong to this document")
 
     self._regions[region.get_id()] = region
 
@@ -225,7 +225,7 @@ class ISD(model.Root):
     if element.get_begin() is not None and element.get_begin() > offset:
       return None
 
-    if element.get_end() is not None and element.get_end() < offset:
+    if element.get_end() is not None and element.get_end() <= offset:
       return None
 
     # associated region is that associated with the element, or inherited otherwise
@@ -259,6 +259,11 @@ class ISD(model.Root):
 
     styles_to_be_computed: typing.Set[model.StyleProperty] = set()
 
+    # copy text nodes
+
+    if isinstance(element, model.Text):
+      isd_element.set_text(element.get_text())
+
     # apply animation
 
     for animation_step in element.iter_animation_steps():
@@ -266,7 +271,7 @@ class ISD(model.Root):
       if animation_step.begin is not None and animation_step.begin > offset:
         continue
 
-      if animation_step.end is not None and animation_step.end < offset:
+      if animation_step.end is not None and animation_step.end <= offset:
         continue
 
       styles_to_be_computed.add(animation_step.style_property)
