@@ -191,6 +191,25 @@ class ISDTest(unittest.TestCase):
 
     self.assertEqual(span.get_style(styles.StyleProperties.Color), styles.NamedColors.blue.value)
 
+    text = list(span)[0]
+
+    self.assertIsInstance(text, model.Text)
+
+    self.assertEqual(text.get_text(), "hello")
+
+  def test_isd_10(self):
+    isd = ISD.from_model(self.doc, 0)
+
+    regions = list(isd.iter_regions())
+
+    self.assertEqual(len(regions), 1)
+
+    r1 = regions[0]
+
+    self.assertEqual(r1.get_id(), "r1")
+
+    self.assertEqual(len(r1), 0)
+
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
       for filename in files:
