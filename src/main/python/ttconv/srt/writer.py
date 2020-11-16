@@ -33,9 +33,10 @@ import ttconv.model as model
 import ttconv.srt.style as style
 from ttconv.filters import Filter
 from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
+from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
 from ttconv.srt.paragraph import SrtParagraph
-from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType
+from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +44,28 @@ LOGGER = logging.getLogger(__name__)
 class SrtContext:
   """SRT writer context"""
 
-  filters: List[Filter] = [
+  filters: List[Filter] = (
+    SupportedStylePropertiesFilter({
+      StyleProperties.FontWeight: [
+        # Every values
+      ],
+      StyleProperties.FontStyle: [
+        FontStyleType.normal,
+        FontStyleType.italic
+      ],
+      StyleProperties.TextDecoration: [
+        TextDecorationType.underline
+      ],
+      StyleProperties.Color: [
+        # Every values
+      ],
+    }),
     DefaultStylePropertyValuesFilter({
       StyleProperties.Color: NamedColors.white.value,
       StyleProperties.FontWeight: FontWeightType.normal,
       StyleProperties.FontStyle: FontStyleType.normal,
     })
-  ]
+  )
 
   def __init__(self):
     self._captions_counter: int = 0
