@@ -32,9 +32,10 @@ from typing import List
 import ttconv.model as model
 import ttconv.srt.style as style
 from ttconv.filters import Filter
-from ttconv.filters.default_style_properties import DefaultStylePropertiesFilter
+from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
 from ttconv.isd import ISD
 from ttconv.srt.paragraph import SrtParagraph
+from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,11 @@ class SrtContext:
   """SRT writer context"""
 
   filters: List[Filter] = [
-    DefaultStylePropertiesFilter()
+    DefaultStylePropertyValuesFilter({
+      StyleProperties.Color: NamedColors.white.value,
+      StyleProperties.FontWeight: FontWeightType.normal,
+      StyleProperties.FontStyle: FontStyleType.normal,
+    })
   ]
 
   def __init__(self):

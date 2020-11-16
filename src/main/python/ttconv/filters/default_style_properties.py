@@ -25,39 +25,46 @@
 
 """Style properties default values filter"""
 
-from typing import Dict, List
+from typing import Dict, Type, Any
 
 from ttconv.filters import Filter
 from ttconv.isd import ISD
 from ttconv.model import ContentElement
-from ttconv.style_properties import StyleProperties, StyleProperty
+from ttconv.style_properties import StyleProperty
 
 
-class DefaultStylePropertiesFilter(Filter):
+class DefaultStylePropertyValuesFilter(Filter):
   """Filter that remove default style properties"""
 
-  filtered_style_properties: List[StyleProperty] = StyleProperties.ALL
+  def __init__(self, style_property_default_values: Dict[Type[StyleProperty], Any]):
+    self.style_property_default_values = style_property_default_values
 
-  def process_element(self, element: ContentElement, inherited_style_props: Dict):
+  def process_element(self, element: ContentElement):
     """Filter ISD element style properties"""
 
-    for style_prop in self.filtered_style_properties:
+    element_styles = list(element.iter_styles())
+    for style_prop in element_styles:
 
-      inherited_style_prop = inherited_style_props.get(style_prop)
       value = element.get_style(style_prop)
-      default_value = style_prop.make_initial_value()
+      default_value = self.style_property_default_values.get(style_prop)
+
+      parent = element.parent()
+      if parent is not None and style_prop.is_inherited:
+        # If the parent style property value has not been removed, it means
+        # the value is not set to default, and so that the child style property
+        # value may have been "forced" to the default value, so let's skip it.
+        parent_value = parent.get_style(style_prop)
+        if parent_value is not None and parent_value is not value:
+          continue
 
       # Remove the style property if its value is default (and if it is not inherited)
-      if (inherited_style_prop is None or not style_prop.is_inherited) and value == default_value:
+      if default_value is not None and value == default_value:
         element.set_style(style_prop, None)
 
-      elif value is not None and style_prop.is_inherited:
-        inherited_style_props[style_prop] = value
-
     for child in element:
-      self.process_element(child, inherited_style_props)
+      self.process_element(child)
 
   def process(self, isd: ISD):
     """Filter ISD document style properties"""
     for region in isd.iter_regions():
-      self.process_element(region, {})
+      self.process_element(region)
