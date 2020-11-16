@@ -37,10 +37,10 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.isd import ISD
 
-class ISDTest(unittest.TestCase):
+class Document0Test(unittest.TestCase):
 
   '''
-  <region xml:id="r1" tts:showBackground="always"/>
+  <region xml:id="r1"/>
   <region xml:id="r2" begin="2s" end="9s">
     <set tts:color="red"/>
   </region>
@@ -51,7 +51,9 @@ class ISDTest(unittest.TestCase):
     </div>
     <div end="12s" region="r2">
       <p>
-        <span>hello</span>
+        <span>
+        hello
+        </span>
       </p>
     </div>
   </body>
@@ -82,7 +84,6 @@ class ISDTest(unittest.TestCase):
     )
 
     r1 = model.Region("r1", self.doc)
-    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
     self.doc.put_region(r1)
 
     # r2: sig times = {2, 9}
@@ -129,7 +130,7 @@ class ISDTest(unittest.TestCase):
     span1.push_child(t1)
 
   def test_significant_times(self):
-    self.assertEqual(ISD.significant_times(self.doc), set((0, 2, 3, 9, 1, 10, 4)))
+    self.assertEqual(ISD.significant_times(self.doc), sorted((0, 2, 3, 9, 1, 10, 4)))
 
   def test_isd_0(self):
     isd = ISD.from_model(self.doc, 0)
@@ -189,7 +190,27 @@ class ISDTest(unittest.TestCase):
 
     self.assertEqual(len(span), 1)
 
-    self.assertEqual(span.get_style(styles.StyleProperties.Color), styles.NamedColors.blue.value)
+    text = list(span)[0]
+
+    self.assertIsInstance(text, model.Text)
+
+    self.assertEqual(text.get_text(), "hello")
+
+  def test_isd_10(self):
+    isd = ISD.from_model(self.doc, 0)
+
+    regions = list(isd.iter_regions())
+
+    self.assertEqual(len(regions), 1)
+
+    r1 = regions[0]
+
+    self.assertEqual(r1.get_id(), "r1")
+
+    self.assertEqual(len(r1), 0)
+
+
+class IMSCTestSuiteTest(unittest.TestCase):
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
@@ -224,6 +245,324 @@ class ISDTest(unittest.TestCase):
               self.assertIsNotNone(isd)
             if len(logs.output) > 1:
               self.fail(logs.output)
+
+class ComputeStyleTest(unittest.TestCase):
+
+  def test_compute_extent_pct(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.pct),
+        height=styles.LengthType(25, styles.LengthType.Units.pct)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertEqual(extent.height.value, 25)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+    self.assertEqual(extent.width.value, 50)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
+
+  def test_compute_extent_px(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.px),
+        height=styles.LengthType(25, styles.LengthType.Units.px)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertAlmostEqual(extent.width.value, 100*50/doc.get_px_resolution().width)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
+
+    self.assertAlmostEqual(extent.height.value, 100*25/doc.get_px_resolution().height)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+  def test_compute_extent_c(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(10, styles.LengthType.Units.c),
+        height=styles.LengthType(20, styles.LengthType.Units.c)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertAlmostEqual(extent.width.value, 100*10/doc.get_cell_resolution().columns)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
+
+    self.assertAlmostEqual(extent.height.value, 100*20/doc.get_cell_resolution().rows)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+  def test_compute_extent_em(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(20, styles.LengthType.Units.em),
+        height=styles.LengthType(3, styles.LengthType.Units.em)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+
+    self.assertAlmostEqual(extent.width.value, 100*20/doc.get_cell_resolution().rows)
+    self.assertEqual(extent.width.units, styles.LengthType.Units.rh)
+
+    self.assertAlmostEqual(extent.height.value, 100*3/doc.get_cell_resolution().rows)
+    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+
+  def test_compute_padding(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.pct),
+        height=styles.LengthType(25, styles.LengthType.Units.pct)
+      )
+    )
+    r1.set_style(
+      styles.StyleProperties.Padding,
+      styles.PaddingType(
+        before=styles.LengthType(5, styles.LengthType.Units.pct),
+        after=styles.LengthType(10, styles.LengthType.Units.pct),
+        start=styles.LengthType(15, styles.LengthType.Units.pct),
+        end=styles.LengthType(20, styles.LengthType.Units.pct)
+      )
+    )
+    doc.put_region(r1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    padding: styles.PaddingType = region.get_style(styles.StyleProperties.Padding)
+
+    self.assertAlmostEqual(padding.before.value, 25 * 0.05)
+    self.assertAlmostEqual(padding.after.value, 25 * 0.10)
+    self.assertAlmostEqual(padding.start.value, 50 * 0.15)
+    self.assertAlmostEqual(padding.end.value, 50 * 0.2)
+
+  def test_compute_style_property(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(styles.StyleProperties.FontSize, styles.LengthType(value=50, units=styles.LengthType.Units.pct))
+    doc.put_region(r1)
+
+    b = model.Body(doc)
+    b.set_style(styles.StyleProperties.FontSize, styles.LengthType(value=50, units=styles.LengthType.Units.pct))
+    b.set_region(r1)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    p1.push_child(span1)
+
+    t1 = model.Text(doc, "hello")
+    span1.push_child(t1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    span = region[0][0][0][0]
+
+    fs: styles.LengthType = span.get_style(styles.StyleProperties.FontSize)
+
+    self.assertAlmostEqual(fs.value, 25 / doc.get_cell_resolution().rows)
+
+    self.assertEqual(fs.units, styles.LengthType.Units.rh)
+
+class InheritanceStyleTest(unittest.TestCase):
+
+  def test_text_decoration_inheritance(self):
+    doc = model.Document()
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(
+      styles.StyleProperties.TextDecoration,
+      styles.TextDecorationType(
+        line_through=False,
+        underline=True,
+        overline=True
+      )
+    )
+    doc.put_region(r1)
+
+    b = model.Body(doc)
+    b.set_style(
+      styles.StyleProperties.TextDecoration,
+      styles.TextDecorationType(
+        overline=False
+      )
+    )
+    b.set_region(r1)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    p1.push_child(span1)
+
+    t1 = model.Text(doc, "hello")
+    span1.push_child(t1)
+
+    isd = ISD.from_model(doc, 0)
+
+    region = list(isd.iter_regions())[0]
+
+    span = region[0][0][0][0]
+
+    self.assertEqual(
+      span.get_style(styles.StyleProperties.TextDecoration),
+      styles.TextDecorationType(
+        line_through=False,
+        underline=True,
+        overline=False
+      )
+    )
+
+class Document1Test(unittest.TestCase):
+
+  """
+    <region xml:id="r1"/>
+
+    <body region="r1">
+      <div>
+        <p begin="1s" end="3s">
+          <span>
+          hello
+          </span>
+          <span begin="1s">
+          bye
+          </span>
+        </p>
+      </div>
+    </body>
+  """
+
+  def setUp(self):
+    self.doc = model.Document()
+
+    r1 = model.Region("r1", self.doc)
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.whenActive)
+    self.doc.put_region(r1)
+
+    b = model.Body(self.doc)
+    b.set_region(r1)
+    self.doc.set_body(b)
+
+    div1 = model.Div(self.doc)
+    b.push_child(div1)
+
+    p1 = model.P(self.doc)
+    p1.set_begin(1)
+    p1.set_end(3)
+    div1.push_child(p1)
+
+    span1 = model.Span(self.doc)
+    span1.push_child(model.Text(self.doc, "hello"))
+    p1.push_child(span1)
+
+    span2 = model.Span(self.doc)
+    span2.set_begin(1)
+    span2.push_child(model.Text(self.doc, "bye"))
+    p1.push_child(span2)
+
+  def test_sig_times(self):
+  
+    self.assertEqual(ISD.significant_times(self.doc), sorted((0, 1, 2, 3)))
+
+  def test_isd_0(self):
+
+    isd = ISD.from_model(self.doc, 0)
+
+    self.assertEqual(len(isd), 0)
+
+  def test_isd_1(self):
+
+    isd = ISD.from_model(self.doc, 1)
+
+    self.assertEqual(len(isd), 1)
+
+    p = list(isd.iter_regions())[0][0][0][0]
+
+    self.assertEqual(len(p), 1)
+
+    self.assertEqual(p[0][0].get_text(), "hello")
+
+  def test_isd_2(self):
+
+    isd = ISD.from_model(self.doc, 2)
+
+    self.assertEqual(len(isd), 1)
+
+    p = list(isd.iter_regions())[0][0][0][0]
+
+    self.assertEqual(len(p), 2)
+
+    self.assertEqual(p[0][0].get_text(), "hello")
+
+    self.assertEqual(p[1][0].get_text(), "bye")
+
+  def test_isd_3(self):
+
+    isd = ISD.from_model(self.doc, 0)
+
+    self.assertEqual(len(isd), 0)
 
 if __name__ == '__main__':
   unittest.main()

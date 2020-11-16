@@ -312,13 +312,13 @@ class SccReaderTest(unittest.TestCase):
     self.assertEqual(region_1, p_list[2].get_region())
 
     self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
-                             TextDecorationType(underline=TextDecorationType.Action.add))
+                             TextDecorationType(underline=True))
 
     self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
     self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
-                             TextDecorationType(underline=TextDecorationType.Action.add))
+                             TextDecorationType(underline=True))
 
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)

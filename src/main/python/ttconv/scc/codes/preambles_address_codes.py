@@ -102,7 +102,7 @@ class SccPreambleAddressCode:
     self._indent: Optional[int] = desc_bits.get_indent()
     self._font_style: Optional[bool] = FontStyleType.italic if desc_bits.get_italic() else None
     self._text_decoration: Optional[TextDecorationType] = \
-      TextDecorationType(underline=TextDecorationType.Action.add) if desc_bits.get_underline() else None
+      TextDecorationType(underline=True) if desc_bits.get_underline() else None
     self._channel = 2 if byte_1 & 0x08 else 1
 
   def get_row(self) -> int:

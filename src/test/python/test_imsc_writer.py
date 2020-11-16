@@ -225,8 +225,8 @@ class StylePropertyWriterTest(unittest.TestCase):
       _get_set_style(
         imsc_styles.StyleProperties.TextDecoration,
         styles.TextDecorationType(
-          underline=styles.TextDecorationType.Action.remove,
-          line_through=styles.TextDecorationType.Action.add
+          underline=False,
+          line_through=True
         )
       ),
       "noUnderline lineThrough"
@@ -237,12 +237,12 @@ class StylePropertyWriterTest(unittest.TestCase):
       _get_set_style(
         imsc_styles.StyleProperties.TextEmphasis,
         styles.TextEmphasisType(
-          style=styles.TextEmphasisType.Style.filled,
+          style=styles.TextEmphasisType.Style.filled_circle,
           color=styles.NamedColors.red.value,
           position=styles.TextEmphasisType.Position.after
         )
       ),
-      "filled #ff0000 after"
+      "filled circle #ff0000 after"
     )
 
   def test_tts_text_outline(self):
@@ -257,7 +257,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
     to2 = styles.TextOutlineType(
       color=styles.NamedColors.red.value,
-      thickness=styles.LengthType(value="5")
+      thickness=styles.LengthType(value=5)
     )
     self.assertEqual(
       _get_set_style(
@@ -280,13 +280,13 @@ class StylePropertyWriterTest(unittest.TestCase):
     ts2 = styles.TextShadowType(
       (
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+          x_offset=styles.LengthType(value=1, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=1.2, units=styles.LengthType.Units.em)
         ),
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
-          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          x_offset=styles.LengthType(value=0.5, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=0.7, units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value=1, units=styles.LengthType.Units.em),
           color=styles.NamedColors.red.value
         )
       )

@@ -703,29 +703,35 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      
       if xml_attrib == "none":
-        return styles.SpecialValues.none
 
-      s = xml_attrib.split(" ")
+        underline = False
+        line_through = False
+        overline = False
 
-      underline = styles.TextDecorationType.Action.none
-      line_through = styles.TextDecorationType.Action.none
-      overline = styles.TextDecorationType.Action.none
+      else:
 
-      if "underline" in s:
-        underline = styles.TextDecorationType.Action.add
-      elif "noUnderline" in s:
-        underline = styles.TextDecorationType.Action.remove
-        
-      if "lineThrough" in s:
-        line_through = styles.TextDecorationType.Action.add
-      elif "noLineThrough" in s:
-        line_through = styles.TextDecorationType.Action.remove
+        s = xml_attrib.split(" ")
 
-      if "overline" in s:
-        overline = styles.TextDecorationType.Action.add
-      elif "noOverline" in s:
-        overline = styles.TextDecorationType.Action.remove
+        underline = None
+        line_through = None
+        overline = None
+
+        if "underline" in s:
+          underline = True
+        elif "noUnderline" in s:
+          underline = False
+          
+        if "lineThrough" in s:
+          line_through = True
+        elif "noLineThrough" in s:
+          line_through = False
+
+        if "overline" in s:
+          overline = True
+        elif "noOverline" in s:
+          overline = False
 
       return styles.TextDecorationType(
         underline=underline,
@@ -736,27 +742,24 @@ class StyleProperties:
     @classmethod
     def from_model(cls, xml_element, model_value: styles.TextDecorationType):
       
-      if model_value == styles.SpecialValues.none:
-        attrib_value = "none"
-      else:
-        actual_values = []
+      actual_values = []
 
-        if model_value.underline == styles.TextDecorationType.Action.add:
-          actual_values.append("underline")
-        elif model_value.underline == styles.TextDecorationType.Action.remove:
-          actual_values.append("noUnderline")
+      if model_value.underline is True:
+        actual_values.append("underline")
+      elif model_value.underline is False:
+        actual_values.append("noUnderline")
 
-        if model_value.line_through == styles.TextDecorationType.Action.add:
-          actual_values.append("lineThrough")
-        elif model_value.line_through == styles.TextDecorationType.Action.remove:
-          actual_values.append("noLineThrough")
+      if model_value.line_through is True:
+        actual_values.append("lineThrough")
+      elif model_value.line_through is False:
+        actual_values.append("noLineThrough")
 
-        if model_value.overline == styles.TextDecorationType.Action.add:
-          actual_values.append("overline")
-        elif model_value.overline == styles.TextDecorationType.Action.remove:
-          actual_values.append("noOverline")
+      if model_value.overline is True:
+        actual_values.append("overline")
+      elif model_value.overline is False:
+        actual_values.append("noOverline")
 
-        attrib_value = " ".join(actual_values)
+      attrib_value = " ".join(actual_values)
 
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", attrib_value)
 
@@ -772,19 +775,28 @@ class StyleProperties:
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       
       style = None
-      symbol = None
+      style_style = None
+      style_symbol = None
       color = None
       position = None
 
       for c in xml_attrib.split(" "):
-        
-        if c in styles.TextEmphasisType.Style.__members__:
+
+        if c == "none":
+
+          return styles.SpecialValues.none
+
+        if c == "auto":
+
+          style = styles.TextEmphasisType.Style.auto
+
+        elif c in ("filled", "open"):
           
-          style = styles.TextEmphasisType.Style[c]
+          style_style = c
 
-        elif c in styles.TextEmphasisType.Symbol.__members__:
+        elif c in ("circle", "dot", "sesame"):
 
-          symbol = styles.TextEmphasisType.Symbol[c]
+          style_symbol = c
 
         elif c in styles.TextEmphasisType.Position.__members__:
 
@@ -798,22 +810,22 @@ class StyleProperties:
 
           color = utils.parse_color(c)
 
-      if style is None and symbol is None:
+      if style_style is None and style_symbol is None:
 
         style = styles.TextEmphasisType.Style.auto
 
       else:
 
-        symbol = symbol or styles.TextEmphasisType.Symbol.circle
-        style = style or styles.TextEmphasisType.Style.filled
+        style_style = style_style if style_style is not None else "circle"
+        style_symbol = style_symbol if style_symbol is not None else "filled"
+        style = styles.TextEmphasisType.Style(f"{style_style} {style_symbol}")
 
-      position = position or styles.TextEmphasisType.Position.outside
+      position = position if position is not None else styles.TextEmphasisType.Position.outside
 
       return styles.TextEmphasisType(
         style=style,
         color=color,
-        position=position,
-        symbol=symbol
+        position=position
       )
 
     @classmethod
@@ -822,14 +834,10 @@ class StyleProperties:
 
       actual_values.append(model_value.style.value)
 
-      if model_value.symbol is not None:
-        actual_values.append(model_value.symbol.value)
-
       if model_value.color is not None:
         actual_values.append(StyleProperties.to_ttml_color(model_value.color))
 
-      if model_value.position is not None:
-        actual_values.append(model_value.position.value) 
+      actual_values.append(model_value.position.value) 
 
       xml_element.set(
         f"{{{cls.ns}}}{cls.local_name}",
