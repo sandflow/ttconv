@@ -31,6 +31,8 @@ from typing import List
 
 import ttconv.model as model
 import ttconv.srt.style as style
+from ttconv.filters import Filter
+from ttconv.filters.default_style_properties import DefaultStylePropertiesFilter
 from ttconv.isd import ISD
 from ttconv.srt.paragraph import SrtParagraph
 
@@ -39,6 +41,10 @@ LOGGER = logging.getLogger(__name__)
 
 class SrtContext:
   """SRT writer context"""
+
+  filters: List[Filter] = [
+    DefaultStylePropertiesFilter()
+  ]
 
   def __init__(self):
     self._captions_counter: int = 0
@@ -110,7 +116,7 @@ class SrtContext:
           self.append_element(div, offset)
 
   def __str__(self) -> str:
-    return "\n\n".join(str(p) for p in self._paragraphs)
+    return "\n\n".join(str(p) for p in self._paragraphs) + "\n"
 
 
 #
@@ -120,12 +126,14 @@ class SrtContext:
 def from_model(doc: model.Document) -> str:
   """Converts the data model to a SRT document"""
 
-
   srt = SrtContext()
   significant_times = ISD.significant_times(doc)
 
   for offset in significant_times:
     isd = ISD.from_model(doc, offset)
+
+    for filter in srt.filters:
+      filter.process(isd)
 
     srt.add_isd(isd, offset)
 
