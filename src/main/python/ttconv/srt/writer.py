@@ -26,10 +26,13 @@
 """SRT writer"""
 
 import logging
+from fractions import Fraction
+from typing import List
 
 import ttconv.model as model
 import ttconv.srt.style as style
-from ttconv.srt.time_code import SrtTimeCode
+from ttconv.isd import ISD
+from ttconv.srt.paragraph import SrtParagraph
 
 LOGGER = logging.getLogger(__name__)
 
@@ -39,41 +42,29 @@ class SrtContext:
 
   def __init__(self):
     self._captions_counter: int = 0
-    self._content: str = ""
+    self._begin: Fraction = Fraction(0)
+    self._end: Fraction = Fraction(0)
+    self._paragraphs: List[SrtParagraph] = []
 
-  def get_content(self) -> str:
-    """Returns SRT content"""
-    return self._content
-
-  def write_element(self, element: model.ContentElement):
+  def append_element(self, element: model.ContentElement, offset: Fraction):
     """Converts model element to SRT content"""
+
     if isinstance(element, model.Div):
       for elem in list(element):
-        self.write_element(elem)
+        self.append_element(elem, offset)
 
     if isinstance(element, model.P):
 
-      if self._captions_counter > 0:
-        self._content += "\n\n"
-
-      begin = element.get_begin()
-      end = element.get_end()
-
-      if begin is None:
-        if self._captions_counter > 0:
-          raise ValueError("No begin time for paragraph:", element)
-        begin = 0.0
-
-      if end is None:
-        raise ValueError("No end time for paragraph:", element)
+      if self._paragraphs:
+        self._paragraphs[-1].set_end(offset)
 
       self._captions_counter += 1
 
-      self._content += str(self._captions_counter) + "\n"
-      self._content += str(SrtTimeCode.from_time_offset(begin)) + " --> " + str(SrtTimeCode.from_time_offset(end)) + "\n"
+      self._paragraphs.append(SrtParagraph(self._captions_counter))
+      self._paragraphs[-1].set_begin(offset)
 
       for elem in list(element):
-        self.write_element(elem)
+        self.append_element(elem, offset)
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -82,47 +73,61 @@ class SrtContext:
       font_color = style.get_font_color(element)
 
       if font_color is not None:
-        self._content += style.FONT_COLOR_TAG_IN.format(font_color)
+        self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
 
       if is_bold:
-        self._content += style.BOLD_TAG_IN
+        self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
       if is_italic:
-        self._content += style.ITALIC_TAG_IN
+        self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
       if is_underlined:
-        self._content += style.UNDERLINE_TAG_IN
+        self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
 
       for elem in list(element):
-        self.write_element(elem)
+        self.append_element(elem, offset)
 
       if is_underlined:
-        self._content += style.UNDERLINE_TAG_OUT
+        self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
       if is_italic:
-        self._content += style.ITALIC_TAG_OUT
+        self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
       if is_bold:
-        self._content += style.BOLD_TAG_OUT
+        self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
       if font_color is not None:
-        self._content += style.FONT_COLOR_TAG_OUT
+        self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_OUT)
 
     if isinstance(element, model.Br):
-      self._content += "\n"
+      self._paragraphs[-1].append_text("\n")
 
     if isinstance(element, model.Text):
-      self._content += element.get_text()
+      self._paragraphs[-1].append_text(element.get_text())
 
     # TODO: handle element alignment
     # TODO: handle region style
+
+  def add_isd(self, isd, offset: Fraction):
+    for region in isd.iter_regions():
+      for body in region:
+        for div in list(body):
+          self.append_element(div, offset)
+
+  def __str__(self) -> str:
+    return "\n\n".join(str(p) for p in self._paragraphs)
 
 
 #
 # srt writer
 #
 
-def from_model(model_doc: model.Document) -> str:
+def from_model(doc: model.Document) -> str:
   """Converts the data model to a SRT document"""
-  body = model_doc.get_body()
 
-  context = SrtContext()
-  for div in list(body):
-    context.write_element(div)
 
-  return context.get_content()
+  srt = SrtContext()
+  significant_times = ISD.significant_times(doc)
+
+  for offset in significant_times:
+    isd = ISD.from_model(doc, offset)
+
+    srt.add_isd(isd, offset)
+
+  return str(srt)
+
