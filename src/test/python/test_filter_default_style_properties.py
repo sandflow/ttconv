@@ -25,7 +25,7 @@
 
 """Unit tests for the style property default values filter"""
 
-# pylint: disable=R0201,C0115,C0116
+# pylint: disable=R0201,C0115,C0116,W0212
 from fractions import Fraction
 from unittest import TestCase
 
@@ -91,7 +91,7 @@ class DefaultStylesFilterTest(TestCase):
     span1.push_child(t1)
 
     significant_times = sorted(ISD.significant_times(doc))
-    self.assertTrue(5, len(significant_times))
+    self.assertEqual(5, len(significant_times))
 
     isd = ISD.from_model(doc, significant_times[1])
 

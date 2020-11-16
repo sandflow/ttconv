@@ -32,6 +32,7 @@ from ttconv.srt.time_code import SrtTimeCode
 
 
 class SrtParagraph:
+  """SRT paragraph definition class"""
 
   def __init__(self, identifier: int):
     self._id: int = identifier
@@ -40,18 +41,23 @@ class SrtParagraph:
     self._text: str = ""
 
   def set_begin(self, offset: Fraction):
+    """Sets the paragraph begin time code"""
     self._begin = SrtTimeCode.from_time_offset(offset)
 
   def get_begin(self) -> SrtTimeCode:
+    """Returns the paragraph begin time code"""
     return self._begin
 
   def set_end(self, offset: Fraction):
+    """Sets the paragraph end time code"""
     self._end = SrtTimeCode.from_time_offset(offset)
 
   def get_end(self) -> SrtTimeCode:
+    """Returns the paragraph end time code"""
     return self._end
 
   def append_text(self, text: str):
+    """Appends text to the paragraph"""
     self._text += text
 
   def __str__(self) -> str:

@@ -30,7 +30,7 @@ from typing import Dict, List, Type
 from ttconv.filters import Filter
 from ttconv.isd import ISD
 from ttconv.model import ContentElement
-from ttconv.style_properties import StyleProperties, StyleProperty
+from ttconv.style_properties import StyleProperty
 
 class SupportedStylePropertiesFilter(Filter):
   """Filter that remove unsupported style properties"""

@@ -25,14 +25,14 @@
 
 """Unit tests for the supported style properties filter"""
 
-# pylint: disable=R0201,C0115,C0116
+# pylint: disable=R0201,C0115,C0116,W0212
 from fractions import Fraction
 from unittest import TestCase
 
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Document, Region, Body, Div, Span, Text
-from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType
+from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType, ExtentType, LengthType
 
 
 class SupportedStylePropertiesFilterTest(TestCase):
@@ -106,7 +106,7 @@ class SupportedStylePropertiesFilterTest(TestCase):
     span1.push_child(t1)
 
     significant_times = sorted(ISD.significant_times(doc))
-    self.assertTrue(5, len(significant_times))
+    self.assertEqual(5, len(significant_times))
 
     isd = ISD.from_model(doc, significant_times[1])
 
@@ -134,7 +134,10 @@ class SupportedStylePropertiesFilterTest(TestCase):
 
     self.assertEqual(2, len(r1._styles))
     self.assertEqual(NamedColors.red.value, r1.get_style(StyleProperties.BackgroundColor))
-    self.assertEqual(StyleProperties.Extent.make_initial_value(), r1.get_style(StyleProperties.Extent))
+    self.assertEqual(ExtentType(
+      height=LengthType(value=0.0, units=LengthType.Units.rh),
+      width=LengthType(value=0.0, units=LengthType.Units.rw)
+    ), r1.get_style(StyleProperties.Extent))
 
     self.assertEqual(0, len(p1._styles))
     self.assertIsNone(p1.get_style(StyleProperties.BackgroundColor))

@@ -131,6 +131,7 @@ class SrtContext:
     # TODO: handle region style
 
   def add_isd(self, isd, offset: Fraction):
+    """Converts and append ISD content to SRT content"""
     for region in isd.iter_regions():
       for body in region:
         for div in list(body):
@@ -153,8 +154,8 @@ def from_model(doc: model.Document) -> str:
   for offset in significant_times:
     isd = ISD.from_model(doc, offset)
 
-    for filter in srt.filters:
-      filter.process(isd)
+    for srt_filter in srt.filters:
+      srt_filter.process(isd)
 
     srt.add_isd(isd, offset)
 
