@@ -60,13 +60,12 @@ class SccReaderTest(unittest.TestCase):
     }
 
     for (color, code) in disassembly_colors.items():
-      print(color, code)
       self.assertEqual(code, get_color_disassembly(color.value))
 
-    self.assertEqual("BlS", get_color_disassembly(ColorType((0, 0, 255, 136))))
-    self.assertEqual("Bl", get_color_disassembly(ColorType((0, 0, 255, 128))))
-    self.assertEqual("Bl", get_color_disassembly(ColorType((0, 0, 255, 145))))
-    self.assertEqual("T", get_color_disassembly(ColorType((0, 0, 255, 0))))
+    self.assertEqual("BlS", get_color_disassembly(ColorType([0, 0, 255, 136])))
+    self.assertEqual("Bl", get_color_disassembly(ColorType([0, 0, 255, 128])))
+    self.assertEqual("Bl", get_color_disassembly(ColorType([0, 0, 255, 145])))
+    self.assertEqual("T", get_color_disassembly(ColorType([0, 0, 255, 0])))
 
   def test_scc_disassembly_font_style(self):
     disassembly_font_style = {
