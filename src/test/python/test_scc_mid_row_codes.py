@@ -54,9 +54,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_white_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[2]), SccMidRowCode.WHITE_UNDERLINE, NamedColors.white.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[3]), SccMidRowCode.WHITE_UNDERLINE, NamedColors.white.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_green(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[4]), SccMidRowCode.GREEN, NamedColors.green.value, None, None)
@@ -64,9 +64,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_green_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[6]), SccMidRowCode.GREEN_UNDERLINE, NamedColors.green.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[7]), SccMidRowCode.GREEN_UNDERLINE, NamedColors.green.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_blue(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[8]), SccMidRowCode.BLUE, NamedColors.blue.value, None, None)
@@ -74,9 +74,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_blue_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[10]), SccMidRowCode.BLUE_UNDERLINE, NamedColors.blue.value, None,
-                            TextDecorationType(underline=TextDecorationType.Action.add))
+                            TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[11]), SccMidRowCode.BLUE_UNDERLINE, NamedColors.blue.value, None,
-                            TextDecorationType(underline=TextDecorationType.Action.add))
+                            TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_cyan(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[12]), SccMidRowCode.CYAN, NamedColors.cyan.value, None, None)
@@ -84,9 +84,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_cyan_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[14]), SccMidRowCode.CYAN_UNDERLINE, NamedColors.cyan.value, None,
-                            TextDecorationType(underline=TextDecorationType.Action.add))
+                            TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[15]), SccMidRowCode.CYAN_UNDERLINE, NamedColors.cyan.value, None,
-                            TextDecorationType(underline=TextDecorationType.Action.add))
+                            TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_red(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[16]), SccMidRowCode.RED, NamedColors.red.value, None, None)
@@ -94,9 +94,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_red_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[18]), SccMidRowCode.RED_UNDERLINE, NamedColors.red.value, None,
-                            TextDecorationType(underline=TextDecorationType.Action.add))
+                            TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[19]), SccMidRowCode.RED_UNDERLINE, NamedColors.red.value, None,
-                            TextDecorationType(underline=TextDecorationType.Action.add))
+                            TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_yellow(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[20]), SccMidRowCode.YELLOW, NamedColors.yellow.value, None, None)
@@ -104,9 +104,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_yellow_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[22]), SccMidRowCode.YELLOW_UNDERLINE, NamedColors.yellow.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[23]), SccMidRowCode.YELLOW_UNDERLINE, NamedColors.yellow.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_magenta(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[24]), SccMidRowCode.MAGENTA, NamedColors.magenta.value, None,
@@ -116,9 +116,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_magenta_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[26]), SccMidRowCode.MAGENTA_UNDERLINE, NamedColors.magenta.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[27]), SccMidRowCode.MAGENTA_UNDERLINE, NamedColors.magenta.value,
-                            None, TextDecorationType(underline=TextDecorationType.Action.add))
+                            None, TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_valid_italics(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[28]), SccMidRowCode.ITALICS, None, FontStyleType.italic, None)
@@ -126,9 +126,9 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
   def test_scc_mid_row_codes_valid_italics_underline(self):
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[30]), SccMidRowCode.ITALICS_UNDERLINE, None,
-                            FontStyleType.italic, TextDecorationType(underline=TextDecorationType.Action.add))
+                            FontStyleType.italic, TextDecorationType(underline=True))
     self.check_mid_row_code(SccMidRowCode.find(MID_ROW_CODE_VALUES[31]), SccMidRowCode.ITALICS_UNDERLINE, None,
-                            FontStyleType.italic, TextDecorationType(underline=TextDecorationType.Action.add))
+                            FontStyleType.italic, TextDecorationType(underline=True))
 
   def test_scc_mid_row_codes_invalid(self):
     other_code_values = [code for code in range(0x0000, 0xFFFF) if code not in MID_ROW_CODE_VALUES]

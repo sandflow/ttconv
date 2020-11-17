@@ -269,6 +269,10 @@ class ContentElement:
       child = child._next_sibling
     return count
 
+  def __getitem__(self, key: int) -> ContentElement:
+    '''Returns the key`th child of the element.'''
+    return list(self)[key]
+
   def dfs_iterator(self) -> typing.Iterator[ContentElement]:
     '''Returns an iterator over all elements in the tree rooted at the element,
     in depth-first search order.'''

@@ -61,6 +61,12 @@ class LengthType:
   value: numbers.Number = 0
   units: Units = Units.pct
 
+  def __post_init__(self):
+    if not isinstance(self.value, numbers.Number):
+      raise ValueError("The length value must be a number")
+
+    if not isinstance(self.units, LengthType.Units):
+      raise ValueError("Invalid units")
 
 @dataclass(frozen=True)
 class ColorType:
@@ -224,14 +230,9 @@ class TextDecorationType:
   '''TTML \\<text-decoration\\>
   '''
 
-  class Action(Enum):
-    none = "none"
-    add = "add"
-    remove = "remove"
-
-  underline: Action = Action.none
-  line_through: Action = Action.none
-  overline: Action = Action.none
+  underline: typing.Optional[bool] = None
+  line_through: typing.Optional[bool] = None
+  overline: typing.Optional[bool] = None
 
 
 @dataclass(frozen=True)
@@ -240,25 +241,36 @@ class TextEmphasisType:
   '''
 
   class Style(Enum):
-    none = "none"
+    '''Combines \\<emphasis-style\\> and \\<emphasis-symbol\\>
+    '''
     auto = "auto"
-    filled = "filled"
-    open = "open"
-
-  class Symbol(Enum):
-    circle = "circle"
-    dot = "dot"
-    sesame = "sesame"
+    filled_circle = "filled circle"
+    filled_dot = "filled dot"
+    filled_sesame = "filled sesame"
+    open_circle = "open circle"
+    open_dot = "open dot"
+    open_sesame = "open sesame"
 
   class Position(Enum):
+    ''' \\<emphasis-position\\>
+    '''
     outside = "outside"
     before = "before"
     after = "after"
 
-  style: Style = Style.none
-  symbol: Symbol = None
+  style: Style = Style.auto
   color: ColorType = None
-  position: Position = None
+  position: Position = Position.outside
+
+  def __post_init__(self):
+    if not isinstance(self.style, TextEmphasisType.Style):
+      raise ValueError("Style must be a text emphasis style enumeration value")
+
+    if not (self.color is None or isinstance(self.color, ColorType)):
+      raise ValueError("The color must be None or a valid color")
+
+    if not isinstance(self.position, TextEmphasisType.Position):
+      raise ValueError("Position must be a text emphasis position enumeration value")
 
 
 @dataclass(frozen=True)
@@ -269,6 +281,12 @@ class TextOutlineType:
   thickness: LengthType
   color: ColorType = None
 
+  def __post_init__(self):
+    if self.thickness is None or not isinstance(self.thickness, LengthType):
+      raise ValueError("The thickness value must be a length")
+
+    if not (self.color is None or isinstance(self.color, ColorType)):
+      raise ValueError("The color must be None or a valid color")
 
 @dataclass(frozen=True)
 class TextShadowType:
@@ -277,6 +295,8 @@ class TextShadowType:
 
   @dataclass(frozen=True)
   class Shadow:
+    '''Represents one shadow value
+    '''
     x_offset: LengthType
     y_offset: LengthType
     blur_radius: typing.Optional[LengthType] = None
@@ -330,15 +350,27 @@ class PositionType:
 class StyleProperty:
   '''Abstract base class for all style properties'''
 
+  @classmethod
+  def is_inherited(cls) -> bool:
+    '''True if a child element inherits the value of the property from its parent
+    '''
+    raise NotImplementedError
+
+  @classmethod
+  def is_animatable(cls) -> bool:
+    '''True if the property can be use in a `DiscreteAnimationStep` instance
+    '''
+    raise NotImplementedError
+
   @staticmethod
   def validate(value: typing.Any) -> bool:
     '''Returns whether the value is valid for the style property.'''
-    raise Exception("Not implemented in the base class")
+    raise NotImplementedError
 
   @staticmethod
   def make_initial_value() -> typing.Any:
     '''Creates an instance of the initial value of the style property.'''
-    raise Exception("Not implemented in the base class")
+    raise NotImplementedError
 
 class StyleProperties:
   '''Container for all style properties
@@ -554,7 +586,8 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: LengthType):
-      return isinstance(value, LengthType) and value.units == LengthType.Units.c
+      return isinstance(value, LengthType) and \
+        value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw)
 
 
   class LuminanceGain(StyleProperty):
@@ -766,11 +799,15 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return SpecialValues.none
+      return TextDecorationType(
+        underline=False,
+        overline=False,
+        line_through=False
+      )
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.none or isinstance(value, TextDecorationType)
+      return isinstance(value, TextDecorationType)
 
 
   class TextEmphasis(StyleProperty):
@@ -782,11 +819,11 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return TextEmphasisType()
+      return SpecialValues.none
 
     @staticmethod
     def validate(value):
-      return isinstance(value, TextEmphasisType)
+      return value is SpecialValues.none or isinstance(value, TextEmphasisType)
 
 
   class TextOutline(StyleProperty):
