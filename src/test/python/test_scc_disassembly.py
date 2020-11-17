@@ -29,10 +29,25 @@
 
 import unittest
 
+from ttconv.scc.disassembly import get_text_decoration_disassembly
 from ttconv.scc.reader import to_disassembly
+from ttconv.style_properties import TextDecorationType
 
 
 class SccReaderTest(unittest.TestCase):
+
+  def test_scc_disassembly_text_decoration(self):
+    disassembly_text_decoration = {
+      TextDecorationType(underline=True): "U",
+      TextDecorationType(underline=False): "",
+      TextDecorationType(underline=None): "",
+      TextDecorationType(overline=True): "",
+      TextDecorationType(line_through=True): "",
+      None: ""
+    }
+
+    for (text_decoration, code) in disassembly_text_decoration.items():
+      self.assertEqual(code, get_text_decoration_disassembly(text_decoration))
 
   def test_scc_disassembly(self):
     scc_content = """Scenarist_SCC V1.0
