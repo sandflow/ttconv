@@ -91,7 +91,7 @@ class DefaultStylesFilterTest(TestCase):
     span1.push_child(t1)
 
     significant_times = sorted(ISD.significant_times(doc))
-    self.assertEqual(5, len(significant_times))
+    self.assertEqual(3, len(significant_times))
 
     isd = ISD.from_model(doc, significant_times[1])
 
