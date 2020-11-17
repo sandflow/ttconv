@@ -78,6 +78,6 @@ def get_font_style_disassembly(font_style: FontStyleType) -> str:
 
 def get_text_decoration_disassembly(text_decoration: TextDecorationType) -> str:
   """Get text decoration disassembly code"""
-  if text_decoration is not None:
+  if text_decoration is not None and text_decoration.underline is True:
     return "U"
   return ""
