@@ -43,22 +43,22 @@ FONT_COLOR_TAG_IN = "<font color=\"{}\">"
 FONT_COLOR_TAG_OUT = "</font>"
 
 
-def is_element_bold(element: ContentElement):
+def is_element_bold(element: ContentElement) -> bool:
   """Returns whether the element text is bold"""
   font_weight: Optional[FontWeightType] = element.get_style(StyleProperties.FontWeight)
   return font_weight is not None and font_weight is FontWeightType.bold
 
 
-def is_element_italic(element: ContentElement):
+def is_element_italic(element: ContentElement) -> bool:
   """Returns whether the element text is italic"""
   font_style: Optional[FontStyleType] = element.get_style(StyleProperties.FontStyle)
   return font_style is not None and font_style is FontStyleType.italic
 
 
-def is_element_underlined(element: ContentElement):
+def is_element_underlined(element: ContentElement) -> bool:
   """Returns whether the element text is underlined"""
   text_decoration: Optional[TextDecorationType] = element.get_style(StyleProperties.TextDecoration)
-  return text_decoration is not None and text_decoration is TextDecorationType.underline
+  return text_decoration is not None and text_decoration.underline is True
 
 
 def get_font_color(element: ContentElement) -> Optional[str]:
