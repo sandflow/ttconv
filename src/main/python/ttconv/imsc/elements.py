@@ -200,9 +200,24 @@ class TTElement(TTMLElement):
     if model_doc.get_cell_resolution() != model.CellResolutionType(rows=15, columns=32):
       imsc_attr.CellResolutionAttribute.set(tt_element, model_doc.get_cell_resolution())
 
-    if model_doc.get_px_resolution() is not None:
+    has_px = False
+
+    all_elements = list(model_doc.iter_regions())
+
+    if model_doc.get_body() is not None:
+      all_elements.extend(model_doc.get_body().dfs_iterator())
+
+    for element in all_elements:
+      for model_style_prop in element.iter_styles():
+        if StyleProperties.BY_MODEL_PROP[model_style_prop].has_px(element.get_style(model_style_prop)):
+          has_px = True
+          break
+      if has_px:
+        break
+
+    if model_doc.get_px_resolution() is not None and has_px:
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
-    
+
     if model_doc.get_active_area() is not None:
       imsc_attr.ActiveAreaAttribute.set(tt_element, model_doc.get_active_area())
 
