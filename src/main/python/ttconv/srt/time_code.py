@@ -53,5 +53,8 @@ class SrtTimeCode:
 
     return SrtTimeCode(h, m, s, ms)
 
+  def to_seconds(self) -> float:
+    return self._hours * 3600.0 + self._minutes * 60.0 + self._seconds + self._milliseconds / 1000.0
+
   def __repr__(self) -> str:
     return ":".join(f'{item:02}' for item in [self._hours, self._minutes, self._seconds]) + "," + f'{self._milliseconds:03}'
