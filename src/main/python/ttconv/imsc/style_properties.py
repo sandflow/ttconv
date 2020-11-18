@@ -335,7 +335,7 @@ class StyleProperties:
 
     @classmethod
     def has_px(cls, attrib_value: styles.LengthType) -> bool:
-      if attrib_value is not styles.SpecialValues.none:
+      if attrib_value is not styles.SpecialValues.normal:
         return attrib_value.units == styles.LengthType.Units.px
 
       return False
