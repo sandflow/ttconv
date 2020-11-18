@@ -536,13 +536,13 @@ class StylePropertyWriterTest(unittest.TestCase):
 
     prop = styles.TextOutlineType(
       color=styles.NamedColors.red.value,
-      thickness=styles.LengthType(value="5", units=styles.LengthType.Units.em)
+      thickness=styles.LengthType(value=5, units=styles.LengthType.Units.em)
     )
     self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), False)
 
     prop = styles.TextOutlineType(
       color=styles.NamedColors.red.value,
-      thickness=styles.LengthType(value="5", units=styles.LengthType.Units.px)
+      thickness=styles.LengthType(value=5, units=styles.LengthType.Units.px)
     )
     self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), True)
     
@@ -550,13 +550,13 @@ class StylePropertyWriterTest(unittest.TestCase):
     prop = styles.TextShadowType(
       (
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+          x_offset=styles.LengthType(value=1, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=1, units=styles.LengthType.Units.em)
         ),
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
-          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          x_offset=styles.LengthType(value=0.5, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=0.7, units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value=1, units=styles.LengthType.Units.em),
           color=styles.NamedColors.red.value
         )
       )
@@ -566,13 +566,13 @@ class StylePropertyWriterTest(unittest.TestCase):
     prop = styles.TextShadowType(
       (
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.px),
-          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+          x_offset=styles.LengthType(value=1, units=styles.LengthType.Units.px),
+          y_offset=styles.LengthType(value=1.2, units=styles.LengthType.Units.em)
         ),
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
-          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          x_offset=styles.LengthType(value=0.5, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=0.7, units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value=1, units=styles.LengthType.Units.em),
           color=styles.NamedColors.red.value
         )
       )
@@ -582,13 +582,13 @@ class StylePropertyWriterTest(unittest.TestCase):
     prop = styles.TextShadowType(
       (
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
-          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+          x_offset=styles.LengthType(value=1, units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value=1.2, units=styles.LengthType.Units.em)
         ),
         styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.px),
-          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
-          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          x_offset=styles.LengthType(value=0.5, units=styles.LengthType.Units.px),
+          y_offset=styles.LengthType(value=0.7, units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value=1, units=styles.LengthType.Units.em),
           color=styles.NamedColors.red.value
         )
       )
