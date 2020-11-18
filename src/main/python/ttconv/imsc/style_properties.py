@@ -335,7 +335,7 @@ class StyleProperties:
 
     @classmethod
     def has_px(cls, attrib_value: styles.LengthType) -> bool:
-      if attrib_value == styles.SpecialValues.none:
+      if attrib_value is not styles.SpecialValues.none:
         return attrib_value.units == styles.LengthType.Units.px
 
       return False
@@ -942,19 +942,16 @@ class StyleProperties:
 
     @classmethod
     def has_px(cls, attrib_value: styles.TextShadowType) -> bool:
-      has_px = False
 
       for shadow in attrib_value.shadows:
         if shadow.x_offset.units == styles.LengthType.Units.px or \
           shadow.y_offset.units == styles.LengthType.Units.px:
-          has_px = True
-          break
+          return True
         if shadow.blur_radius is not None:
           if shadow.blur_radius.units == styles.LengthType.Units.px:
-            has_px = True
-            break
+            return True
       
-      return has_px
+      return False
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
