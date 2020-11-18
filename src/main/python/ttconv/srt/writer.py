@@ -132,13 +132,22 @@ class SrtContext:
 
   def add_isd(self, isd, offset: Fraction):
     """Converts and append ISD content to SRT content"""
+    is_isd_empty = True
+
     for region in isd.iter_regions():
+
+      if len(region) > 0:
+        is_isd_empty = False
+
       for body in region:
         for div in list(body):
           self.append_element(div, offset)
 
+    if is_isd_empty and self._paragraphs and self._paragraphs[-1].get_end() is None:
+      self._paragraphs[-1].set_end(offset)
+
   def __str__(self) -> str:
-    return "\n\n".join(str(p) for p in self._paragraphs) + "\n"
+    return "\n".join(p.to_string() for p in self._paragraphs)
 
 
 #

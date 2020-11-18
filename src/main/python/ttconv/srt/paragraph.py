@@ -44,7 +44,7 @@ class SrtParagraph:
     """Sets the paragraph begin time code"""
     self._begin = SrtTimeCode.from_time_offset(offset)
 
-  def get_begin(self) -> SrtTimeCode:
+  def get_begin(self) -> Optional[SrtTimeCode]:
     """Returns the paragraph begin time code"""
     return self._begin
 
@@ -52,7 +52,7 @@ class SrtParagraph:
     """Sets the paragraph end time code"""
     self._end = SrtTimeCode.from_time_offset(offset)
 
-  def get_end(self) -> SrtTimeCode:
+  def get_end(self) -> Optional[SrtTimeCode]:
     """Returns the paragraph end time code"""
     return self._end
 
@@ -60,5 +60,19 @@ class SrtParagraph:
     """Appends text to the paragraph"""
     self._text += text
 
+  def to_string(self) -> str:
+    """Returns the SRT paragraph as a formatted string"""
+    if self._begin is None:
+      raise ValueError("SRT paragraph begin time code must be set.")
+
+    if self._end is None:
+      raise ValueError("SRT paragraph end time code must be set.")
+
+    if self._end.to_seconds() <= self._begin.to_seconds():
+      raise ValueError("SRT paragraph end time code must be greater than the begin time code.")
+
+    return str(self)
+
   def __str__(self) -> str:
-    return "\n".join((str(self._id), str(self._begin) + " --> " + str(self._end), str(self._text)))
+    return "\n".join((str(self._id), str(self._begin) + " --> " + str(self._end), str(self._text))) \
+           + ("\n" if self._text else "")
