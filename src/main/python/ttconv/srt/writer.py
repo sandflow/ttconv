@@ -127,9 +127,6 @@ class SrtContext:
     if isinstance(element, model.Text):
       self._paragraphs[-1].append_text(element.get_text())
 
-    # TODO: handle element alignment
-    # TODO: handle region style
-
   def add_isd(self, isd, offset: Fraction):
     """Converts and append ISD content to SRT content"""
     is_isd_empty = True
@@ -169,4 +166,3 @@ def from_model(doc: model.Document) -> str:
     srt.add_isd(isd, offset)
 
   return str(srt)
-
