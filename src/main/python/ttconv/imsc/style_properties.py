@@ -205,7 +205,7 @@ class StyleProperties:
     @classmethod
     def has_px(cls, attrib_value: styles.ExtentType) -> bool:
       return attrib_value.height.units == styles.LengthType.Units.px or \
-        attrib_value.height.units == styles.LengthType.Units.px
+        attrib_value.width.units == styles.LengthType.Units.px
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
