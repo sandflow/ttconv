@@ -1,5 +1,6 @@
 [run]
 data_file = build/.coverage
+source_pkgs = ttconv
 
 [html]
 directory = build/htmlcov
