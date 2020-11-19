@@ -46,6 +46,12 @@ def _get_set_style(imsc_style_prop, model_value):
   imsc_style_prop.from_model(e, model_value)
   return e.attrib.get(f"{{{imsc_style_prop.ns}}}{imsc_style_prop.local_name}")
 
+def _get_time(imsc_style_prop, model_value):
+  e = et.Element("p")
+  assert imsc_style_prop.model_prop.validate(model_value)
+  imsc_style_prop.from_model(e, model_value)
+  return e.attrib.get(f"{{{imsc_style_prop.ns}}}{imsc_style_prop.local_name}")
+
 class ReaderWriterTest(unittest.TestCase):
 
   def setUp(self):
@@ -594,6 +600,39 @@ class StylePropertyWriterTest(unittest.TestCase):
       )
     )
     self.assertEqual(imsc_styles.StyleProperties.TextShadow.has_px(prop), True)
+
+class WriterWithTimeFormattingTest(unittest.TestCase):
+
+  def setUp(self):
+    if not os.path.exists('build'):
+      os.makedirs('build')
+    
+    et.register_namespace("ttml", xml_ns.TTML)
+    et.register_namespace("ttp", xml_ns.TTP)
+    et.register_namespace("tts", xml_ns.TTS)
+    et.register_namespace("ittp", xml_ns.ITTP)
+    et.register_namespace("itts", xml_ns.ITTS)
+
+  def test_write_with_frames(self):
+
+    doc = model.Document()
+    body = model.Body(doc)
+    div = model.Div(doc)
+    p = model.P(doc)
+    span = model.Span(doc)
+    text = model.Text(doc)
+    text.set_text("asdf")
+    
+    span.push_child(text)
+    p.push_child(span)
+    div.push_child(p)
+    body.push_child(div)
+    doc.set_body(body)
+
+    # write the document out to a file
+    imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
+
+    #self.pretty_print(tree_from_model.getroot())
 
 if __name__ == '__main__':
   unittest.main()
