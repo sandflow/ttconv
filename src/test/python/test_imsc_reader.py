@@ -63,24 +63,6 @@ class IMSCReaderTest(unittest.TestCase):
     tt_not_root = et.ElementTree(et.fromstring(xml_str))
     self.assertIsNone(imsc_reader.to_model(tt_not_root))
 
-  def test_reader_invalid_tt_element(self):
-
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
-      <tt xml:lang="en"
-          xmlns="http://www.w3.org/ns/ttml"
-          xmlns:ttm="http://www.w3.org/ns/ttml#metadata" 
-          xmlns:tts="http://www.w3.org/ns/ttml#styling"
-          xmlns:ttp="http://www.w3.org/ns/ttml#parameter" 
-          xmlns:ittp="http://www.w3.org/ns/ttml/profile/imsc1#parameter"
-          ittp:activeArea="50% 50% 80% 80%"
-          tts:extent="640px 480px"
-          ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text">
-          <asdf></asdf>
-      </tt>"""
-
-    #invalid_tt_element = et.ElementTree(et.fromstring(xml_str))
-    #self.assertIsNone(imsc_reader.to_model(invalid_tt_element))
-
   def test_body_only(self):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')
     imsc_reader.to_model(tree)
