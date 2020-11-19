@@ -23,14 +23,60 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Data model filter"""
+"""Paragraphs merging filter"""
 
+import logging
+
+from ttconv.filters import Filter
 from ttconv.isd import ISD
+from ttconv.model import Div, P, Br
+
+LOGGER = logging.getLogger(__name__)
 
 
-class Filter:
-  """Abstract base class for filters"""
+class ParagraphsMergingFilter(Filter):
+  """Filter for merging ISD document paragraphs per region into a single paragraph"""
 
   def process(self, isd: ISD):
-    """Process the specified ISD and returns it."""
-    pass
+    """Merges the ISD document paragraphs for each regions"""
+
+    for region in isd.iter_regions():
+
+      for body in region:
+
+        target_div = Div(isd)
+        target_paragraph = P(isd)
+        target_div.push_child(target_paragraph)
+
+        original_divs = list(body)
+
+        nb_paragraphs_in_body = 0
+        for div in original_divs:
+          nb_paragraphs_in_body += len(div)
+
+        if nb_paragraphs_in_body <= 1:
+          continue
+
+        for (div_index, div) in enumerate(original_divs):
+
+          LOGGER.warning("Merging ISD paragraphs.")
+
+          for (p_index, p) in enumerate(div):
+
+            for span in list(p):
+              # Remove child from its parent body
+              span.remove()
+
+              # Add it to the target paragraph
+              target_paragraph.push_child(span)
+
+            # Separate each merged paragraph by a Br element
+            if p_index < len(div) - 1:
+              target_paragraph.push_child(Br(isd))
+
+          div.remove()
+
+          if div_index < len(original_divs) - 1:
+            target_paragraph.push_child(Br(isd))
+
+        body.push_child(target_div)

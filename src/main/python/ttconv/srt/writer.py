@@ -33,6 +33,8 @@ import ttconv.model as model
 import ttconv.srt.style as style
 from ttconv.filters import Filter
 from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
+from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
+from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
 from ttconv.srt.paragraph import SrtParagraph
@@ -45,6 +47,8 @@ class SrtContext:
   """SRT writer context"""
 
   filters: List[Filter] = (
+    RegionsMergingFilter(),
+    ParagraphsMergingFilter(),
     SupportedStylePropertiesFilter({
       StyleProperties.FontWeight: [
         # Every values
