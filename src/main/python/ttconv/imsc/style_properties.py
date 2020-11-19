@@ -55,7 +55,7 @@ class StyleProperty:
     raise NotImplementedError
 
   @classmethod
-  def has_px(cls, attrib_value: typing.Any) -> bool:
+  def has_px(cls, _attrib_value: typing.Any) -> bool:
     return False
 
   @classmethod
