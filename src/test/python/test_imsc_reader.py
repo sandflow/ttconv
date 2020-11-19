@@ -39,13 +39,6 @@ import ttconv.imsc.namespaces as xml_ns
 
 class IMSCReaderTest(unittest.TestCase):
 
-  def setUp(self):
-    et.register_namespace("ttml", xml_ns.TTML)
-    et.register_namespace("ttp", xml_ns.TTP)
-    et.register_namespace("tts", xml_ns.TTS)
-    et.register_namespace("ittp", xml_ns.ITTP)
-    et.register_namespace("itts", xml_ns.ITTS)
-
   def test_reader_tt_element_not_root_element(self):
 
     xml_str = """<?xml version="1.0" encoding="UTF-8"?>
