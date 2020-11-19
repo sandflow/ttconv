@@ -603,16 +603,6 @@ class StylePropertyWriterTest(unittest.TestCase):
 
 class WriterWithTimeFormattingTest(unittest.TestCase):
 
-  def setUp(self):
-    if not os.path.exists('build'):
-      os.makedirs('build')
-    
-    et.register_namespace("ttml", xml_ns.TTML)
-    et.register_namespace("ttp", xml_ns.TTP)
-    et.register_namespace("tts", xml_ns.TTS)
-    et.register_namespace("ittp", xml_ns.ITTP)
-    et.register_namespace("itts", xml_ns.ITTS)
-
   def test_write_with_frames(self):
 
     doc = model.Document()
@@ -633,6 +623,10 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
 
     #self.pretty_print(tree_from_model.getroot())
+    self.assertEqual(
+      _get_time(imsc_styles.StyleProperties.LuminanceGain, 1.2),
+      "1.2"
+    )
 
 if __name__ == '__main__':
   unittest.main()
