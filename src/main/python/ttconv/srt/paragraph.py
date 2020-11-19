@@ -26,7 +26,7 @@
 """SRT paragraph"""
 
 from fractions import Fraction
-from typing import Optional
+from typing import Optional, Union
 
 from ttconv.srt.time_code import SrtTimeCode
 
@@ -48,13 +48,17 @@ class SrtParagraph:
     """Returns the paragraph begin time code"""
     return self._begin
 
-  def set_end(self, offset: Fraction):
+  def set_end(self, offset: Union[Fraction, float]):
     """Sets the paragraph end time code"""
     self._end = SrtTimeCode.from_time_offset(offset)
 
   def get_end(self) -> Optional[SrtTimeCode]:
     """Returns the paragraph end time code"""
     return self._end
+
+  def is_only_whitespace(self):
+    """Returns whether the paragraph tex contains only whitespace"""
+    return self._text.isspace()
 
   def append_text(self, text: str):
     """Appends text to the paragraph"""

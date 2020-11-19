@@ -147,6 +147,18 @@ class SrtContext:
     if is_isd_empty and self._paragraphs and self._paragraphs[-1].get_end() is None:
       self._paragraphs[-1].set_end(offset)
 
+  def finish(self):
+    """Checks and processes the last paragraph"""
+    if self._paragraphs and self._paragraphs[-1].get_end() is None:
+      if self._paragraphs[-1].is_only_whitespace():
+        # if the last paragraph contains only whitespace, remove it
+        self._paragraphs.pop()
+
+      else:
+        # set default end time code
+        LOGGER.warning("Set a default end value to paragraph (begin + 10s).")
+        self._paragraphs[-1].set_end(self._paragraphs[-1].get_begin().to_seconds() + 10.0)
+
   def __str__(self) -> str:
     return "\n".join(p.to_string() for p in self._paragraphs)
 
@@ -168,5 +180,7 @@ def from_model(doc: model.Document) -> str:
       srt_filter.process(isd)
 
     srt.add_isd(isd, offset)
+
+  srt.finish()
 
   return str(srt)

@@ -28,10 +28,13 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 
 import os
+import unittest
+import xml.etree.ElementTree as et
 from fractions import Fraction
 from pathlib import Path
 from unittest import TestCase
 
+import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 from ttconv.model import Document, Region, Body, Div, P, Span, Text
@@ -100,13 +103,51 @@ Pellentesque interdum lacinia sollicitudin.
 
     self.assertEqual(expected_srt, srt_from_model)
 
-  def test_imsc_1_test_suite(self):
+  def test_scc_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/scc"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".scc":
           with self.subTest(name):
-            scc_content = Path(os.path.join(root, filename)).read_text()
+            path = os.path.join(root, filename)
+            scc_content = Path(path).read_text()
             test_model = scc_reader.to_model(scc_content)
             srt_from_model = srt_writer.from_model(test_model)
-            self.assertTrue(len(srt_from_model) > 0)
+            self.assertTrue(len(srt_from_model) > 0, msg=f"Could not convert {path}")
+
+  def test_imsc_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            path = os.path.join(root, filename)
+            tree = et.parse(path)
+            test_model = imsc_reader.to_model(tree)
+            srt_from_model = srt_writer.from_model(test_model)
+            self.assertIsNotNone(srt_from_model, msg=f"Could not convert {path}")
+
+  @unittest.skip("Too long to process")
+  def test_imsc_1_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            path = os.path.join(root, filename)
+            tree = et.parse(path)
+            test_model = imsc_reader.to_model(tree)
+            srt_from_model = srt_writer.from_model(test_model)
+            self.assertIsNotNone(srt_from_model, msg=f"Could not convert {path}")
+
+  def test_imsc_1_2_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_2/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            path = os.path.join(root, filename)
+            tree = et.parse(path)
+            test_model = imsc_reader.to_model(tree)
+            srt_from_model = srt_writer.from_model(test_model)
+            self.assertIsNotNone(srt_from_model, msg=f"Could not convert {path}")
