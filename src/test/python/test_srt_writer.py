@@ -26,9 +26,13 @@
 """Unit tests for the SRT writer"""
 
 # pylint: disable=R0201,C0115,C0116,W0212
+
+import os
 from fractions import Fraction
+from pathlib import Path
 from unittest import TestCase
 
+import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 from ttconv.model import Document, Region, Body, Div, P, Span, Text
 
@@ -95,3 +99,14 @@ Pellentesque interdum lacinia sollicitudin.
     srt_from_model = srt_writer.from_model(doc)
 
     self.assertEqual(expected_srt, srt_from_model)
+
+  def test_imsc_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/scc"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".scc":
+          with self.subTest(name):
+            scc_content = Path(os.path.join(root, filename)).read_text()
+            test_model = scc_reader.to_model(scc_content)
+            srt_from_model = srt_writer.from_model(test_model)
+            self.assertTrue(len(srt_from_model) > 0)

@@ -76,8 +76,6 @@ class ParagraphsMergingFilterTest(TestCase):
 
     isd.put_region(r1)
 
-    isd.print_tree()
-
     regions = list(isd.iter_regions())
     self.assertEqual(1, len(regions))
 
@@ -94,8 +92,6 @@ class ParagraphsMergingFilterTest(TestCase):
     self.assertEqual(2, len(paragraphs_2))
 
     paragraphs_merging_filter.process(isd)
-
-    isd.print_tree()
 
     regions = list(isd.iter_regions())
     self.assertEqual(1, len(regions))
