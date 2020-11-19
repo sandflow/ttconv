@@ -24,9 +24,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """SCC disassembly functions"""
+import logging
 
 from ttconv.style_properties import ColorType, NamedColors, FontStyleType, TextDecorationType
 
+LOGGER = logging.getLogger(__name__)
 
 def get_color_disassembly(color: ColorType) -> str:
   """Get color disassembly code"""
@@ -35,28 +37,34 @@ def get_color_disassembly(color: ColorType) -> str:
   if color is None:
     return disassembly
 
-  if color is NamedColors.white.value:
+  rgb_color = color.components[:-1]
+  if rgb_color == NamedColors.white.value.components[:-1]:
     disassembly = "Wh"
-  elif color is NamedColors.green.value:
+  elif rgb_color == NamedColors.green.value.components[:-1]:
     disassembly = "Gr"
-  elif color is NamedColors.blue.value:
+  elif rgb_color == NamedColors.blue.value.components[:-1]:
     disassembly = "Bl"
-  elif color is NamedColors.cyan.value:
+  elif rgb_color == NamedColors.cyan.value.components[:-1]:
     disassembly = "Cy"
-  elif color is NamedColors.red.value:
+  elif rgb_color == NamedColors.red.value.components[:-1]:
     disassembly = "R"
-  elif color is NamedColors.yellow.value:
+  elif rgb_color == NamedColors.yellow.value.components[:-1]:
     disassembly = "Y"
-  elif color is NamedColors.magenta.value:
+  elif rgb_color == NamedColors.magenta.value.components[:-1]:
     disassembly = "Ma"
-  elif color is NamedColors.black.value:
+  elif rgb_color == NamedColors.black.value.components[:-1]:
     disassembly = "Bk"
-  elif color is NamedColors.transparent.value:
-    disassembly = "T"
 
   # Alpha channel
-  if color.components[3] == 0x88:
+  if color.components[3] == 0:
+    disassembly = "T"
+  elif color.components[3] == 0x88:
     disassembly += "S"
+  elif color.components[3] != 0xFF:
+    LOGGER.warning("Skip unsupported %s alpha level in disassembly format.", color.components[3])
+
+  if not disassembly:
+    LOGGER.warning("Unsupported '%s' color in disassembly format.", color.components)
 
   return disassembly
 

@@ -26,10 +26,10 @@
 '''IMSC writer'''
 
 import logging
+import xml.etree.ElementTree as et
 import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.model as model
-import xml.etree.ElementTree as et
 
 LOGGER = logging.getLogger(__name__)
 
