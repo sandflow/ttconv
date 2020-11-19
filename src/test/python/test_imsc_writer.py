@@ -38,6 +38,7 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.style_properties as imsc_styles
+from ttconv.scc.utils import get_extent_from_dimensions
 
 def _get_set_style(imsc_style_prop, model_value):
   e = et.Element("p")
@@ -336,6 +337,263 @@ class StylePropertyWriterTest(unittest.TestCase):
       "tbrl"
     )
 
+  def test_tts_writing_extent(self):
+    self.assertEqual(
+      _get_set_style(imsc_styles.StyleProperties.Extent,
+      get_extent_from_dimensions(123, 456, styles.LengthType.Units.px)),
+      '123px 456px'
+    )
+
+  def test_tts_writing_no_extent_when_no_body(self):
+
+    d = model.Document()
+
+    tree_from_model = imsc_writer.from_model(d)
+
+    extent = tree_from_model.getroot().attrib.get(
+      f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
     
+    self.assertEqual(extent, None)
+  
+  def test_tts_writing_no_extent_when_body_has_no_extents(self):
+
+    doc = model.Document()
+    body = model.Body(doc)
+    div = model.Div(doc)
+    p = model.P(doc)
+    span = model.Span(doc)
+    text = model.Text(doc)
+    text.set_text("asdf")
+    
+    span.push_child(text)
+    p.push_child(span)
+    div.push_child(p)
+    body.push_child(div)
+    doc.set_body(body)
+
+    tree_from_model = imsc_writer.from_model(doc)
+
+    extent = tree_from_model.getroot().attrib.get(
+      f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
+    
+    self.assertEqual(extent, None)
+
+  def test_tts_writing_extent_when_body_has_extents(self):
+
+    doc = model.Document()
+    body = model.Body(doc)
+    div = model.Div(doc)
+
+    div.set_style(styles.StyleProperties.Extent,
+      get_extent_from_dimensions(123, 456, styles.LengthType.Units.px))
+
+    p = model.P(doc)
+    span = model.Span(doc)
+    text = model.Text(doc)
+    text.set_text("asdf")
+    
+    span.push_child(text)
+    p.push_child(span)
+    div.push_child(p)
+    body.push_child(div)
+    doc.set_body(body)
+
+    r = model.Region("hello", doc)
+    r.set_style(styles.StyleProperties.Extent,
+      get_extent_from_dimensions(123, 456, styles.LengthType.Units.px))
+
+    doc.put_region(r)
+
+    tree_from_model = imsc_writer.from_model(doc)
+
+    extent = tree_from_model.getroot().attrib.get(
+      f"{{{imsc_styles.StyleProperties.Extent.ns}}}{imsc_styles.StyleProperties.Extent.local_name}")
+    
+    self.assertEqual(extent, '1920px 1080px')
+
+  def test_style_property_base_has_px(self):
+    prop = imsc_styles.StyleProperty
+    self.assertEqual(imsc_styles.StyleProperty.has_px(prop),
+      False
+    )
+
+  def test_style_property_Disparity_has_px(self):
+    prop = styles.LengthType(1, styles.LengthType.units.em)
+    self.assertEqual(imsc_styles.StyleProperties.Disparity.has_px(prop), False)
+
+    prop = styles.LengthType(1, styles.LengthType.units.px)
+    self.assertEqual(imsc_styles.StyleProperties.Disparity.has_px(prop), True)
+
+  def test_style_property_Extent_has_px(self):
+    prop = styles.ExtentType(styles.LengthType(1, styles.LengthType.units.px), 
+      styles.LengthType(1, styles.LengthType.units.em))
+    self.assertEqual(imsc_styles.StyleProperties.Extent.has_px(prop), True)
+
+    prop = styles.ExtentType(styles.LengthType(1, styles.LengthType.units.px), 
+      styles.LengthType(1, styles.LengthType.units.px))
+    self.assertEqual(imsc_styles.StyleProperties.Extent.has_px(prop), True)
+
+    prop = styles.ExtentType(styles.LengthType(1, styles.LengthType.units.em), 
+      styles.LengthType(1, styles.LengthType.units.px))
+    self.assertEqual(imsc_styles.StyleProperties.Extent.has_px(prop), True)
+
+    prop = styles.ExtentType(styles.LengthType(1, styles.LengthType.units.em), 
+      styles.LengthType(1, styles.LengthType.units.em))
+    self.assertEqual(imsc_styles.StyleProperties.Extent.has_px(prop), False)
+
+  def test_style_property_FontSize_has_px(self):
+    prop = styles.LengthType(1, styles.LengthType.units.em)
+    self.assertEqual(imsc_styles.StyleProperties.FontSize.has_px(prop), False)
+
+    prop = styles.LengthType(1, styles.LengthType.units.px)
+    self.assertEqual(imsc_styles.StyleProperties.FontSize.has_px(prop), True)
+
+  def test_style_property_LineHeight_has_px(self):
+    prop = styles.SpecialValues.normal
+    self.assertEqual(imsc_styles.StyleProperties.LineHeight.has_px(prop), False)
+
+    prop = styles.LengthType(1, styles.LengthType.units.em)
+    self.assertEqual(imsc_styles.StyleProperties.LineHeight.has_px(prop), False)
+
+    prop = styles.LengthType(1, styles.LengthType.units.px)
+    self.assertEqual(imsc_styles.StyleProperties.LineHeight.has_px(prop), True)
+
+  def test_style_property_Origin_has_px(self):
+    prop = styles.PositionType(styles.LengthType(1, styles.LengthType.units.px), 
+      styles.LengthType(1, styles.LengthType.units.em))
+    self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), True)
+
+    prop = styles.PositionType(styles.LengthType(1, styles.LengthType.units.px), 
+      styles.LengthType(1, styles.LengthType.units.px))
+    self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), True)
+
+    prop = styles.PositionType(styles.LengthType(1, styles.LengthType.units.em), 
+      styles.LengthType(1, styles.LengthType.units.px))
+    self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), True)
+
+    prop = styles.PositionType(styles.LengthType(1, styles.LengthType.units.em), 
+      styles.LengthType(1, styles.LengthType.units.em))
+    self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), False)
+
+  def test_style_property_Padding_has_px(self):
+    prop = styles.PaddingType(
+      before = styles.LengthType(10.1, styles.LengthType.units.px),
+      end = styles.LengthType(20.2, styles.LengthType.units.em),
+      after = styles.LengthType(30.3, styles.LengthType.units.em),
+      start = styles.LengthType(40.4, styles.LengthType.units.em)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.Padding.has_px(prop), True)
+
+    prop = styles.PaddingType(
+      before = styles.LengthType(10.1, styles.LengthType.units.em),
+      end = styles.LengthType(20.2, styles.LengthType.units.px),
+      after = styles.LengthType(30.3, styles.LengthType.units.em),
+      start = styles.LengthType(40.4, styles.LengthType.units.em)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.Padding.has_px(prop), True)
+
+    prop = styles.PaddingType(
+      before = styles.LengthType(10.1, styles.LengthType.units.em),
+      end = styles.LengthType(20.2, styles.LengthType.units.em),
+      after = styles.LengthType(30.3, styles.LengthType.units.px),
+      start = styles.LengthType(40.4, styles.LengthType.units.em)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.Padding.has_px(prop), True)
+
+    prop = styles.PaddingType(
+      before = styles.LengthType(10.1, styles.LengthType.units.em),
+      end = styles.LengthType(20.2, styles.LengthType.units.em),
+      after = styles.LengthType(30.3, styles.LengthType.units.em),
+      start = styles.LengthType(40.4, styles.LengthType.units.px)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.Padding.has_px(prop), True)
+
+    prop = styles.PaddingType(
+      before = styles.LengthType(10.1, styles.LengthType.units.em),
+      end = styles.LengthType(20.2, styles.LengthType.units.em),
+      after = styles.LengthType(30.3, styles.LengthType.units.em),
+      start = styles.LengthType(40.4, styles.LengthType.units.em)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.Padding.has_px(prop), False)
+
+  def test_style_property_RubyReserve_has_px(self):
+    prop = styles.RubyReserveType(
+      position=styles.RubyReserveType.Position.both,
+      length=styles.LengthType(value=1.2, units=styles.LengthType.Units.px)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.RubyReserve.has_px(prop), True)
+
+    prop = styles.RubyReserveType(
+      position=styles.RubyReserveType.Position.both,
+      length=styles.LengthType(value=1.2, units=styles.LengthType.Units.em)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.RubyReserve.has_px(prop), False)
+
+
+  def test_style_property_TextOutline_has_px(self):
+    prop = styles.SpecialValues.none
+    self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), False)
+
+    prop = styles.TextOutlineType(
+      color=styles.NamedColors.red.value,
+      thickness=styles.LengthType(value="5", units=styles.LengthType.Units.em)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), False)
+
+    prop = styles.TextOutlineType(
+      color=styles.NamedColors.red.value,
+      thickness=styles.LengthType(value="5", units=styles.LengthType.Units.px)
+    )
+    self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), True)
+    
+  def test_style_property_TextShadow_has_px(self):
+    prop = styles.TextShadowType(
+      (
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+        ),
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          color=styles.NamedColors.red.value
+        )
+      )
+    )
+    self.assertEqual(imsc_styles.StyleProperties.TextShadow.has_px(prop), False)
+
+    prop = styles.TextShadowType(
+      (
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.px),
+          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+        ),
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          color=styles.NamedColors.red.value
+        )
+      )
+    )
+    self.assertEqual(imsc_styles.StyleProperties.TextShadow.has_px(prop), True)
+
+    prop = styles.TextShadowType(
+      (
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          y_offset=styles.LengthType(value="1.2", units=styles.LengthType.Units.em)
+        ),
+        styles.TextShadowType.Shadow(
+          x_offset=styles.LengthType(value="0.5", units=styles.LengthType.Units.px),
+          y_offset=styles.LengthType(value="0.7", units=styles.LengthType.Units.em),
+          blur_radius=styles.LengthType(value="1", units=styles.LengthType.Units.em),
+          color=styles.NamedColors.red.value
+        )
+      )
+    )
+    self.assertEqual(imsc_styles.StyleProperties.TextShadow.has_px(prop), True)
+
 if __name__ == '__main__':
   unittest.main()
