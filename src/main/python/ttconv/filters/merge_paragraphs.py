@@ -51,6 +51,7 @@ class ParagraphsMergingFilter(Filter):
 
   def process(self, isd: ISD):
     """Merges the ISD document paragraphs for each regions"""
+    LOGGER.debug("Apply paragraphs merging filter to ISD.")
 
     for region in isd.iter_regions():
 

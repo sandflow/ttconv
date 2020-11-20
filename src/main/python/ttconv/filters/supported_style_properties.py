@@ -25,6 +25,7 @@
 
 """Filter for style properties supported by the output"""
 
+import logging
 from typing import Dict, List, Type
 
 from ttconv.filters import Filter
@@ -32,13 +33,16 @@ from ttconv.isd import ISD
 from ttconv.model import ContentElement
 from ttconv.style_properties import StyleProperty
 
+LOGGER = logging.getLogger(__name__)
+
+
 class SupportedStylePropertiesFilter(Filter):
   """Filter that remove unsupported style properties"""
 
   def __init__(self, supported_style_properties: Dict[Type[StyleProperty], List]):
     self.supported_style_properties = supported_style_properties
 
-  def process_element(self, element: ContentElement):
+  def _process_element(self, element: ContentElement):
     """Filter ISD element style properties"""
 
     element_styles = list(element.iter_styles())
@@ -54,9 +58,11 @@ class SupportedStylePropertiesFilter(Filter):
       element.set_style(style_prop, None)
 
     for child in element:
-      self.process_element(child)
+      self._process_element(child)
 
   def process(self, isd: ISD):
     """Filter ISD document style properties"""
+    LOGGER.debug("Filter default style properties from ISD.")
+
     for region in isd.iter_regions():
-      self.process_element(region)
+      self._process_element(region)

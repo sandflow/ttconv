@@ -53,7 +53,7 @@ class SupportedStylePropertiesFilterTest(TestCase):
     self.assertEqual(StyleProperties.Color.make_initial_value(), p.get_style(StyleProperties.Color))
     self.assertEqual(StyleProperties.Extent.make_initial_value(), p.get_style(StyleProperties.Extent))
 
-    supported_style_properties.process_element(p)
+    supported_style_properties._process_element(p)
 
     self.assertIsNone(p.get_style(StyleProperties.Color))
     self.assertEqual(StyleProperties.Extent.make_initial_value(), p.get_style(StyleProperties.Extent))
@@ -61,7 +61,7 @@ class SupportedStylePropertiesFilterTest(TestCase):
 
     p.set_style(StyleProperties.Color, NamedColors.red.value)
 
-    supported_style_properties.process_element(p)
+    supported_style_properties._process_element(p)
 
     self.assertEqual(2, len(p._styles))
     self.assertEqual(NamedColors.red.value, p.get_style(StyleProperties.Color))

@@ -132,7 +132,10 @@ class SrtContext:
       self._paragraphs[-1].append_text(element.get_text())
 
   def add_isd(self, isd, offset: Fraction):
-    """Converts and append ISD content to SRT content"""
+    """Converts and appends ISD content to SRT content"""
+
+    LOGGER.debug("Append ISD from %ss offset to SRT content.", float(offset))
+
     is_isd_empty = True
 
     for region in isd.iter_regions():
@@ -149,6 +152,9 @@ class SrtContext:
 
   def finish(self):
     """Checks and processes the last paragraph"""
+
+    LOGGER.debug("Check and process the last SRT paragraph.")
+
     if self._paragraphs and self._paragraphs[-1].get_end() is None:
       if self._paragraphs[-1].is_only_whitespace():
         # if the last paragraph contains only whitespace, remove it

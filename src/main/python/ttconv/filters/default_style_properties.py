@@ -25,12 +25,15 @@
 
 """Style properties default values filter"""
 
+import logging
 from typing import Dict, Type, Any
 
 from ttconv.filters import Filter
 from ttconv.isd import ISD
 from ttconv.model import ContentElement
 from ttconv.style_properties import StyleProperty
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DefaultStylePropertyValuesFilter(Filter):
@@ -39,7 +42,7 @@ class DefaultStylePropertyValuesFilter(Filter):
   def __init__(self, style_property_default_values: Dict[Type[StyleProperty], Any]):
     self.style_property_default_values = style_property_default_values
 
-  def process_element(self, element: ContentElement):
+  def _process_element(self, element: ContentElement):
     """Filter ISD element style properties"""
 
     element_styles = list(element.iter_styles())
@@ -62,9 +65,11 @@ class DefaultStylePropertyValuesFilter(Filter):
         element.set_style(style_prop, None)
 
     for child in element:
-      self.process_element(child)
+      self._process_element(child)
 
   def process(self, isd: ISD):
     """Filter ISD document style properties"""
+    LOGGER.debug("Apply default style properties filter to ISD.")
+
     for region in isd.iter_regions():
-      self.process_element(region)
+      self._process_element(region)

@@ -39,6 +39,7 @@ class RegionsMergingFilter(Filter):
 
   def process(self, isd: ISD):
     """Merges the ISD document regions"""
+    LOGGER.debug("Apply regions merging filter to ISD.")
 
     original_regions = list(isd.iter_regions())
 

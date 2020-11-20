@@ -49,7 +49,7 @@ class DefaultStylesFilterTest(TestCase):
     self.assertEqual(len(StyleProperties.ALL), len(p._styles))
     self.assertEqual(StyleProperties.Color.make_initial_value(), p.get_style(StyleProperties.Color))
 
-    default_style_value_filter.process_element(p)
+    default_style_value_filter._process_element(p)
 
     self.assertIsNone(p.get_style(StyleProperties.Color))
     self.assertEqual(len(StyleProperties.ALL) - 1, len(p._styles))
