@@ -38,6 +38,10 @@ import ttconv.style_properties as styles
 class ISD(model.Root):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
   of a `model.Document` taken at a given point in time
+
+  # Constants
+
+  `DEFAULT_REGION_ID`: `id` value of the default region
   '''
 
   class Region(model.Region):
@@ -53,6 +57,8 @@ class ISD(model.Root):
         raise ValueError("ISD regions must contain at most one body instance")
 
       model.ContentElement.push_child(self, child)
+
+  DEFAULT_REGION_ID = "default_region"
 
   def __init__(self, doc: typing.Optional[model.Document]):
     super().__init__()
@@ -170,11 +176,18 @@ class ISD(model.Root):
     '''
     isd = ISD(doc)
 
-    for region in doc.iter_regions():
-      root_region = ISD._process_element(isd, offset, region, None, None, None, None, region)
+    regions = tuple(doc.iter_regions())
 
-      if root_region is not None:
-        isd.put_region(root_region)
+    if regions:
+      for region in regions:
+        isd_region = ISD._process_element(isd, offset, region, None, None, None, None, region)
+        if isd_region is not None:
+          isd.put_region(isd_region)
+    else:
+      default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
+      isd_region = ISD._process_element(isd, offset, None, None, None, None, None, default_region)
+      if isd_region is not None:
+        isd.put_region(isd_region)
 
     return isd
 
