@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 import unittest
 from numbers import Number
-from typing import Union
+from typing import Union, Type
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
 from ttconv.scc.reader import SccWord, SccLine, to_model
@@ -148,7 +148,7 @@ class SccReaderTest(unittest.TestCase):
       else:
         self.assertEqual(expected_child, Br)
 
-  def check_element_style(self, elem: ContentElement, style_property: StyleProperty, expected_value):
+  def check_element_style(self, elem: ContentElement, style_property: Type[StyleProperty], expected_value):
     self.assertEqual(expected_value, elem.get_style(style_property))
 
   def check_element_origin(self, elem: ContentElement, expected_x_origin: Union[int, float, Number],
