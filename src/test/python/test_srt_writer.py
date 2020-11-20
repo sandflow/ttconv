@@ -37,7 +37,7 @@ from unittest import TestCase
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
-from ttconv.model import Document, Region, Body, Div, P, Span, Text
+from ttconv.model import Document, Region, Body, Div, P, Span, Text, ContentElement
 
 
 class SrtWriterTest(TestCase):
@@ -114,6 +114,7 @@ Pellentesque interdum lacinia sollicitudin.
             test_model = scc_reader.to_model(scc_content)
             srt_from_model = srt_writer.from_model(test_model)
             self.assertTrue(len(srt_from_model) > 0, msg=f"Could not convert {path}")
+            self._check_output_srt(test_model, srt_from_model, path)
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
@@ -125,7 +126,7 @@ Pellentesque interdum lacinia sollicitudin.
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
             srt_from_model = srt_writer.from_model(test_model)
-            self.assertIsNotNone(srt_from_model, msg=f"Could not convert {path}")
+            self._check_output_srt(test_model, srt_from_model, path)
 
   @unittest.skip("Too long to process")
   def test_imsc_1_1_test_suite(self):
@@ -138,7 +139,7 @@ Pellentesque interdum lacinia sollicitudin.
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
             srt_from_model = srt_writer.from_model(test_model)
-            self.assertIsNotNone(srt_from_model, msg=f"Could not convert {path}")
+            self._check_output_srt(test_model, srt_from_model, path)
 
   def test_imsc_1_2_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_2/ttml"):
@@ -150,4 +151,39 @@ Pellentesque interdum lacinia sollicitudin.
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
             srt_from_model = srt_writer.from_model(test_model)
-            self.assertIsNotNone(srt_from_model, msg=f"Could not convert {path}")
+            self._check_output_srt(test_model, srt_from_model, path)
+
+  #
+  # Utility functions
+  #
+
+  def _has_child_paragraphs(self, element: ContentElement) -> bool:
+    has_paragraphs = False
+
+    for child in element:
+      if isinstance(child, P):
+        return True
+      elif isinstance(child, Div):
+        has_paragraphs = self._has_child_paragraphs(child)
+
+    return has_paragraphs
+
+  def _has_document_paragraphs(self, doc: Document) -> bool:
+    body = doc.get_body()
+
+    if body is None:
+      return False
+
+    paragraphs = False
+
+    for child in body:
+      if self._has_child_paragraphs(child):
+        return True
+
+    return paragraphs
+
+  def _check_output_srt(self, model: Document, srt: str, path: str):
+    if self._has_document_paragraphs(model):
+      self.assertTrue(len(srt) > 0, msg=f"Could not convert {path}")
+    else:
+      self.assertEqual(0, len(srt), msg=f"Could not convert {path}")

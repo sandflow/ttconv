@@ -29,13 +29,25 @@ import logging
 
 from ttconv.filters import Filter
 from ttconv.isd import ISD
-from ttconv.model import Div, P, Br
+from ttconv.model import Div, P, Br, ContentElement
 
 LOGGER = logging.getLogger(__name__)
 
 
 class ParagraphsMergingFilter(Filter):
   """Filter for merging ISD document paragraphs per region into a single paragraph"""
+
+  def _get_paragraphs(self, element: ContentElement):
+    """Retrieves child paragraphs"""
+    paragraphs = []
+
+    for child in element:
+      if isinstance(child, Div):
+        paragraphs = paragraphs + self._get_paragraphs(child)
+      elif isinstance(child, P):
+        paragraphs.append(child)
+
+    return paragraphs
 
   def process(self, isd: ISD):
     """Merges the ISD document paragraphs for each regions"""
@@ -50,33 +62,28 @@ class ParagraphsMergingFilter(Filter):
 
         original_divs = list(body)
 
-        nb_paragraphs_in_body = 0
+        paragraphs = []
         for div in original_divs:
-          nb_paragraphs_in_body += len(div)
+          paragraphs += self._get_paragraphs(div)
 
-        if nb_paragraphs_in_body <= 1:
+        if len(paragraphs) <= 1:
           continue
 
-        for (div_index, div) in enumerate(original_divs):
+        LOGGER.warning("Merging ISD paragraphs.")
 
-          LOGGER.warning("Merging ISD paragraphs.")
-
-          for (p_index, p) in enumerate(div):
-
-            for span in list(p):
-              # Remove child from its parent body
-              span.remove()
-
-              # Add it to the target paragraph
-              target_paragraph.push_child(span)
-
-            # Separate each merged paragraph by a Br element
-            if p_index < len(div) - 1:
-              target_paragraph.push_child(Br(isd))
-
+        for div in original_divs:
           div.remove()
 
-          if div_index < len(original_divs) - 1:
+        for (index, p) in enumerate(paragraphs):
+          for span in list(p):
+            # Remove child from its parent body
+            span.remove()
+
+            # Add it to the target paragraph
+            target_paragraph.push_child(span)
+
+          # Separate each merged paragraph by a Br element
+          if index < len(paragraphs) - 1:
             target_paragraph.push_child(Br(isd))
 
         body.push_child(target_div)
