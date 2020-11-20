@@ -35,8 +35,26 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
+import ttconv.imsc.namespaces as xml_ns
 
 class IMSCReaderTest(unittest.TestCase):
+
+  def test_reader_tt_element_not_root_element(self):
+
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+      <not_tt xml:lang="en"
+          xmlns="http://www.w3.org/ns/ttml"
+          xmlns:ttm="http://www.w3.org/ns/ttml#metadata" 
+          xmlns:tts="http://www.w3.org/ns/ttml#styling"
+          xmlns:ttp="http://www.w3.org/ns/ttml#parameter" 
+          xmlns:ittp="http://www.w3.org/ns/ttml/profile/imsc1#parameter"
+          ittp:activeArea="50% 50% 80% 80%"
+          tts:extent="640px 480px"
+          ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text">
+      </not_tt>"""
+
+    tt_not_root = et.ElementTree(et.fromstring(xml_str))
+    self.assertIsNone(imsc_reader.to_model(tt_not_root))
 
   def test_body_only(self):
     tree = et.parse('src/test/resources/ttml/body_only.ttml')

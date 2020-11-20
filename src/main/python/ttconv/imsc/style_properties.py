@@ -55,6 +55,10 @@ class StyleProperty:
     raise NotImplementedError
 
   @classmethod
+  def has_px(cls, _attrib_value: typing.Any) -> bool:
+    return False
+
+  @classmethod
   def extract(cls, context: StyleParsingContext, xml_attrib: str):
     '''Converts an IMSC style property to a data model value'''
     raise NotImplementedError
@@ -143,6 +147,10 @@ class StyleProperties:
     model_prop = styles.StyleProperties.Disparity
 
     @classmethod
+    def has_px(cls, attrib_value: styles.LengthType) -> bool:
+      return attrib_value.units == styles.LengthType.Units.px 
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return StyleProperties.ttml_length_to_model(context, xml_attrib)
 
@@ -193,6 +201,11 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "extent"
     model_prop = styles.StyleProperties.Extent
+
+    @classmethod
+    def has_px(cls, attrib_value: styles.ExtentType) -> bool:
+      return attrib_value.height.units == styles.LengthType.Units.px or \
+        attrib_value.width.units == styles.LengthType.Units.px
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
@@ -266,6 +279,10 @@ class StyleProperties:
     model_prop = styles.StyleProperties.FontSize
 
     @classmethod
+    def has_px(cls, attrib_value: styles.LengthType) -> bool:
+      return attrib_value.units == styles.LengthType.Units.px 
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       return StyleProperties.ttml_length_to_model(context, xml_attrib)
 
@@ -315,6 +332,13 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "lineHeight"
     model_prop = styles.StyleProperties.LineHeight
+
+    @classmethod
+    def has_px(cls, attrib_value: styles.LengthType) -> bool:
+      if attrib_value is not styles.SpecialValues.normal:
+        return attrib_value.units == styles.LengthType.Units.px
+
+      return False
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
@@ -413,6 +437,11 @@ class StyleProperties:
     model_prop = styles.StyleProperties.Origin
 
     @classmethod
+    def has_px(cls, attrib_value: styles.PositionType) -> bool:
+      return attrib_value.x.units == styles.LengthType.Units.px or \
+        attrib_value.y.units == styles.LengthType.Units.px
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
 
       if xml_attrib == "auto":
@@ -465,6 +494,13 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "padding"
     model_prop = styles.StyleProperties.Padding
+
+    @classmethod
+    def has_px(cls, attrib_value: styles.PaddingType) -> bool:
+      return attrib_value.after.units == styles.LengthType.Units.px or \
+        attrib_value.before.units == styles.LengthType.Units.px or \
+        attrib_value.start.units == styles.LengthType.Units.px or \
+        attrib_value.end.units == styles.LengthType.Units.px
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
@@ -594,6 +630,10 @@ class StyleProperties:
     model_prop = styles.StyleProperties.RubyReserve
 
     @classmethod
+    def has_px(cls, attrib_value: styles.RubyReserveType) -> bool:
+      return attrib_value.length.units == styles.LengthType.Units.px
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
       
       if xml_attrib == "none":
@@ -700,6 +740,9 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "textDecoration"
     model_prop = styles.StyleProperties.TextDecoration
+
+
+
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
@@ -853,6 +896,13 @@ class StyleProperties:
     model_prop = styles.StyleProperties.TextOutline
 
     @classmethod
+    def has_px(cls, attrib_value: styles.TextOutlineType) -> bool:
+      if attrib_value is not styles.SpecialValues.none:
+        return attrib_value.thickness.units == styles.LengthType.Units.px
+
+      return False
+
+    @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
       
       if xml_attrib == "none":
@@ -897,6 +947,19 @@ class StyleProperties:
     ns = xml_ns.TTS
     local_name = "textShadow"
     model_prop = styles.StyleProperties.TextShadow
+
+    @classmethod
+    def has_px(cls, attrib_value: styles.TextShadowType) -> bool:
+
+      for shadow in attrib_value.shadows:
+        if shadow.x_offset.units == styles.LengthType.Units.px or \
+          shadow.y_offset.units == styles.LengthType.Units.px:
+          return True
+        if shadow.blur_radius is not None:
+          if shadow.blur_radius.units == styles.LengthType.Units.px:
+            return True
+      
+      return False
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:

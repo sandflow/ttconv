@@ -564,5 +564,39 @@ class Document1Test(unittest.TestCase):
 
     self.assertEqual(len(isd), 0)
 
+
+class DefaultRegion(unittest.TestCase):
+
+  def test_default_region(self):
+
+    doc = model.Document()
+
+    b = model.Body(doc)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    span1.push_child(model.Text(doc, "hello"))
+    p1.push_child(span1)
+
+    isd = ISD.from_model(doc, 0)
+
+    self.assertEqual(len(isd), 1)
+
+    regions = list(isd.iter_regions())
+
+    self.assertEqual(regions[0].get_id(), ISD.DEFAULT_REGION_ID)
+
+    p = regions[0][0][0][0]
+
+    self.assertEqual(len(p), 1)
+
+    self.assertEqual(p[0][0].get_text(), "hello")
+
 if __name__ == '__main__':
   unittest.main()

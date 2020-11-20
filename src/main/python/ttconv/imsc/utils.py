@@ -65,12 +65,12 @@ def parse_color(attr_value: str) -> styles.ColorType:
   if m:
 
     return styles.ColorType(
-      [
+      (
         int(m.group(1), 16),
         int(m.group(2), 16),
         int(m.group(3), 16),
         int(m.group(4), 16) if m.group(4) else 255
-      ]
+      )
     )
 
   m = _DEC_COLOR_RE.match(attr_value)
@@ -78,12 +78,12 @@ def parse_color(attr_value: str) -> styles.ColorType:
   if m:
 
     return styles.ColorType(
-      [
+      (
         int(m.group(1)),
         int(m.group(2)),
         int(m.group(3)),
         255
-      ]
+      )
     )
     
   m = _DEC_COLORA_RE.match(attr_value)
@@ -91,12 +91,12 @@ def parse_color(attr_value: str) -> styles.ColorType:
   if m:
 
     return styles.ColorType(
-      [
+      (
         int(m.group(1)),
         int(m.group(2)),
         int(m.group(3)),
         int(m.group(4))
-      ]
+      )
     )
 
   raise ValueError("Bad Syntax")

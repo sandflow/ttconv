@@ -29,10 +29,66 @@
 
 import unittest
 
+from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.reader import to_disassembly
+from ttconv.style_properties import NamedColors, ColorType, FontStyleType, TextDecorationType
 
 
 class SccReaderTest(unittest.TestCase):
+
+  def test_scc_disassembly_color(self):
+    disassembly_colors = {
+      NamedColors.white: "Wh",
+      NamedColors.green: "Gr",
+      NamedColors.blue: "Bl",
+      NamedColors.cyan: "Cy",
+      NamedColors.aqua: "Cy",
+      NamedColors.red: "R",
+      NamedColors.yellow: "Y",
+      NamedColors.magenta: "Ma",
+      NamedColors.fuchsia: "Ma",
+      NamedColors.black: "Bk",
+      NamedColors.transparent: "T",
+      NamedColors.silver: "",
+      NamedColors.gray: "",
+      NamedColors.maroon: "",
+      NamedColors.purple: "",
+      NamedColors.lime: "",
+      NamedColors.olive: "",
+      NamedColors.navy: "",
+      NamedColors.teal: ""
+    }
+
+    for (color, code) in disassembly_colors.items():
+      self.assertEqual(code, get_color_disassembly(color.value))
+
+    self.assertEqual("BlS", get_color_disassembly(ColorType((0, 0, 255, 136))))
+    self.assertEqual("Bl", get_color_disassembly(ColorType((0, 0, 255, 128))))
+    self.assertEqual("Bl", get_color_disassembly(ColorType((0, 0, 255, 145))))
+    self.assertEqual("T", get_color_disassembly(ColorType((0, 0, 255, 0))))
+
+  def test_scc_disassembly_font_style(self):
+    disassembly_font_style = {
+      FontStyleType.normal: "",
+      FontStyleType.oblique: "",
+      FontStyleType.italic: "I",
+    }
+
+    for (font_style, code) in disassembly_font_style.items():
+      self.assertEqual(code, get_font_style_disassembly(font_style))
+
+  def test_scc_disassembly_text_decoration(self):
+    disassembly_text_decoration = {
+      TextDecorationType(underline=True): "U",
+      TextDecorationType(underline=False): "",
+      TextDecorationType(underline=None): "",
+      TextDecorationType(overline=True): "",
+      TextDecorationType(line_through=True): "",
+      None: ""
+    }
+
+    for (text_decoration, code) in disassembly_text_decoration.items():
+      self.assertEqual(code, get_text_decoration_disassembly(text_decoration))
 
   def test_scc_disassembly(self):
     scc_content = """Scenarist_SCC V1.0
