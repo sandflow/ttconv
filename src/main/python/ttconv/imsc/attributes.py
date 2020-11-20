@@ -297,6 +297,11 @@ class TemporalAttributeParsingContext:
   frame_rate: Fraction = Fraction(30, 1)
   tick_rate: int = 1
 
+@dataclass
+class TemporalAttributeWritingContext:
+  frame_rate: Fraction = Fraction(30, 1)
+  tick_rate: int = 1
+
 class BeginAttribute:
   '''begin attribute
   '''
@@ -320,7 +325,7 @@ class BeginAttribute:
       return None
 
   @staticmethod
-  def set(ttml_element, begin):
+  def set(context: TemporalAttributeWritingContext, ttml_element, begin:Fraction):
     value = begin.numerator / begin.denominator
     ttml_element.set(BeginAttribute.qn, f"{value}s")
 
@@ -348,7 +353,7 @@ class EndAttribute:
       return None
 
   @staticmethod
-  def set(ttml_element, end):
+  def set(context: TemporalAttributeWritingContext, ttml_element, end:Fraction):
     value = end.numerator / end.denominator
     ttml_element.set(EndAttribute.qn, f"{value}s")
 
@@ -374,8 +379,7 @@ class DurAttribute:
 
   @staticmethod
   def set(ttml_element, dur):
-    ttml_element.set(DurAttribute.qn, dur)
-
+    raise NotImplementedError
 
 class TimeContainer(Enum):
   par = "par"

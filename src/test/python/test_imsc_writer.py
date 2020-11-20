@@ -30,6 +30,7 @@
 import os
 import unittest
 import logging
+from fractions import Fraction
 import xml.etree.ElementTree as et
 import xml.dom.minidom as minidom
 import ttconv.imsc.reader as imsc_reader
@@ -604,7 +605,6 @@ class StylePropertyWriterTest(unittest.TestCase):
 class WriterWithTimeFormattingTest(unittest.TestCase):
 
   def test_write_with_frames(self):
-
     doc = model.Document()
     body = model.Body(doc)
     div = model.Div(doc)
@@ -620,13 +620,14 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     doc.set_body(body)
 
     # write the document out to a file
-    imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
+    imsc_writer.from_model(doc)
+    imsc_writer.from_model(doc, Fraction(30000, 1001))
 
     #self.pretty_print(tree_from_model.getroot())
-    self.assertEqual(
-      _get_time(imsc_styles.StyleProperties.LuminanceGain, 1.2),
-      "1.2"
-    )
+    #self.assertEqual(
+    #  _get_time(imsc_styles.StyleProperties.LuminanceGain, 1.2),
+    #  "1.2"
+    #)
 
 if __name__ == '__main__':
   unittest.main()
