@@ -345,7 +345,7 @@ class ISD(model.Root):
 
     # prune element is display is "none"
 
-    if isd_element.get_style(styles.StyleProperties.Display) is styles.SpecialValues.none:
+    if isd_element.get_style(styles.StyleProperties.Display) is styles.DisplayType.none:
       return None
 
     # process children of the element

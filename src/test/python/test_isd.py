@@ -37,6 +37,15 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.isd import ISD
 
+def _print_isd_node(element, level):
+  if isinstance(element, model.Text):
+    print('"', element.get_text(), '"')
+  else:
+    print(" " * 2 * level, element.__class__.__name__)
+
+  for child in element:
+    _print_isd_node(child, level + 1)
+
 class Document0Test(unittest.TestCase):
 
   '''
@@ -211,6 +220,23 @@ class Document0Test(unittest.TestCase):
 
 
 class IMSCTestSuiteTest(unittest.TestCase):
+
+  def test_display_none_handling(self):
+    xml_doc = et.parse("src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/MediaParTiming002.ttml")
+    doc = imsc_reader.to_model(xml_doc)
+    isd = ISD.from_model(doc, 0)
+
+    regions = list(isd.iter_regions())
+
+    # single default region
+
+    self.assertEqual(len(regions), 1)
+
+    # no content
+
+    self.assertEqual(len(regions[0]), 0)
+
+
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
