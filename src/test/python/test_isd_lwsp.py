@@ -68,5 +68,24 @@ class LSWPTests(unittest.TestCase):
 
     self.assertEqual(spans[3][0].get_text(), "est")
 
+  def test_lwsp_preserve(self):
+    tree = et.parse('src/test/resources/ttml/lwsp_preserve.ttml')
+
+    doc = imsc_reader.to_model(tree)
+
+    isd = ISD.from_model(doc, 0)
+
+    p0 = list(isd.iter_regions())[0][0][0][0]
+
+    spans = list(p0)
+
+    self.assertEqual(len(spans), 3)
+
+    self.assertEqual(spans[0][0].get_text(), "hello")
+
+    self.assertEqual(spans[1][0].get_text(), " my \nname ")
+
+    self.assertEqual(spans[2][0].get_text(), "is Mathilda")
+
 if __name__ == '__main__':
   unittest.main()

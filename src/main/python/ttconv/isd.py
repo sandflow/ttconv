@@ -443,7 +443,7 @@ def _process_lwsp(text_node_list: typing.List[typing.Union[model.Text, model.Br]
 
   for i, node in enumerate(text_node_list):
 
-    if isinstance(node, model.Br) or node.get_space() is model.WhiteSpaceHandling.PRESERVE:
+    if isinstance(node, model.Br) or node.parent().get_space() is model.WhiteSpaceHandling.PRESERVE:
       continue
 
     trimmed_text = re.sub(r"[\t\r\n ]+", " ", node.get_text())
