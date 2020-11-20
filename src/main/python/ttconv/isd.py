@@ -425,7 +425,7 @@ def _construct_text_list(element: model.ContentElement, text_node_list: typing.L
 def _process_lwsp(text_node_list: typing.List[typing.Union[model.Text, model.Br]]):
   '''Processes LWSP according to the space property'''
 
-  def is_prev_char_LWSP(prev_element):
+  def _is_prev_char_lwsp(prev_element):
     if isinstance(prev_element, model.Br):
       return True
       
@@ -433,7 +433,7 @@ def _process_lwsp(text_node_list: typing.List[typing.Union[model.Text, model.Br]
 
     return len(prev_text) > 0 and prev_text[-1] in ("\t", "\r", "\n", " ")
 
-  def is_next_char_LWSP(next_element):
+  def _is_next_char_lwsp(next_element):
     if isinstance(next_element, model.Br):
       return True
       
@@ -450,13 +450,13 @@ def _process_lwsp(text_node_list: typing.List[typing.Union[model.Text, model.Br]
 
     if len(trimmed_text) > 0 and trimmed_text[0] == " ":
 
-      if i == 0 or is_prev_char_LWSP(text_node_list[i - 1]):
+      if i == 0 or _is_prev_char_lwsp(text_node_list[i - 1]):
 
         trimmed_text = trimmed_text[1:]
 
     if len(trimmed_text) > 0 and trimmed_text[-1] == " ":
 
-      if i == (len(text_node_list) - 1) or is_next_char_LWSP(text_node_list[i + 1]):
+      if i == (len(text_node_list) - 1) or _is_prev_char_lwsp(text_node_list[i + 1]):
 
         trimmed_text = trimmed_text[:-1]
 
