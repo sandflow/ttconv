@@ -436,31 +436,58 @@ def _process_lwsp(text_node_list: typing.List[typing.Union[model.Text, model.Br]
   def _is_next_char_lwsp(next_element):
     if isinstance(next_element, model.Br):
       return True
-      
+
     next_text = next_element.get_text()
 
-    return len(next_text) > 0 and next_text[0] in ("\t", "\r", "\n", " ")
+    return len(next_text) > 0 and next_text[0] in ("\r", "\n")
 
-  for i, node in enumerate(text_node_list):
+
+  elist = list(text_node_list)
+
+  # first pass: collapse spaces and remove leading LWSPs
+
+  i = 0
+
+  while i < len(elist):
+
+    node = elist[i]
 
     if isinstance(node, model.Br) or node.parent().get_space() is model.WhiteSpaceHandling.PRESERVE:
+      i += 1
       continue
 
     trimmed_text = re.sub(r"[\t\r\n ]+", " ", node.get_text())
 
     if len(trimmed_text) > 0 and trimmed_text[0] == " ":
 
-      if i == 0 or _is_prev_char_lwsp(text_node_list[i - 1]):
+      if i == 0 or _is_prev_char_lwsp(elist[i - 1]):
 
         trimmed_text = trimmed_text[1:]
 
-    if len(trimmed_text) > 0 and trimmed_text[-1] == " ":
-
-      if i == (len(text_node_list) - 1) or _is_prev_char_lwsp(text_node_list[i + 1]):
-
-        trimmed_text = trimmed_text[:-1]
-
     node.set_text(trimmed_text)
+
+    if len(trimmed_text) == 0:
+      del elist[i]
+    else:
+      i += 1
+
+  # second pass: remove trailing LWSPs
+
+  for i, node in enumerate(elist):
+
+    if isinstance(node, model.Br) or node.parent().get_space() is model.WhiteSpaceHandling.PRESERVE:
+      i += 1
+      continue
+
+    node_text = node.get_text()
+
+    if node_text[-1] == " ":
+
+      if i == (len(elist) - 1) or _is_next_char_lwsp(elist[i + 1]):
+
+        node.set_text(node_text[:-1])
+
+    
 
 def _compute_length(
     source_length: styles.LengthType,

@@ -81,7 +81,7 @@ class LSWPTests(unittest.TestCase):
 
     self.assertEqual(len(spans), 3)
 
-    self.assertEqual(spans[0][0].get_text(), "hello")
+    self.assertEqual(spans[0][0].get_text(), "hello ")
 
     self.assertEqual(spans[1][0].get_text(), " my \nname ")
 
