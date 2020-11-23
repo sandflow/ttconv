@@ -38,6 +38,7 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 from ttconv.model import Document, Region, Body, Div, P, Span, Text, ContentElement
+from ttconv.style_properties import StyleProperties, DisplayType
 
 
 class SrtWriterTest(TestCase):
@@ -161,8 +162,12 @@ Pellentesque interdum lacinia sollicitudin.
     has_paragraphs = False
 
     for child in element:
+      if child.get_style(StyleProperties.Display) is DisplayType.none and not list(child.iter_animation_steps()):
+        continue
+
       if isinstance(child, P):
         return True
+
       elif isinstance(child, Div):
         has_paragraphs = self._has_child_paragraphs(child)
 

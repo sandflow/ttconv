@@ -4,6 +4,9 @@
 
 pipenv run python -m pylint src/main/python/ttconv/ src/test/python/
 
+# Exit immediately if unit tests exit with a non-zero status.
+set -e
+
 ## unit test and coverage
 
 pipenv run coverage run -m unittest discover -v -s src/test/python/ -t .
