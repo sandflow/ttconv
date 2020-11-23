@@ -162,11 +162,12 @@ Pellentesque interdum lacinia sollicitudin.
     has_paragraphs = False
 
     for child in element:
+      if child.get_style(StyleProperties.Display) is DisplayType.none and not list(child.iter_animation_steps()):
+        continue
+
       if isinstance(child, P):
-        if len(list(child.iter_animation_steps())) > 0:
-          return True
-        if child.get_style(StyleProperties.Display) is not DisplayType.none:
-          return True
+        return True
+
       elif isinstance(child, Div):
         has_paragraphs = self._has_child_paragraphs(child)
 
