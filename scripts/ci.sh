@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# Exit immediately if a command exits with a non-zero status.
-set -e
-
 ## Linter
 
 pipenv run python -m pylint src/main/python/ttconv/ src/test/python/
+
+# Exit immediately if unit tests exit with a non-zero status.
+set -e
 
 ## unit test and coverage
 
