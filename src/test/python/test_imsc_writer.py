@@ -611,34 +611,28 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     context.frame_rate = Fraction(1, 1)
     time = Fraction(1, 4)
     val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '0:00:00.250000s')
 
     context.frame_rate = Fraction(30000, 1000)
     time = Fraction(2, 1)
     val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '60f')
 
-    doc = model.Document()
-    body = model.Body(doc)
-    div = model.Div(doc)
-    p = model.P(doc)
-    span = model.Span(doc)
-    text = model.Text(doc)
-    text.set_text("asdf")
-    
-    span.push_child(text)
-    p.push_child(span)
-    div.push_child(p)
-    body.push_child(div)
-    doc.set_body(body)
+    context.frame_rate = Fraction(30000, 1001)
+    time = Fraction(3, 1)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '89f')
 
-    # write the document out to a file
-    imsc_writer.from_model(doc)
-    imsc_writer.from_model(doc, Fraction(30000, 1001))
+    context.frame_rate = Fraction(25000, 1000)
+    time = Fraction(3600, 1)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '90000f')
 
-    #self.pretty_print(tree_from_model.getroot())
-    #self.assertEqual(
-    #  _get_time(imsc_styles.StyleProperties.LuminanceGain, 1.2),
-    #  "1.2"
-    #)
+    context.frame_rate = Fraction(30000, 1001)
+    time = float(0.7674333333333333).as_integer_ratio()
+    time = Fraction(time[0], time[1])
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '23f')
 
 if __name__ == '__main__':
   unittest.main()
