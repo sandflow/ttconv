@@ -27,6 +27,7 @@
 
 import re
 import logging
+import datetime 
 from fractions import Fraction
 import typing
 from dataclasses import dataclass
@@ -302,6 +303,26 @@ class TemporalAttributeWritingContext:
   frame_rate: Fraction = Fraction(30, 1)
   tick_rate: int = 1
 
+def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> str:
+  if context.frame_rate.numerator == 1 and context.frame_rate.denominator == 1:
+    return to_hh_mm_ss_ms(time)
+  return to_frames(context, time)
+
+def to_hh_mm_ss_ms(time: Fraction) -> str:
+  value = time.numerator / time.denominator
+  value = datetime.timedelta(seconds = value)
+  #millsec = value.microseconds / 1000
+  #value = str(datetime.timedelta(seconds = value)) 
+
+  return f"{value}s"
+
+def to_frames(context: TemporalAttributeWritingContext, time: Fraction) -> str:
+  value = time.numerator / time.denominator
+  value *= (context.frame_rate.numerator / context.frame_rate.denominator)
+  # TODO - what should our rounding algorithm be?
+  value = int(value)
+  return f"{value}f"
+
 class BeginAttribute:
   '''begin attribute
   '''
@@ -326,9 +347,8 @@ class BeginAttribute:
 
   @staticmethod
   def set(context: TemporalAttributeWritingContext, ttml_element, begin:Fraction):
-    value = begin.numerator / begin.denominator
-    ttml_element.set(BeginAttribute.qn, f"{value}s")
-
+    value = to_time_format(context, begin)
+    ttml_element.set(BeginAttribute.qn, value)
 
 class EndAttribute:
   '''end attributes
@@ -354,8 +374,8 @@ class EndAttribute:
 
   @staticmethod
   def set(context: TemporalAttributeWritingContext, ttml_element, end:Fraction):
-    value = end.numerator / end.denominator
-    ttml_element.set(EndAttribute.qn, f"{value}s")
+    value = to_time_format(context, end)
+    ttml_element.set(EndAttribute.qn, value)
 
 class DurAttribute:
   '''dur attributes

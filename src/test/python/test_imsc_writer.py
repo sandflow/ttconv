@@ -39,6 +39,7 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.style_properties as imsc_styles
+import ttconv.imsc.attributes as attributes
 from ttconv.scc.utils import get_extent_from_dimensions
 
 def _get_set_style(imsc_style_prop, model_value):
@@ -605,6 +606,16 @@ class StylePropertyWriterTest(unittest.TestCase):
 class WriterWithTimeFormattingTest(unittest.TestCase):
 
   def test_write_with_frames(self):
+
+    context = attributes.TemporalAttributeWritingContext
+    context.frame_rate = Fraction(1, 1)
+    time = Fraction(1, 4)
+    val = attributes.to_time_format(context, time)
+
+    context.frame_rate = Fraction(30000, 1000)
+    time = Fraction(2, 1)
+    val = attributes.to_time_format(context, time)
+
     doc = model.Document()
     body = model.Body(doc)
     div = model.Div(doc)
