@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Exit immediately if a command exits with a non-zero status.
+set -e
+
 ## Linter
 
 pipenv run python -m pylint src/main/python/ttconv/ src/test/python/
