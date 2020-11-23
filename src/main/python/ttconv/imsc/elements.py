@@ -902,11 +902,12 @@ class ContentElement(TTMLElement):
     '''Creates an anonymous span in the element `model_element` from the text contained in `span_text`
     '''
     if isinstance(model_element, model.Span):
-
       return model.Text(document, span_text)
 
     s = model.Span(document)
-    
+    s.set_space(model_element.get_space())
+    s.set_lang(model_element.get_lang())
+
     s.push_child(model.Text(document, span_text))
 
     return s

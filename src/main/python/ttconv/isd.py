@@ -30,6 +30,7 @@ from __future__ import annotations
 import inspect
 import typing
 import numbers
+import re
 from fractions import Fraction
 
 import ttconv.model as model
@@ -38,6 +39,10 @@ import ttconv.style_properties as styles
 class ISD(model.Root):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
   of a `model.Document` taken at a given point in time
+
+  # Constants
+
+  `DEFAULT_REGION_ID`: `id` value of the default region
   '''
 
   class Region(model.Region):
@@ -53,6 +58,8 @@ class ISD(model.Root):
         raise ValueError("ISD regions must contain at most one body instance")
 
       model.ContentElement.push_child(self, child)
+
+  DEFAULT_REGION_ID = "default_region"
 
   def __init__(self, doc: typing.Optional[model.Document]):
     super().__init__()
@@ -170,11 +177,18 @@ class ISD(model.Root):
     '''
     isd = ISD(doc)
 
-    for region in doc.iter_regions():
-      root_region = ISD._process_element(isd, offset, region, None, None, None, None, region)
+    regions = tuple(doc.iter_regions())
 
-      if root_region is not None:
-        isd.put_region(root_region)
+    if regions:
+      for region in regions:
+        isd_region = ISD._process_element(isd, offset, region, None, None, None, None, region)
+        if isd_region is not None:
+          isd.put_region(isd_region)
+    else:
+      default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
+      isd_region = ISD._process_element(isd, offset, None, None, None, None, None, default_region)
+      if isd_region is not None:
+        isd.put_region(isd_region)
 
     return isd
 
@@ -332,7 +346,7 @@ class ISD(model.Root):
 
     # prune element is display is "none"
 
-    if isd_element.get_style(styles.StyleProperties.Display) is styles.SpecialValues.none:
+    if isd_element.get_style(styles.StyleProperties.Display) is styles.DisplayType.none:
       return None
 
     # process children of the element
@@ -375,6 +389,12 @@ class ISD(model.Root):
     if len(isd_element_children) > 0:
       isd_element.push_children(isd_element_children)
 
+      if isinstance(isd_element, (model.P, model.Rt, model.Rtc)):
+        text_node_list = []
+        _construct_text_list(isd_element, text_node_list)
+        _process_lwsp(text_node_list)
+        _prune_empty_spans(isd_element)
+
     # remove styles that are not applicable
 
     for computed_style_prop in list(isd_element.iter_styles()):
@@ -383,7 +403,7 @@ class ISD(model.Root):
     
     # prune or keep the element
 
-    if isinstance(isd_element, (model.Br, model.Text)):
+    if isinstance(isd_element, (model.Br, model.Text,model.Rb, model.Rbc)):
       return isd_element
 
     if isd_element.has_children():
@@ -396,6 +416,91 @@ class ISD(model.Root):
       return isd_element
 
     return None
+
+def _prune_empty_spans(element: model.ContentElement):
+  children = list(element)
+  for child in children:
+    _prune_empty_spans(child)
+    if isinstance(child, model.Text) and not child.get_text():
+      element.remove_child(child)
+    elif isinstance(child, model.Span) and not child:
+      element.remove_child(child)
+
+
+def _construct_text_list(element: model.ContentElement, text_node_list: typing.List[typing.Union[model.Text, model.Br]]):
+  '''Constructs a list of all text and br elements in dfs order, excluding rt, rtc and rp elements'''
+  for child in element:
+    if isinstance(child, model.Br) or (isinstance(child, model.Text) and child.get_text()):
+      text_node_list.append(child)
+    elif not isinstance(child, (model.Rt, model.Rtc, model.Rp)):
+      _construct_text_list(child, text_node_list)
+
+def _process_lwsp(text_node_list: typing.List[typing.Union[model.Text, model.Br]]):
+  '''Processes LWSP according to the space property'''
+
+  def _is_prev_char_lwsp(prev_element):
+    if isinstance(prev_element, model.Br):
+      return True
+      
+    prev_text = prev_element.get_text()
+
+    return len(prev_text) > 0 and prev_text[-1] in ("\t", "\r", "\n", " ")
+
+  def _is_next_char_lwsp(next_element):
+    if isinstance(next_element, model.Br):
+      return True
+
+    next_text = next_element.get_text()
+
+    return len(next_text) > 0 and next_text[0] in ("\r", "\n")
+
+
+  elist = list(text_node_list)
+
+  # first pass: collapse spaces and remove leading LWSPs
+
+  i = 0
+
+  while i < len(elist):
+
+    node = elist[i]
+
+    if isinstance(node, model.Br) or node.parent().get_space() is model.WhiteSpaceHandling.PRESERVE:
+      i += 1
+      continue
+
+    trimmed_text = re.sub(r"[\t\r\n ]+", " ", node.get_text())
+
+    if len(trimmed_text) > 0 and trimmed_text[0] == " ":
+
+      if i == 0 or _is_prev_char_lwsp(elist[i - 1]):
+
+        trimmed_text = trimmed_text[1:]
+
+    node.set_text(trimmed_text)
+
+    if len(trimmed_text) == 0:
+      del elist[i]
+    else:
+      i += 1
+
+  # second pass: remove trailing LWSPs
+
+  for i, node in enumerate(elist):
+
+    if isinstance(node, model.Br) or node.parent().get_space() is model.WhiteSpaceHandling.PRESERVE:
+      i += 1
+      continue
+
+    node_text = node.get_text()
+
+    if node_text[-1] == " ":
+
+      if i == (len(elist) - 1) or _is_next_char_lwsp(elist[i + 1]):
+
+        node.set_text(node_text[:-1])
+
+    
 
 def _compute_length(
     source_length: styles.LengthType,

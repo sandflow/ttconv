@@ -37,6 +37,15 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.isd import ISD
 
+def _print_isd_node(element, level):
+  if isinstance(element, model.Text):
+    print('"', element.get_text(), '"')
+  else:
+    print(" " * 2 * level, element.__class__.__name__)
+
+  for child in element:
+    _print_isd_node(child, level + 1)
+
 class Document0Test(unittest.TestCase):
 
   '''
@@ -211,6 +220,23 @@ class Document0Test(unittest.TestCase):
 
 
 class IMSCTestSuiteTest(unittest.TestCase):
+
+  def test_display_none_handling(self):
+    xml_doc = et.parse("src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/MediaParTiming002.ttml")
+    doc = imsc_reader.to_model(xml_doc)
+    isd = ISD.from_model(doc, 0)
+
+    regions = list(isd.iter_regions())
+
+    # single default region
+
+    self.assertEqual(len(regions), 1)
+
+    # no content
+
+    self.assertEqual(len(regions[0]), 0)
+
+
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
@@ -563,6 +589,40 @@ class Document1Test(unittest.TestCase):
     isd = ISD.from_model(self.doc, 0)
 
     self.assertEqual(len(isd), 0)
+
+
+class DefaultRegion(unittest.TestCase):
+
+  def test_default_region(self):
+
+    doc = model.Document()
+
+    b = model.Body(doc)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    span1.push_child(model.Text(doc, "hello"))
+    p1.push_child(span1)
+
+    isd = ISD.from_model(doc, 0)
+
+    self.assertEqual(len(isd), 1)
+
+    regions = list(isd.iter_regions())
+
+    self.assertEqual(regions[0].get_id(), ISD.DEFAULT_REGION_ID)
+
+    p = regions[0][0][0][0]
+
+    self.assertEqual(len(p), 1)
+
+    self.assertEqual(p[0][0].get_text(), "hello")
 
 if __name__ == '__main__':
   unittest.main()
