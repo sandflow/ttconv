@@ -77,12 +77,21 @@ class IMSCAppTest(unittest.TestCase):
 
   def test_pop_on_scc(self):
     tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.ttml".split())
+    self.assertTrue(os.path.exists("build/pop-on.ttml"))
+    tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.srt".split())
+    self.assertTrue(os.path.exists("build/pop-on.srt"))
 
   def test_paint_on_scc(self):
     tt.main("convert -i src/test/resources/scc/paint-on.scc -o build/paint-on.ttml".split())
+    self.assertTrue(os.path.exists("build/paint-on.ttml"))
+    tt.main("convert -i src/test/resources/scc/paint-on.scc -o build/paint-on.srt".split())
+    self.assertTrue(os.path.exists("build/paint-on.srt"))
 
   def test_mix_rows_roll_up_scc(self):
     tt.main("convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.ttml".split())
+    self.assertTrue(os.path.exists("build/mix-rows-roll-up.ttml"))
+    tt.main("convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.srt".split())
+    self.assertTrue(os.path.exists("build/mix-rows-roll-up.srt"))
 
   def test_bad_function(self):
 
@@ -118,6 +127,10 @@ class IMSCAppTest(unittest.TestCase):
     self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(tt.FileTypes.SCC.value, None))
     self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(tt.FileTypes.SCC.value, "asdf"))
     self.assertEqual(tt.FileTypes.SCC, tt.FileTypes.get_file_type(None, "scc"))
+
+    self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(tt.FileTypes.SRT.value, None))
+    self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(tt.FileTypes.SRT.value, "asdf"))
+    self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(None, "srt"))
 
 
 if __name__ == '__main__':

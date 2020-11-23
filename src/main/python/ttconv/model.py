@@ -300,16 +300,16 @@ class ContentElement:
   
   # style properties
 
-  def has_style(self, style_prop: StyleProperty) -> bool:
+  def has_style(self, style_prop: typing.Type[StyleProperty]) -> bool:
     '''Returns whether there is a value for style property `style_prop`.
     '''
     return style_prop in self._styles
 
-  def get_style(self, style_prop: StyleProperty):
+  def get_style(self, style_prop: typing.Type[StyleProperty]):
     '''Returns the value for the style property `style_prop`, or None.'''
     return self._styles.get(style_prop)
 
-  def set_style(self, style_prop: StyleProperty, value: typing.Any):
+  def set_style(self, style_prop: typing.Type[StyleProperty], value: typing.Any):
     '''Sets the value for the style property `style_prop` to `value`.'''
     if style_prop not in StyleProperties.ALL:
       raise ValueError("Invalid style property")
@@ -327,11 +327,11 @@ class ContentElement:
 
   _applicableStyles: typing.Set[StyleProperty] = frozenset()
 
-  def is_style_applicable(self, style_prop: StyleProperty) -> bool:
+  def is_style_applicable(self, style_prop: typing.Type[StyleProperty]) -> bool:
     '''Whether the style property `style_prop` apply to the element'''
     return style_prop in self._applicableStyles
 
-  def iter_styles(self) -> typing.Iterator[StyleProperty]:
+  def iter_styles(self) -> typing.Iterator[typing.Type[StyleProperty]]:
     '''Returns an iterator over all style properties that are not `None`
     '''
     return iter(self._styles)

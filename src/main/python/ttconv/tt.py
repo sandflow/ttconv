@@ -34,6 +34,7 @@ from pathlib import Path
 from enum import Enum
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
+import ttconv.srt.writer as srt_writer
 import ttconv.scc.reader as scc_reader
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,7 @@ class FileTypes(Enum):
   '''Enumerates the types of supported'''
   TTML = "ttml"
   SCC = "scc"
+  SRT = "srt"
 
   @staticmethod
   def get_file_type(file_type: str, file_extension: str):
@@ -159,6 +161,19 @@ def convert(args):
     # Write out the converted file
     #
     tree_from_model.write(outputfile)
+
+  elif writer_type is FileTypes.SRT:
+    #
+    # Construct and configure the writer
+    #
+    srt_document = srt_writer.from_model(model)
+
+    #
+    # Write out the converted file
+    #
+    with open(outputfile, "w") as srt_file:
+      srt_file.write(srt_document)
+
   else:
     if args.otype is not None:
       exit_str  = f'Output type {args.otype} is not supported'
