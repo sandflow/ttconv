@@ -210,7 +210,7 @@ class _SccContext:
       self.init_current_caption(time_code)
       self.set_current_to_previous()
 
-    elif control_code is SccControlCode.EDM:
+    elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
       # Erase displayed caption (Pop-On)
       if len(self.previous_captions) > 0:
         # Set line breaks depending on the position of the content
