@@ -398,7 +398,7 @@ class SccLine:
     for scc_word in self.scc_words:
 
       if progress_callback:
-        progress_callback()
+        progress_callback(0.5)
 
       if context.previous_code == scc_word.value:
         continue
@@ -555,7 +555,7 @@ def to_model(scc_content: str, progress_callback = None):
       continue
 
     if progress_callback:
-      progress_callback()
+      progress_callback(1.0)
 
     time_code = scc_line.to_model(context)
 

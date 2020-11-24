@@ -164,9 +164,6 @@ class TTElement(TTMLElement):
 
     for child_element in xml_elem:
 
-      if progress_callback:
-        progress_callback()
-
       if BodyElement.is_instance(child_element):
 
         if not has_body:
@@ -176,6 +173,9 @@ class TTElement(TTMLElement):
           body_element = ContentElement.from_xml(tt_ctx, child_element)
 
           tt_ctx.doc.set_body(body_element.model_element if body_element is not None else None)
+
+          if progress_callback:
+            progress_callback(1)
 
         else:
           LOGGER.error("More than one body element present")
@@ -187,6 +187,9 @@ class TTElement(TTMLElement):
           has_head = True
 
           HeadElement.from_xml(tt_ctx, child_element)
+
+          if progress_callback:
+            progress_callback(0.5)
 
         else:
           LOGGER.error("More than one head element present")
@@ -219,7 +222,7 @@ class TTElement(TTMLElement):
         break
 
     if progress_callback:
-      progress_callback()
+      progress_callback(0.5)
 
     if model_doc.get_px_resolution() is not None and has_px:
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
@@ -234,7 +237,7 @@ class TTElement(TTMLElement):
       tt_element.append(head_element)
 
     if progress_callback:
-      progress_callback()
+      progress_callback(1.0)
 
     model_body = model_doc.get_body()
 
