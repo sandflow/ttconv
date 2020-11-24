@@ -32,7 +32,7 @@ import ttconv.model as model
 LOGGER = logging.getLogger(__name__)
 
 
-def to_model(xml_tree) -> model.Document:
+def to_model(xml_tree, progress_callback = None) -> model.Document:
   '''Convers an IMSC document to the data model'''
 
   xml_element = xml_tree.getroot()
@@ -41,7 +41,7 @@ def to_model(xml_tree) -> model.Document:
     LOGGER.fatal("A tt element is not the root element")
     return None
 
-  tt_element = imsc_elements.TTElement.from_xml(None, xml_element)
+  tt_element = imsc_elements.TTElement.from_xml(None, xml_element, progress_callback)
 
   if tt_element is None:
     LOGGER.fatal("Invalid TT element")

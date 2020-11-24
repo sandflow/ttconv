@@ -37,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-def from_model(model_doc: model.Document):
+def from_model(model_doc: model.Document, progress_callback = None):
   '''Converts the data model to an IMSC document'''
 
   et.register_namespace("ttml", xml_ns.TTML)
@@ -47,5 +47,5 @@ def from_model(model_doc: model.Document):
   et.register_namespace("itts", xml_ns.ITTS)
     
   return et.ElementTree(
-    imsc_elements.TTElement.from_model(model_doc)
+    imsc_elements.TTElement.from_model(model_doc, progress_callback)
     )

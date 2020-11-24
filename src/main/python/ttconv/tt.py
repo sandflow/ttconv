@@ -39,6 +39,10 @@ import ttconv.scc.reader as scc_reader
 
 LOGGER = logging.getLogger(__name__)
 
+def progress_callback():
+  '''Callback handler used by reader and writer.'''
+  LOGGER.info(".")
+
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
   TTML = "ttml"
@@ -133,7 +137,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = imsc_reader.to_model(tree)
+    model = imsc_reader.to_model(tree, progress_callback)
 
   elif reader_type is FileTypes.SCC:
     file_as_str = Path(inputfile).read_text()
@@ -141,7 +145,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = scc_reader.to_model(file_as_str)
+    model = scc_reader.to_model(file_as_str, progress_callback)
   else:
     if args.itype is not None:
       exit_str  = f'Input type {args.itype} is not supported'
@@ -155,7 +159,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model)
+    tree_from_model = imsc_writer.from_model(model, progress_callback)
 
     #
     # Write out the converted file
@@ -166,7 +170,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model)
+    srt_document = srt_writer.from_model(model, progress_callback)
 
     #
     # Write out the converted file

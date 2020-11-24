@@ -96,7 +96,7 @@ class TTMLElement:
     raise NotImplementedError
 
   @staticmethod
-  def from_xml(parent_ctx, xml_elem):
+  def from_xml(parent_ctx, xml_elem, progress_callback = None):
     '''Returns a parsing context for the TTML element represented by the XML element `xml_elem` and
     given the parent context `parent_ctx`
     '''
@@ -117,7 +117,7 @@ class TTElement(TTMLElement):
     return xml_elem.tag == TTElement.qn
 
   @staticmethod
-  def from_xml(_parent_ctx: typing.Optional[TTMLElement.ParsingContext], xml_elem) -> TTElement.ParsingContext:
+  def from_xml(_parent_ctx: typing.Optional[TTMLElement.ParsingContext], xml_elem, progress_callback = None) -> TTElement.ParsingContext:
     '''`_parent_ctx` is ignored and can be set to `None`
     '''
 
@@ -164,6 +164,9 @@ class TTElement(TTMLElement):
 
     for child_element in xml_elem:
 
+      if progress_callback:
+        progress_callback()
+
       if BodyElement.is_instance(child_element):
 
         if not has_body:
@@ -191,7 +194,7 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document) -> et.Element:
+  def from_model(model_doc: model.Document, progress_callback = None) -> et.Element:
 
     tt_element = et.Element(TTElement.qn)
 
@@ -215,6 +218,9 @@ class TTElement(TTMLElement):
       if has_px:
         break
 
+    if progress_callback:
+      progress_callback()
+
     if model_doc.get_px_resolution() is not None and has_px:
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
 
@@ -226,6 +232,9 @@ class TTElement(TTMLElement):
 
     if head_element is not None:
       tt_element.append(head_element)
+
+    if progress_callback:
+      progress_callback()
 
     model_body = model_doc.get_body()
 

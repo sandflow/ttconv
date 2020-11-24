@@ -172,7 +172,7 @@ class ISD(model.Root):
     return sorted(s_times)
 
   @staticmethod
-  def from_model(doc: model.Document, offset: Fraction) -> typing.Optional[ISD]:
+  def from_model(doc: model.Document, offset: Fraction, progress_callback = None) -> typing.Optional[ISD]:
     '''Creates an ISD from a snapshot of a Document `doc` at a given time offset `offset`
     '''
     isd = ISD(doc)

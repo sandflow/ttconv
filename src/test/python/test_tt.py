@@ -132,6 +132,5 @@ class IMSCAppTest(unittest.TestCase):
     self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(tt.FileTypes.SRT.value, "asdf"))
     self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(None, "srt"))
 
-
 if __name__ == '__main__':
   unittest.main()
