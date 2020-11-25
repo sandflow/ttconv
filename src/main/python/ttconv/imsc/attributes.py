@@ -303,23 +303,12 @@ class TemporalAttributeParsingContext:
 class TemporalAttributeWritingContext:
   frame_rate: Fraction = Fraction(30, 1)
 
-def to_time_str(seconds) -> str:
-  millisec = (seconds % 1) * 1000
-  min, sec = divmod(seconds, 60) 
-  hour, min = divmod(min, 60) 
-  return "%d:%02d:%02d.%02d" % (hour, min, sec, millisec)
-
 def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> str:
   if context.frame_rate is None:
     return to_hh_mm_ss_ms(time)
   return to_frames(context, time)
 
-def getMilliSeconds(num):
-    return (num % 1) * 1000
-
 def to_hh_mm_ss_ms(time: Fraction) -> str:
-  #value = to_time_str(time)
-  #return f"{value}s"
   millisecond = (time % 1) * 1000
   minute, second = divmod(time, 60) 
   hour, minute = divmod(minute, 60) 
