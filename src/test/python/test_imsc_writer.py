@@ -608,10 +608,10 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
   def test_write_with_frames(self):
 
     context = attributes.TemporalAttributeWritingContext
-    context.frame_rate = Fraction(1, 1)
+    context.frame_rate = None
     time = Fraction(1, 4)
     val = attributes.to_time_format(context, time)
-    self.assertEqual(val, '0:00:00.250000s')
+    self.assertEqual(val, '0:00:00.250s')
 
     context.frame_rate = Fraction(30000, 1000)
     time = Fraction(2, 1)
@@ -621,7 +621,7 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     context.frame_rate = Fraction(30000, 1001)
     time = Fraction(3, 1)
     val = attributes.to_time_format(context, time)
-    self.assertEqual(val, '89f')
+    self.assertEqual(val, '90f')
 
     context.frame_rate = Fraction(25000, 1000)
     time = Fraction(3600, 1)

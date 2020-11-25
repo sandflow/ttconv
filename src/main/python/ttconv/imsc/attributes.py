@@ -28,6 +28,7 @@
 import re
 import logging
 import datetime 
+import math
 from fractions import Fraction
 import typing
 from dataclasses import dataclass
@@ -301,26 +302,32 @@ class TemporalAttributeParsingContext:
 @dataclass
 class TemporalAttributeWritingContext:
   frame_rate: Fraction = Fraction(30, 1)
-  tick_rate: int = 1
+
+def to_time_str(seconds) -> str:
+  millisec = (seconds % 1) * 1000
+  min, sec = divmod(seconds, 60) 
+  hour, min = divmod(min, 60) 
+  return "%d:%02d:%02d.%02d" % (hour, min, sec, millisec)
 
 def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> str:
-  if context.frame_rate.numerator == 1 and context.frame_rate.denominator == 1:
+  if context.frame_rate is None:
     return to_hh_mm_ss_ms(time)
   return to_frames(context, time)
 
-def to_hh_mm_ss_ms(time: Fraction) -> str:
-  value = time.numerator / time.denominator
-  value = datetime.timedelta(seconds = value)
-  #millsec = value.microseconds / 1000
-  #value = str(datetime.timedelta(seconds = value)) 
+def getMilliSeconds(num):
+    return (num % 1) * 1000
 
-  return f"{value}s"
+def to_hh_mm_ss_ms(time: Fraction) -> str:
+  #value = to_time_str(time)
+  #return f"{value}s"
+  millisecond = (time % 1) * 1000
+  minute, second = divmod(time, 60) 
+  hour, minute = divmod(minute, 60) 
+  return "%d:%02d:%02d.%02ds" % (hour, minute, second, millisecond)
 
 def to_frames(context: TemporalAttributeWritingContext, time: Fraction) -> str:
-  value = time.numerator / time.denominator
-  value *= (context.frame_rate.numerator / context.frame_rate.denominator)
-  # TODO - what should our rounding algorithm be?
-  value = int(value)
+  value = time * context.frame_rate
+  value = math.ceil(value)
   return f"{value}f"
 
 class BeginAttribute:

@@ -199,7 +199,7 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document, frame_rate = Fraction(1,1)) -> et.Element:
+  def from_model(model_doc: model.Document, frame_rate = None) -> et.Element:
     '''Converts the data model to an IMSC document contained in an ElementTree Element'''
 
     tt_element = et.Element(TTElement.qn)
