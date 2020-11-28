@@ -34,7 +34,7 @@ import ttconv.imsc.utils as utils
 import ttconv.model as model
 
 class StyleParsingContext:
-  doc: model.Document
+  doc: model.ContentDocument
 
 class StyleProperty:
   '''Base class for style properties'''

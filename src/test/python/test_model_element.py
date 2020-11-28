@@ -42,7 +42,7 @@ class ContentElementTest(unittest.TestCase):
     self.assertIsNone(e.get_doc())
 
   def test_attach(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     e = model.ContentElement()
 
@@ -52,8 +52,8 @@ class ContentElementTest(unittest.TestCase):
     self.assertTrue(e.is_attached())
 
   def test_already_attached(self):
-    doc = model.Document()
-    doc2 = model.Document()
+    doc = model.ContentDocument()
+    doc2 = model.ContentDocument()
 
     e = model.ContentElement()
 
@@ -63,7 +63,7 @@ class ContentElementTest(unittest.TestCase):
       e.set_doc(doc2)
 
   def test_detach(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     e = model.ContentElement()
 
@@ -75,7 +75,7 @@ class ContentElementTest(unittest.TestCase):
     self.assertFalse(e.is_attached())
 
   def test_failed_child_detach(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     e = model.ContentElement(doc)
 

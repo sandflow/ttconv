@@ -46,7 +46,7 @@ def _print_isd_node(element, level):
   for child in element:
     _print_isd_node(child, level + 1)
 
-class Document0Test(unittest.TestCase):
+class ContentDocument0Test(unittest.TestCase):
 
   '''
   <region xml:id="r1"/>
@@ -69,7 +69,7 @@ class Document0Test(unittest.TestCase):
   '''
 
   def setUp(self):
-    self.doc = model.Document()
+    self.doc = model.ContentDocument()
 
     a1 = model.DiscreteAnimationStep(
       style_property=styles.StyleProperties.Color,
@@ -275,7 +275,7 @@ class IMSCTestSuiteTest(unittest.TestCase):
 class ComputeStyleTest(unittest.TestCase):
 
   def test_compute_extent_pct(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
@@ -301,7 +301,7 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
 
   def test_compute_extent_px(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
@@ -327,7 +327,7 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
   def test_compute_extent_c(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
@@ -353,7 +353,7 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
   def test_compute_extent_em(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
@@ -379,7 +379,7 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
   def test_compute_padding(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
@@ -413,7 +413,7 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertAlmostEqual(padding.end.value, 50 * 0.2)
 
   def test_compute_style_property(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.FontSize, styles.LengthType(value=50, units=styles.LengthType.Units.pct))
@@ -451,7 +451,7 @@ class ComputeStyleTest(unittest.TestCase):
 class InheritanceStyleTest(unittest.TestCase):
 
   def test_text_decoration_inheritance(self):
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
     r1.set_style(
@@ -501,7 +501,7 @@ class InheritanceStyleTest(unittest.TestCase):
       )
     )
 
-class Document1Test(unittest.TestCase):
+class ContentDocument1Test(unittest.TestCase):
 
   """
     <region xml:id="r1"/>
@@ -521,7 +521,7 @@ class Document1Test(unittest.TestCase):
   """
 
   def setUp(self):
-    self.doc = model.Document()
+    self.doc = model.ContentDocument()
 
     r1 = model.Region("r1", self.doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.whenActive)
@@ -595,7 +595,7 @@ class DefaultRegion(unittest.TestCase):
 
   def test_default_region(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
 
     b = model.Body(doc)
     doc.set_body(b)

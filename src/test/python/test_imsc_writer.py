@@ -109,7 +109,7 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
   def test_body_only(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
     body = model.Body(doc)
     div = model.Div(doc)
     p = model.P(doc)
@@ -346,7 +346,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
   def test_tts_writing_no_extent_when_no_body(self):
 
-    d = model.Document()
+    d = model.ContentDocument()
 
     tree_from_model = imsc_writer.from_model(d)
 
@@ -357,7 +357,7 @@ class StylePropertyWriterTest(unittest.TestCase):
   
   def test_tts_writing_no_extent_when_body_has_no_extents(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
     body = model.Body(doc)
     div = model.Div(doc)
     p = model.P(doc)
@@ -380,7 +380,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
   def test_tts_writing_extent_when_body_has_extents(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
     body = model.Body(doc)
     div = model.Div(doc)
 

@@ -173,7 +173,7 @@ class SrtContext:
 # srt writer
 #
 
-def from_model(doc: model.Document) -> str:
+def from_model(doc: model.ContentDocument) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()

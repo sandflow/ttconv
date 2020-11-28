@@ -37,14 +37,14 @@ from unittest import TestCase
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
-from ttconv.model import Document, Region, Body, Div, P, Span, Text, ContentElement
+from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
 
 
 class SrtWriterTest(TestCase):
 
   def test_srt_writer(self):
-    doc = Document()
+    doc = ContentDocument()
 
     r1 = Region("r1", doc)
     doc.put_region(r1)
@@ -174,7 +174,7 @@ Pellentesque interdum lacinia sollicitudin.
 
     return has_paragraphs
 
-  def _has_document_paragraphs(self, doc: Document) -> bool:
+  def _has_document_paragraphs(self, doc: ContentDocument) -> bool:
     body = doc.get_body()
 
     if body is None:
@@ -188,7 +188,7 @@ Pellentesque interdum lacinia sollicitudin.
 
     return paragraphs
 
-  def _check_output_srt(self, model: Document, srt: str, path: str):
+  def _check_output_srt(self, model: ContentDocument, srt: str, path: str):
     if self._has_document_paragraphs(model):
       self.assertTrue(len(srt) > 0, msg=f"Could not convert {path}")
     else:
