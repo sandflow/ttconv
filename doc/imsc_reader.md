@@ -9,7 +9,7 @@ preserve rendering fidelity but not necessarily structure, e.g. referential styl
 ## Usage
 
 The IMSC reader accepts as input an XML document that conforms to the [ElementTree XML
-API](https://docs.python.org/3.7/library/xml.etree.elementtree.html) and returns a `model.Document` object.
+API](https://docs.python.org/3.7/library/xml.etree.elementtree.html) and returns a `model.ContentDocument` object.
 
 ```python
 import xml.etree.ElementTree as et

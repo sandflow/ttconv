@@ -32,10 +32,10 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 
-class DocumentTest(unittest.TestCase):
+class ContentDocumentTest(unittest.TestCase):
 
   def test_init(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     self.assertIsNone(d.get_body())
     
@@ -49,7 +49,7 @@ class DocumentTest(unittest.TestCase):
   
   
   def test_set_body(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     b = model.Body(d)
 
@@ -62,7 +62,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIsNone(d.get_body())
 
   def test_set_bad_body(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     b = model.Body()
 
@@ -70,7 +70,7 @@ class DocumentTest(unittest.TestCase):
       d.set_body(b)
   
   def test_add_region(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     r = model.Region("hello", d)
 
@@ -79,7 +79,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIs(d.get_region(r.get_id()), r)
 
   def test_remove_region(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     r = model.Region("hello", d)
 
@@ -95,7 +95,7 @@ class DocumentTest(unittest.TestCase):
 
 
   def test_add_detached_region(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     r = model.Region("hello")
 
@@ -104,7 +104,7 @@ class DocumentTest(unittest.TestCase):
 
 
   def test_add_dup_region(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     r1 = model.Region("hello", d)
 
@@ -117,7 +117,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIs(d.get_region(r2.get_id()), r2)
 
   def test_iter_region(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     r1 = model.Region("hello1", d)
 
@@ -131,7 +131,7 @@ class DocumentTest(unittest.TestCase):
 
 
   def test_add_initial_value(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     c = styles.ColorType((12, 23, 43, 56))
 
@@ -142,7 +142,7 @@ class DocumentTest(unittest.TestCase):
     self.assertEqual(c, c2)
 
   def test_remove_initial_value(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     c = styles.ColorType((12, 23, 43, 56))
 
@@ -159,7 +159,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIsNone(d.get_initial_value(styles.StyleProperties.Color))
 
   def test_add_null_initial_value(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     c = styles.ColorType((12, 23, 43, 56))
 
@@ -176,7 +176,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIsNone(d.get_initial_value(styles.StyleProperties.Color))
 
   def test_add_dup_initial_value(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     c1 = styles.ColorType((12, 23, 43, 56))
 
@@ -191,7 +191,7 @@ class DocumentTest(unittest.TestCase):
     self.assertIs(d.get_initial_value(styles.StyleProperties.Color), c2)
 
   def test_add_bad_initial_value(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     c1 = styles.ColorType((12, 23, 43, 56))
     
@@ -199,7 +199,7 @@ class DocumentTest(unittest.TestCase):
       d.put_initial_value(styles.StyleProperties.Extent, c1)
 
   def test_iter_initial_values(self):
-    d = model.Document()
+    d = model.ContentDocument()
 
     c1 = styles.ColorType((12, 23, 43, 56))
 
@@ -227,7 +227,7 @@ class DocumentTest(unittest.TestCase):
 
   def test_language(self):
 
-    d = model.Document()
+    d = model.ContentDocument()
 
     self.assertEqual(d.get_lang(), "")
 
@@ -286,14 +286,14 @@ class DocumentTest(unittest.TestCase):
 
   def test_document_active_area_default(self):
 
-    d = model.Document()
+    d = model.ContentDocument()
 
     self.assertIsNone(d.get_active_area())
 
 
   def test_document_active_area(self):
 
-    d = model.Document()
+    d = model.ContentDocument()
 
     aa = model.ActiveAreaType(0.1, 0.15, 0.8, 0.7)
 
@@ -311,7 +311,7 @@ class DocumentTest(unittest.TestCase):
 
   def test_display_aspect_ratio(self):
 
-    d = model.Document()
+    d = model.ContentDocument()
 
     self.assertIsNone(d.get_display_aspect_ratio())
 

@@ -49,7 +49,7 @@ class TTMLElement:
 
     def __init__(self, ttml_class: TTMLElement, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
 
-      self.doc = parent_ctx.doc if parent_ctx is not None else model.Document()
+      self.doc = parent_ctx.doc if parent_ctx is not None else model.ContentDocument()
 
       self.style_elements: typing.Dict[str, StyleElement] = parent_ctx.style_elements if parent_ctx is not None else {}
 
@@ -191,7 +191,7 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document) -> et.Element:
+  def from_model(model_doc: model.ContentDocument) -> et.Element:
 
     tt_element = et.Element(TTElement.qn)
 
@@ -303,7 +303,7 @@ class HeadElement(TTMLElement):
     return head_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document):
+  def from_model(model_doc: model.ContentDocument):
 
     head_element = et.Element(HeadElement.qn)
 
@@ -363,7 +363,7 @@ class LayoutElement(TTMLElement):
     return layout_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document):
+  def from_model(model_doc: model.ContentDocument):
 
     layout_element = et.Element(LayoutElement.qn)
     
@@ -441,7 +441,7 @@ class StylingElement(TTMLElement):
     return styling_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document) -> typing.Optional[et.Element]:
+  def from_model(model_doc: model.ContentDocument) -> typing.Optional[et.Element]:
     
     styling_element = None
 
@@ -560,7 +560,7 @@ class InitialElement(TTMLElement):
 
       try:
 
-        # set the initial value on the data model Document (the data model does have 
+        # set the initial value on the data model ContentDocument (the data model does have 
         # a distinct <initial> element)
 
         model_prop, model_value = prop.to_model(initial_ctx, xml_elem)

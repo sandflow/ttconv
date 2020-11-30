@@ -36,9 +36,9 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 
-class ISD(model.Root):
+class ISD(model.Document):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
-  of a `model.Document` taken at a given point in time
+  of a `model.ContentDocument` taken at a given point in time
 
   # Constants
 
@@ -61,7 +61,7 @@ class ISD(model.Root):
 
   DEFAULT_REGION_ID = "default_region"
 
-  def __init__(self, doc: typing.Optional[model.Document]):
+  def __init__(self, doc: typing.Optional[model.ContentDocument]):
     super().__init__()
 
     self._regions: typing.Mapping[str, ISD.Region] = {}
@@ -127,7 +127,7 @@ class ISD(model.Root):
     return (begin_time, end_time)
 
   @staticmethod
-  def significant_times(doc: model.Document) -> typing.List[Fraction]:
+  def significant_times(doc: model.ContentDocument) -> typing.List[Fraction]:
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
     increasing order'''
 
@@ -172,8 +172,8 @@ class ISD(model.Root):
     return sorted(s_times)
 
   @staticmethod
-  def from_model(doc: model.Document, offset: Fraction) -> typing.Optional[ISD]:
-    '''Creates an ISD from a snapshot of a Document `doc` at a given time offset `offset`
+  def from_model(doc: model.ContentDocument, offset: Fraction) -> typing.Optional[ISD]:
+    '''Creates an ISD from a snapshot of a ContentDocument `doc` at a given time offset `offset`
     '''
     isd = ISD(doc)
 

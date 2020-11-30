@@ -37,7 +37,7 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-def from_model(model_doc: model.Document):
+def from_model(model_doc: model.ContentDocument):
   '''Converts the data model to an IMSC document'''
 
   et.register_namespace("ttml", xml_ns.TTML)
