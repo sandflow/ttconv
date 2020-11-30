@@ -221,9 +221,6 @@ class TTElement(TTMLElement):
       if has_px:
         break
 
-    if progress_callback:
-      progress_callback(0.5)
-
     if model_doc.get_px_resolution() is not None and has_px:
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
 
@@ -233,11 +230,11 @@ class TTElement(TTMLElement):
     # Write the <head> section first
     head_element = HeadElement.from_model(model_doc)
 
+    if progress_callback:
+      progress_callback(0.5)
+
     if head_element is not None:
       tt_element.append(head_element)
-
-    if progress_callback:
-      progress_callback(1.0)
 
     model_body = model_doc.get_body()
 
@@ -247,6 +244,9 @@ class TTElement(TTMLElement):
 
       if body_element is not None:
         tt_element.append(body_element)
+
+    if progress_callback:
+      progress_callback(1.0)
 
     return tt_element
 
