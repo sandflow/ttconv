@@ -178,14 +178,18 @@ def from_model(doc: model.Document, progress_callback = None) -> str:
 
   srt = SrtContext()
   significant_times = ISD.significant_times(doc)
+  nb_significant_times = len(significant_times)
 
-  for offset in significant_times:
-    isd = ISD.from_model(doc, offset, progress_callback)
+  for (index, offset) in enumerate(significant_times):
+    isd = ISD.from_model(doc, offset)
 
     for srt_filter in srt.filters:
       srt_filter.process(isd)
 
     srt.add_isd(isd, offset)
+
+    if progress_callback:
+      progress_callback((index + 1) / nb_significant_times)
 
   srt.finish()
 
