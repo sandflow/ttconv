@@ -390,15 +390,12 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_model(self, context: _SccContext, progress_callback = None) -> SccTimeCode:
+  def to_model(self, context: _SccContext) -> SccTimeCode:
     """Converts the SCC line to the data model"""
 
     debug = str(self.time_code) + "\t"
 
     for scc_word in self.scc_words:
-
-      if progress_callback:
-        progress_callback(0.5)
 
       if context.previous_code == scc_word.value:
         continue
@@ -526,7 +523,7 @@ class SccLine:
 # SCC reader
 #
 
-def to_model(scc_content: str, progress_callback = None):
+def to_model(scc_content: str, progress_callback=None):
   """Converts a SCC document to the data model"""
 
   context = _SccContext()
@@ -547,15 +544,19 @@ def to_model(scc_content: str, progress_callback = None):
   body.push_child(context.div)
 
   time_code = None
-  for line in scc_content.splitlines():
+
+  lines = scc_content.splitlines()
+  nb_lines = len(lines)
+
+  for (index, line) in enumerate(lines):
     LOGGER.debug(line)
     scc_line = SccLine.from_str(line)
 
+    if progress_callback:
+      progress_callback((index + 1) / nb_lines)
+
     if scc_line is None:
       continue
-
-    if progress_callback:
-      progress_callback(1.0)
 
     time_code = scc_line.to_model(context)
 
