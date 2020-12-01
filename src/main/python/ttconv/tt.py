@@ -39,6 +39,8 @@ import ttconv.scc.reader as scc_reader
 
 LOGGER = logging.getLogger(__name__)
 
+READING = True
+
 # Print iterations progress
 def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
   """
@@ -63,7 +65,8 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  printProgressBar(percent_progress, 1.0, prefix = 'Progress:', suffix = 'Complete', length = 50)
+  prefix_str = "Reading Progress:" if READING else "Writing Progress:"
+  printProgressBar(percent_progress, 1.0, prefix = prefix_str, suffix = 'Complete', length = 50)
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -150,6 +153,9 @@ def convert(args):
   reader_type = FileTypes.get_file_type(args.itype, input_file_extension)
   writer_type = FileTypes.get_file_type(args.otype, output_file_extension)
 
+  global READING
+  READING = True
+
   if reader_type is FileTypes.TTML:
     # 
     # Parse the xml input file into an ElementTree
@@ -176,6 +182,8 @@ def convert(args):
     
     LOGGER.error(exit_str)
     sys.exit(exit_str)
+
+  READING = False
 
   if writer_type is FileTypes.TTML:
     #
