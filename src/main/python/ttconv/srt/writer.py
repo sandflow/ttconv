@@ -173,7 +173,7 @@ class SrtContext:
 # srt writer
 #
 
-def from_model(doc: model.Document, progress_callback = None) -> str:
+def from_model(doc: model.Document, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()
@@ -188,8 +188,7 @@ def from_model(doc: model.Document, progress_callback = None) -> str:
 
     srt.add_isd(isd, offset)
 
-    if progress_callback:
-      progress_callback((index + 1) / nb_significant_times)
+    progress_callback((index + 1) / nb_significant_times)
 
   srt.finish()
 

@@ -523,7 +523,7 @@ class SccLine:
 # SCC reader
 #
 
-def to_model(scc_content: str, progress_callback=None):
+def to_model(scc_content: str, progress_callback=lambda _: None):
   """Converts a SCC document to the data model"""
 
   context = _SccContext()
@@ -552,8 +552,7 @@ def to_model(scc_content: str, progress_callback=None):
     LOGGER.debug(line)
     scc_line = SccLine.from_str(line)
 
-    if progress_callback:
-      progress_callback((index + 1) / nb_lines)
+    progress_callback((index + 1) / nb_lines)
 
     if scc_line is None:
       continue
