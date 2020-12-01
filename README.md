@@ -32,7 +32,7 @@ Processing shared across multiple reader and writer modules is factored out in c
 
 ### Command line
 
-_NOTE: The current build only supports SCC to {SCC, TTML}. Additional input and output formats are being added_
+_NOTE: `ttconv` currently supports {SCC, IMSC} to {SRT, IMSC}. Additional input and output formats are planned._
 
 * Install the runtime dependencies (see below)
 * Run
