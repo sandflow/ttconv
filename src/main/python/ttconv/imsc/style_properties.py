@@ -631,7 +631,7 @@ class StyleProperties:
 
     @classmethod
     def has_px(cls, attrib_value: styles.RubyReserveType) -> bool:
-      return attrib_value.length.units == styles.LengthType.Units.px
+      return attrib_value.length is not None and attrib_value.length.units == styles.LengthType.Units.px
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
