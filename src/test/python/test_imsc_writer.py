@@ -635,10 +635,14 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     self.assertEqual(val, '90000f')
 
     context.frame_rate = Fraction(30000, 1001)
-    time = float(0.7674333333333333).as_integer_ratio()
-    time = Fraction(time[0], time[1])
+    time = Fraction(0.7674333333333333)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '23f')
 
+    context.frame_rate = Fraction(30000, 1001)
+    time = 2301 / Fraction(30000, 1001)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '2301f')
+    
 if __name__ == '__main__':
   unittest.main()
