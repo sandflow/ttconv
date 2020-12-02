@@ -371,20 +371,24 @@ class ISD(model.Document):
 
     else:
 
-      for child_element in iter(element):
-        isd_child_element = ISD._process_element(
-          isd,
-          absolute_offset,
-          selected_region,
-          associated_region,
-          isd_element,
-          begin_time,
-          end_time,
-          child_element
+      isd_element_children = tuple(
+        filter(
+          lambda e : e is not None,
+          map(
+            lambda child_element: ISD._process_element(
+              isd,
+              absolute_offset,
+              selected_region,
+              associated_region,
+              isd_element,
+              begin_time,
+              end_time,
+              child_element
+            ),
+            element
+          )
         )
-
-        if isd_child_element is not None:
-          isd_element_children.append(isd_child_element)
+      )
 
     if len(isd_element_children) > 0:
       isd_element.push_children(isd_element_children)
