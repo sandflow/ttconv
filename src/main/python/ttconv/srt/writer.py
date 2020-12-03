@@ -25,10 +25,12 @@
 
 """SRT writer"""
 
+import sys
 import logging
 from fractions import Fraction
-from multiprocessing import cpu_count, Manager, Pool, Queue
 from typing import List
+
+from multiprocessing import Pool
 
 import ttconv.model as model
 import ttconv.srt.style as style
@@ -174,52 +176,30 @@ class SrtContext:
 # srt writer
 #
 
-def _compute_isd(queue: Queue, doc: model.ContentDocument, offset: Fraction):
-  """Computes ISD from model and time offset, and send it to the queue"""
-  queue.put((offset, ISD.from_model(doc, offset)))
-
+def _process(worker_data):
+  return ISD.from_model(worker_data[1], worker_data[0])
 
 def from_model(doc: model.ContentDocument) -> str:
   """Converts the data model to a SRT document"""
 
+  sys.setrecursionlimit(10000)
+
   srt = SrtContext()
-  significant_times = ISD.significant_times(doc)
 
-  # Set up ISD computation thread pool
-  manager = Manager()
-  queue = manager.Queue()
-  computation_arguments = map(lambda sig_time: (queue, doc, sig_time), significant_times)
-
-  # Use all available CPUs except one
-  cpus = cpu_count() - 1
+  offsets = ISD.significant_times(doc)
 
   # Compute ISDs
-  with Pool(cpus) as pool:
-    pool.starmap(func=_compute_isd, iterable=computation_arguments)
 
-  # Computed ISDs buffer
-  buffer = {}
-  offset = None
-  isd = None
+  with Pool() as pool:
+    isds = pool.map(
+      _process,
+      [(offset, doc) for offset in offsets]
+    )
 
-  for significant_time in significant_times:
+  # process ISDs
 
-    while offset != significant_time:
+  for offset, isd in zip(offsets, isds):
 
-      if offset is not None:
-        # Fill ISDs buffer
-        buffer[offset] = isd
-
-      buffered_isd = buffer.get(significant_time)
-      if buffered_isd is None:
-        # Consume ISDs queue
-        (offset, isd) = queue.get(block=True)
-      else:
-        # Consume ISDs buffer
-        offset = significant_time
-        isd = buffered_isd
-
-    # Process ISD filters
     for srt_filter in srt.filters:
       srt_filter.process(isd)
 
