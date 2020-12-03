@@ -30,7 +30,7 @@
 import unittest
 from fractions import Fraction
 
-from ttconv.model import Document, Span, Br
+from ttconv.model import ContentDocument, Span, Br
 from ttconv.scc.content import SccCaptionLineBreak
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
@@ -113,7 +113,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
   def test_to_paragraph(self):
     caption_paragraph = SccCaptionParagraph()
-    doc = Document()
+    doc = ContentDocument()
 
     self.assertRaisesRegex(TypeError, "Element id must be a valid xml:id string", caption_paragraph.to_paragraph, doc)
 

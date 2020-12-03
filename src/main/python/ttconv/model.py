@@ -115,16 +115,16 @@ class ContentElement:
   # document
 
   def is_attached(self) -> bool:
-    '''Returns whether the element belongs to a `Document`.'''
+    '''Returns whether the element belongs to a `ContentDocument`.'''
     return self.get_doc() is not None
 
-  def get_doc(self) -> typing.Optional[Document]:
-    '''Returns the `Document` to which the element belongs, or `None` otherwise.'''
+  def get_doc(self) -> typing.Optional[ContentDocument]:
+    '''Returns the `ContentDocument` to which the element belongs, or `None` otherwise.'''
     return self._doc
 
-  def set_doc(self, doc: Document):
+  def set_doc(self, doc: ContentDocument):
     '''Attaches the element to `doc`, or detaches it from its current owning
-    `Document` if `doc` is `None`.'''
+    `ContentDocument` if `doc` is `None`.'''
 
     if doc is None:
 
@@ -774,7 +774,7 @@ class Region(ContentElement):
     StyleProperties.WritingMode
     ])
 
-  def __init__(self, region_id: str, doc: Document = None):
+  def __init__(self, region_id: str, doc: ContentDocument = None):
     super().__init__(doc)
     
     if region_id is None:
@@ -844,7 +844,7 @@ class ActiveAreaType:
     if self.height < 0  or self.height > 1:
       raise ValueError("height must be in the range [0, 1]")
 
-class Root:
+class Document:
   '''Base class for TTML documents, including ISDs, as specified in TTML2'''
 
   def __init__(self):
@@ -923,7 +923,7 @@ class Root:
 
     self._px_resolution = px_resolution
 
-class Document(Root):
+class ContentDocument(Document):
   '''TTML document'''
 
   def __init__(self):

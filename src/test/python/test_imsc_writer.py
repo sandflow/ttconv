@@ -95,6 +95,22 @@ class ReaderWriterTest(unittest.TestCase):
             if len(logs.output) > 1:
               self.fail(logs.output)
 
+  def test_imsc_1_1_test_suite(self):
+    if not os.path.exists('build/imsc1_1'):
+      os.makedirs('build/imsc1_1')
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            test_model = imsc_reader.to_model(tree)
+            tree_from_model = imsc_writer.from_model(test_model)
+            self.write_pretty_xml(tree_from_model, f'build/imsc1_1/{name}.ttml')
+            if len(logs.output) > 1:
+              self.fail(logs.output)
+
 class FromModelBodyWriterTest(unittest.TestCase):
 
   def setUp(self):
@@ -109,7 +125,7 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
   def test_body_only(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
     body = model.Body(doc)
     div = model.Div(doc)
     p = model.P(doc)
@@ -346,7 +362,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
   def test_tts_writing_no_extent_when_no_body(self):
 
-    d = model.Document()
+    d = model.ContentDocument()
 
     tree_from_model = imsc_writer.from_model(d)
 
@@ -357,7 +373,7 @@ class StylePropertyWriterTest(unittest.TestCase):
   
   def test_tts_writing_no_extent_when_body_has_no_extents(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
     body = model.Body(doc)
     div = model.Div(doc)
     p = model.P(doc)
@@ -380,7 +396,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
   def test_tts_writing_extent_when_body_has_extents(self):
 
-    doc = model.Document()
+    doc = model.ContentDocument()
     body = model.Body(doc)
     div = model.Div(doc)
 

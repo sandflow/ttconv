@@ -42,7 +42,7 @@ LOGGER = logging.getLogger(__name__)
 READING = True
 
 # Print iterations progress
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', print_end = "\r"):
   """
   Call in a loop to create terminal progress bar
   @params:
@@ -53,20 +53,20 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
       decimals    - Optional  : positive number of decimals in percent complete (Int)
       length      - Optional  : character length of bar (Int)
       fill        - Optional  : bar fill character (Str)
-      printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+      print_end    - Optional  : end character (e.g. "\r", "\r\n") (Str)
   """
   percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
   filled_length = int(length * iteration // total)
-  bar = fill * filled_length + '-' * (length - filled_length)
-  print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+  bar_val = fill * filled_length + '-' * (length - filled_length)
+  print(f'\r{prefix} |{bar_val}| {percent}% {suffix}', end = print_end)
   # Print New Line on Complete
   if iteration == total: 
-      print()
+    print()
 
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
   prefix_str = "Reading Progress:" if READING else "Writing Progress:"
-  printProgressBar(percent_progress, 1.0, prefix = prefix_str, suffix = 'Complete', length = 50)
+  print_progress_bar(percent_progress, 1.0, prefix = prefix_str, suffix = 'Complete', length = 50)
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
