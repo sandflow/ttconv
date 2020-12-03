@@ -29,6 +29,7 @@ import sys
 import logging
 from fractions import Fraction
 from typing import List
+from itertools import starmap
 
 from multiprocessing import Pool
 
@@ -176,8 +177,8 @@ class SrtContext:
 # srt writer
 #
 
-def _process(worker_data):
-  return ISD.from_model(worker_data[1], worker_data[0])
+def _generate_isd(doc, offset):
+  return ISD.from_model(doc, offset)
 
 def from_model(doc: model.ContentDocument) -> str:
   """Converts the data model to a SRT document"""
@@ -190,11 +191,20 @@ def from_model(doc: model.ContentDocument) -> str:
 
   # Compute ISDs
 
-  with Pool() as pool:
-    isds = pool.map(
-      _process,
-      [(offset, doc) for offset in offsets]
-    )
+  if len(offsets) > 100:
+
+    with Pool() as pool:
+      isds = pool.starmap(
+        _generate_isd,
+        [(doc, offset) for offset in offsets]
+      )
+
+  else:
+
+    isds = starmap(
+        _generate_isd,
+        [(doc, offset) for offset in offsets]
+      )
 
   # process ISDs
 
