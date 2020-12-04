@@ -171,7 +171,7 @@ def convert(args):
     #
     # Write out the converted file
     #
-    with open(outputfile, "w") as srt_file:
+    with open(outputfile, "w", encoding="utf-8") as srt_file:
       srt_file.write(srt_document)
 
   else:
