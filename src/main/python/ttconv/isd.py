@@ -41,9 +41,14 @@ class SignificantTimes:
   """Information on the temporal offsets at which a ContentDocument changes.
   The class emulates the behavior of a list containing temporal offsets where the document changes, in increasing order
   """
-  def __init__(self, sig_times, cache = None):
+  def __init__(
+    self,
+    sig_times: typing.List[Fraction],
+    interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]] = None
+    ):
+
     self._sig_times = tuple(sig_times)
-    self._cache = cache or {}
+    self._cache = interval_cache or {}
 
   def __getitem__(self, key):
     return self._sig_times[key]
