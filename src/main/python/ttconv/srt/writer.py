@@ -177,8 +177,8 @@ class SrtContext:
 # srt writer
 #
 
-def _generate_isd(doc, offset):
-  return ISD.from_model(doc, offset)
+def _generate_isd(doc, offset, sig_times):
+  return ISD.from_model(doc, offset, sig_times)
 
 def from_model(doc: model.ContentDocument) -> str:
   """Converts the data model to a SRT document"""
@@ -196,14 +196,14 @@ def from_model(doc: model.ContentDocument) -> str:
     with Pool() as pool:
       isds = pool.starmap(
         _generate_isd,
-        [(doc, offset) for offset in offsets]
+        [(doc, offset, offsets) for offset in offsets]
       )
 
   else:
 
     isds = starmap(
         _generate_isd,
-        [(doc, offset) for offset in offsets]
+        [(doc, offset, offsets) for offset in offsets]
       )
 
   # process ISDs

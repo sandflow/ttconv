@@ -36,6 +36,23 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 
+class SignificantTimes:
+  def __init__(self, sig_times, cache = None):
+    self._sig_times = sig_times
+    self._cache = cache or {}
+
+  def __getitem__(self, key):
+    return self._sig_times[key]
+
+  def __len__(self):
+    return len(self._sig_times)
+
+  def __iter__(self):
+    return iter(self._sig_times)
+
+  def interval_cache(self):
+    return self._cache
+
 class ISD(model.Document):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
   of a `model.ContentDocument` taken at a given point in time
@@ -127,15 +144,19 @@ class ISD(model.Document):
     return (begin_time, end_time)
 
   @staticmethod
-  def significant_times(doc: model.ContentDocument) -> typing.List[Fraction]:
+  def significant_times(doc: model.ContentDocument) -> SignificantTimes:
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
     increasing order'''
+
+    cache = {}
 
     def sig_times(element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
 
       # add signficant times for the element
 
       begin_time, end_time = ISD._make_absolute(element.get_begin(), element.get_end(), parent_begin, parent_end)
+
+      cache[element] = (begin_time, end_time)
 
       s_times.add(begin_time)
 
@@ -169,24 +190,26 @@ class ISD(model.Document):
     if doc.get_body() is not None:
       sig_times(doc.get_body(), 0, None) 
 
-    return sorted(s_times)
+    return SignificantTimes(sorted(s_times), cache)
 
   @staticmethod
-  def from_model(doc: model.ContentDocument, offset: Fraction) -> typing.Optional[ISD]:
+  def from_model(doc: model.ContentDocument, offset: Fraction, sig_times: SignificantTimes = None) -> typing.Optional[ISD]:
     '''Creates an ISD from a snapshot of a ContentDocument `doc` at a given time offset `offset`
     '''
     isd = ISD(doc)
 
     regions = tuple(doc.iter_regions())
 
+    cache = {} if sig_times is None else sig_times.interval_cache()
+
     if regions:
       for region in regions:
-        isd_region = ISD._process_element(isd, offset, region, None, None, None, None, region)
+        isd_region = ISD._process_element(cache, isd, offset, region, None, None, None, None, region)
         if isd_region is not None:
           isd.put_region(isd_region)
     else:
       default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
-      isd_region = ISD._process_element(isd, offset, None, None, None, None, None, default_region)
+      isd_region = ISD._process_element(cache, isd, offset, None, None, None, None, None, default_region)
       if isd_region is not None:
         isd.put_region(isd_region)
 
@@ -220,6 +243,7 @@ class ISD(model.Document):
 
   @staticmethod
   def _process_element(
+      cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]],
       isd: ISD,
       absolute_offset: Fraction,
       selected_region: model.Region,
@@ -232,14 +256,18 @@ class ISD(model.Document):
     if element is None:
       return None
 
-    doc = element.get_doc()
+    element_interval = cache.get(element)
 
-    begin_time, end_time = ISD._make_absolute(
-      element.get_begin(),
-      element.get_end(),
-      parent_computed_begin,
-      parent_computed_end
-    )
+    if element_interval is None:
+      element_interval = ISD._make_absolute(
+        element.get_begin(),
+        element.get_end(),
+        parent_computed_begin,
+        parent_computed_end
+      )
+      cache[element] = element_interval
+
+    begin_time, end_time = element_interval
 
     # prune if temporally inactive
     
@@ -265,6 +293,8 @@ class ISD(model.Document):
       return None
 
     # create an ISD element
+
+    doc = element.get_doc()
 
     if isinstance(element, model.Region):
       isd_element = ISD.Region(element.get_id(), isd)
@@ -356,6 +386,7 @@ class ISD(model.Document):
     if isinstance(element, model.Region):
 
       isd_body_element = ISD._process_element(
+        cache,
         isd,
         absolute_offset,
         selected_region,
@@ -376,6 +407,7 @@ class ISD(model.Document):
           lambda e : e is not None,
           map(
             lambda child_element: ISD._process_element(
+              cache,
               isd,
               absolute_offset,
               selected_region,
