@@ -25,13 +25,9 @@
 
 """SRT writer"""
 
-import sys
 import logging
 from fractions import Fraction
 from typing import List
-from itertools import starmap
-
-from multiprocessing import Pool
 
 import ttconv.model as model
 import ttconv.srt.style as style
@@ -177,38 +173,19 @@ class SrtContext:
 # srt writer
 #
 
-def _generate_isd(doc, offset, sig_times):
-  return ISD.from_model(doc, offset, sig_times)
 
 def from_model(doc: model.ContentDocument) -> str:
   """Converts the data model to a SRT document"""
 
-  sys.setrecursionlimit(10000)
-
   srt = SrtContext()
-
-  sig_times = ISD.significant_times(doc)
 
   # Compute ISDs
 
-  if len(sig_times) > 100:
-
-    with Pool() as pool:
-      isds = pool.starmap(
-        _generate_isd,
-        [(doc, offset, sig_times) for offset in sig_times]
-      )
-
-  else:
-
-    isds = starmap(
-        _generate_isd,
-        [(doc, offset, sig_times) for offset in sig_times]
-      )
+  isds = ISD.generate_isd_sequence(doc)
 
   # process ISDs
 
-  for offset, isd in zip(sig_times, isds):
+  for offset, isd in isds:
 
     for srt_filter in srt.filters:
       srt_filter.process(isd)

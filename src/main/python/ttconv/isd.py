@@ -31,14 +31,18 @@ import inspect
 import typing
 import numbers
 import re
+from itertools import starmap
 from fractions import Fraction
 
 import ttconv.model as model
 import ttconv.style_properties as styles
 
 class SignificantTimes:
+  """Information on the temporal offsets at which a ContentDocument changes.
+  The class emulates the behavior of a list containing temporal offsets where the document changes, in increasing order
+  """
   def __init__(self, sig_times, cache = None):
-    self._sig_times = sig_times
+    self._sig_times = tuple(sig_times)
     self._cache = cache or {}
 
   def __getitem__(self, key):
@@ -50,8 +54,16 @@ class SignificantTimes:
   def __iter__(self):
     return iter(self._sig_times)
 
-  def interval_cache(self):
+  def interval_cache(self) -> typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]:
+    """Returns a dictionary that maps content elements to their respective absolute begin and end times.
+    This dictionary is optionally used by `ISD.from_model` to increase performance.
+    """
     return self._cache
+
+  def offsets(self) -> typing.Tuple[Fraction,...]:
+    """Returns a list of temporal offsets where the document changes, in increasing order.
+    """
+    return self._sig_times
 
 class ISD(model.Document):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
@@ -148,7 +160,7 @@ class ISD(model.Document):
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
     increasing order'''
 
-    cache = {}
+    interval_cache = {}
 
     def sig_times(element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
 
@@ -156,7 +168,7 @@ class ISD(model.Document):
 
       begin_time, end_time = ISD._make_absolute(element.get_begin(), element.get_end(), parent_begin, parent_end)
 
-      cache[element] = (begin_time, end_time)
+      interval_cache[element] = (begin_time, end_time)
 
       s_times.add(begin_time)
 
@@ -190,30 +202,69 @@ class ISD(model.Document):
     if doc.get_body() is not None:
       sig_times(doc.get_body(), 0, None) 
 
-    return SignificantTimes(sorted(s_times), cache)
+    return SignificantTimes(sorted(s_times), interval_cache)
 
   @staticmethod
-  def from_model(doc: model.ContentDocument, offset: Fraction, sig_times: SignificantTimes = None) -> typing.Optional[ISD]:
-    '''Creates an ISD from a snapshot of a ContentDocument `doc` at a given time offset `offset`
+  def from_model(
+    doc: model.ContentDocument,
+    offset: Fraction,
+    sig_times: typing.Optional[SignificantTimes] = None) -> typing.Optional[ISD]:
+    '''Creates an ISD from a snapshot of a ContentDocument `doc` at a given time offset `offset`.
+    A `SignificantTimes` instance generated from `doc` can be provided to speed-up the generation process.
     '''
     isd = ISD(doc)
 
     regions = tuple(doc.iter_regions())
 
-    cache = {} if sig_times is None else sig_times.interval_cache()
+    interval_cache = {} if sig_times is None else sig_times.interval_cache()
 
     if regions:
       for region in regions:
-        isd_region = ISD._process_element(cache, isd, offset, region, None, None, None, None, region)
+        isd_region = ISD._process_element(interval_cache, isd, offset, region, None, None, None, None, region)
         if isd_region is not None:
           isd.put_region(isd_region)
     else:
       default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
-      isd_region = ISD._process_element(cache, isd, offset, None, None, None, None, None, default_region)
+      isd_region = ISD._process_element(interval_cache, isd, offset, None, None, None, None, None, default_region)
       if isd_region is not None:
         isd.put_region(isd_region)
 
     return isd
+
+  @staticmethod
+  def generate_isd_sequence(doc: model.ContentDocument, is_multithreaded: bool = True) -> typing.List[typing.Tuple[Fraction, ISD]]:
+    """ Returns a list of duples, each consisting of a significant time in the ContentDocument `doc`
+    and the corresponding `ISD` instance. The duples are sorted in order of increasing significant time.
+    This helper function by default uses multithreading to improve performance on large ContentDocument instances.
+    """
+
+    sig_times = ISD.significant_times(doc)
+
+  # Compute ISDs
+
+    if len(sig_times) > 100 and is_multithreaded:
+
+      # pylint: disable=import-outside-toplevel
+      import sys
+      from multiprocessing import Pool
+      # pylint: enable=import-outside-toplevel
+
+      sys.setrecursionlimit(10000)
+
+      with Pool() as pool:
+        isds = pool.starmap(
+          _generate_isd,
+          [(doc, offset, sig_times) for offset in sig_times]
+        )
+
+    else:
+
+      isds = starmap(
+          _generate_isd,
+          [(doc, offset, sig_times) for offset in sig_times]
+        )
+
+    return list(zip(sig_times, isds))
 
   @staticmethod
   def _compute_styles(
@@ -243,7 +294,7 @@ class ISD(model.Document):
 
   @staticmethod
   def _process_element(
-      cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]],
+      interval_cache,
       isd: ISD,
       absolute_offset: Fraction,
       selected_region: model.Region,
@@ -256,7 +307,7 @@ class ISD(model.Document):
     if element is None:
       return None
 
-    element_interval = cache.get(element)
+    element_interval = interval_cache.get(element)
 
     if element_interval is None:
       element_interval = ISD._make_absolute(
@@ -265,7 +316,7 @@ class ISD(model.Document):
         parent_computed_begin,
         parent_computed_end
       )
-      cache[element] = element_interval
+      interval_cache[element] = element_interval
 
     begin_time, end_time = element_interval
 
@@ -386,7 +437,7 @@ class ISD(model.Document):
     if isinstance(element, model.Region):
 
       isd_body_element = ISD._process_element(
-        cache,
+        interval_cache,
         isd,
         absolute_offset,
         selected_region,
@@ -407,7 +458,7 @@ class ISD(model.Document):
           lambda e : e is not None,
           map(
             lambda child_element: ISD._process_element(
-              cache,
+              interval_cache,
               isd,
               absolute_offset,
               selected_region,
@@ -1096,3 +1147,6 @@ class StyleProcessors:
     }
 
 # pylint: enable=missing-class-docstring
+
+def _generate_isd(doc, offset, sig_times):
+  return ISD.from_model(doc, offset, sig_times)
