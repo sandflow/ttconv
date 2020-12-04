@@ -187,28 +187,28 @@ def from_model(doc: model.ContentDocument) -> str:
 
   srt = SrtContext()
 
-  offsets = ISD.significant_times(doc)
+  sig_times = ISD.significant_times(doc)
 
   # Compute ISDs
 
-  if len(offsets) > 100:
+  if len(sig_times) > 100:
 
     with Pool() as pool:
       isds = pool.starmap(
         _generate_isd,
-        [(doc, offset, offsets) for offset in offsets]
+        [(doc, offset, sig_times) for offset in sig_times]
       )
 
   else:
 
     isds = starmap(
         _generate_isd,
-        [(doc, offset, offsets) for offset in offsets]
+        [(doc, offset, sig_times) for offset in sig_times]
       )
 
   # process ISDs
 
-  for offset, isd in zip(offsets, isds):
+  for offset, isd in zip(sig_times, isds):
 
     for srt_filter in srt.filters:
       srt_filter.process(isd)
