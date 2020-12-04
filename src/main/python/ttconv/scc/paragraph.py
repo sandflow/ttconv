@@ -30,7 +30,7 @@ import logging
 import math
 from typing import Optional, List
 
-from ttconv.model import Region, Document, P, Br, Span, Text
+from ttconv.model import Region, ContentDocument, P, Br, Span, Text
 from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_ROW, SccCaptionLineBreak
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.time_codes import SccTimeCode
@@ -215,7 +215,7 @@ class SccCaptionParagraph:
 
     return last_lines
 
-  def to_paragraph(self, doc: Document) -> P:
+  def to_paragraph(self, doc: ContentDocument) -> P:
     """Converts and returns current caption paragraph into P instance"""
 
     # Set up a new paragraph
@@ -282,7 +282,7 @@ class SccCaptionParagraph:
 class _SccParagraphRegion:
   """SCC paragraph region utility class"""
 
-  def __init__(self, paragraph: SccCaptionParagraph, doc: Document):
+  def __init__(self, paragraph: SccCaptionParagraph, doc: ContentDocument):
     self._paragraph = paragraph
     self._doc = doc
 

@@ -49,7 +49,7 @@ class TTMLElement:
 
     def __init__(self, ttml_class: TTMLElement, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
 
-      self.doc = parent_ctx.doc if parent_ctx is not None else model.Document()
+      self.doc = parent_ctx.doc if parent_ctx is not None else model.ContentDocument()
 
       self.style_elements: typing.Dict[str, StyleElement] = parent_ctx.style_elements if parent_ctx is not None else {}
 
@@ -199,7 +199,7 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document, frame_rate = None) -> et.Element:
+  def from_model(model_doc: model.ContentDocument, frame_rate = None) -> et.Element:
     '''Converts the data model to an IMSC document contained in an ElementTree Element'''
 
     tt_element = et.Element(TTElement.qn)
@@ -314,7 +314,7 @@ class HeadElement(TTMLElement):
     return head_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.Document):
+  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.ContentDocument):
 
     head_element = et.Element(HeadElement.qn)
 
@@ -374,7 +374,7 @@ class LayoutElement(TTMLElement):
     return layout_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.Document):
+  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.ContentDocument):
 
     layout_element = et.Element(LayoutElement.qn)
     
@@ -452,7 +452,7 @@ class StylingElement(TTMLElement):
     return styling_ctx
 
   @staticmethod
-  def from_model(model_doc: model.Document) -> typing.Optional[et.Element]:
+  def from_model(model_doc: model.ContentDocument) -> typing.Optional[et.Element]:
     
     styling_element = None
 
@@ -571,7 +571,7 @@ class InitialElement(TTMLElement):
 
       try:
 
-        # set the initial value on the data model Document (the data model does have 
+        # set the initial value on the data model ContentDocument (the data model does have 
         # a distinct <initial> element)
 
         model_prop, model_value = prop.to_model(initial_ctx, xml_elem)
@@ -848,6 +848,12 @@ class ContentElement(TTMLElement):
 
     # pylint: enable=too-many-branches
 
+  @classmethod
+  def make_ttml_element(cls):
+    '''Creates an XML element for the content element
+    '''
+    raise NotImplementedError
+
   @staticmethod
   def from_model_style_properties(model_content_element, element):
     '''Write TTML style properties from the model'''
@@ -966,7 +972,7 @@ class ContentElement(TTMLElement):
     else:
       return None
 
-    xml_element = et.Element(imsc_class.qn)
+    xml_element = imsc_class.make_ttml_element()
 
     if imsc_class.has_region:
       if model_element.get_region() is not None:
@@ -1039,6 +1045,10 @@ class RegionElement(ContentElement):
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.Region):
     return ContentElement.from_model(ctx, model_element)
 
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)
+
 class SetElement(ContentElement):
   '''Process TTML <set> element
   '''
@@ -1092,6 +1102,11 @@ class SetElement(ContentElement):
 
     return set_element
 
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)
+
+
 class BodyElement(ContentElement):
   '''Process TTML body element
   '''
@@ -1119,9 +1134,11 @@ class BodyElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
 
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)
 
 class DivElement(ContentElement):
   '''Process TTML <div> element
@@ -1152,6 +1169,9 @@ class DivElement(ContentElement):
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
     return ContentElement.from_model(ctx, model_element)
 
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)
 
 class PElement(ContentElement):
   '''Process TTML <p> element
@@ -1182,6 +1202,9 @@ class PElement(ContentElement):
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
     return ContentElement.from_model(ctx, model_element)
 
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)
 
 class SpanElement(ContentElement):
   '''Process the TTML <span> element
@@ -1198,6 +1221,8 @@ class SpanElement(ContentElement):
   is_mixed = True
   has_children = True
 
+  ruby_attribute_qn = f"{{{xml_ns.TTS}}}ruby"
+
   @staticmethod
   def is_instance(xml_elem):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) is None
@@ -1206,7 +1231,7 @@ class SpanElement(ContentElement):
   def get_ruby_attr(ttml_span):
     '''extracts the value of the TTML `tts:ruby` attribute from the XML element `ttml_span`
     '''
-    return ttml_span.get(f"{{{xml_ns.TTS}}}ruby")
+    return ttml_span.get(SpanElement.ruby_attribute_qn)
 
   @classmethod
   def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SpanElement.ParsingContext]:
@@ -1216,9 +1241,11 @@ class SpanElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
 
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)
 
 class RubyElement(ContentElement):
   '''Process the TTML <span tts:ruby="container"> element
@@ -1228,6 +1255,7 @@ class RubyElement(ContentElement):
     '''Maintains state when parsing the element
     '''
 
+  qn = f"{{{xml_ns.TTML}}}span"
   ruby = "container"
   has_timing = True
   has_region = True
@@ -1248,6 +1276,10 @@ class RubyElement(ContentElement):
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn, {SpanElement.ruby_attribute_qn: cls.ruby})
 
 class RbElement(ContentElement):
   '''Process the TTML <span tts:ruby="base"> element
@@ -1276,8 +1308,11 @@ class RbElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(RubyElement.qn, {SpanElement.ruby_attribute_qn: cls.ruby})
 
 
 class RtElement(ContentElement):
@@ -1307,8 +1342,11 @@ class RtElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(RubyElement.qn, {SpanElement.ruby_attribute_qn: cls.ruby})
 
 
 class RpElement(ContentElement):
@@ -1338,8 +1376,11 @@ class RpElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(RubyElement.qn, {SpanElement.ruby_attribute_qn: cls.ruby})
 
 
 class RbcElement(ContentElement):
@@ -1369,8 +1410,11 @@ class RbcElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(RubyElement.qn, {SpanElement.ruby_attribute_qn: cls.ruby})
 
 
 class RtcElement(ContentElement):
@@ -1400,8 +1444,12 @@ class RtcElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(RubyElement.qn, {SpanElement.ruby_attribute_qn: cls.ruby})
+
 
 class BrElement(ContentElement):
   '''Process the TTML <br> element
@@ -1430,5 +1478,8 @@ class BrElement(ContentElement):
 
   @staticmethod
   def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
-    
     return ContentElement.from_model(ctx, model_element)
+
+  @classmethod
+  def make_ttml_element(cls):
+    return et.Element(cls.qn)

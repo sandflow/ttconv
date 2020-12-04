@@ -31,7 +31,7 @@ from unittest import TestCase
 
 from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
 from ttconv.isd import ISD
-from ttconv.model import P, Document, Region, Body, Div, Span, Text
+from ttconv.model import P, ContentDocument, Region, Body, Div, Span, Text
 from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType
 
 
@@ -60,7 +60,7 @@ class DefaultStylesFilterTest(TestCase):
       StyleProperties.Direction: DirectionType.ltr
     })
 
-    doc = Document()
+    doc = ContentDocument()
 
     r1 = Region("r1", doc)
     r1.set_style(StyleProperties.BackgroundColor, NamedColors.red.value)

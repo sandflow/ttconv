@@ -29,7 +29,7 @@
 
 import unittest
 
-from ttconv.model import Document, CellResolutionType
+from ttconv.model import ContentDocument, CellResolutionType
 from ttconv.scc.content import SccCaptionLineBreak
 from ttconv.scc.paragraph import SccCaptionParagraph, _SccParagraphRegion
 from ttconv.scc.style import SccCaptionStyle
@@ -39,7 +39,7 @@ from ttconv.style_properties import StyleProperties
 class SccParagraphRegionTest(unittest.TestCase):
 
   def test_region_prefix(self):
-    doc = Document()
+    doc = ContentDocument()
 
     caption_paragraph = SccCaptionParagraph()
     paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
@@ -58,7 +58,7 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertEqual("rollup", paragraph_region._get_region_prefix())
 
   def test_matching_region(self):
-    doc = Document()
+    doc = ContentDocument()
     doc_columns = 40
     doc_rows = 19
     doc.set_cell_resolution(CellResolutionType(rows=doc_rows, columns=doc_columns))

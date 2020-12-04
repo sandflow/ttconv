@@ -31,7 +31,7 @@ import logging
 import re
 from typing import Optional, List
 
-from ttconv.model import Document, Body, Div, CellResolutionType
+from ttconv.model import ContentDocument, Body, Div, CellResolutionType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
@@ -527,7 +527,7 @@ def to_model(scc_content: str):
   """Converts a SCC document to the data model"""
 
   context = _SccContext()
-  document = Document()
+  document = ContentDocument()
 
   # Safe area must be a 32x15 grid, that represents 80% of the root area
   root_cell_resolution = CellResolutionType(rows=19, columns=40)

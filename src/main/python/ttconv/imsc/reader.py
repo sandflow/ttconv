@@ -32,7 +32,7 @@ import ttconv.model as model
 LOGGER = logging.getLogger(__name__)
 
 
-def to_model(xml_tree) -> model.Document:
+def to_model(xml_tree) -> model.ContentDocument:
   '''Convers an IMSC document to the data model'''
 
   xml_element = xml_tree.getroot()

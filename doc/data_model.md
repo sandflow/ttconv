@@ -9,7 +9,7 @@ The canonical model is specified in `ttconv.model`.
 The class hierarchy of the canonical model is summarized the following figure:
 
 ```txt
-  Document
+  ContentDocument
     : Region* Body?
 
   Body
@@ -42,7 +42,7 @@ The class hierarchy of the canonical model is summarized the following figure:
 
 where:
 
-* the `Document` class corresponds to the `tt` element
+* the `ContentDocument` class corresponds to the `tt` element
 * the `Body`, `Div`, `P`, `Span`, `Br` and `Region` classes corresponds to the TTML content element of the same name, respectively
 * the `Text` class corresponds to a TTML text node
 * the `Ruby`, `Rt`, `Rb`, `Rtc`, `Rbc`, `Rp` classes correspond to the TTML `span` element with the computed value of `tts:ruby` attribute specified in the following table
@@ -58,13 +58,13 @@ where:
 
 ## Basic operation
 
-The canonical model allows content elements (instances of `ttconv.model.ContentElement`) to be arranged in a hierarchical structures (using the `ttconv.model.ContentElement.push_child()` and `ttconv.model.ContentElement.remove_child()`) that are associated with a single document (using the `ttconv.model.ContentElement.set_doc()` method with an instance of `ttconv.model.Document`).
+The canonical model allows content elements (instances of `ttconv.model.ContentElement`) to be arranged in a hierarchical structures (using the `ttconv.model.ContentElement.push_child()` and `ttconv.model.ContentElement.remove_child()`) that are associated with a single document (using the `ttconv.model.ContentElement.set_doc()` method with an instance of `ttconv.model.ContentDocument`).
 
 ## Divergences with the TTML data model
 
 ### Initial values
 
-The TTML `initial` elements are accessed using the `Document.set_initial_value()` and `Document.get_initial_value()` method.
+The TTML `initial` elements are accessed using the `ContentDocument.set_initial_value()` and `ContentDocument.get_initial_value()` method.
 
 ### Styling
 

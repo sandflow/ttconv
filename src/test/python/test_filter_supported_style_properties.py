@@ -31,7 +31,7 @@ from unittest import TestCase
 
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
-from ttconv.model import P, Document, Region, Body, Div, Span, Text
+from ttconv.model import P, ContentDocument, Region, Body, Div, Span, Text
 from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType, ExtentType, LengthType
 
 
@@ -75,7 +75,7 @@ class SupportedStylePropertiesFilterTest(TestCase):
       StyleProperties.Extent: []
     })
 
-    doc = Document()
+    doc = ContentDocument()
 
     r1 = Region("r1", doc)
     r1.set_style(StyleProperties.BackgroundColor, NamedColors.red.value)

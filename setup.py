@@ -1,12 +1,8 @@
 """A setuptools based setup module.
-
-See:
-https://packaging.python.org/guides/distributing-packages-using-setuptools/
-https://github.com/pypa/sampleproject
 """
 
-from setuptools import setup, find_packages
 import pathlib
+from setuptools import setup, find_packages
 
 here = pathlib.Path(__file__).parent.resolve()
 
@@ -14,13 +10,13 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='ttconv', 
-    version='1.0.0.dev1',
+    version='1.0.0.dev2',
     description='Library for conversion of common timed text formats',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/sandlow/ttconv',
     author='Sandflow Consulting LLC',
-    author_email='pal@sandflow.com',
+    author_email='info@sandflow.com',
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Developers',
@@ -34,7 +30,7 @@ setup(
     ],
     keywords='ttml, timed text, captions, subtitles, imsc, scc, srt, webvtt, smpte-tt, conversion',
 
-    package_dir={'ttconv': 'src/main/python'}, 
+    package_dir={'ttconv': 'src/main/python/ttconv'}, 
 
     packages=find_packages(where='src/main/python'),
 
