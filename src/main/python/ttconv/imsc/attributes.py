@@ -312,7 +312,7 @@ def to_hh_mm_ss_ms(time: Fraction) -> str:
   millisecond = (time % 1) * 1000
   minute, second = divmod(time, 60) 
   hour, minute = divmod(minute, 60) 
-  return f"{hour}:{minute:02}:{int(second):02}.{int(millisecond):03}s"
+  return f"{hour}:{minute:02}:{int(second):02}.{int(millisecond):03}"
 
 def to_frames(context: TemporalAttributeWritingContext, time: Fraction) -> str:
   value = time * context.frame_rate
