@@ -173,19 +173,22 @@ class SrtContext:
 # srt writer
 #
 
-def from_model(doc: model.ContentDocument) -> str:
+def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()
   significant_times = ISD.significant_times(doc)
+  nb_significant_times = len(significant_times)
 
-  for offset in significant_times:
+  for (index, offset) in enumerate(significant_times):
     isd = ISD.from_model(doc, offset)
 
     for srt_filter in srt.filters:
       srt_filter.process(isd)
 
     srt.add_isd(isd, offset)
+
+    progress_callback((index + 1) / nb_significant_times)
 
   srt.finish()
 

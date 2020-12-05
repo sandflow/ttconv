@@ -104,7 +104,7 @@ class TTMLElement:
     raise NotImplementedError
 
   @staticmethod
-  def from_xml(parent_ctx, xml_elem):
+  def from_xml(parent_ctx, xml_elem, progress_callback=lambda _: None):
     '''Returns a parsing context for the TTML element represented by the XML element `xml_elem` and
     given the parent context `parent_ctx`
     '''
@@ -125,7 +125,7 @@ class TTElement(TTMLElement):
     return xml_elem.tag == TTElement.qn
 
   @staticmethod
-  def from_xml(_parent_ctx: typing.Optional[TTMLElement.ParsingContext], xml_elem) -> TTElement.ParsingContext:
+  def from_xml(_parent_ctx: typing.Optional[TTMLElement.ParsingContext], xml_elem, progress_callback=lambda _: None) -> TTElement.ParsingContext:
     '''`_parent_ctx` is ignored and can be set to `None`
     '''
 
@@ -182,6 +182,8 @@ class TTElement(TTMLElement):
 
           tt_ctx.doc.set_body(body_element.model_element if body_element is not None else None)
 
+          progress_callback(1)
+
         else:
           LOGGER.error("More than one body element present")
 
@@ -193,13 +195,15 @@ class TTElement(TTMLElement):
 
           HeadElement.from_xml(tt_ctx, child_element)
 
+          progress_callback(0.5)
+
         else:
           LOGGER.error("More than one head element present")
 
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.ContentDocument, frame_rate = None) -> et.Element:
+  def from_model(model_doc: model.ContentDocument, frame_rate = None, progress_callback=lambda _: None) -> et.Element:
     '''Converts the data model to an IMSC document contained in an ElementTree Element'''
 
     tt_element = et.Element(TTElement.qn)
@@ -235,6 +239,8 @@ class TTElement(TTMLElement):
     # Write the <head> section first
     head_element = HeadElement.from_model(ctx, model_doc)
 
+    progress_callback(0.5)
+
     if head_element is not None:
       tt_element.append(head_element)
 
@@ -246,6 +252,8 @@ class TTElement(TTMLElement):
 
       if body_element is not None:
         tt_element.append(body_element)
+
+    progress_callback(1.0)
 
     return tt_element
 
