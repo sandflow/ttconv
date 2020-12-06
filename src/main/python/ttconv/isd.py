@@ -31,6 +31,9 @@ import inspect
 import typing
 import numbers
 import re
+import sys
+import os
+import multiprocessing
 from itertools import starmap
 from fractions import Fraction
 
@@ -69,6 +72,8 @@ class SignificantTimes:
     """Returns a list of temporal offsets where the document changes, in increasing order.
     """
     return self._sig_times
+
+ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
 class ISD(model.Document):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot
@@ -222,15 +227,16 @@ class ISD(model.Document):
     regions = tuple(doc.iter_regions())
 
     interval_cache = {} if sig_times is None else sig_times.interval_cache()
+    activity_cache = {}
 
     if regions:
       for region in regions:
-        isd_region = ISD._process_element(interval_cache, isd, offset, region, None, None, None, None, region)
+        isd_region = ISD._process_element(interval_cache, activity_cache, isd, offset, region, None, None, None, None, region)
         if isd_region is not None:
           isd.put_region(isd_region)
     else:
       default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
-      isd_region = ISD._process_element(interval_cache, isd, offset, None, None, None, None, None, default_region)
+      isd_region = ISD._process_element(interval_cache, activity_cache, isd, offset, None, None, None, None, None, default_region)
       if isd_region is not None:
         isd.put_region(isd_region)
 
@@ -240,23 +246,24 @@ class ISD(model.Document):
   def generate_isd_sequence(doc: model.ContentDocument, is_multithreaded: bool = True) -> typing.List[typing.Tuple[Fraction, ISD]]:
     """ Returns a list of duples, each consisting of a significant time in the ContentDocument `doc`
     and the corresponding `ISD` instance. The duples are sorted in order of increasing significant time.
-    This helper function by default uses multithreading to improve performance on large ContentDocument instances.
+    This helper function by default uses multithreading to improve performance on large ContentDocument
+    instances. Setting the environment variable "ISD_NO_MULTIPROC" disables multithreading.
     """
 
     sig_times = ISD.significant_times(doc)
 
   # Compute ISDs
 
-    if len(sig_times) > 100 and is_multithreaded:
-
-      # pylint: disable=import-outside-toplevel
-      import sys
-      from multiprocessing import Pool
-      # pylint: enable=import-outside-toplevel
+    if (
+      len(sig_times) > 100 and
+      is_multithreaded and
+      multiprocessing.cpu_count() > 1 and
+      not os.getenv(ISD_NO_MULTIPROC_ENV)
+    ):
 
       sys.setrecursionlimit(10000)
 
-      with Pool() as pool:
+      with multiprocessing.Pool() as pool:
         isds = pool.starmap(
           _generate_isd,
           [(doc, offset, sig_times) for offset in sig_times]
@@ -271,6 +278,20 @@ class ISD(model.Document):
 
     return list(zip(sig_times, isds))
 
+
+  _ORDERED_STYLE_PROPS = (
+    styles.StyleProperties.FontSize,
+    styles.StyleProperties.Extent,
+    styles.StyleProperties.Origin,
+    styles.StyleProperties.LineHeight,
+    styles.StyleProperties.LinePadding,
+    styles.StyleProperties.RubyReserve,
+    styles.StyleProperties.TextOutline,
+    styles.StyleProperties.TextShadow,
+    styles.StyleProperties.TextEmphasis,
+    styles.StyleProperties.Padding
+  )
+
   @staticmethod
   def _compute_styles(
       styles_to_be_computed: typing.Set[model.StyleProperty],
@@ -280,26 +301,14 @@ class ISD(model.Document):
     '''Compute style property values. This needs to be done in a specific order since the computed
     value of some style properties depend on the computed values of others'''
 
-    ordered_style_props = (
-      styles.StyleProperties.FontSize,
-      styles.StyleProperties.Extent,
-      styles.StyleProperties.Origin,
-      styles.StyleProperties.LineHeight,
-      styles.StyleProperties.LinePadding,
-      styles.StyleProperties.RubyReserve,
-      styles.StyleProperties.TextOutline,
-      styles.StyleProperties.TextShadow,
-      styles.StyleProperties.TextEmphasis,
-      styles.StyleProperties.Padding
-    )
-
-    for style_prop in ordered_style_props:
+    for style_prop in ISD._ORDERED_STYLE_PROPS:
       if style_prop in styles_to_be_computed:
         StyleProcessors.BY_STYLE_PROP[style_prop].compute(isd_parent, isd_element)
 
   @staticmethod
   def _process_element(
       interval_cache,
+      activity_cache,
       isd: ISD,
       absolute_offset: Fraction,
       selected_region: model.Region,
@@ -309,8 +318,17 @@ class ISD(model.Document):
       parent_computed_end: typing.Optional[Fraction],
       element: model.ContentElement
   ) -> typing.Optional[model.ContentElement]:
-    if element is None:
+
+
+    # first check the activity cache and return immediate if the element is not active
+
+    is_active = activity_cache.get(element)
+
+    if is_active is False:
+
       return None
+
+    # compute the temporal extent of the element, hopefully from the cache
 
     element_interval = interval_cache.get(element)
 
@@ -325,13 +343,18 @@ class ISD(model.Document):
 
     begin_time, end_time = element_interval
 
-    # prune if temporally inactive
-    
-    if begin_time is not None and begin_time > absolute_offset:
-      return None
+    # update the activity cache if the element was not present
+      
+    if is_active is None:
 
-    if end_time is not None and end_time <= absolute_offset:
-      return None
+      if (
+        (begin_time is not None and begin_time > absolute_offset) or
+        (end_time is not None and end_time <= absolute_offset)
+      ) :
+        activity_cache[element] = False
+        return None
+
+      activity_cache[element] = True
 
     # associated region is that associated with the element, or inherited otherwise
 
@@ -441,29 +464,29 @@ class ISD(model.Document):
 
     if isinstance(element, model.Region):
 
-      isd_body_element = ISD._process_element(
-        interval_cache,
-        isd,
-        absolute_offset,
-        selected_region,
-        associated_region,
-        isd_element,
-        None,
-        None,
-        doc.get_body()
-      )
+      if doc.get_body() is not None:
+        isd_body_element = ISD._process_element(
+          interval_cache,
+          activity_cache,
+          isd,
+          absolute_offset,
+          selected_region,
+          associated_region,
+          isd_element,
+          None,
+          None,
+          doc.get_body()
+        )
 
-      if isd_body_element is not None:
-        isd_element_children.append(isd_body_element)
+        if isd_body_element is not None:
+          isd_element_children.append(isd_body_element)
 
     else:
 
-      isd_element_children = tuple(
-        filter(
-          lambda e : e is not None,
-          map(
-            lambda child_element: ISD._process_element(
+      for child_element in element:
+        isd_element_child = ISD._process_element(
               interval_cache,
+              activity_cache,
               isd,
               absolute_offset,
               selected_region,
@@ -472,11 +495,10 @@ class ISD(model.Document):
               begin_time,
               end_time,
               child_element
-            ),
-            element
-          )
         )
-      )
+
+        if isd_element_child is not None:
+          isd_element_children.append(isd_element_child)
 
     if len(isd_element_children) > 0:
       isd_element.push_children(isd_element_children)
