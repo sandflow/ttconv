@@ -34,7 +34,6 @@ import re
 import sys
 import os
 import multiprocessing
-from itertools import starmap
 from fractions import Fraction
 
 import ttconv.model as model
@@ -258,7 +257,7 @@ class ISD(model.Document):
 
     progress_callback(0.1)
 
-  # Compute ISDs
+    # Compute ISDs
 
     isds = []
 
