@@ -179,9 +179,14 @@ def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> 
 
   srt = SrtContext()
 
+  # split progress between ISD construction and SRT writing
+
+  def _isd_progress(progress: float):
+    progress_callback(progress/2)
+
   # Compute ISDs
 
-  isds = ISD.generate_isd_sequence(doc, progress_callback)
+  isds = ISD.generate_isd_sequence(doc, _isd_progress)
 
   # process ISDs
 
@@ -191,6 +196,8 @@ def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> 
       srt_filter.process(isd)
 
     srt.add_isd(isd, offset)
+
+    progress_callback(0.5 + (i + 1)/len(isds)/2)
 
   srt.finish()
 
