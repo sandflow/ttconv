@@ -243,7 +243,11 @@ class ISD(model.Document):
     return isd
 
   @staticmethod
-  def generate_isd_sequence(doc: model.ContentDocument, is_multithreaded: bool = True) -> typing.List[typing.Tuple[Fraction, ISD]]:
+  def generate_isd_sequence(
+    doc: model.ContentDocument,
+    progress_callback=lambda _: None,
+    is_multithreaded:
+    bool = True) -> typing.List[typing.Tuple[Fraction, ISD]]:
     """ Returns a list of duples, each consisting of a significant time in the ContentDocument `doc`
     and the corresponding `ISD` instance. The duples are sorted in order of increasing significant time.
     This helper function by default uses multithreading to improve performance on large ContentDocument
@@ -252,7 +256,11 @@ class ISD(model.Document):
 
     sig_times = ISD.significant_times(doc)
 
+    progress_callback(0.1)
+
   # Compute ISDs
+
+    isds = []
 
     if (
       len(sig_times) > 100 and
@@ -264,17 +272,20 @@ class ISD(model.Document):
       sys.setrecursionlimit(10000)
 
       with multiprocessing.Pool() as pool:
-        isds = pool.starmap(
-          _generate_isd,
-          [(doc, offset, sig_times) for offset in sig_times]
-        )
+
+        for i, isd in enumerate(
+          pool.imap(_generate_isd,
+          [(doc, offset, sig_times) for offset in sig_times],
+          int(len(sig_times)/multiprocessing.cpu_count()))
+        ):
+          isds.append(isd)
+          progress_callback(0.1 + 0.9 * (i + 1) / len(sig_times))
 
     else:
 
-      isds = starmap(
-          _generate_isd,
-          [(doc, offset, sig_times) for offset in sig_times]
-        )
+      for i, isd in enumerate(map(_generate_isd, [(doc, offset, sig_times) for offset in sig_times])):
+        isds.append(isd)
+        progress_callback(0.1 + 0.9 * (i + 1) / len(sig_times))
 
     return list(zip(sig_times, isds))
 
@@ -1175,5 +1186,6 @@ class StyleProcessors:
 
 # pylint: enable=missing-class-docstring
 
-def _generate_isd(doc, offset, sig_times):
+def _generate_isd(args):
+  doc, offset, sig_times = args
   return ISD.from_model(doc, offset, sig_times)

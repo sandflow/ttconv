@@ -174,18 +174,18 @@ class SrtContext:
 #
 
 
-def from_model(doc: model.ContentDocument) -> str:
+def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()
 
   # Compute ISDs
 
-  isds = ISD.generate_isd_sequence(doc)
+  isds = ISD.generate_isd_sequence(doc, progress_callback)
 
   # process ISDs
 
-  for offset, isd in isds:
+  for i, (offset, isd) in enumerate(isds):
 
     for srt_filter in srt.filters:
       srt_filter.process(isd)
