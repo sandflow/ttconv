@@ -92,8 +92,7 @@ class TTMLElement:
   class WritingContext:
     '''State information when writing a TTML element'''
 
-    def __init__(self, frame_rate: imsc_attr.TemporalAttributeWritingContext):
-
+    def __init__(self, frame_rate: Fraction):
       self.temporal_context = imsc_attr.TemporalAttributeWritingContext
       self.temporal_context.frame_rate = frame_rate
 

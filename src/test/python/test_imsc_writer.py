@@ -623,39 +623,37 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
 
   def test_write_with_frames(self):
 
-    context = attributes.TemporalAttributeWritingContext
-    context.frame_rate = None
+    context = attributes.TemporalAttributeWritingContext(None)
     time = Fraction(1, 4)
     val = attributes.to_time_format(context, time)
-    self.assertEqual(val, '0:00:00.250')
+    self.assertEqual(val, '00:00:00.250')
 
-    context = attributes.TemporalAttributeWritingContext
-    context.frame_rate = None
+    context = attributes.TemporalAttributeWritingContext(None)
     time = Fraction(1, 3)
     val = attributes.to_time_format(context, time)
-    self.assertEqual(val, '0:00:00.333')
+    self.assertEqual(val, '00:00:00.333')
 
-    context.frame_rate = Fraction(30000, 1000)
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1000))
     time = Fraction(2, 1)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '60f')
 
-    context.frame_rate = Fraction(30000, 1001)
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
     time = Fraction(3, 1)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '90f')
 
-    context.frame_rate = Fraction(25000, 1000)
+    context = attributes.TemporalAttributeWritingContext(Fraction(25000, 1000))
     time = Fraction(3600, 1)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '90000f')
 
-    context.frame_rate = Fraction(30000, 1001)
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
     time = Fraction(0.7674333333333333)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '23f')
 
-    context.frame_rate = Fraction(30000, 1001)
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
     time = 2301 / Fraction(30000, 1001)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '2301f')
