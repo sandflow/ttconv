@@ -28,7 +28,7 @@
 from fractions import Fraction
 from typing import Optional, Union
 
-from ttconv.srt.time_code import SrtTimeCode
+from ttconv.time_code import TimeCode
 
 
 class SrtParagraph:
@@ -36,23 +36,25 @@ class SrtParagraph:
 
   def __init__(self, identifier: int):
     self._id: int = identifier
-    self._begin: Optional[SrtTimeCode] = None
-    self._end: Optional[SrtTimeCode] = None
+    self._begin: Optional[TimeCode] = None
+    self._end: Optional[TimeCode] = None
     self._text: str = ""
 
   def set_begin(self, offset: Fraction):
     """Sets the paragraph begin time code"""
-    self._begin = SrtTimeCode.from_time_offset(offset)
+    self._begin = TimeCode.from_seconds(offset)
+    self._begin.set_separator(",")
 
-  def get_begin(self) -> Optional[SrtTimeCode]:
+  def get_begin(self) -> Optional[TimeCode]:
     """Returns the paragraph begin time code"""
     return self._begin
 
   def set_end(self, offset: Union[Fraction, float]):
     """Sets the paragraph end time code"""
-    self._end = SrtTimeCode.from_time_offset(offset)
+    self._end = TimeCode.from_seconds(offset)
+    self._end.set_separator(",")
 
-  def get_end(self) -> Optional[SrtTimeCode]:
+  def get_end(self) -> Optional[TimeCode]:
     """Returns the paragraph end time code"""
     return self._end
 
