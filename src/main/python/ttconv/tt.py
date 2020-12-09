@@ -189,7 +189,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, progress_callback)
+    tree_from_model = imsc_writer.from_model(model, None, progress_callback)
 
     #
     # Write out the converted file

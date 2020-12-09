@@ -26,6 +26,7 @@
 '''IMSC writer'''
 
 import logging
+from fractions import Fraction
 import xml.etree.ElementTree as et
 import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.namespaces as xml_ns
@@ -37,9 +38,9 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-def from_model(model_doc: model.ContentDocument, progress_callback=lambda _: None):
+def from_model(model_doc: model.ContentDocument, frame_rate = None, progress_callback=lambda _: None):
   '''Converts the data model to an IMSC document'''
-
+  
   et.register_namespace("ttml", xml_ns.TTML)
   et.register_namespace("ttp", xml_ns.TTP)
   et.register_namespace("tts", xml_ns.TTS)
@@ -47,5 +48,5 @@ def from_model(model_doc: model.ContentDocument, progress_callback=lambda _: Non
   et.register_namespace("itts", xml_ns.ITTS)
     
   return et.ElementTree(
-    imsc_elements.TTElement.from_model(model_doc, progress_callback)
+    imsc_elements.TTElement.from_model(model_doc, frame_rate, progress_callback)
     )

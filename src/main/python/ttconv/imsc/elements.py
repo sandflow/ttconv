@@ -89,6 +89,13 @@ class TTMLElement:
       space_attr_value = imsc_attr.XMLSpaceAttribute.extract(xml_elem)
       self.space = space_attr_value if space_attr_value is not None else parent_ctx.space
 
+  class WritingContext:
+    '''State information when writing a TTML element'''
+
+    def __init__(self, frame_rate: Fraction):
+      self.temporal_context = imsc_attr.TemporalAttributeWritingContext
+      self.temporal_context.frame_rate = frame_rate
+
   @staticmethod
   def is_instance(xml_elem) -> bool:
     '''Returns true if the XML element `xml_elem` is an instance of the class
@@ -195,7 +202,8 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.ContentDocument, progress_callback=lambda _: None) -> et.Element:
+  def from_model(model_doc: model.ContentDocument, frame_rate = None, progress_callback=lambda _: None) -> et.Element:
+    '''Converts the data model to an IMSC document contained in an ElementTree Element'''
 
     tt_element = et.Element(TTElement.qn)
 
@@ -225,8 +233,10 @@ class TTElement(TTMLElement):
     if model_doc.get_active_area() is not None:
       imsc_attr.ActiveAreaAttribute.set(tt_element, model_doc.get_active_area())
 
+    ctx = TTMLElement.WritingContext(frame_rate)
+
     # Write the <head> section first
-    head_element = HeadElement.from_model(model_doc)
+    head_element = HeadElement.from_model(ctx, model_doc)
 
     progress_callback(0.5)
 
@@ -237,7 +247,7 @@ class TTElement(TTMLElement):
 
     if model_body is not None:
 
-      body_element = BodyElement.from_model(model_body)
+      body_element = BodyElement.from_model(ctx, model_body)
 
       if body_element is not None:
         tt_element.append(body_element)
@@ -311,7 +321,7 @@ class HeadElement(TTMLElement):
     return head_ctx
 
   @staticmethod
-  def from_model(model_doc: model.ContentDocument):
+  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.ContentDocument):
 
     head_element = et.Element(HeadElement.qn)
 
@@ -320,7 +330,7 @@ class HeadElement(TTMLElement):
     if styling_element is not None:
       head_element.append(styling_element)
 
-    layout_element = LayoutElement.from_model(model_doc)
+    layout_element = LayoutElement.from_model(ctx, model_doc)
 
     if layout_element is not None:
       head_element.append(layout_element)
@@ -371,12 +381,12 @@ class LayoutElement(TTMLElement):
     return layout_ctx
 
   @staticmethod
-  def from_model(model_doc: model.ContentDocument):
+  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.ContentDocument):
 
     layout_element = et.Element(LayoutElement.qn)
     
     for r in model_doc.iter_regions():
-      region_element = RegionElement.from_model(r)
+      region_element = RegionElement.from_model(ctx, r)
       if region_element is not None:
         layout_element.append(region_element)
 
@@ -861,11 +871,11 @@ class ContentElement(TTMLElement):
         imsc_prop.from_model(element, value)
 
   @staticmethod
-  def from_model_animation(model_element: model.ContentElement, xml_element):
+  def from_model_animation(ctx: TTMLElement.WritingContext, model_element: model.ContentElement, xml_element):
     '''Write TTML set element from the model'''
 
     for a_step in model_element.iter_animation_steps():
-      set_element = SetElement.from_model(a_step)
+      set_element = SetElement.from_model(ctx, a_step)
       if set_element is not None:
         xml_element.append(set_element)
 
@@ -942,7 +952,7 @@ class ContentElement(TTMLElement):
   # pylint: disable=too-many-branches
 
   @staticmethod
-  def from_model(model_element: model.ContentElement) -> typing.Optional[ContentElement]:
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement) -> typing.Optional[ContentElement]:
 
     if isinstance(model_element, model.Body):
       imsc_class = BodyElement
@@ -977,17 +987,17 @@ class ContentElement(TTMLElement):
 
     if imsc_class.has_timing:
       if model_element.get_begin() is not None:
-        imsc_attr.BeginAttribute.set(xml_element, model_element.get_begin())
+        imsc_attr.BeginAttribute.set(ctx.temporal_context, xml_element, model_element.get_begin())
 
       if model_element.get_end() is not None:
-        imsc_attr.EndAttribute.set(xml_element, model_element.get_end())
+        imsc_attr.EndAttribute.set(ctx.temporal_context, xml_element, model_element.get_end())
 
     if model_element.get_id() is not None:
       imsc_attr.XMLIDAttribute.set(xml_element, model_element.get_id())
 
     if imsc_class.has_styles:
       ContentElement.from_model_style_properties(model_element, xml_element)
-      ContentElement.from_model_animation(model_element, xml_element)
+      ContentElement.from_model_animation(ctx, model_element, xml_element)
 
     if imsc_class.has_children:
       last_child_element = None
@@ -999,7 +1009,7 @@ class ContentElement(TTMLElement):
           else:
             last_child_element.tail = child.get_text()
 
-        child_element = ContentElement.from_model(child)
+        child_element = ContentElement.from_model(ctx, child)
         if child_element is not None:
           xml_element.append(child_element)
         
@@ -1039,8 +1049,8 @@ class RegionElement(ContentElement):
     return region_ctx
 
   @staticmethod
-  def from_model(model_element: model.Region):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.Region):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1080,7 +1090,7 @@ class SetElement(ContentElement):
     return set_ctx
 
   @staticmethod
-  def from_model(anim_step: model.DiscreteAnimationStep):
+  def from_model(ctx: TTMLElement.WritingContext, anim_step: model.DiscreteAnimationStep):
 
     set_element = et.Element(SetElement.qn)
 
@@ -1092,10 +1102,10 @@ class SetElement(ContentElement):
     )
 
     if anim_step.begin is not None:
-      imsc_attr.BeginAttribute.set(set_element, anim_step.begin)
+      imsc_attr.BeginAttribute.set(ctx.temporal_context, set_element, anim_step.begin)
 
     if anim_step.end is not None:
-      imsc_attr.EndAttribute.set(set_element, anim_step.end)
+      imsc_attr.EndAttribute.set(ctx.temporal_context, set_element, anim_step.end)
 
     return set_element
 
@@ -1130,8 +1140,8 @@ class BodyElement(ContentElement):
     return body_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1163,8 +1173,8 @@ class DivElement(ContentElement):
     return div_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1196,8 +1206,8 @@ class PElement(ContentElement):
     return p_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1237,8 +1247,8 @@ class SpanElement(ContentElement):
     return span_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1271,8 +1281,8 @@ class RubyElement(ContentElement):
     return ruby_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1304,8 +1314,8 @@ class RbElement(ContentElement):
     return rb_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1338,8 +1348,8 @@ class RtElement(ContentElement):
     return rt_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1372,8 +1382,8 @@ class RpElement(ContentElement):
     return rp_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1406,8 +1416,8 @@ class RbcElement(ContentElement):
     return rbc_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1440,8 +1450,8 @@ class RtcElement(ContentElement):
     return rtc_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
@@ -1474,8 +1484,8 @@ class BrElement(ContentElement):
     return br_ctx
 
   @staticmethod
-  def from_model(model_element: model.ContentElement):
-    return ContentElement.from_model(model_element)
+  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+    return ContentElement.from_model(ctx, model_element)
 
   @classmethod
   def make_ttml_element(cls):
