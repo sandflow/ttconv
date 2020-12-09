@@ -173,22 +173,31 @@ class SrtContext:
 # srt writer
 #
 
+
 def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()
-  significant_times = ISD.significant_times(doc)
-  nb_significant_times = len(significant_times)
 
-  for (index, offset) in enumerate(significant_times):
-    isd = ISD.from_model(doc, offset)
+  # split progress between ISD construction and SRT writing
+
+  def _isd_progress(progress: float):
+    progress_callback(progress/2)
+
+  # Compute ISDs
+
+  isds = ISD.generate_isd_sequence(doc, _isd_progress)
+
+  # process ISDs
+
+  for i, (offset, isd) in enumerate(isds):
 
     for srt_filter in srt.filters:
       srt_filter.process(isd)
 
     srt.add_isd(isd, offset)
 
-    progress_callback((index + 1) / nb_significant_times)
+    progress_callback(0.5 + (i + 1)/len(isds)/2)
 
   srt.finish()
 

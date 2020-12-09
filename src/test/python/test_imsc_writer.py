@@ -30,6 +30,7 @@
 import os
 import unittest
 import logging
+from fractions import Fraction
 import xml.etree.ElementTree as et
 import xml.dom.minidom as minidom
 import ttconv.imsc.reader as imsc_reader
@@ -38,9 +39,16 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.style_properties as imsc_styles
+import ttconv.imsc.attributes as attributes
 from ttconv.scc.utils import get_extent_from_dimensions
 
 def _get_set_style(imsc_style_prop, model_value):
+  e = et.Element("p")
+  assert imsc_style_prop.model_prop.validate(model_value)
+  imsc_style_prop.from_model(e, model_value)
+  return e.attrib.get(f"{{{imsc_style_prop.ns}}}{imsc_style_prop.local_name}")
+
+def _get_time(imsc_style_prop, model_value):
   e = et.Element("p")
   assert imsc_style_prop.model_prop.validate(model_value)
   imsc_style_prop.from_model(e, model_value)
@@ -611,5 +619,44 @@ class StylePropertyWriterTest(unittest.TestCase):
     )
     self.assertEqual(imsc_styles.StyleProperties.TextShadow.has_px(prop), True)
 
+class WriterWithTimeFormattingTest(unittest.TestCase):
+
+  def test_write_with_frames(self):
+
+    context = attributes.TemporalAttributeWritingContext(None)
+    time = Fraction(1, 4)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '00:00:00.250')
+
+    context = attributes.TemporalAttributeWritingContext(None)
+    time = Fraction(1, 3)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '00:00:00.333')
+
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1000))
+    time = Fraction(2, 1)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '60f')
+
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
+    time = Fraction(3, 1)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '90f')
+
+    context = attributes.TemporalAttributeWritingContext(Fraction(25000, 1000))
+    time = Fraction(3600, 1)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '90000f')
+
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
+    time = Fraction(0.7674333333333333)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '23f')
+
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
+    time = 2301 / Fraction(30000, 1001)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '2301f')
+    
 if __name__ == '__main__':
   unittest.main()
