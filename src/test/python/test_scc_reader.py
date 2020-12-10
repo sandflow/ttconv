@@ -32,7 +32,7 @@ from typing import Union, Type
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
 from ttconv.scc.reader import SccWord, SccLine, to_model
-from ttconv.scc.time_codes import SccTimeCode
+from ttconv.time_code import SmpteTimeCode, FPS_30
 from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType
 
@@ -124,7 +124,7 @@ class SccLineTest(unittest.TestCase):
     line_str = "01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(18, len(scc_line.scc_words))
-    self.assertEqual(SccTimeCode(1, 3, 27, 29).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
 
     self.assertIsNone(SccLine.from_str(""))
     self.assertIsNone(SccLine.from_str("Hello world!"))
@@ -134,8 +134,8 @@ class SccReaderTest(unittest.TestCase):
 
   def check_caption(self, paragraph: P, caption_id: str, begin: str, end: str, *children):
     self.assertEqual(caption_id, paragraph.get_id())
-    self.assertEqual(SccTimeCode.parse(begin).to_temporal_offset(), paragraph.get_begin())
-    self.assertEqual(SccTimeCode.parse(end).to_temporal_offset(), paragraph.get_end())
+    self.assertEqual(SmpteTimeCode.parse(begin, FPS_30).to_temporal_offset(), paragraph.get_begin())
+    self.assertEqual(SmpteTimeCode.parse(end, FPS_30).to_temporal_offset(), paragraph.get_end())
 
     p_children = list(paragraph)
     self.assertEqual(len(children), len(p_children))

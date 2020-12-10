@@ -33,7 +33,7 @@ from typing import Optional, List
 from ttconv.model import Region, ContentDocument, P, Br, Span, Text
 from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_ROW, SccCaptionLineBreak
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.scc.time_codes import SccTimeCode
+from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
 from ttconv.style_properties import PositionType, ExtentType, StyleProperties, LengthType, DisplayAlignType
 
@@ -46,8 +46,8 @@ class SccCaptionParagraph:
   def __init__(self, safe_area_x_offset: int = 0, safe_area_y_offset: int = 0,
                caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
     self._caption_id: str = ""
-    self._begin: Optional[SccTimeCode] = None
-    self._end: Optional[SccTimeCode] = None
+    self._begin: Optional[SmpteTimeCode] = None
+    self._end: Optional[SmpteTimeCode] = None
     self._safe_area_x_offset = safe_area_x_offset
     self._safe_area_y_offset = safe_area_y_offset
     self._column_offset: int = safe_area_x_offset
@@ -69,7 +69,7 @@ class SccCaptionParagraph:
     """Sets caption begin time code"""
     self._begin = copy.copy(time_code)
 
-  def get_begin(self) -> SccTimeCode:
+  def get_begin(self) -> SmpteTimeCode:
     """Returns the caption begin time code"""
     return self._begin
 
@@ -77,7 +77,7 @@ class SccCaptionParagraph:
     """Sets caption end time code"""
     self._end = copy.copy(time_code)
 
-  def get_end(self) -> SccTimeCode:
+  def get_end(self) -> SmpteTimeCode:
     """Returns the caption end time code"""
     return self._end
 
