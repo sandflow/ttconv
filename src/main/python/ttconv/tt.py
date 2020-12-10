@@ -37,9 +37,39 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.srt.writer as srt_writer
 import ttconv.scc.reader as scc_reader
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("ttconv")
 
 READING = True
+
+class ProgressConsoleHandler(logging.StreamHandler):
+    """
+    A handler class which allows the cursor to stay on
+    one line for selected messages
+    """
+    is_writing_progress_bar = False
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            stream = self.stream
+            writing_progress_bar = hasattr(record, 'writing_progress_bar')
+            if self.is_writing_progress_bar and not writing_progress_bar:
+                stream.write(self.terminator)
+            
+            stream.write(msg)
+            
+            if writing_progress_bar:
+                #stream.write('... ')
+                #sys.stdout.write(str('test'))
+                self.is_writing_progress_bar = True
+            else:
+                stream.write(self.terminator)
+                self.is_writing_progress_bar = False
+            self.flush()
+
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
 
 # Print iterations progress
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', print_end = "\r"):
@@ -58,10 +88,15 @@ def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1
   percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
   filled_length = int(length * iteration // total)
   bar_val = fill * filled_length + '-' * (length - filled_length)
-  print(f'\r{prefix} |{bar_val}| {percent}% {suffix}', end = print_end)
+  #print(f'\r{prefix} |{bar_val}| {percent}% {suffix}', end = print_end)
+  #sys.stdout.write(f'\r{prefix} |{bar_val}| {percent}% {suffix}')
+
+  LOGGER.info(f'\r{prefix} |{bar_val}| {percent}% {suffix}', extra={'writing_progress_bar':True})
+  #LOGGER.info(f'%s', extra={'writing_progress_bar':True, 'percent':percent})
+
   # Print New Line on Complete
   if iteration == total: 
-    print()
+    sys.stdout.write(str('\r\n'))
 
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
@@ -228,6 +263,14 @@ def validate(args):
 
 def main(argv):
   '''Main application processing'''
+
+  progress = ProgressConsoleHandler()
+  #_console  = logging.StreamHandler()  
+
+  LOGGER.setLevel(logging.INFO) 
+  LOGGER.addHandler(progress)
+
+#  logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
   args = cli.parse_args(argv)
   if args.subcommand is None:
