@@ -60,7 +60,7 @@ class _BasicTimeCode(ABC):
     return float(self._hours * 3600 + self._minutes * 60 + self._seconds)
 
 
-class TimeCode(_BasicTimeCode):
+class ClockTime(_BasicTimeCode):
   """Millisecond-based time code definition"""
 
   TIME_CODE_PATTERN = ':'.join(['(?P<h>[0-9]{2})',
@@ -82,21 +82,21 @@ class TimeCode(_BasicTimeCode):
     return super().to_seconds() + self._milliseconds / 1000.0
 
   @staticmethod
-  def parse(time_code: str) -> TimeCode:
-    """Reads the time code string and converts to a TimeCode instance"""
-    tc_regex = re.compile(TimeCode.TIME_CODE_PATTERN)
+  def parse(time_code: str) -> ClockTime:
+    """Reads the time code string and converts to a ClockTime instance"""
+    tc_regex = re.compile(ClockTime.TIME_CODE_PATTERN)
     match = tc_regex.match(time_code)
 
     if match is not None:
-      return TimeCode(int(match.group('h')),
-                      int(match.group('m')),
-                      int(match.group('s')),
-                      int(match.group('ms')))
+      return ClockTime(int(match.group('h')),
+                       int(match.group('m')),
+                       int(match.group('s')),
+                       int(match.group('ms')))
 
     raise ValueError("Invalid time code format")
 
   @staticmethod
-  def from_seconds(seconds: Union[float, Fraction]) -> TimeCode:
+  def from_seconds(seconds: Union[float, Fraction]) -> ClockTime:
     """Creates a time code from time offset in seconds"""
     seconds = float(seconds)
 
@@ -105,7 +105,7 @@ class TimeCode(_BasicTimeCode):
     s = floor(seconds % 60)
     ms = int((seconds % 1) * 1000)
 
-    return TimeCode(h, m, s, ms)
+    return ClockTime(h, m, s, ms)
 
   def set_separator(self, separator: str):
     """Sets separator character before the millisecond digits into the literal representation of this time code"""
@@ -115,8 +115,8 @@ class TimeCode(_BasicTimeCode):
     return ":".join(f'{item:02}' for item in [self._hours, self._minutes, self._seconds]) \
            + self._ms_separator + f'{self._milliseconds:03}'
 
-  def __eq__(self, other: TimeCode):
-    if not isinstance(other, TimeCode):
+  def __eq__(self, other: ClockTime):
+    if not isinstance(other, ClockTime):
       return False
     return self._hours == other.get_hours() and \
            self._minutes == other.get_minutes() and \
