@@ -507,11 +507,11 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return ["default"]
+      return ("default",)
 
     @staticmethod
     def validate(value: typing.List[str]):
-      return isinstance(value, list) and all(lambda i: isinstance(i, str) for i in value)
+      return isinstance(value, tuple) and all(lambda i: isinstance(i, str) for i in value)
 
 
   class FontSize(StyleProperty):
