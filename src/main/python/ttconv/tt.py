@@ -56,15 +56,11 @@ class ProgressConsoleHandler(logging.StreamHandler):
       stream = self.stream
       writing_progress_bar = hasattr(record, 'writing_progress_bar')
 
+      percent = None
       if writing_progress_bar:
         self.last_progress_msg = msg
-
-      str_found = False
-      if "Output file" in msg or "Input file" in msg:
-        str_found = True
-      else:
-        str_found = False
-
+        percent = getattr(record, 'percent')
+  
       if self.is_writing_progress_bar and not writing_progress_bar:
         # erase and over write the progress bar
         stream.write('\r')
@@ -89,6 +85,9 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
       if writing_progress_bar:
         self.is_writing_progress_bar = True
+        if percent is not None and float(percent) >= 100.0:
+          sys.stdout.write(str('\r\n'))
+          self.is_writing_progress_bar = False
 
       self.flush()
 
@@ -97,39 +96,22 @@ class ProgressConsoleHandler(logging.StreamHandler):
     except:
       self.handleError(record)
 
-# Print iterations progress
-def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', print_end = "\r"):
-  """
-  Call in a loop to create terminal progress bar
-  @params:
-      iteration   - Required  : current iteration (Int)
-      total       - Required  : total iterations (Int)
-      prefix      - Optional  : prefix string (Str)
-      suffix      - Optional  : suffix string (Str)
-      decimals    - Optional  : positive number of decimals in percent complete (Int)
-      length      - Optional  : character length of bar (Int)
-      fill        - Optional  : bar fill character (Str)
-      print_end    - Optional  : end character (e.g. "\r", "\r\n") (Str)
-  """
-  percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-  filled_length = int(length * iteration // total)
-  bar_val = fill * filled_length + '-' * (length - filled_length)
-
-  LOGGER.info(f'\r{prefix} |{bar_val}| {percent}% {suffix}', extra={'writing_progress_bar':True})
-  #LOGGER.info(f'%s', extra={'writing_progress_bar':True, 'percent':percent})
-
-  # Print New Line on Complete
-  if iteration >= total: 
-    sys.stdout.write(str('\r\n'))
-
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  #prefix_str = "Reading Progress:" if READING else "Writing Progress:"
-  if READING:
-    prefix_str = "Reading Progress:"
-  else:
-     prefix_str = "Writing Progress:"
-  print_progress_bar(percent_progress, 1.0, prefix = prefix_str, suffix = 'Complete', length = 50)
+  prefix_str = "Reading Progress:" if READING else "Writing Progress:"
+
+  total = 1.0
+  prefix = prefix_str
+  suffix = 'Complete'
+  decimals = 1
+  length = 50
+  fill = '█'
+  percent = ("{0:." + str(decimals) + "f}").format(100 * (percent_progress / float(total)))
+  filled_length = int(length * percent_progress // total)
+  bar_val = fill * filled_length + '-' * (length - filled_length)
+
+  LOGGER.info(f'\r{prefix} |{bar_val}| {percent}% {suffix}', extra={'writing_progress_bar':True, 'percent':percent})
+  #LOGGER.info(f'%s', extra={'writing_progress_bar':True, 'percent':percent})
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -292,13 +274,10 @@ def validate(args):
 def main(argv):
   '''Main application processing'''
 
+  LOGGER.handlers.clear()
   progress = ProgressConsoleHandler()
-  #_console  = logging.StreamHandler()  
-
   LOGGER.setLevel(logging.INFO) 
   LOGGER.addHandler(progress)
-
-#  logging.basicConfig(stream=sys.stderr, level=logging.INFO)
 
   args = cli.parse_args(argv)
   if args.subcommand is None:
