@@ -42,34 +42,60 @@ LOGGER = logging.getLogger("ttconv")
 READING = True
 
 class ProgressConsoleHandler(logging.StreamHandler):
-    """
-    A handler class which allows the cursor to stay on
-    one line for selected messages
-    """
-    is_writing_progress_bar = False
-    def emit(self, record):
-        try:
-            msg = self.format(record)
-            stream = self.stream
-            writing_progress_bar = hasattr(record, 'writing_progress_bar')
-            if self.is_writing_progress_bar and not writing_progress_bar:
-                stream.write(self.terminator)
-            
-            stream.write(msg)
-            
-            if writing_progress_bar:
-                #stream.write('... ')
-                #sys.stdout.write(str('test'))
-                self.is_writing_progress_bar = True
-            else:
-                stream.write(self.terminator)
-                self.is_writing_progress_bar = False
-            self.flush()
+  """
+  A handler class which allows the cursor to stay on
+  one line for selected messages
+  """
+  is_writing_progress_bar = False
+  last_progress_msg = ""
 
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
-            self.handleError(record)
+  def emit(self, record):
+    try:
+      msg = self.format(record)
+
+      stream = self.stream
+      writing_progress_bar = hasattr(record, 'writing_progress_bar')
+
+      if writing_progress_bar:
+        self.last_progress_msg = msg
+
+      str_found = False
+      if "Output file" in msg or "Input file" in msg:
+        str_found = True
+      else:
+        str_found = False
+
+      if self.is_writing_progress_bar and not writing_progress_bar:
+        # erase and over write the progress bar
+        stream.write('\r')
+        length = len(self.last_progress_msg)
+        i = 0
+        while i < length:
+          stream.write(' ')
+          i += 1
+
+        # go to beginning of the line and write the new messages
+        stream.write('\r')
+        stream.write(msg)
+        stream.write(self.terminator)
+
+        # write the old progress information
+        stream.write(self.last_progress_msg)
+      elif writing_progress_bar:
+        stream.write(msg)
+      else:
+        stream.write(msg)
+        stream.write(self.terminator)
+
+      if writing_progress_bar:
+        self.is_writing_progress_bar = True
+
+      self.flush()
+
+    except (KeyboardInterrupt, SystemExit):
+      raise
+    except:
+      self.handleError(record)
 
 # Print iterations progress
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', print_end = "\r"):
@@ -88,19 +114,21 @@ def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1
   percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
   filled_length = int(length * iteration // total)
   bar_val = fill * filled_length + '-' * (length - filled_length)
-  #print(f'\r{prefix} |{bar_val}| {percent}% {suffix}', end = print_end)
-  #sys.stdout.write(f'\r{prefix} |{bar_val}| {percent}% {suffix}')
 
   LOGGER.info(f'\r{prefix} |{bar_val}| {percent}% {suffix}', extra={'writing_progress_bar':True})
   #LOGGER.info(f'%s', extra={'writing_progress_bar':True, 'percent':percent})
 
   # Print New Line on Complete
-  if iteration == total: 
+  if iteration >= total: 
     sys.stdout.write(str('\r\n'))
 
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  prefix_str = "Reading Progress:" if READING else "Writing Progress:"
+  #prefix_str = "Reading Progress:" if READING else "Writing Progress:"
+  if READING:
+    prefix_str = "Reading Progress:"
+  else:
+     prefix_str = "Writing Progress:"
   print_progress_bar(percent_progress, 1.0, prefix = prefix_str, suffix = 'Complete', length = 50)
 
 class FileTypes(Enum):
