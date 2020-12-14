@@ -276,6 +276,9 @@ class HeadElement(TTMLElement):
     parent_ctx: typing.Optional[TTMLElement.ParsingContext],
     xml_elem: et.Element
   ) -> HeadElement.ParsingContext:
+    '''Converts the XML element `xml_elem` into its representation in the data model.
+    `parent_ctx` contains state information passed from parent to child in the TTML hierarchy.
+    '''
     
     head_ctx = HeadElement.ParsingContext(HeadElement, parent_ctx)
 
@@ -329,6 +332,9 @@ class HeadElement(TTMLElement):
     ctx: TTMLElement.WritingContext,
     model_doc: model.ContentDocument,
   )-> typing.Optional[et.Element]:
+    '''Converts the ContentDocument `model_doc` into its TTML representation, i.e. an XML element.
+    `ctx` contains state information used in the process.
+    '''
 
     head_element = et.Element(HeadElement.qn)
 
@@ -364,6 +370,9 @@ class LayoutElement(TTMLElement):
     parent_ctx: typing.Optional[TTMLElement.ParsingContext],
     xml_elem: et.Element
   ) -> typing.Optional[LayoutElement.ParsingContext]:
+    '''Converts the XML element `xml_elem` into its representation in the data model.
+    `parent_ctx` contains state information passed from parent to child in the TTML hierarchy.
+    '''
 
     layout_ctx = LayoutElement.ParsingContext(LayoutElement, parent_ctx)
 
@@ -395,6 +404,9 @@ class LayoutElement(TTMLElement):
     ctx: TTMLElement.WritingContext,
     model_doc: model.ContentDocument,
   ) -> typing.Optional[et.Element]:
+    '''Returns a TTML `layout` element (an XML element) using the information in the ContentDocument `model_doc`.
+    `ctx` contains state information used in the process.
+    '''
 
     layout_element = et.Element(LayoutElement.qn)
     
@@ -442,6 +454,9 @@ class StylingElement(TTMLElement):
     parent_ctx: typing.Optional[TTMLElement.ParsingContext],
     xml_elem: et.Element
   ) -> typing.Optional[StylingElement.ParsingContext]:
+    '''Converts the XML element `xml_elem` into its representation in the data model.
+    `parent_ctx` contains state information passed from parent to child in the TTML hierarchy.
+    '''
 
     styling_ctx = StylingElement.ParsingContext(StylingElement, parent_ctx)
 
@@ -479,7 +494,10 @@ class StylingElement(TTMLElement):
     _ctx: TTMLElement.WritingContext,
     model_doc: model.ContentDocument
   ) -> typing.Optional[et.Element]:
-    
+    '''Returns a TTML `styling` element using the information in the ContentDocument `model_doc`.
+    `ctx` contains state information used in the process.
+    '''
+
     styling_element = None
 
     for style_prop, style_value in model_doc.iter_initial_values():
@@ -524,7 +542,10 @@ class StyleElement(TTMLElement):
     parent_ctx: typing.Optional[TTMLElement.ParsingContext],
     xml_elem: et.Element
   ) -> typing.Optional[StyleElement.ParsingContext]:
-    
+    '''Converts the XML element `xml_elem` into its representation in the data model.
+    `parent_ctx` contains state information passed from parent to child in the TTML hierarchy.
+    '''
+
     style_ctx = StyleElement.ParsingContext(parent_ctx)
 
     # collect all specified style attributes
@@ -588,7 +609,10 @@ class InitialElement(TTMLElement):
     parent_ctx: typing.Optional[TTMLElement.ParsingContext],
     xml_elem: et.Element
   ) -> typing.Optional[InitialElement.ParsingContext]:
-    
+    '''Converts the XML element `xml_elem` into its representation in the data model.
+    `parent_ctx` contains state information passed from parent to child in the TTML hierarchy.
+    '''
+
     initial_ctx = InitialElement.ParsingContext(InitialElement, parent_ctx)
 
     # collect the specified style attributes
@@ -619,6 +643,9 @@ class InitialElement(TTMLElement):
 
   @staticmethod
   def from_model(style_prop: imsc_styles.StyleProperty, initial_value: typing.Any):
+    '''Returns a TTML `initial` element corresponding to the style property `style_prop` with
+    initial value `initial_value`.
+    '''
 
     initial_element = et.Element(InitialElement.qn)
     
@@ -955,6 +982,9 @@ class ContentElement(TTMLElement):
     parent_ctx: typing.Optional[TTMLElement.ParsingContext],
     xml_elem: et.Element
   ) -> typing.Optional[ContentElement.ParsingContext]:
+    '''Converts the XML element `xml_elem` into its representation in the data model.
+    `parent_ctx` contains state information passed from parent to child in the TTML hierarchy.
+    '''
 
     content_classes = [
       BodyElement,
@@ -985,6 +1015,9 @@ class ContentElement(TTMLElement):
     ctx: TTMLElement.WritingContext,
     model_element: model.ContentElement
   ) -> typing.Optional[et.Element]:
+    '''Returns the TTML element corresponding to the model element `model_element`.
+    `ctx` contains state information used in the process.
+    '''
 
     if isinstance(model_element, model.Body):
       imsc_class = BodyElement
