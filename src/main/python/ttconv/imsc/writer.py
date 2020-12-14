@@ -27,6 +27,8 @@
 
 import logging
 from fractions import Fraction
+import numbers
+import typing
 import xml.etree.ElementTree as et
 import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.namespaces as xml_ns
