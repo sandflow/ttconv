@@ -270,14 +270,14 @@ def validate(args):
   print(args.input)
   LOGGER.info("Input file is %s", args.input)
 
+# Ensure that the handler is added only once/globally
+# Otherwise the handler will be called multiple times
+progress = ProgressConsoleHandler()
+LOGGER.addHandler(progress)
+LOGGER.setLevel(logging.INFO) 
 
 def main(argv):
   '''Main application processing'''
-
-  LOGGER.handlers.clear()
-  progress = ProgressConsoleHandler()
-  LOGGER.setLevel(logging.INFO) 
-  LOGGER.addHandler(progress)
 
   args = cli.parse_args(argv)
   if args.subcommand is None:
