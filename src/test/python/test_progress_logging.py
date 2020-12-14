@@ -27,14 +27,42 @@
 
 import logging
 import unittest
-import sys
 import ttconv.tt as tt
 
 LOGGER = logging.getLogger("ttconv")
 
 class IMSCAppLoggingProgressBarTest(unittest.TestCase):
 
+  def test_logging_info(self):
+
+    with self.assertLogs('ttconv', level='INFO') as cm:
+      inputfile = "input"
+      outputfile = "output"
+      LOGGER.info("Input file is %s", inputfile)
+      LOGGER.info("Output file is %s", outputfile)
+      LOGGER.info('test 1')
+
+      LOGGER.info('test 2')
+      LOGGER.info('test 3')
+      LOGGER.info('test 4')
+      LOGGER.info('test 5')
+      LOGGER.info('test 6')
+      LOGGER.info('test 7')
+
+    self.assertEqual(cm.output, [
+                                'INFO:ttconv:Input file is input',
+                                'INFO:ttconv:Output file is output',
+                                'INFO:ttconv:test 1',
+                                'INFO:ttconv:test 2',
+                                'INFO:ttconv:test 3',
+                                'INFO:ttconv:test 4',
+                                'INFO:ttconv:test 5',
+                                'INFO:ttconv:test 6',
+                                'INFO:ttconv:test 7'
+                                ])
+
   def test_logging_progress_bar(self):
+
     inputfile = "input"
     outputfile = "output"
     LOGGER.info("Input file is %s", inputfile)
@@ -52,6 +80,41 @@ class IMSCAppLoggingProgressBarTest(unittest.TestCase):
     tt.LOGGER.info('test 6')
     tt.progress_callback(1)
     LOGGER.info('test 7')
+
+
+  def test_logging_progress_bar_asserts(self):
+
+    with self.assertLogs('ttconv', level='INFO') as cm:
+      inputfile = "input"
+      outputfile = "output"
+      LOGGER.info("Input file is %s", inputfile)
+      LOGGER.info("Output file is %s", outputfile)
+      LOGGER.info('test 1')
+
+      tt.progress_callback(0)
+      LOGGER.info('test 2')
+      LOGGER.info('test 3')
+      #tt.progress_callback(0.1)
+      #tt.progress_callback(1)
+      LOGGER.info('test 4')
+      #tt.progress_callback(0.3)
+      LOGGER.info('test 5')
+      LOGGER.info('test 6')
+      #tt.progress_callback(1)
+      LOGGER.info('test 7')
+
+    self.assertEqual(cm.output, [
+                                'INFO:ttconv:Input file is input',
+                                'INFO:ttconv:Output file is output',
+                                'INFO:ttconv:test 1',
+                                'Reading Progress: |--------------------------------------------------| 0.0% Complete',
+                                'INFO:ttconv:test 2',
+                                'INFO:ttconv:test 3',
+                                'INFO:ttconv:test 4',
+                                'INFO:ttconv:test 5',
+                                'INFO:ttconv:test 6',
+                                'INFO:ttconv:test 7'
+                                ])
 
 if __name__ == '__main__':
   unittest.main()
