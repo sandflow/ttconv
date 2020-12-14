@@ -49,6 +49,21 @@ class ProgressConsoleHandler(logging.StreamHandler):
   is_writing_progress_bar = False
   last_progress_msg = ""
 
+  def progress_str(self, percent_progress: float) -> str:
+    '''Formats the progress string.'''
+
+    total = 1.0
+    prefix = "Reading Progress:" if READING else "Writing Progress:"
+    suffix = 'Complete'
+    decimals = 1
+    length = 50
+    fill = '█'
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (percent_progress / float(total)))
+    filled_length = int(length * percent_progress // total)
+    bar_val = fill * filled_length + '-' * (length - filled_length)
+    
+    return f'\r{prefix} |{bar_val}| {percent}% {suffix}'
+
   def emit(self, record):
     try:
       msg = self.format(record)
@@ -56,19 +71,17 @@ class ProgressConsoleHandler(logging.StreamHandler):
       stream = self.stream
       writing_progress_bar = hasattr(record, 'writing_progress_bar')
 
-      percent = None
+      percent_progress = None
       if writing_progress_bar:
+        percent_progress = getattr(record, 'percent_progress')
+        msg = self.progress_str(float(percent_progress))
         self.last_progress_msg = msg
-        percent = getattr(record, 'percent')
   
       if self.is_writing_progress_bar and not writing_progress_bar:
         # erase and over write the progress bar
         stream.write('\r')
         length = len(self.last_progress_msg)
-        i = 0
-        while i < length:
-          stream.write(' ')
-          i += 1
+        stream.write(' ' * length)
 
         # go to beginning of the line and write the new messages
         stream.write('\r')
@@ -85,7 +98,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
       if writing_progress_bar:
         self.is_writing_progress_bar = True
-        if percent is not None and float(percent) >= 100.0:
+        if percent_progress is not None and float(percent_progress) >= 1.0:
           sys.stdout.write(str('\r\n'))
           self.is_writing_progress_bar = False
 
@@ -98,20 +111,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  prefix_str = "Reading Progress:" if READING else "Writing Progress:"
-
-  total = 1.0
-  prefix = prefix_str
-  suffix = 'Complete'
-  decimals = 1
-  length = 50
-  fill = '█'
-  percent = ("{0:." + str(decimals) + "f}").format(100 * (percent_progress / float(total)))
-  filled_length = int(length * percent_progress // total)
-  bar_val = fill * filled_length + '-' * (length - filled_length)
-
-  LOGGER.info(f'\r{prefix} |{bar_val}| {percent}% {suffix}', extra={'writing_progress_bar':True, 'percent':percent})
-  #LOGGER.info(f'%s', extra={'writing_progress_bar':True, 'percent':percent})
+  LOGGER.info('', extra={'writing_progress_bar':True, 'percent_progress':percent_progress})
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''

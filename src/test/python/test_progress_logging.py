@@ -35,11 +35,6 @@ LOGGER = logging.getLogger("ttconv")
 class IMSCAppLoggingProgressBarTest(unittest.TestCase):
 
   def test_logging_progress_bar(self):
-    progress = tt.ProgressConsoleHandler()
-
-    LOGGER.setLevel(logging.INFO) 
-    LOGGER.addHandler(progress)
-
     inputfile = "input"
     outputfile = "output"
     LOGGER.info("Input file is %s", inputfile)
