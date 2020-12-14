@@ -27,7 +27,6 @@
 
 import re
 import logging
-import datetime 
 import math
 from fractions import Fraction
 import typing
@@ -301,7 +300,7 @@ class TemporalAttributeParsingContext:
 
 @dataclass
 class TemporalAttributeWritingContext:
-  frame_rate: Fraction = Fraction(30, 1)
+  frame_rate: typing.Optional[Fraction] = None
 
 def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> str:
   if context.frame_rate is None:

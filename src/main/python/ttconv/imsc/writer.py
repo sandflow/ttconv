@@ -38,8 +38,14 @@ LOGGER = logging.getLogger(__name__)
 # imsc writer
 #
 
-def from_model(model_doc: model.ContentDocument, frame_rate = None, progress_callback=lambda _: None):
-  '''Converts the data model to an IMSC document'''
+def from_model(
+  model_doc: model.ContentDocument,
+  frame_rate: Fraction = None,
+  progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = lambda _: None
+  ):
+  '''Converts the data model to an IMSC document. The writer regularly the `progress_callback` function, if provided,
+  with a real between 0 and 1, indicating the relative progress of the process.
+  '''
   
   et.register_namespace("ttml", xml_ns.TTML)
   et.register_namespace("ttp", xml_ns.TTP)

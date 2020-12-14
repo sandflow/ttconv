@@ -29,6 +29,7 @@ from __future__ import annotations
 import logging
 from fractions import Fraction
 import typing
+import numbers
 import xml.etree.ElementTree as et
 import ttconv.model as model
 import ttconv.style_properties as model_styles
@@ -93,8 +94,7 @@ class TTMLElement:
     '''State information when writing a TTML element'''
 
     def __init__(self, frame_rate: Fraction):
-      self.temporal_context = imsc_attr.TemporalAttributeWritingContext
-      self.temporal_context.frame_rate = frame_rate
+      self.temporal_context = imsc_attr.TemporalAttributeWritingContext(frame_rate=frame_rate)
 
   @staticmethod
   def is_instance(xml_elem) -> bool:
@@ -103,11 +103,16 @@ class TTMLElement:
     raise NotImplementedError
 
   @staticmethod
-  def from_xml(parent_ctx, xml_elem, progress_callback=lambda _: None):
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[TTMLElement.ParsingContext]:
     '''Returns a parsing context for the TTML element represented by the XML element `xml_elem` and
     given the parent context `parent_ctx`
     '''
     raise NotImplementedError
+
 
 
 class TTElement(TTMLElement):
@@ -124,7 +129,11 @@ class TTElement(TTMLElement):
     return xml_elem.tag == TTElement.qn
 
   @staticmethod
-  def from_xml(_parent_ctx: typing.Optional[TTMLElement.ParsingContext], xml_elem, progress_callback=lambda _: None) -> TTElement.ParsingContext:
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = None
+  ) -> TTElement.ParsingContext:
     '''`_parent_ctx` is ignored and can be set to `None`
     '''
 
@@ -177,7 +186,7 @@ class TTElement(TTMLElement):
 
           has_body = True
 
-          body_element = ContentElement.from_xml(tt_ctx, child_element)
+          body_element = ContentElement.from_xml(tt_ctx, child_element, progress_callback)
 
           tt_ctx.doc.set_body(body_element.model_element if body_element is not None else None)
 
@@ -192,7 +201,7 @@ class TTElement(TTMLElement):
 
           has_head = True
 
-          HeadElement.from_xml(tt_ctx, child_element)
+          HeadElement.from_xml(tt_ctx, child_element, progress_callback)
 
           progress_callback(0.5)
 
@@ -202,8 +211,14 @@ class TTElement(TTMLElement):
     return tt_ctx
 
   @staticmethod
-  def from_model(model_doc: model.ContentDocument, frame_rate = None, progress_callback=lambda _: None) -> et.Element:
+  def from_model(
+    model_doc: model.ContentDocument,
+    frame_rate: typing.Optional[Fraction],
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> et.Element:
     '''Converts the data model to an IMSC document contained in an ElementTree Element'''
+
+    ctx = TTMLElement.WritingContext(frame_rate)
 
     tt_element = et.Element(TTElement.qn)
 
@@ -232,8 +247,6 @@ class TTElement(TTMLElement):
 
     if model_doc.get_active_area() is not None:
       imsc_attr.ActiveAreaAttribute.set(tt_element, model_doc.get_active_area())
-
-    ctx = TTMLElement.WritingContext(frame_rate)
 
     # Write the <head> section first
     head_element = HeadElement.from_model(ctx, model_doc)
@@ -271,7 +284,11 @@ class HeadElement(TTMLElement):
     return xml_elem.tag == HeadElement.qn
 
   @staticmethod
-  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> HeadElement.ParsingContext:
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> HeadElement.ParsingContext:
     
     head_ctx = HeadElement.ParsingContext(HeadElement, parent_ctx)
 
@@ -296,7 +313,8 @@ class HeadElement(TTMLElement):
 
           LayoutElement.from_xml(
             head_ctx,
-            child_element
+            child_element,
+            progress_callback
           )
 
         else:
@@ -311,7 +329,8 @@ class HeadElement(TTMLElement):
 
           StylingElement.from_xml(
             head_ctx,
-            child_element
+            child_element,
+            progress_callback
           )
 
         else:
@@ -321,11 +340,14 @@ class HeadElement(TTMLElement):
     return head_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.ContentDocument):
+  def from_model(
+    ctx: TTMLElement.WritingContext,
+    model_doc: model.ContentDocument,
+  )-> typing.Optional[et.Element]:
 
     head_element = et.Element(HeadElement.qn)
 
-    styling_element = StylingElement.from_model(model_doc)
+    styling_element = StylingElement.from_model(ctx, model_doc)
 
     if styling_element is not None:
       head_element.append(styling_element)
@@ -353,7 +375,11 @@ class LayoutElement(TTMLElement):
     return xml_elem.tag == LayoutElement.qn
 
   @staticmethod
-  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[LayoutElement.ParsingContext]:
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[LayoutElement.ParsingContext]:
 
     layout_ctx = LayoutElement.ParsingContext(LayoutElement, parent_ctx)
 
@@ -369,7 +395,7 @@ class LayoutElement(TTMLElement):
 
       if RegionElement.is_instance(child_element):
 
-        r = RegionElement.from_xml(layout_ctx, child_element)
+        r = RegionElement.from_xml(layout_ctx, child_element, progress_callback)
 
         if r is not None:
           layout_ctx.doc.put_region(r.model_element)
@@ -381,7 +407,10 @@ class LayoutElement(TTMLElement):
     return layout_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_doc: model.ContentDocument):
+  def from_model(
+    ctx: TTMLElement.WritingContext,
+    model_doc: model.ContentDocument,
+  ) -> typing.Optional[et.Element]:
 
     layout_element = et.Element(LayoutElement.qn)
     
@@ -425,7 +454,11 @@ class StylingElement(TTMLElement):
     return xml_elem.tag == StylingElement.qn
 
   @staticmethod
-  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StylingElement.ParsingContext]:
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[StylingElement.ParsingContext]:
 
     styling_ctx = StylingElement.ParsingContext(StylingElement, parent_ctx)
 
@@ -435,11 +468,11 @@ class StylingElement(TTMLElement):
 
       if InitialElement.is_instance(child_xml_elem):
 
-        InitialElement.from_xml(styling_ctx, child_xml_elem)
+        InitialElement.from_xml(styling_ctx, child_xml_elem, progress_callback)
 
       elif StyleElement.is_instance(child_xml_elem):
         
-        style_element = StyleElement.from_xml(styling_ctx, child_xml_elem)
+        style_element = StyleElement.from_xml(styling_ctx, child_xml_elem, progress_callback)
 
         if style_element is None:
           continue
@@ -459,7 +492,10 @@ class StylingElement(TTMLElement):
     return styling_ctx
 
   @staticmethod
-  def from_model(model_doc: model.ContentDocument) -> typing.Optional[et.Element]:
+  def from_model(
+    _ctx: TTMLElement.WritingContext,
+    model_doc: model.ContentDocument
+  ) -> typing.Optional[et.Element]:
     
     styling_element = None
 
@@ -501,7 +537,11 @@ class StyleElement(TTMLElement):
     return xml_elem.tag == StyleElement.qn
 
   @staticmethod
-  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[StyleElement.ParsingContext]:
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[StyleElement.ParsingContext]:
     
     style_ctx = StyleElement.ParsingContext(parent_ctx)
 
@@ -562,7 +602,11 @@ class InitialElement(TTMLElement):
     return xml_elem.tag == InitialElement.qn
 
   @staticmethod
-  def from_xml(parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[InitialElement.ParsingContext]:
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[InitialElement.ParsingContext]:
     
     initial_ctx = InitialElement.ParsingContext(InitialElement, parent_ctx)
 
@@ -708,7 +752,7 @@ class ContentElement(TTMLElement):
 
     # pylint: disable=too-many-branches
 
-    def process(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
+    def process(self, parent_ctx: TTMLElement.ParsingContext, xml_elem, progress_callback):
       '''Generic processing applicable to TTML elements rooted in `region` and `body` elements
       '''
       self.process_lang_attribute(parent_ctx, xml_elem)
@@ -757,10 +801,10 @@ class ContentElement(TTMLElement):
         if issubclass(self.ttml_class, RegionElement) and StyleElement.is_instance(child_xml_element):
           # process nest styling, which is specific to region elements, and does not affect temporal
           # processing
-          StyleElement.from_xml(self, child_xml_element)
+          StyleElement.from_xml(self, child_xml_element, progress_callback)
           continue
 
-        child_element = ContentElement.from_xml(self, child_xml_element)
+        child_element = ContentElement.from_xml(self, child_xml_element, progress_callback)
 
         if child_element is not None:
 
@@ -925,8 +969,13 @@ class ContentElement(TTMLElement):
 
     return s
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[ContentElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[ContentElement.ParsingContext]:
+
     content_classes = [
       BodyElement,
       DivElement,
@@ -945,14 +994,17 @@ class ContentElement(TTMLElement):
 
     for ttml_elem_class in content_classes:
       if ttml_elem_class.is_instance(xml_elem):
-        return ttml_elem_class.from_xml(parent_ctx, xml_elem)
+        return ttml_elem_class.from_xml(parent_ctx, xml_elem, progress_callback)
     
     return None
 
   # pylint: disable=too-many-branches
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement) -> typing.Optional[ContentElement]:
+  def from_model(
+    ctx: TTMLElement.WritingContext,
+    model_element: model.ContentElement
+  ) -> typing.Optional[et.Element]:
 
     if isinstance(model_element, model.Body):
       imsc_class = BodyElement
@@ -1036,8 +1088,12 @@ class RegionElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == RegionElement.qn
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RegionElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RegionElement.ParsingContext]:
     rid = imsc_attr.XMLIDAttribute.extract(xml_elem)
 
     if rid is None:
@@ -1049,7 +1105,10 @@ class RegionElement(ContentElement):
     return region_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_element: model.Region):
+  def from_model(
+    ctx: TTMLElement.WritingContext,
+    model_element: model.Region
+  ) -> typing.Optional[et.Element]:
     return ContentElement.from_model(ctx, model_element)
 
   @classmethod
@@ -1082,30 +1141,37 @@ class SetElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == SetElement.qn
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SetElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[SetElement.ParsingContext]:
     set_ctx = SetElement.ParsingContext(SetElement, parent_ctx)
     set_ctx.process(parent_ctx, xml_elem)
 
     return set_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, anim_step: model.DiscreteAnimationStep):
+  def from_model(
+    ctx: TTMLElement.WritingContext,
+    model_element: model.DiscreteAnimationStep
+  ) -> typing.Optional[et.Element]:
 
     set_element = et.Element(SetElement.qn)
 
-    imsc_style = imsc_styles.StyleProperties.BY_MODEL_PROP[anim_step.style_property]
+    imsc_style = imsc_styles.StyleProperties.BY_MODEL_PROP[model_element.style_property]
 
     imsc_style.from_model(
       set_element,
-      anim_step.value
+      model_element.value
     )
 
-    if anim_step.begin is not None:
-      imsc_attr.BeginAttribute.set(ctx.temporal_context, set_element, anim_step.begin)
+    if model_element.begin is not None:
+      imsc_attr.BeginAttribute.set(ctx.temporal_context, set_element, model_element.begin)
 
-    if anim_step.end is not None:
-      imsc_attr.EndAttribute.set(ctx.temporal_context, set_element, anim_step.end)
+    if model_element.end is not None:
+      imsc_attr.EndAttribute.set(ctx.temporal_context, set_element, model_element.end)
 
     return set_element
 
@@ -1133,8 +1199,12 @@ class BodyElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == BodyElement.qn
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[BodyElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[BodyElement.ParsingContext]:
     body_ctx = BodyElement.ParsingContext(BodyElement, parent_ctx, model.Body(parent_ctx.doc))
     body_ctx.process(parent_ctx, xml_elem)
     return body_ctx
@@ -1166,8 +1236,12 @@ class DivElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == DivElement.qn
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[DivElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[DivElement.ParsingContext]:
     div_ctx = DivElement.ParsingContext(DivElement, parent_ctx, model.Div(parent_ctx.doc))
     div_ctx.process(parent_ctx, xml_elem)
     return div_ctx
@@ -1199,8 +1273,12 @@ class PElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == PElement.qn
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[PElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[PElement.ParsingContext]:
     p_ctx = PElement.ParsingContext(PElement, parent_ctx, model.P(parent_ctx.doc))
     p_ctx.process(parent_ctx, xml_elem)
     return p_ctx
@@ -1240,8 +1318,12 @@ class SpanElement(ContentElement):
     '''
     return ttml_span.get(SpanElement.ruby_attribute_qn)
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[SpanElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[SpanElement.ParsingContext]:
     span_ctx = SpanElement.ParsingContext(SpanElement, parent_ctx, model.Span(parent_ctx.doc))
     span_ctx.process(parent_ctx, xml_elem)
     return span_ctx
@@ -1274,8 +1356,12 @@ class RubyElement(ContentElement):
   def is_instance(xml_elem):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RubyElement.ruby
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RubyElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RubyElement.ParsingContext]:
     ruby_ctx = RubyElement.ParsingContext(RubyElement, parent_ctx, model.Ruby(parent_ctx.doc))
     ruby_ctx.process(parent_ctx, xml_elem)
     return ruby_ctx
@@ -1307,8 +1393,12 @@ class RbElement(ContentElement):
   def is_instance(xml_elem):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RbElement.ruby
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RbElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RbElement.ParsingContext]:
     rb_ctx = RbElement.ParsingContext(RbElement, parent_ctx, model.Rb(parent_ctx.doc))
     rb_ctx.process(parent_ctx, xml_elem)
     return rb_ctx
@@ -1341,8 +1431,12 @@ class RtElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RtElement.ruby
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RtElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RtElement.ParsingContext]:
     rt_ctx = RtElement.ParsingContext(RtElement, parent_ctx, model.Rt(parent_ctx.doc))
     rt_ctx.process(parent_ctx, xml_elem)
     return rt_ctx
@@ -1375,8 +1469,12 @@ class RpElement(ContentElement):
   def is_instance(xml_elem):
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RpElement.ruby
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RpElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RpElement.ParsingContext]:
     rp_ctx = RpElement.ParsingContext(RpElement, parent_ctx, model.Rp(parent_ctx.doc))
     rp_ctx.process(parent_ctx, xml_elem)
     return rp_ctx
@@ -1409,8 +1507,12 @@ class RbcElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RbcElement.ruby
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RbcElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RbcElement.ParsingContext]:
     rbc_ctx = RbcElement.ParsingContext(RbcElement, parent_ctx, model.Rbc(parent_ctx.doc))
     rbc_ctx.process(parent_ctx, xml_elem)
     return rbc_ctx
@@ -1443,8 +1545,12 @@ class RtcElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == SpanElement.qn and SpanElement.get_ruby_attr(xml_elem) == RtcElement.ruby
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[RtcElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[RtcElement.ParsingContext]:
     rtc_ctx = RtcElement.ParsingContext(RtcElement, parent_ctx, model.Rtc(parent_ctx.doc))
     rtc_ctx.process(parent_ctx, xml_elem)
     return rtc_ctx
@@ -1477,14 +1583,21 @@ class BrElement(ContentElement):
   def is_instance(xml_elem) -> bool:
     return xml_elem.tag == BrElement.qn
 
-  @classmethod
-  def from_xml(cls, parent_ctx: TTMLElement.ParsingContext, xml_elem) -> typing.Optional[BrElement.ParsingContext]:
+  @staticmethod
+  def from_xml(
+    parent_ctx: typing.Optional[TTMLElement.ParsingContext],
+    xml_elem: et.Element,
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+  ) -> typing.Optional[BrElement.ParsingContext]:
     br_ctx = BrElement.ParsingContext(BrElement, parent_ctx, model.Br(parent_ctx.doc))
     br_ctx.process(parent_ctx, xml_elem)
     return br_ctx
 
   @staticmethod
-  def from_model(ctx: TTMLElement.WritingContext, model_element: model.ContentElement):
+  def from_model(
+    ctx: TTMLElement.WritingContext,
+    model_element: typing.Any
+  ) -> typing.Optional[et.Element]:
     return ContentElement.from_model(ctx, model_element)
 
   @classmethod
