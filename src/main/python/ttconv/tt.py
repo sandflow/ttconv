@@ -39,21 +39,23 @@ import ttconv.scc.reader as scc_reader
 
 LOGGER = logging.getLogger("ttconv")
 
-READING = True
-
 class ProgressConsoleHandler(logging.StreamHandler):
   """
   A handler class which allows the cursor to stay on
   one line for selected messages
   """
-  is_writing_progress_bar = False
-  last_progress_msg = ""
 
+  def __init__(self):
+    self.is_writing_progress_bar = False
+    self.last_progress_msg = ""
+    self.reading = True
+    super(ProgressConsoleHandler, self).__init__()
+    
   def progress_str(self, percent_progress: float) -> str:
     '''Formats the progress string.'''
 
     total = 1.0
-    prefix = "Reading Progress:" if READING else "Writing Progress:"
+    prefix = "Reading Progress:" if self.reading else "Writing Progress:"
     suffix = 'Complete'
     decimals = 1
     length = 50
@@ -111,7 +113,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
 def progress_callback(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  LOGGER.info('', extra={'writing_progress_bar':True, 'percent_progress':percent_progress})
+  LOGGER.info(f'{percent_progress}%', extra={'writing_progress_bar':True, 'percent_progress':percent_progress})
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -198,8 +200,7 @@ def convert(args):
   reader_type = FileTypes.get_file_type(args.itype, input_file_extension)
   writer_type = FileTypes.get_file_type(args.otype, output_file_extension)
 
-  global READING
-  READING = True
+  progress.reading = True
 
   if reader_type is FileTypes.TTML:
     # 
@@ -228,7 +229,7 @@ def convert(args):
     LOGGER.error(exit_str)
     sys.exit(exit_str)
 
-  READING = False
+  progress.reading = False
 
   if writer_type is FileTypes.TTML:
     #
