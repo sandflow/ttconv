@@ -261,7 +261,7 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
 
-      return list(map(
+      return tuple(map(
         lambda f: "monospaceSerif" if f == "default" else f,
         utils.parse_font_families(xml_attrib)
       ))
