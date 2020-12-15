@@ -35,7 +35,6 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
-import ttconv.imsc.namespaces as xml_ns
 
 class IMSCReaderTest(unittest.TestCase):
 
@@ -221,6 +220,26 @@ class IMSCReaderTest(unittest.TestCase):
     p = list(list(doc.get_body())[0])[3]
 
     self.assertEqual(p.get_end(), Fraction(4394201, 1000))
+
+  def test_ooo_set_element(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+      <tt xml:lang="en"
+          xmlns="http://www.w3.org/ns/ttml"
+          xmlns:tts="http://www.w3.org/ns/ttml#styling">
+      <body>
+        <div><p>hello</p></div>
+        <set tts:color="red"/>
+        <div><p>bye</p></div>
+      </body>
+      </tt>"""
+
+    tree = et.ElementTree(et.fromstring(xml_str))
+
+    with self.assertLogs() as logs:
+      logging.getLogger().info("*****dummy*****") # dummy log
+      self.assertIsNotNone(imsc_reader.to_model(tree))
+      if len(logs.output) != 2:
+        self.fail(logs.output)
 
 if __name__ == '__main__':
   unittest.main()

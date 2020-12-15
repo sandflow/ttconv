@@ -804,6 +804,8 @@ class ContentElement(TTMLElement):
 
       # process children elements
 
+      is_inline_animation_complete = False
+
       for child_xml_element in xml_elem:
 
         if issubclass(self.ttml_class, RegionElement) and StyleElement.is_instance(child_xml_element):
@@ -815,6 +817,12 @@ class ContentElement(TTMLElement):
         child_element = ContentElement.from_xml(self, child_xml_element)
 
         if child_element is not None:
+
+          if issubclass(child_element.ttml_class, SetElement):
+            if is_inline_animation_complete:
+              LOGGER.warning("<set> element is out of order")
+          elif is_inline_animation_complete is False:
+            is_inline_animation_complete = True
 
           if self.time_container.is_seq():
 
