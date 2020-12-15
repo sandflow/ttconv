@@ -769,9 +769,8 @@ class ContentElement(TTMLElement):
           if issubclass(child_element.ttml_class, SetElement):
             if is_inline_animation_complete:
               LOGGER.warning("<set> element is out of order")
-          else:
-            if is_inline_animation_complete is False:
-              is_inline_animation_complete = True
+          elif is_inline_animation_complete is False:
+            is_inline_animation_complete = True
 
           if self.time_container.is_seq():
 
