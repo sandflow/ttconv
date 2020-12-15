@@ -48,14 +48,13 @@ class ProgressConsoleHandler(logging.StreamHandler):
   def __init__(self):
     self.is_writing_progress_bar = False
     self.last_progress_msg = ""
-    self.reading = True
     super(ProgressConsoleHandler, self).__init__()
     
-  def progress_str(self, percent_progress: float) -> str:
+  def progress_str(self, reading: bool, percent_progress: float) -> str:
     '''Formats the progress string.'''
 
     total = 1.0
-    prefix = "Reading Progress:" if self.reading else "Writing Progress:"
+    prefix = "Reading Progress:" if reading else "Writing Progress:"
     suffix = 'Complete'
     decimals = 1
     length = 50
@@ -74,9 +73,11 @@ class ProgressConsoleHandler(logging.StreamHandler):
       writing_progress_bar = hasattr(record, 'writing_progress_bar')
 
       percent_progress = None
+      reading = True
       if writing_progress_bar:
         percent_progress = getattr(record, 'percent_progress')
-        msg = self.progress_str(float(percent_progress))
+        reading = getattr(record, 'reading')
+        msg = self.progress_str(reading, float(percent_progress))
         self.last_progress_msg = msg
   
       if self.is_writing_progress_bar and not writing_progress_bar:
@@ -111,9 +112,19 @@ class ProgressConsoleHandler(logging.StreamHandler):
     except:
       self.handleError(record)
 
-def progress_callback(percent_progress: float):
+def progress_callback_read(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  LOGGER.info(f'{percent_progress}%', extra={'writing_progress_bar':True, 'percent_progress':percent_progress})
+  LOGGER.info(f'{percent_progress}%', 
+    extra={'writing_progress_bar':True, 
+    'percent_progress':percent_progress,
+    'reading':True})
+
+def progress_callback_write(percent_progress: float):
+  '''Callback handler used by reader and writer.'''
+  LOGGER.info(f'{percent_progress}%', 
+    extra={'writing_progress_bar':True, 
+    'percent_progress':percent_progress,
+    'reading':False})
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -200,8 +211,6 @@ def convert(args):
   reader_type = FileTypes.get_file_type(args.itype, input_file_extension)
   writer_type = FileTypes.get_file_type(args.otype, output_file_extension)
 
-  progress.reading = True
-
   if reader_type is FileTypes.TTML:
     # 
     # Parse the xml input file into an ElementTree
@@ -211,7 +220,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = imsc_reader.to_model(tree, progress_callback)
+    model = imsc_reader.to_model(tree, progress_callback_read)
 
   elif reader_type is FileTypes.SCC:
     file_as_str = Path(inputfile).read_text()
@@ -219,7 +228,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = scc_reader.to_model(file_as_str, progress_callback)
+    model = scc_reader.to_model(file_as_str, progress_callback_read)
   else:
     if args.itype is not None:
       exit_str  = f'Input type {args.itype} is not supported'
@@ -229,13 +238,11 @@ def convert(args):
     LOGGER.error(exit_str)
     sys.exit(exit_str)
 
-  progress.reading = False
-
   if writer_type is FileTypes.TTML:
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, None, progress_callback)
+    tree_from_model = imsc_writer.from_model(model, None, progress_callback_write)
 
     #
     # Write out the converted file
@@ -246,7 +253,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, progress_callback)
+    srt_document = srt_writer.from_model(model, progress_callback_write)
 
     #
     # Write out the converted file
