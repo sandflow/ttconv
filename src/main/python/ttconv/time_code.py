@@ -34,7 +34,7 @@ from math import floor, ceil
 from typing import Union
 
 
-class _BasicTimeCode(ABC):
+class _HHMMSSTimeExpression(ABC):
   """Time code basic definition"""
 
   def __init__(self, hours: int, minutes: int, seconds: int):
@@ -60,7 +60,7 @@ class _BasicTimeCode(ABC):
     return float(self._hours * 3600 + self._minutes * 60 + self._seconds)
 
 
-class ClockTime(_BasicTimeCode):
+class ClockTime(_HHMMSSTimeExpression):
   """Millisecond-based time code definition"""
 
   TIME_CODE_PATTERN = ':'.join(['(?P<h>[0-9]{2})',
@@ -134,7 +134,7 @@ FPS_59_94 = Fraction(60000, 1001)
 FPS_60 = Fraction(60, 1)
 
 
-class SmpteTimeCode(_BasicTimeCode):
+class SmpteTimeCode(_HHMMSSTimeExpression):
   """Frame-based time code definition"""
 
   SMPTE_TIME_CODE_NDF_PATTERN = ':'.join(['(?P<ndf_h>[0-9]{2})',
