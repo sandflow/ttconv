@@ -36,10 +36,17 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.srt.writer as srt_writer
 import ttconv.scc.reader as scc_reader
+from ttconv.config import GeneralConfiguration
+from ttconv.imsc.config import ImscWriterConfiguration
 
 LOGGER = logging.getLogger(__name__)
 
 READING = True
+
+CONFIGURATIONS = [
+  ("general", GeneralConfiguration),
+  ("imsc_writer", ImscWriterConfiguration)
+]
 
 # Print iterations progress
 def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', print_end = "\r"):
