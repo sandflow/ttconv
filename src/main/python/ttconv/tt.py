@@ -45,42 +45,48 @@ class ProgressConsoleHandler(logging.StreamHandler):
   one line for selected messages
   """
 
+  class ProgressType(Enum):
+    '''Whether the progress is for reading or writing operations
+    '''
+    read = 1
+    write = 2
+
   def __init__(self):
     self.is_writing_progress_bar = False
     self.last_progress_msg = ""
-    super(ProgressConsoleHandler, self).__init__()
-    
-  def progress_str(self, reading: bool, percent_progress: float) -> str:
-    '''Formats the progress string.'''
-
-    total = 1.0
-    prefix = "Reading Progress:" if reading else "Writing Progress:"
-    suffix = 'Complete'
-    decimals = 1
-    length = 50
-    fill = '█'
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (percent_progress / float(total)))
-    filled_length = int(length * percent_progress // total)
-    bar_val = fill * filled_length + '-' * (length - filled_length)
-    
-    return f'\r{prefix} |{bar_val}| {percent}% {suffix}'
+    super().__init__()
 
   def emit(self, record):
+
+    def progress_str(progress_type: ProgressConsoleHandler.ProgressType, percent_progress: float) -> str:
+      '''Formats the progress string.'''
+
+      prefix = "Reading:" if progress_type is ProgressConsoleHandler.ProgressType.read else "Writing:"
+      suffix = 'Complete'
+      length = 50
+      fill = '█'
+      filled_length = int(length * percent_progress)
+      bar_val = fill * filled_length + '-' * (length - filled_length)
+      
+      return f'\r{prefix} |{bar_val}| {100 * percent_progress:3.0f}% {suffix}'
+
     try:
       msg = self.format(record)
 
       stream = self.stream
-      writing_progress_bar = hasattr(record, 'writing_progress_bar')
 
+      is_progress_bar_record = hasattr(record, 'progress_bar')
       percent_progress = None
-      reading = True
-      if writing_progress_bar:
+
+      if is_progress_bar_record:
         percent_progress = getattr(record, 'percent_progress')
-        reading = getattr(record, 'reading')
-        msg = self.progress_str(reading, float(percent_progress))
+        msg = progress_str(
+          getattr(record, 'progress_bar'),
+          float(percent_progress)
+        )
         self.last_progress_msg = msg
   
-      if self.is_writing_progress_bar and not writing_progress_bar:
+      if self.is_writing_progress_bar and not is_progress_bar_record:
         # erase and over write the progress bar
         stream.write('\r')
         length = len(self.last_progress_msg)
@@ -93,38 +99,46 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
         # write the old progress information
         stream.write(self.last_progress_msg)
-      elif writing_progress_bar:
+      elif is_progress_bar_record:
         stream.write(msg)
       else:
         stream.write(msg)
         stream.write(self.terminator)
 
-      if writing_progress_bar:
+      if is_progress_bar_record:
         self.is_writing_progress_bar = True
         if percent_progress is not None and float(percent_progress) >= 1.0:
-          sys.stdout.write(str('\r\n'))
+          sys.stdout.write('\r\n')
           self.is_writing_progress_bar = False
 
       self.flush()
 
     except (KeyboardInterrupt, SystemExit):
       raise
-    except:
+    except: # pylint: disable=bare-except
       self.handleError(record)
 
 def progress_callback_read(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  LOGGER.info(f'{percent_progress}%', 
-    extra={'writing_progress_bar':True, 
-    'percent_progress':percent_progress,
-    'reading':True})
+  LOGGER.info(
+    "%d%%",
+    percent_progress,
+    extra={
+      'progress_bar': ProgressConsoleHandler.ProgressType.read, 
+      'percent_progress': percent_progress,
+    }
+  )
 
 def progress_callback_write(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  LOGGER.info(f'{percent_progress}%', 
-    extra={'writing_progress_bar':True, 
-    'percent_progress':percent_progress,
-    'reading':False})
+  LOGGER.info(
+    "%d%%",
+    percent_progress,
+    extra={
+      'progress_bar': ProgressConsoleHandler.ProgressType.write, 
+      'percent_progress': percent_progress,
+    }
+  )
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
