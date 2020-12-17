@@ -30,7 +30,7 @@ from __future__ import annotations
 import copy
 from typing import Optional
 
-from ttconv.scc.time_codes import SccTimeCode
+from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets
 from ttconv.style_properties import PositionType
 
@@ -52,26 +52,26 @@ class SccCaptionText(SccCaptionContent):
   """Caption text content"""
 
   def __init__(self):
-    self._begin: Optional[SccTimeCode] = None
-    self._end: Optional[SccTimeCode] = None
+    self._begin: Optional[SmpteTimeCode] = None
+    self._end: Optional[SmpteTimeCode] = None
     self._style_properties = {}
     self._text: str = ""
     self._x_offset: int = 0
     self._y_offset: int = 0
 
-  def set_begin(self, time_code: SccTimeCode):
+  def set_begin(self, time_code: SmpteTimeCode):
     """Sets begin time code"""
     self._begin = copy.copy(time_code)
 
-  def get_begin(self) -> SccTimeCode:
+  def get_begin(self) -> SmpteTimeCode:
     """Returns the begin time code"""
     return self._begin
 
-  def set_end(self, time_code: SccTimeCode):
+  def set_end(self, time_code: SmpteTimeCode):
     """Sets end time code"""
     self._end = copy.copy(time_code)
 
-  def get_end(self) -> SccTimeCode:
+  def get_end(self) -> SmpteTimeCode:
     """Returns the end time code"""
     return self._end
 

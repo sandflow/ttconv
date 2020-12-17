@@ -34,7 +34,7 @@ from ttconv.model import ContentDocument, Span, Br
 from ttconv.scc.content import SccCaptionLineBreak
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.scc.time_codes import SccTimeCode
+from ttconv.time_code import SmpteTimeCode, FPS_30
 
 
 class SccCaptionParagraphTest(unittest.TestCase):
@@ -137,8 +137,8 @@ class SccCaptionParagraphTest(unittest.TestCase):
     children = list(paragraph)
     self.assertEqual(0, len(children))
 
-    caption_paragraph.set_begin(SccTimeCode.parse("00:01:02:03"))
-    caption_paragraph.set_end(SccTimeCode.parse("00:02:03:04"))
+    caption_paragraph.set_begin(SmpteTimeCode.parse("00:01:02:03", FPS_30))
+    caption_paragraph.set_end(SmpteTimeCode.parse("00:02:03:04", FPS_30))
 
     caption_paragraph.new_caption_text()
     caption_paragraph.get_current_text().append("Hello")
