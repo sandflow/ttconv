@@ -38,6 +38,7 @@ import ttconv.srt.writer as srt_writer
 import ttconv.scc.reader as scc_reader
 from ttconv.config import GeneralConfiguration
 from ttconv.imsc.config import ImscWriterConfiguration
+from ttconv.isd import IsdConfiguration
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,8 @@ READING = True
 
 CONFIGURATIONS = [
   ("general", GeneralConfiguration),
-  ("imsc_writer", ImscWriterConfiguration)
+  ("imsc_writer", ImscWriterConfiguration),
+  ("isd", IsdConfiguration)
 ]
 
 # Print iterations progress

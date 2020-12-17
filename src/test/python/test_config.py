@@ -27,8 +27,12 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 import json
+from fractions import Fraction
 from unittest import TestCase
 
+from ttconv.config import GeneralConfiguration
+from ttconv.imsc.config import TimeExpressionEnum, ImscWriterConfiguration
+from ttconv.isd import IsdConfiguration
 from ttconv.tt import CONFIGURATIONS
 
 
@@ -37,14 +41,68 @@ class ConfigurationTest(TestCase):
   def test_config_parsing(self):
 
     config_json = """{
+      "general": {
+        "progress_bar": false,
+        "log_level": "INFO"
+      },
       "imsc_writer": {
         "fps": "30000/1001",
         "time_expression_format": "frames"
       },
-      "general": {}
+      "isd" : {
+        "multi_thread": false
+      },
+      "imsc_reader" : {},
+      "srt_writer" : {},
+      "scc_reader" : {}
     }
     """
     config_dict = json.loads(config_json)
+
+    expected_configurations = [
+      GeneralConfiguration(log_level='INFO', progress_bar=False),
+      ImscWriterConfiguration(time_expression_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
+      IsdConfiguration(multi_thread=False)
+    ]
+
+    module_configurations = []
+    for (key, config_class) in CONFIGURATIONS:
+      config_value = config_dict.get(key)
+
+      if config_value is None:
+        continue
+
+      module_config = config_class.parse(config_value)
+
+      self.assertIsNotNone(module_config)
+      module_configurations.append(module_config)
+
+    for exp_config in expected_configurations:
+      self.assertTrue(exp_config in module_configurations)
+
+  def test_default_config_parsing(self):
+
+    config_json = """{
+      "imsc_writer": {
+        "fps": "30000/1001",
+        "time_expression_format": "frames"
+      },
+      "general": {},
+      "isd" : {},
+      "imsc_reader" : {},
+      "srt_writer" : {},
+      "scc_reader" : {}
+    }
+    """
+    config_dict = json.loads(config_json)
+
+    expected_configurations = [
+      GeneralConfiguration(),
+      ImscWriterConfiguration(time_expression_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
+      IsdConfiguration()
+    ]
+
+    module_configurations = []
 
     for (key, config_class) in CONFIGURATIONS:
       config_value = config_dict.get(key)
@@ -52,6 +110,10 @@ class ConfigurationTest(TestCase):
       if config_value is None:
         continue
 
-      # create module configuration from JSON extracted value
       module_config = config_class.parse(config_value)
+
       self.assertIsNotNone(module_config)
+      module_configurations.append(module_config)
+
+    for exp_config in expected_configurations:
+      self.assertTrue(exp_config in module_configurations)

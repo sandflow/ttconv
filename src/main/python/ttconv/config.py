@@ -27,28 +27,41 @@
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Any
 
 
 class ModuleConfiguration:
   """Base class for module configurations"""
 
   @classmethod
-  def get_fields(cls) -> Dict:
+  def get_fields(cls) -> List[dataclasses.Field]:
     """Returns data class fields"""
-    return cls.__dict__['__dataclass_fields__']
+    return list(dataclasses.fields(cls))
 
   @classmethod
   def validate(cls, config_dict: Dict):
     """Validates configuration dictionary"""
-    for (name, field) in cls.get_fields().items():
-      optional_field = "Optional" in field.type
+    for field in cls.get_fields():
+      optional_field = "Optional" in field.type or cls.get_field_default(field) is not None
 
-      config_value = config_dict.get(name)
+      config_value = config_dict.get(field.name)
       if not optional_field and config_value is None:
-        raise ValueError("Compulsory configuration field missing:", name)
+        raise ValueError("Compulsory configuration field missing:", field.name)
+
+  @classmethod
+  def parse(cls, config_dict: Dict) -> ModuleConfiguration:
+    """Parses configuration dictionary"""
+    cls.validate(config_dict)
+
+    instance = cls()
+    for field in cls.get_fields():
+      field_value = config_dict.get(field.name, cls.get_field_default(field))
+      setattr(instance, field.name, field_value)
+
+    return instance
 
   @staticmethod
   def parse_fraction(value: str) -> Fraction:
@@ -57,18 +70,16 @@ class ModuleConfiguration:
 
     return Fraction(int(num), int(den))
 
+  @staticmethod
+  def get_field_default(field: dataclasses.Field) -> Optional[Any]:
+    """Returns the default field value if any, None otherwise"""
+    if isinstance(field.default, dataclasses._MISSING_TYPE):
+      return None
+    return field.default
+
 
 @dataclass
 class GeneralConfiguration(ModuleConfiguration):
   """TT general configuration"""
-  log_level: Optional[str] = "DEBUG"
-  other = None
-
-  @staticmethod
-  def parse(config_value: Dict) -> GeneralConfiguration:
-    """Parse configuration dictionary"""
-    log_level = config_value.get("log_level")
-    if log_level is not None:
-      return GeneralConfiguration(log_level)
-    # default
-    return GeneralConfiguration()
+  log_level: Optional[str] = "WARN"
+  progress_bar: Optional[bool] = True

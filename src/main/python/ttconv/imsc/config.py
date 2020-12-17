@@ -59,11 +59,11 @@ class ImscWriterConfiguration(ModuleConfiguration):
   time_expression_format: TimeExpressionEnum
   fps: Fraction
 
-  @staticmethod
-  def parse(config_value: Dict) -> ImscWriterConfiguration:
+  @classmethod
+  def parse(cls, config_value: Dict) -> ImscWriterConfiguration:
     """Parse configuration dictionary"""
     # Validate configuration
-    ImscWriterConfiguration.validate(config_value)
+    cls.validate(config_value)
 
     # Parse configuration
     fps = ModuleConfiguration.parse_fraction(config_value.get("fps"))
