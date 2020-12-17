@@ -37,36 +37,108 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.srt.writer as srt_writer
 import ttconv.scc.reader as scc_reader
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("ttconv")
 
-READING = True
-
-# Print iterations progress
-def print_progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', print_end = "\r"):
+class ProgressConsoleHandler(logging.StreamHandler):
   """
-  Call in a loop to create terminal progress bar
-  @params:
-      iteration   - Required  : current iteration (Int)
-      total       - Required  : total iterations (Int)
-      prefix      - Optional  : prefix string (Str)
-      suffix      - Optional  : suffix string (Str)
-      decimals    - Optional  : positive number of decimals in percent complete (Int)
-      length      - Optional  : character length of bar (Int)
-      fill        - Optional  : bar fill character (Str)
-      print_end    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+  A handler class which allows the cursor to stay on
+  one line for selected messages
   """
-  percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-  filled_length = int(length * iteration // total)
-  bar_val = fill * filled_length + '-' * (length - filled_length)
-  print(f'\r{prefix} |{bar_val}| {percent}% {suffix}', end = print_end)
-  # Print New Line on Complete
-  if iteration == total: 
-    print()
 
-def progress_callback(percent_progress: float):
+  class ProgressType(Enum):
+    '''Whether the progress is for reading or writing operations
+    '''
+    read = 1
+    write = 2
+
+  def __init__(self):
+    self.is_writing_progress_bar = False
+    self.last_progress_msg = ""
+    super().__init__()
+
+  def emit(self, record):
+
+    def progress_str(progress_type: ProgressConsoleHandler.ProgressType, percent_progress: float) -> str:
+      '''Formats the progress string.'''
+
+      prefix = "Reading:" if progress_type is ProgressConsoleHandler.ProgressType.read else "Writing:"
+      suffix = 'Complete'
+      length = 50
+      fill = '█'
+      filled_length = int(length * percent_progress)
+      bar_val = fill * filled_length + '-' * (length - filled_length)
+      
+      return f'\r{prefix} |{bar_val}| {100 * percent_progress:3.0f}% {suffix}'
+
+    try:
+      msg = self.format(record)
+
+      stream = self.stream
+
+      is_progress_bar_record = hasattr(record, 'progress_bar')
+      percent_progress = None
+
+      if is_progress_bar_record:
+        percent_progress = getattr(record, 'percent_progress')
+        msg = progress_str(
+          getattr(record, 'progress_bar'),
+          float(percent_progress)
+        )
+        self.last_progress_msg = msg
+  
+      if self.is_writing_progress_bar and not is_progress_bar_record:
+        # erase and over write the progress bar
+        stream.write('\r')
+        length = len(self.last_progress_msg)
+        stream.write(' ' * length)
+
+        # go to beginning of the line and write the new messages
+        stream.write('\r')
+        stream.write(msg)
+        stream.write(self.terminator)
+
+        # write the old progress information
+        stream.write(self.last_progress_msg)
+      elif is_progress_bar_record:
+        stream.write(msg)
+      else:
+        stream.write(msg)
+        stream.write(self.terminator)
+
+      if is_progress_bar_record:
+        self.is_writing_progress_bar = True
+        if percent_progress is not None and float(percent_progress) >= 1.0:
+          sys.stdout.write('\r\n')
+          self.is_writing_progress_bar = False
+
+      self.flush()
+
+    except (KeyboardInterrupt, SystemExit):
+      raise
+    except: # pylint: disable=bare-except
+      self.handleError(record)
+
+def progress_callback_read(percent_progress: float):
   '''Callback handler used by reader and writer.'''
-  prefix_str = "Reading Progress:" if READING else "Writing Progress:"
-  print_progress_bar(percent_progress, 1.0, prefix = prefix_str, suffix = 'Complete', length = 50)
+  LOGGER.info(
+    "%d%%",
+    percent_progress,
+    extra={
+      'progress_bar': ProgressConsoleHandler.ProgressType.read, 
+      'percent_progress': percent_progress,
+    }
+  )
+
+def progress_callback_write(percent_progress: float):
+  '''Callback handler used by reader and writer.'''
+  LOGGER.info(
+    "%d%%",
+    percent_progress,
+    extra={
+      'progress_bar': ProgressConsoleHandler.ProgressType.write, 
+      'percent_progress': percent_progress,
+    }
+  )
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -153,9 +225,6 @@ def convert(args):
   reader_type = FileTypes.get_file_type(args.itype, input_file_extension)
   writer_type = FileTypes.get_file_type(args.otype, output_file_extension)
 
-  global READING
-  READING = True
-
   if reader_type is FileTypes.TTML:
     # 
     # Parse the xml input file into an ElementTree
@@ -165,7 +234,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = imsc_reader.to_model(tree, progress_callback)
+    model = imsc_reader.to_model(tree, progress_callback_read)
 
   elif reader_type is FileTypes.SCC:
     file_as_str = Path(inputfile).read_text()
@@ -173,7 +242,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = scc_reader.to_model(file_as_str, progress_callback)
+    model = scc_reader.to_model(file_as_str, progress_callback_read)
   else:
     if args.itype is not None:
       exit_str  = f'Input type {args.itype} is not supported'
@@ -183,13 +252,11 @@ def convert(args):
     LOGGER.error(exit_str)
     sys.exit(exit_str)
 
-  READING = False
-
   if writer_type is FileTypes.TTML:
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, None, progress_callback)
+    tree_from_model = imsc_writer.from_model(model, None, progress_callback_write)
 
     #
     # Write out the converted file
@@ -200,7 +267,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, progress_callback)
+    srt_document = srt_writer.from_model(model, progress_callback_write)
 
     #
     # Write out the converted file
@@ -225,6 +292,11 @@ def validate(args):
   print(args.input)
   LOGGER.info("Input file is %s", args.input)
 
+# Ensure that the handler is added only once/globally
+# Otherwise the handler will be called multiple times
+progress = ProgressConsoleHandler()
+LOGGER.addHandler(progress)
+LOGGER.setLevel(logging.INFO) 
 
 def main(argv):
   '''Main application processing'''
