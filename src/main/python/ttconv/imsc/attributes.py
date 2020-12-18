@@ -36,6 +36,7 @@ import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
 #import xml.etree.ElementTree as et
+from ttconv.time_code import ClockTime
 
 LOGGER = logging.getLogger(__name__)
 
@@ -308,10 +309,7 @@ def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> 
   return to_frames(context, time)
 
 def to_hh_mm_ss_ms(time: Fraction) -> str:
-  millisecond = (time % 1) * 1000
-  minute, second = divmod(time, 60) 
-  hour, minute = divmod(minute, 60) 
-  return f"{hour:02}:{minute:02}:{int(second):02}.{int(millisecond):03}"
+  return str(ClockTime.from_seconds(time))
 
 def to_frames(context: TemporalAttributeWritingContext, time: Fraction) -> str:
   value = time * context.frame_rate

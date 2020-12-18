@@ -41,12 +41,12 @@ from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptio
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.scc.time_codes import SccTimeCode, SMPTE_TIME_CODE_NDF_PATTERN, SMPTE_TIME_CODE_DF_PATTERN
 from ttconv.style_properties import StyleProperties, NamedColors
+from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOGGER = logging.getLogger(__name__)
 
-SCC_LINE_PATTERN = '((' + SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
+SCC_LINE_PATTERN = '((' + SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
 
 PARITY_BIT_MASK = 0b01111111
 
@@ -77,12 +77,12 @@ class _SccContext:
       self.previous_captions.append(self.current_caption)
       self.current_caption = None
 
-  def init_current_caption(self, time_code: SccTimeCode):
+  def init_current_caption(self, time_code: SmpteTimeCode):
     """Initializes the current caption with begin time"""
     if self.current_caption is not None:
       self.current_caption.set_begin(time_code)
 
-  def push_previous_caption(self, time_code: SccTimeCode, index: int = 0):
+  def push_previous_caption(self, time_code: SmpteTimeCode, index: int = 0):
     """Sets previous caption end time, pushes it into the data model and resets it"""
     if len(self.previous_captions) > 0:
       previous_caption = self.previous_captions.pop(index)
@@ -93,7 +93,7 @@ class _SccContext:
 
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
-  def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SccTimeCode):
+  def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SmpteTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
     if self.current_caption is None:
       raise ValueError("No current SCC caption initialized")
@@ -163,7 +163,7 @@ class _SccContext:
 
     self.current_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, attribute_code.get_text_decoration())
 
-  def process_control_code(self, control_code: SccControlCode, time_code: SccTimeCode):
+  def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
 
     if control_code is SccControlCode.RCL:
@@ -259,7 +259,7 @@ class _SccContext:
       # the model (i.e. a row is erased when a PAC is received, so before a new caption is written onto it).
       pass
 
-  def process_text(self, word: str, time_code: SccTimeCode):
+  def process_text(self, word: str, time_code: SmpteTimeCode):
     """Processes SCC text words"""
     if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
       if word.startswith(" "):
@@ -278,7 +278,7 @@ class _SccContext:
 
     self.current_caption.get_current_text().append(word)
 
-  def flush(self, time_code: SccTimeCode):
+  def flush(self, time_code: SmpteTimeCode):
     """Flushes the remaining current caption"""
     if self.current_caption is not None:
       self.set_current_to_previous()
@@ -348,7 +348,7 @@ class SccWord:
 class SccLine:
   """SCC line definition"""
 
-  def __init__(self, time_code: SccTimeCode, scc_words: List[SccWord]):
+  def __init__(self, time_code: SmpteTimeCode, scc_words: List[SccWord]):
     self.time_code = time_code
     self.scc_words = scc_words
 
@@ -365,7 +365,7 @@ class SccLine:
       return None
 
     time_code = match.group(1)
-    time_offset = SccTimeCode.parse(time_code)
+    time_offset = SmpteTimeCode.parse(time_code, FPS_30)
 
     hex_words = line.split('\t')[1].split(' ')
     scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
@@ -390,7 +390,7 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_model(self, context: _SccContext) -> SccTimeCode:
+  def to_model(self, context: _SccContext) -> SmpteTimeCode:
     """Converts the SCC line to the data model"""
 
     debug = str(self.time_code) + "\t"

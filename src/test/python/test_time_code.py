@@ -23,42 +23,52 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Unit tests for the SRT Time Code"""
+"""Unit tests for the Time Code"""
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
 from fractions import Fraction
 from unittest import TestCase
 
-from ttconv.srt.time_code import SrtTimeCode
+from ttconv.time_code import ClockTime
 
 
-class SrtTimeCodeTest(TestCase):
+class TimeCodeTest(TestCase):
 
   def test_time_code(self):
     seconds = 123.45
-    time_code = SrtTimeCode.from_time_offset(seconds)
+    time_code = ClockTime.from_seconds(seconds)
+    self.assertEqual("00:02:03.450", str(time_code))
+    time_code.set_separator(",")
     self.assertEqual("00:02:03,450", str(time_code))
     self.assertEqual(seconds, time_code.to_seconds())
 
     seconds = 3723.4567
-    time_code = SrtTimeCode.from_time_offset(seconds)
+    time_code = ClockTime.from_seconds(seconds)
+    self.assertEqual("01:02:03.456", str(time_code))
+    time_code.set_separator(",")
     self.assertEqual("01:02:03,456", str(time_code))
     self.assertAlmostEqual(seconds, time_code.to_seconds(), delta=0.001)
 
     seconds = Fraction(3600, 4)
-    time_code = SrtTimeCode.from_time_offset(seconds)
+    time_code = ClockTime.from_seconds(seconds)
+    self.assertEqual("00:15:00.000", str(time_code))
+    time_code.set_separator(",")
     self.assertEqual("00:15:00,000", str(time_code))
     self.assertEqual(seconds, time_code.to_seconds())
 
     one_day_in_seconds = 24 * 3600
 
     seconds = -1.500
-    time_code = SrtTimeCode.from_time_offset(seconds)
+    time_code = ClockTime.from_seconds(seconds)
+    self.assertEqual("23:59:58.500", str(time_code))
+    time_code.set_separator(",")
     self.assertEqual("23:59:58,500", str(time_code))
     self.assertEqual(one_day_in_seconds + seconds, time_code.to_seconds())
 
     seconds = 1.500
-    time_code = SrtTimeCode.from_time_offset(one_day_in_seconds + seconds)
+    time_code = ClockTime.from_seconds(one_day_in_seconds + seconds)
+    self.assertEqual("00:00:01.500", str(time_code))
+    time_code.set_separator(",")
     self.assertEqual("00:00:01,500", str(time_code))
     self.assertEqual(seconds, time_code.to_seconds())
