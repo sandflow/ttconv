@@ -66,8 +66,8 @@ class ConfigurationTest(TestCase):
     ]
 
     module_configurations = []
-    for (key, config_class) in CONFIGURATIONS:
-      config_value = config_dict.get(key)
+    for config_class in CONFIGURATIONS:
+      config_value = config_dict.get(config_class.name)
 
       if config_value is None:
         continue
@@ -104,8 +104,8 @@ class ConfigurationTest(TestCase):
 
     module_configurations = []
 
-    for (key, config_class) in CONFIGURATIONS:
-      config_value = config_dict.get(key)
+    for config_class in CONFIGURATIONS:
+      config_value = config_dict.get(config_class.name)
 
       if config_value is None:
         continue

@@ -78,7 +78,19 @@ class ModuleConfiguration:
     return field.default
 
 
+class TTConfig:
+  """Module configuration class decorator"""
+
+  def __init__(self, name: str):
+    self.name = name
+
+  def __call__(self, config_class):
+    config_class.name = self.name
+    return config_class
+
+
 @dataclass
+@TTConfig(name="general")
 class GeneralConfiguration(ModuleConfiguration):
   """TT general configuration"""
   log_level: Optional[str] = "WARN"

@@ -39,7 +39,7 @@ from fractions import Fraction
 
 import ttconv.model as model
 import ttconv.style_properties as styles
-from ttconv.config import ModuleConfiguration
+from ttconv.config import ModuleConfiguration, TTConfig
 
 
 class SignificantTimes:
@@ -79,6 +79,7 @@ ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
 
 @dataclass
+@TTConfig(name="isd")
 class IsdConfiguration(ModuleConfiguration):
   """ISD configuration"""
   multi_thread: bool = True

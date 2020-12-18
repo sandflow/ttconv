@@ -32,7 +32,7 @@ from enum import Enum
 from fractions import Fraction
 from typing import Dict, Optional
 
-from ttconv.config import ModuleConfiguration
+from ttconv.config import ModuleConfiguration, TTConfig
 
 
 class TimeExpressionEnum(Enum):
@@ -54,6 +54,7 @@ class TimeExpressionEnum(Enum):
 
 
 @dataclass
+@TTConfig(name="imsc_writer")
 class ImscWriterConfiguration(ModuleConfiguration):
   """IMSC writer configuration"""
   time_expression_format: TimeExpressionEnum

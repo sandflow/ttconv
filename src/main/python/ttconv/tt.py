@@ -45,9 +45,9 @@ LOGGER = logging.getLogger(__name__)
 READING = True
 
 CONFIGURATIONS = [
-  ("general", GeneralConfiguration),
-  ("imsc_writer", ImscWriterConfiguration),
-  ("isd", IsdConfiguration)
+  GeneralConfiguration,
+  ImscWriterConfiguration,
+  IsdConfiguration
 ]
 
 # Print iterations progress
