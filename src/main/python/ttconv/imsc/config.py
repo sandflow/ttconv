@@ -27,10 +27,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from fractions import Fraction
-from typing import Dict, Optional
+from typing import Optional
 
 from ttconv.config import ModuleConfiguration, TTConfig
 
@@ -57,17 +57,14 @@ class TimeExpressionEnum(Enum):
 @TTConfig(name="imsc_writer")
 class ImscWriterConfiguration(ModuleConfiguration):
   """IMSC writer configuration"""
-  time_expression_format: TimeExpressionEnum
-  fps: Fraction
 
-  @classmethod
-  def parse(cls, config_value: Dict) -> ImscWriterConfiguration:
-    """Parse configuration dictionary"""
-    # Validate configuration
-    cls.validate(config_value)
+  class FractionDecoder:
+    """Utility callable for converting string to Fraction"""
 
-    # Parse configuration
-    fps = ModuleConfiguration.parse_fraction(config_value.get("fps"))
-    time_expression_format = TimeExpressionEnum.parse(config_value.get("time_expression_format"))
+    def __call__(self, value: str) -> Fraction:
+      [num, den] = value.split('/')
 
-    return ImscWriterConfiguration(fps=fps, time_expression_format=time_expression_format)
+      return Fraction(int(num), int(den))
+
+  time_expression_format: TimeExpressionEnum = field(metadata={"decoder": TimeExpressionEnum.parse})
+  fps: Fraction = field(metadata={"decoder": FractionDecoder()})

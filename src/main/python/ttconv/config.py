@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from fractions import Fraction
 from typing import Optional, Dict, List, Any
 
 
@@ -56,19 +55,20 @@ class ModuleConfiguration:
     """Parses configuration dictionary"""
     cls.validate(config_dict)
 
-    instance = cls()
+    kwargs = {}
     for field in cls.get_fields():
+
       field_value = config_dict.get(field.name, cls.get_field_default(field))
-      setattr(instance, field.name, field_value)
+
+      decoder = field.metadata.get("decoder")
+      if decoder is not None:
+        field_value = decoder.__call__(field_value)
+
+      kwargs[field.name] = field_value
+
+    instance = cls(**kwargs)
 
     return instance
-
-  @staticmethod
-  def parse_fraction(value: str) -> Fraction:
-    """Utility function for parsing Fractions"""
-    [num, den] = value.split('/')
-
-    return Fraction(int(num), int(den))
 
   @staticmethod
   def get_field_default(field: dataclasses.Field) -> Optional[Any]:
