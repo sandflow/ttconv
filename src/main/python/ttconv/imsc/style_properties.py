@@ -248,7 +248,7 @@ class StyleProperties:
 
     @classmethod
     def from_model(cls, xml_element, model_value: bool):
-      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value is not None else "false")
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value else "false")
 
 
   class FontFamily(StyleProperty):
@@ -687,6 +687,22 @@ class StyleProperties:
     @classmethod
     def from_model(cls, xml_element, model_value: float):
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{model_value}%")
+
+
+  class ShowBackground(StyleProperty):
+    '''Corresponds to tts:showBackground.'''
+
+    ns = xml_ns.TTS
+    local_name = "showBackground"
+    model_prop = styles.StyleProperties.ShowBackground
+    
+    @classmethod
+    def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      return styles.ShowBackgroundType[xml_attrib]
+
+    @classmethod
+    def from_model(cls, xml_element, model_value: styles.VisibilityType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class TextAlign(StyleProperty):

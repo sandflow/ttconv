@@ -61,13 +61,6 @@ class ReaderWriterTest(unittest.TestCase):
     if not os.path.exists('build'):
       os.makedirs('build')
 
-  def pretty_print(self, elem):
-    """Return a pretty-printed XML string for the Element.
-    """
-    rough_string = et.tostring(elem, 'utf-8')
-    reparsed = minidom.parseString(rough_string)
-    print(reparsed.toprettyxml(indent="\t"))
-
   def write_pretty_xml(self, tree: et.ElementTree, file_path):
     rough_string = et.tostring(tree.getroot(), 'utf-8')
     reparsed = minidom.parseString(rough_string)
@@ -108,7 +101,8 @@ class ReaderWriterTest(unittest.TestCase):
 
             os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
 
-            self.write_pretty_xml(tree_from_model, os.path.join(base_path, "ttml", test_relative_path))
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
+              f.write(et.tostring(tree_from_model.getroot(), 'utf-8'))
 
             manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
 
@@ -138,7 +132,8 @@ class ReaderWriterTest(unittest.TestCase):
 
             os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
 
-            self.write_pretty_xml(tree_from_model, os.path.join(base_path, "ttml", test_relative_path))
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
+              f.write(et.tostring(tree_from_model.getroot(), 'utf-8'))
 
             manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
 
@@ -179,8 +174,6 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
     # write the document out to a file
     imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
-
-    #self.pretty_print(tree_from_model.getroot())
 
 class StylePropertyWriterTest(unittest.TestCase):
 
