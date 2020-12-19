@@ -716,7 +716,7 @@ class ContentElement(TTMLElement):
     def process_referential_styling(self, xml_elem):
       '''Processes referential styling
       '''
-      for style_ref in imsc_attr.StyleAttribute.extract(xml_elem):
+      for style_ref in reversed(imsc_attr.StyleAttribute.extract(xml_elem)):
         style_element = self.style_elements.get(style_ref)
 
         if style_element is None:
