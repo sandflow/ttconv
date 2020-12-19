@@ -89,6 +89,9 @@ class XMLSpaceAttribute:
     
     return r
 
+  @staticmethod
+  def set(ttml_element, xml_space: model.WhiteSpaceHandling):
+    ttml_element.set(XMLSpaceAttribute.qn, xml_space.value)
 
 
 class RegionAttribute:

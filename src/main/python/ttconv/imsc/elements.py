@@ -1077,6 +1077,10 @@ class ContentElement(TTMLElement):
 
     xml_element = imsc_class.make_ttml_element()
 
+    if (model_element.parent() is None and model_element.get_space() is model.WhiteSpaceHandling.PRESERVE) or \
+      (model_element.parent() is not None and model_element.parent().get_space() != model_element.get_space()):
+      imsc_attr.XMLSpaceAttribute.set(xml_element, model_element.get_space())
+
     if imsc_class.has_region:
       if model_element.get_region() is not None:
         imsc_attr.RegionAttribute.set(xml_element, model_element.get_region().get_id())
