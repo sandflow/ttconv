@@ -370,6 +370,8 @@ class StyleProperties:
       if lp.units != styles.LengthType.Units.c:
         raise ValueError("ebutts:linePadding must be expressed in 'c'")
 
+      return lp
+
     @classmethod
     def from_model(cls, xml_element, model_value: styles.LengthType):
       xml_element.set(
