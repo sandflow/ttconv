@@ -1136,7 +1136,7 @@ class StyleProperties:
     color_str = f"#{model_value.components[0]:02x}" \
                  f"{model_value.components[1]:02x}"  \
                  f"{model_value.components[2]:02x}"
-    if not model_value.components[3] & 0xFF:
+    if model_value.components[3] != 0xFF:
       color_str = f"{color_str}{model_value.components[3]:02x}"
     
     return color_str
