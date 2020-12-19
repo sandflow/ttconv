@@ -35,7 +35,6 @@ from enum import Enum
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
-#import xml.etree.ElementTree as et
 from ttconv.time_code import ClockTime
 
 LOGGER = logging.getLogger(__name__)
@@ -240,6 +239,76 @@ class TickRateAttribute:
 
     return 1
 
+class AspectRatioAttribute:
+  '''ittp:aspectRatio attribute
+  '''
+
+  qn = f"{{{ns.ITTP}}}aspectRatio"
+
+  _re = re.compile(r"(\d+) (\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> typing.Optional[Fraction]:
+
+    ar_raw = ttml_element.attrib.get(AspectRatioAttribute.qn)
+
+    if ar_raw is None:
+      return None
+
+    m = AspectRatioAttribute._re.match(ar_raw)
+
+    if m is None:
+      LOGGER.error("ittp:aspectRatio invalid syntax")
+      return None
+
+    try:
+
+      return Fraction(int(m.group(1)), int(m.group(2)))
+
+    except ZeroDivisionError:
+
+      LOGGER.error("ittp:aspectRatio denominator is 0")
+    
+    return None
+
+class DisplayAspectRatioAttribute:
+  '''ttp:displayAspectRatio attribute
+  '''
+
+  qn = f"{{{ns.TTP}}}displayAspectRatio"
+
+  _re = re.compile(r"(\d+) (\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> typing.Optional[Fraction]:
+
+    ar_raw = ttml_element.attrib.get(DisplayAspectRatioAttribute.qn)
+
+    if ar_raw is None:
+      return None
+
+    m = DisplayAspectRatioAttribute._re.match(ar_raw)
+
+    if m is None:
+      LOGGER.error("ttp:displayAspectRatio invalid syntax")
+      return None
+
+    try:
+
+      return Fraction(int(m.group(1)), int(m.group(2)))
+
+    except ZeroDivisionError:
+
+      LOGGER.error("ttp:displayAspectRatio denominator is 0")
+    
+    return None
+
+  @staticmethod
+  def set(ttml_element, display_aspect_ratio: Fraction):
+    ttml_element.set(
+      DisplayAspectRatioAttribute.qn, 
+      f"{display_aspect_ratio.numerator:g} {display_aspect_ratio.denominator:g}"
+    )
 
 class FrameRateAttribute:
   '''ttp:frameRate and ttp:frameRateMultiplier attribute

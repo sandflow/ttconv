@@ -157,6 +157,22 @@ class TTElement(TTMLElement):
     if active_area is not None:
       tt_ctx.doc.set_active_area(active_area)
 
+    ittp_aspect_ratio = imsc_attr.AspectRatioAttribute.extract(xml_elem)
+
+    ttp_dar = imsc_attr.DisplayAspectRatioAttribute.extract(xml_elem)
+
+    if ttp_dar is not None:
+
+      tt_ctx.doc.set_display_aspect_ratio(ttp_dar)
+
+    elif ittp_aspect_ratio is not None:
+
+      tt_ctx.doc.set_display_aspect_ratio(ittp_aspect_ratio)
+
+    if ittp_aspect_ratio is not None and ttp_dar is not None:
+
+      LOGGER.warning("Both ittp:aspectRatio and ttp:displayAspectRatio specified on tt")
+
     tt_ctx.temporal_context.frame_rate = imsc_attr.FrameRateAttribute.extract(xml_elem)
 
     tt_ctx.temporal_context.tick_rate = imsc_attr.TickRateAttribute.extract(xml_elem)
@@ -233,12 +249,15 @@ class TTElement(TTMLElement):
           break      
       if has_px:
         break
-      
+
     if model_doc.get_px_resolution() is not None and has_px:
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
 
     if model_doc.get_active_area() is not None:
       imsc_attr.ActiveAreaAttribute.set(tt_element, model_doc.get_active_area())
+
+    if model_doc.get_display_aspect_ratio() is not None:
+      imsc_attr.DisplayAspectRatioAttribute.set(tt_element, model_doc.get_display_aspect_ratio())
 
     # Write the <head> section first
     head_element = HeadElement.from_model(ctx, model_doc)
