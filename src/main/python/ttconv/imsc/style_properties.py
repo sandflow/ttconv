@@ -1143,4 +1143,4 @@ class StyleProperties:
 
   @staticmethod
   def to_ttml_length(model_value: styles.LengthType):
-    return f"{model_value.value}{model_value.units.value}"
+    return f"{model_value.value:g}{model_value.units.value}"

@@ -227,9 +227,13 @@ class TTElement(TTMLElement):
         if StyleProperties.BY_MODEL_PROP[model_style_prop].has_px(element.get_style(model_style_prop)):
           has_px = True
           break
+      for animation_step in element.iter_animation_steps():
+        if StyleProperties.BY_MODEL_PROP[animation_step.style_property].has_px(animation_step.value):
+          has_px = True
+          break      
       if has_px:
         break
-
+      
     if model_doc.get_px_resolution() is not None and has_px:
       imsc_attr.ExtentAttribute.set(tt_element, model_doc.get_px_resolution())
 

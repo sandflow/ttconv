@@ -166,7 +166,7 @@ class ExtentAttribute:
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(ExtentAttribute.qn, f"{res.width}px {res.height}px")
+    ttml_element.set(ExtentAttribute.qn, f"{res.width:g}px {res.height:g}px")
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
