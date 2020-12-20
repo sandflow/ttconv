@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 import json
 from fractions import Fraction
-from unittest import TestCase
+import unittest
 
 from ttconv.config import GeneralConfiguration
 from ttconv.imsc.config import TimeExpressionEnum, ImscWriterConfiguration
@@ -36,7 +36,7 @@ from ttconv.isd import IsdConfiguration
 from ttconv.tt import CONFIGURATIONS
 
 
-class ConfigurationTest(TestCase):
+class ConfigurationTest(unittest.TestCase):
 
   def test_config_parsing(self):
 
@@ -117,3 +117,6 @@ class ConfigurationTest(TestCase):
 
     for exp_config in expected_configurations:
       self.assertTrue(exp_config in module_configurations)
+
+if __name__ == '__main__':
+  unittest.main()
