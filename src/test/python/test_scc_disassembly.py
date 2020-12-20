@@ -141,3 +141,6 @@ class SccReaderTest(unittest.TestCase):
     disassembly = to_disassembly(scc_content)
 
     self.assertEqual(expected, disassembly)
+
+if __name__ == '__main__':
+  unittest.main()

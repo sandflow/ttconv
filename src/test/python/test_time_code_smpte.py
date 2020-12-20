@@ -27,12 +27,12 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 from fractions import Fraction
-from unittest import TestCase
+import unittest
 
 from ttconv.time_code import SmpteTimeCode, FPS_29_97, FPS_30
 
 
-class SmpteTimeCodesTest(TestCase):
+class SmpteTimeCodesTest(unittest.TestCase):
 
   def test_parse_non_drop_frame_time_code(self):
     time_code = SmpteTimeCode.parse("01:02:03:04", FPS_30)
@@ -435,3 +435,6 @@ class SmpteTimeCodesTest(TestCase):
     self.assertEqual(35_964, time_code.to_frames())
     self.assertEqual(Fraction(35964, Fraction(30000, 1001)), time_code.to_temporal_offset())
     self.assertEqual("00:20:00;00", str(time_code))
+
+if __name__ == '__main__':
+  unittest.main()

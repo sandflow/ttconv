@@ -27,7 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 from fractions import Fraction
-from unittest import TestCase
+import unittest
 
 from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
 from ttconv.isd import ISD
@@ -35,7 +35,7 @@ from ttconv.model import P, ContentDocument, Region, Body, Div, Span, Text
 from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType
 
 
-class DefaultStylesFilterTest(TestCase):
+class DefaultStylesFilterTest(unittest.TestCase):
 
   def test_process_element(self):
     default_style_value_filter = DefaultStylePropertyValuesFilter({
@@ -128,3 +128,6 @@ class DefaultStylesFilterTest(TestCase):
     self.assertIsNone(span1.get_style(StyleProperties.BackgroundColor))
     self.assertEqual(FontStyleType.italic, span1.get_style(StyleProperties.FontStyle))
     self.assertEqual(DirectionType.ltr, span1.get_style(StyleProperties.Direction))
+
+if __name__ == '__main__':
+  unittest.main()

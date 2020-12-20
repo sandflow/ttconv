@@ -28,14 +28,14 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 
 from typing import List
-from unittest import TestCase
+import unittest
 
 from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement, Br
 
 
-class ParagraphsMergingFilterTest(TestCase):
+class ParagraphsMergingFilterTest(unittest.TestCase):
 
   @staticmethod
   def _get_filled_body(isd: ISD, *text_contents: List[str]) -> Body:
@@ -124,3 +124,6 @@ class ParagraphsMergingFilterTest(TestCase):
 
     text = self._get_text_from_children(spans_and_brs[6])
     self.assertEqual("anyone here?", text)
+
+if __name__ == '__main__':
+  unittest.main()

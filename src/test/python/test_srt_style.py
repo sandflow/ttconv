@@ -27,14 +27,14 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
-from unittest import TestCase
+import unittest
 
 from ttconv.model import Span
 from ttconv.srt import style
 from ttconv.style_properties import StyleProperties, FontWeightType, FontStyleType, TextDecorationType, ColorType, NamedColors
 
 
-class SrtStyleTest(TestCase):
+class SrtStyleTest(unittest.TestCase):
 
   def test_style_is_bold(self):
     element = Span()
@@ -103,3 +103,6 @@ class SrtStyleTest(TestCase):
     element.set_style(StyleProperties.Color, NamedColors.transparent.value)
 
     self.assertEqual("#00000000", style.get_font_color(element))
+
+if __name__ == '__main__':
+  unittest.main()

@@ -28,12 +28,12 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 
 from fractions import Fraction
-from unittest import TestCase
+import unittest
 
 from ttconv.srt.paragraph import SrtParagraph
 
 
-class SrtParagraphTest(TestCase):
+class SrtParagraphTest(unittest.TestCase):
 
   def test_paragraph(self):
     paragraph = SrtParagraph(123)
@@ -63,3 +63,6 @@ class SrtParagraphTest(TestCase):
 
     self.assertEqual("123\n00:20:34,000 --> 00:39:05,000\nHello world!\n", str(paragraph))
     self.assertEqual("123\n00:20:34,000 --> 00:39:05,000\nHello world!\n", paragraph.to_string())
+
+if __name__ == '__main__':
+  unittest.main()
