@@ -30,6 +30,7 @@
 import os
 import io
 import unittest
+import json
 from contextlib import redirect_stdout
 from contextlib import redirect_stderr
 import ttconv.tt as tt
@@ -39,6 +40,13 @@ class IMSCAppTest(unittest.TestCase):
   def setUp(self):
     if not os.path.exists('build'):
       os.makedirs('build')
+
+    if not os.path.exists('build/config.json'):
+      config_json = {}
+      config_json['general'] = {"progress_bar" : False, "log_level": "INFO"}
+
+      with open('build/config.json', 'w') as outfile:
+        json.dump(config_json, outfile)
 
   def test_convert(self):
     # Note passing in the args using split
@@ -102,6 +110,15 @@ class IMSCAppTest(unittest.TestCase):
       #
       with self.assertRaises(SystemExit):
         tt.main("covert")
+
+  def test_with_config(self):
+    tt.main(['convert', 
+      '-i', 'src/test/resources/ttml/body_only.ttml', 
+      '-o', 'build/body_only.out.ttml', 
+      '--config', '{\"general\": {\"progress_bar\":true}}'])
+
+  def test_with_config_file(self):
+    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --config_file build/config.json".split())
 
   def test_validate(self):
     # Note passing in the args using split

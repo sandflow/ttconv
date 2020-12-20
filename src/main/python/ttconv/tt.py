@@ -28,6 +28,7 @@
 import logging
 import os
 import sys
+import json
 import xml.etree.ElementTree as et
 from argparse import ArgumentParser
 from enum import Enum
@@ -37,6 +38,7 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
+from ttconv.config import ModuleConfiguration
 from ttconv.config import GeneralConfiguration
 from ttconv.imsc.config import ImscWriterConfiguration
 from ttconv.isd import IsdConfiguration
@@ -65,6 +67,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
   def __init__(self):
     self.is_writing_progress_bar = False
     self.last_progress_msg = ""
+    self.display_progress_bar = True
     super().__init__()
 
   def emit(self, record):
@@ -89,6 +92,9 @@ class ProgressConsoleHandler(logging.StreamHandler):
       is_progress_bar_record = hasattr(record, 'progress_bar')
       percent_progress = None
 
+      if self.display_progress_bar == False and is_progress_bar_record:
+        return
+      
       if is_progress_bar_record:
         percent_progress = getattr(record, 'percent_progress')
         msg = progress_str(
@@ -177,11 +183,23 @@ class FileTypes(Enum):
     return FileTypes(file_type)
 
 
+def get_config(config_type, json_data) -> ModuleConfiguration:
+  """Returns a requested configuration from json data"""
+  if config_type is None or json_data is None:
+    return None
+
+  for config_class in CONFIGURATIONS:
+    if config_class.name == config_type:
+      config_json = json_data.get(config_class.name)
+      module_config = config_class.parse(config_json)
+      return module_config
+
+  return None
+
 # Argument parsing setup
 #
 cli = ArgumentParser()
 subparsers = cli.add_subparsers(dest="subcommand")
-
 
 def argument(*name_or_flags, **kwargs):
   """Convenience function to properly format arguments to pass to the
@@ -225,13 +243,28 @@ def subcommand(args=None, parent=subparsers):
   argument("-i", "--input", help="Input file path", required=True),
   argument("-o", "--output", help="Output file path", required=True),
   argument("--itype", help="Input file type", required=False),
-  argument("--otype", help="Output file type", required=False)
+  argument("--otype", help="Output file type", required=False),
+  argument("--config", help="Configuration in json", required=False),
+  argument("--config_file", help="Configuration file", required=False)
 ])
 def convert(args):
   '''Process input and output through the reader, converter, and writer'''
 
   inputfile = args.input
   outputfile = args.output
+
+  # Note - Loading config data from a file takes priority over 
+  # data passed in as a json string
+  config = None
+  if args.config is not None:
+    config = json.loads(args.config)
+  if args.config_file is not None:
+    with open(args.config_file) as json_file:
+      config = json.load(json_file)
+
+  config = get_config(GeneralConfiguration.name, config)
+  if config is not None and config.progress_bar is not None:
+    progress.display_progress_bar = config.progress_bar
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
