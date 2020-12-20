@@ -135,6 +135,17 @@ class ExtentType:
   height: LengthType = LengthType()
   width: LengthType = LengthType()
 
+class GenericFontFamilyType(Enum):
+  '''\\<generic-family-name\\>
+  '''
+  default = "default"
+  monospace = "monospace"
+  sansSerif = "sansSerif"
+  serif = "serif"
+  monospaceSansSerif = "monospaceSansSerif"
+  monospaceSerif = "monospaceSerif"
+  proportionalSansSerif = "proportionalSansSerif"
+  proportionalSerif = "proportionalSerif"
 
 class FontStyleType(Enum):
   '''tts:fontStyle value
@@ -507,11 +518,11 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return ("default",)
+      return (GenericFontFamilyType.default,)
 
     @staticmethod
-    def validate(value: typing.List[str]):
-      return isinstance(value, tuple) and all(lambda i: isinstance(i, str) for i in value)
+    def validate(value: typing.Tuple[typing.Union[str, GenericFontFamilyType]]):
+      return isinstance(value, tuple) and all(lambda i: isinstance(i, (str, GenericFontFamilyType)) for i in value)
 
 
   class FontSize(StyleProperty):

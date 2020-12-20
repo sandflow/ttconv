@@ -261,14 +261,19 @@ class StyleProperties:
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
 
-      return tuple(map(
-        lambda f: "monospaceSerif" if f == "default" else f,
-        utils.parse_font_families(xml_attrib)
-      ))
+      return tuple(
+        map(
+          lambda f: styles.GenericFontFamilyType.monospaceSerif if f is styles.GenericFontFamilyType.default else f,
+          utils.parse_font_families(xml_attrib)
+        )
+      )
 
     @classmethod
     def from_model(cls, xml_element, model_value):
-      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value[0])
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}",
+        utils.serialize_font_family(model_value)
+    )
 
 
   class FontSize(StyleProperty):

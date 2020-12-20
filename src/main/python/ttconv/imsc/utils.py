@@ -37,9 +37,6 @@ _DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*
 
 _LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
-_FAMILIES_SEPARATOR = re.compile(r"(?<=[^\\]),")
-_FAMILIES_ESCAPED_CHAR = re.compile(r"\\(.)")
-
 _CLOCK_TIME_FRACTION_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d(?:\.\d+)?)$")
 _CLOCK_TIME_FRAMES_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d):(\d{2,})$")
 _OFFSET_FRAME_RE = re.compile(r"^(\d+(?:\.\d+)?)f")
@@ -114,21 +111,54 @@ def parse_length(attr_value: str) -> typing.Tuple[float, str]:
   raise ValueError("Bad length syntax")
 
 
+_FAMILIES_ESCAPED_CHAR = re.compile(r"\\(.)")
+_SINGLE_QUOTE_PATTERN = "(?:'(?P<single_quote>(.+?)(?<!\\\\))')"
+_DOUBLE_QUOTE_PATTERN = "(?:\"(?P<double_quote>(.+?)(?<!\\\\))\")"
+_NO_QUOTE_PATTERN = "(?P<no_quote>(?:\\\\.|[^'\", ])(?:\\\\.|[^'\",])+)"
+
+_FONT_FAMILY_PATTERN = re.compile(
+  "|".join(
+    (
+      _SINGLE_QUOTE_PATTERN,
+      _DOUBLE_QUOTE_PATTERN,
+      _NO_QUOTE_PATTERN
+    )
+  )
+)
+
 def parse_font_families(attr_value: str) -> typing.List[str]:
   '''Parses th TTML \\<font-family\\> value in `attr_value` into a list of font families'''
 
   rslt = []
 
-  for family in map(str.strip, _FAMILIES_SEPARATOR.split(attr_value)):
+  for m in _FONT_FAMILY_PATTERN.finditer(attr_value):
 
-    unquoted_family = family[1:-1] if family[0] == "'" or family[0] == '"' else family
+    is_quoted = m.lastgroup in ("single_quote", "double_quote")
 
-    rslt.append(_FAMILIES_ESCAPED_CHAR.sub(r"\1", unquoted_family))
+    escaped_family = _FAMILIES_ESCAPED_CHAR.sub(r"\1", m.group(m.lastgroup))
+
+    if not is_quoted and escaped_family in styles.GenericFontFamilyType.__members__:
+      rslt.append(styles.GenericFontFamilyType(escaped_family))
+    else:
+      rslt.append(escaped_family)
+    
 
   if len(rslt) == 0:
     raise ValueError("Bad syntax")
 
   return rslt
+
+def serialize_font_family(font_family: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]):
+  '''Serialize model FontFamily to tts:fontFamily
+  '''
+
+  def _serialize_one_family(family):
+    if isinstance(family, styles.GenericFontFamilyType):
+      return family.value
+    
+    return '"' + family.replace('"', r'\"') + '"'
+
+  return ", ".join(map(_serialize_one_family, font_family))
 
 
 def parse_time_expression(tick_rate: typing.Optional[int], frame_rate: typing.Optional[Fraction], time_expr: str) -> Fraction:
