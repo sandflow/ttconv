@@ -259,6 +259,9 @@ class TTElement(TTMLElement):
     if model_doc.get_display_aspect_ratio() is not None:
       imsc_attr.DisplayAspectRatioAttribute.set(tt_element, model_doc.get_display_aspect_ratio())
 
+    if frame_rate is not None:
+      imsc_attr.FrameRateAttribute.set(tt_element, frame_rate)
+
     # Write the <head> section first
     head_element = HeadElement.from_model(ctx, model_doc)
 
@@ -849,7 +852,7 @@ class ContentElement(TTMLElement):
 
           if self.time_container.is_seq():
 
-            self.implicit_end = child_element.desired_end
+            self.implicit_end = None if child_element.desired_end is None else child_element.desired_end + self.desired_begin
 
           else:
 

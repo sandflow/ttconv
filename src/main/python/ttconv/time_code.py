@@ -63,7 +63,7 @@ class _HHMMSSTimeExpression(ABC):
 class ClockTime(_HHMMSSTimeExpression):
   """Millisecond-based time code definition"""
 
-  TIME_CODE_PATTERN = ':'.join(['(?P<h>[0-9]{2})',
+  TIME_CODE_PATTERN = ':'.join(['(?P<h>[0-9]{2,})',
                                 '(?P<m>[0-9]{2})',
                                 '(?P<s>[0-9]{2})']) + \
                       '(.|,)' + '(?P<ms>[0-9]{2,3})'
@@ -98,12 +98,16 @@ class ClockTime(_HHMMSSTimeExpression):
   @staticmethod
   def from_seconds(seconds: Union[float, Fraction]) -> ClockTime:
     """Creates a time code from time offset in seconds"""
+
+    if seconds < 0:
+      raise ValueError("Seconds must not be less than zero")
+
     seconds = float(seconds)
 
-    h = floor(seconds / 3600 % 24)
+    h = floor(seconds / 3600)
     m = floor(seconds / 60 % 60)
     s = floor(seconds % 60)
-    ms = int((seconds % 1) * 1000)
+    ms = round((seconds % 1) * 1000)
 
     return ClockTime(h, m, s, ms)
 
@@ -112,7 +116,7 @@ class ClockTime(_HHMMSSTimeExpression):
     self._ms_separator = separator
 
   def __str__(self):
-    return ":".join(f'{item:02}' for item in [self._hours, self._minutes, self._seconds]) \
+    return ":".join(f'{item:02d}' for item in [self._hours, self._minutes, self._seconds]) \
            + self._ms_separator + f'{self._milliseconds:03}'
 
   def __eq__(self, other: ClockTime):

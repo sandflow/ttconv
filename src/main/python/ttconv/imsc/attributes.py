@@ -366,6 +366,24 @@ class FrameRateAttribute:
 
     return fr * frm
 
+  @staticmethod
+  def set(ttml_element, frame_rate: Fraction):
+    rounded_fps = round(frame_rate)
+
+    ttml_element.set(
+      FrameRateAttribute.frame_rate_qn, 
+      str(rounded_fps)
+    )
+
+    fps_multiplier = frame_rate / rounded_fps
+
+    if fps_multiplier != 1:
+
+      ttml_element.set(
+        FrameRateAttribute.frame_rate_multiplier_qn, 
+        f"{fps_multiplier.numerator:g} {fps_multiplier.denominator:g}"
+      )
+
 @dataclass
 class TemporalAttributeParsingContext:
   frame_rate: Fraction = Fraction(30, 1)
