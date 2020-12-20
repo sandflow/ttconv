@@ -263,8 +263,11 @@ def convert(args):
       config = json.load(json_file)
 
   config = get_config(GeneralConfiguration.name, config)
-  if config is not None and config.progress_bar is not None:
-    progress.display_progress_bar = config.progress_bar
+  if config is not None:
+    if config.progress_bar is not None:
+      progress.display_progress_bar = config.progress_bar
+    if config.log_level is not None:
+      LOGGER.setLevel(config.log_level)
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
