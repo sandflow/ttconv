@@ -144,7 +144,7 @@ class ExtentAttribute:
   qn = f"{{{ns.TTS}}}extent"
 
   @staticmethod
-  def extract(ttml_element) -> model.PixelResolutionType:
+  def extract(ttml_element) -> typing.Optional[model.PixelResolutionType]:
 
     extent = ttml_element.attrib.get(ExtentAttribute.qn)
 
@@ -160,7 +160,7 @@ class ExtentAttribute:
         LOGGER.error("ttp:extent on <tt> does not use px units")
         return None
 
-      return model.PixelResolutionType(w, h)
+      return model.PixelResolutionType(int(w), int(h))
 
     return None
 
@@ -175,7 +175,7 @@ class ActiveAreaAttribute:
   qn = f"{{{ns.ITTP}}}activeArea"
 
   @staticmethod
-  def extract(ttml_element) -> model.ActiveAreaType:
+  def extract(ttml_element) -> typing.Optional[model.ActiveAreaType]:
 
     aa = ttml_element.attrib.get(ActiveAreaAttribute.qn)
 

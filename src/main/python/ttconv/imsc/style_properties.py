@@ -579,7 +579,7 @@ class StyleProperties:
       )
 
     @classmethod
-    def to_model(cls, context: StyleParsingContext, xml_element) -> typing.Tuple[model.StyleProperty, typing.Any]:
+    def to_model(cls, context: StyleParsingContext, xml_element) -> typing.Tuple[typing.Type[model.StyleProperty], typing.Any]:
       return (
         styles.StyleProperties.Origin,
         cls.extract(context, xml_element.get(f"{{{cls.ns}}}{cls.local_name}"))
@@ -903,7 +903,7 @@ class StyleProperties:
       return False
 
     @classmethod
-    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
+    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[styles.TextOutlineType, styles.SpecialValues]:
       
       if xml_attrib == "none":
         return styles.SpecialValues.none
@@ -962,7 +962,7 @@ class StyleProperties:
       return False
 
     @classmethod
-    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
+    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[styles.TextShadowType, styles.SpecialValues]:
       
       if xml_attrib == "none":
         return styles.SpecialValues.none
@@ -1007,7 +1007,7 @@ class StyleProperties:
           )
         )
 
-      return styles.TextShadowType(shadows)
+      return styles.TextShadowType(tuple(shadows))
 
     @classmethod
     def from_model(cls, xml_element, model_value):

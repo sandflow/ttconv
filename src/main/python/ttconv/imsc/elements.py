@@ -48,7 +48,7 @@ class TTMLElement:
   class ParsingContext(imsc_styles.StyleParsingContext):
     '''State information when parsing a TTML element'''
 
-    def __init__(self, ttml_class: TTMLElement, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
+    def __init__(self, ttml_class: typing.Type[TTMLElement], parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
 
       self.doc = parent_ctx.doc if parent_ctx is not None else model.ContentDocument()
 
@@ -56,9 +56,9 @@ class TTMLElement:
 
       self.temporal_context = parent_ctx.temporal_context if parent_ctx is not None else imsc_attr.TemporalAttributeParsingContext()
 
-      self.ttml_class: TTMLElement = ttml_class
+      self.ttml_class: typing.Type[TTMLElement] = ttml_class
 
-      self.lang: str = None
+      self.lang: typing.Optional[str] = None
 
       self.space: typing.Optional[model.WhiteSpaceHandling] = None
 
@@ -527,8 +527,8 @@ class StyleElement(TTMLElement):
 
     def __init__(self, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
       self.styles: typing.Dict[model_styles.StyleProperty, typing.Any] = dict()
-      self.style_refs: typing.List[str] = None
-      self.id: str = None
+      self.style_refs: typing.Optional[typing.List[str]] = None
+      self.id: typing.Optional[str] = None
       super().__init__(StyleElement, parent_ctx)
 
   qn = f"{{{xml_ns.TTML}}}style"
@@ -667,7 +667,7 @@ class ContentElement(TTMLElement):
     '''
     def __init__(
         self,
-        ttml_class: typing.Optional[TTMLElement],
+        ttml_class: typing.Optional[typing.Type[ContentElement]],
         parent_ctx: TTMLElement.ParsingContext,
         model_element: typing.Optional[model.ContentElement] = None
       ):
@@ -722,7 +722,7 @@ class ContentElement(TTMLElement):
 
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    def process_set_style_properties(self, parent_ctx: TTMLElement, xml_elem):
+    def process_set_style_properties(self, parent_ctx: ContentElement.ParsingContext, xml_elem):
       '''Processes style properties on `<set>` element
       '''
       if parent_ctx.model_element is None:

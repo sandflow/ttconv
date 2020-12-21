@@ -197,10 +197,10 @@ def parse_position(attr_value: str) -> typing.Tuple[str, styles.LengthType, str,
   h_edges = {"left", "right"}
   v_edges = {"top", "bottom"}
 
-  h_edge: str = None
-  h_offset: styles.LengthType = None
-  v_edge: str = None
-  v_offset: styles.LengthType = None
+  h_edge: typing.Optional[str] = None
+  h_offset: typing.Optional[styles.LengthType] = None
+  v_edge: typing.Optional[str] = None
+  v_offset: typing.Optional[styles.LengthType] = None
 
   items = attr_value.split()
 
