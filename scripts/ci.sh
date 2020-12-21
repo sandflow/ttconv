@@ -1,11 +1,11 @@
 #!/bin/sh
 
-## Linter
-
-pipenv run python -m pylint src/main/python/ttconv/ src/test/python/
-
 # Exit immediately if unit tests exit with a non-zero status.
 set -e
+
+## Linter
+
+pipenv run python -m pylint --exit-zero src/main/python/ttconv/ src/test/python/
 
 ## unit test and coverage
 
