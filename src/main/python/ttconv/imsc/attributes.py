@@ -43,7 +43,7 @@ class XMLIDAttribute:
   '''xml:id attribute
   '''
 
-  qn = '{http://www.w3.org/XML/1998/namespace}id'
+  qn = '{{{ns.XML}}}id'
 
   @staticmethod
   def extract(ttml_element):
@@ -57,7 +57,7 @@ class XMLLangAttribute:
   '''xml:lang attribute
   '''
 
-  qn = '{http://www.w3.org/XML/1998/namespace}lang'
+  qn = '{{{ns.XML}}}lang'
 
   @staticmethod
   def extract(ttml_element):
@@ -71,7 +71,7 @@ class XMLSpaceAttribute:
   '''xml:space attribute
   '''
 
-  qn = '{http://www.w3.org/XML/1998/namespace}space'
+  qn = '{{{ns.XML}}}space'
 
   @staticmethod
   def extract(ttml_element):
@@ -100,12 +100,12 @@ class RegionAttribute:
   qn = "region"
 
   @staticmethod
-  def extract(ttml_element):
+  def extract(ttml_element) -> typing.Optional[str]:
     return ttml_element.attrib.get(RegionAttribute.qn)
 
   @staticmethod
-  def set(ttml_element, res):
-    ttml_element.set(RegionAttribute.qn, res)
+  def set(ttml_element, region_id: str):
+    ttml_element.set(RegionAttribute.qn, region_id)
 
 
 class CellResolutionAttribute:
