@@ -77,21 +77,10 @@ class ModuleConfiguration:
       return None
     return field.default
 
-
   @classmethod
   def name(cls):
+    """Returns the configuration name"""
     raise NotImplementedError
-
-
-class TTConfig:
-  """Module configuration class decorator"""
-
-  def __init__(self, name: str):
-    self.name = name
-
-  def __call__(self, config_class):
-    config_class.name = self.name
-    return config_class
 
 
 @dataclass
