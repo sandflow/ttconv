@@ -304,7 +304,7 @@ class ISD(model.Document):
 
   @staticmethod
   def _compute_styles(
-      styles_to_be_computed: typing.Set[model.StyleProperty],
+      styles_to_be_computed: typing.Set[typing.Type[model.StyleProperty]],
       isd_parent: typing.Optional[model.ContentElement],
       isd_element: model.ContentElement
     ):
@@ -397,7 +397,7 @@ class ISD(model.Document):
 
     # keep track of specified style properties
 
-    styles_to_be_computed: typing.Set[model.StyleProperty] = set()
+    styles_to_be_computed: typing.Set[typing.Type[model.StyleProperty]] = set()
 
     # copy text nodes
 
@@ -703,7 +703,7 @@ class StyleProcessor:
   * `style_prop`: reference to the style property that the processor handles
   '''
 
-  style_prop: styles.StyleProperty = None
+  style_prop: typing.Type[styles.StyleProperty] = None
 
   @classmethod
   def compute(cls, parent: model.ContentElement, element: model.ContentElement):
@@ -932,7 +932,7 @@ class StyleProcessors:
 
       wm: styles.WritingModeType = element.get_style(styles.StyleProperties.WritingMode)
 
-      extent: styles.LengthType = element.get_style(styles.StyleProperties.Extent)
+      extent: styles.ExtentType = element.get_style(styles.StyleProperties.Extent)
 
       is_vertical = wm in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl)
 

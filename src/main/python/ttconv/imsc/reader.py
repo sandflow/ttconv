@@ -26,13 +26,15 @@
 '''IMSC reader'''
 
 import logging
+import typing
+
 import ttconv.imsc.elements as imsc_elements
 import ttconv.model as model
 
 LOGGER = logging.getLogger(__name__)
 
 
-def to_model(xml_tree, progress_callback=lambda _: None) -> model.ContentDocument:
+def to_model(xml_tree, progress_callback=lambda _: None) -> typing.Optional[model.ContentDocument]:
   '''Convers an IMSC document to the data model'''
 
   xml_element = xml_tree.getroot()
