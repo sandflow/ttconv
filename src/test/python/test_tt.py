@@ -115,7 +115,7 @@ class IMSCAppTest(unittest.TestCase):
     tt.main(['convert', 
       '-i', 'src/test/resources/ttml/body_only.ttml', 
       '-o', 'build/body_only.out.ttml', 
-      '--config', '{\"general\": {\"progress_bar\":true, \"log_level\":\"WARN\"}}'])
+      '--config', '{"general": {"progress_bar":false, "log_level":"WARN"}}'])
 
   def test_with_config_file(self):
     tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --config_file build/config.json".split())
