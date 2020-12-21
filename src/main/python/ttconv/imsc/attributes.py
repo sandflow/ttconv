@@ -160,6 +160,9 @@ class ExtentAttribute:
         LOGGER.error("ttp:extent on <tt> does not use px units")
         return None
 
+      if not w.is_integer() or not h.is_integer():
+        LOGGER.error("Pixel resolution dimensions must be integer values")
+
       return model.PixelResolutionType(int(w), int(h))
 
     return None
