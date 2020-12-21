@@ -43,7 +43,7 @@ LOGGER = logging.getLogger(__name__)
 
 def from_model(
   model_doc: model.ContentDocument,
-  config: typing.Optional[imsc_config.ImscWriterConfiguration] = None,
+  config: typing.Optional[imsc_config.IMSCWriterConfiguration] = None,
   progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = lambda _: None
   ):
   '''Converts the data model to an IMSC document. The writer regularly the `progress_callback` function, if provided,

@@ -248,7 +248,7 @@ class StyleProperties:
 
     @classmethod
     def from_model(cls, xml_element, model_value: bool):
-      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value is not None else "false")
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", "true" if model_value else "false")
 
 
   class FontFamily(StyleProperty):
@@ -369,6 +369,8 @@ class StyleProperties:
 
       if lp.units != styles.LengthType.Units.c:
         raise ValueError("ebutts:linePadding must be expressed in 'c'")
+
+      return lp
 
     @classmethod
     def from_model(cls, xml_element, model_value: styles.LengthType):
@@ -579,7 +581,7 @@ class StyleProperties:
       )
 
     @classmethod
-    def to_model(cls, context: StyleParsingContext, xml_element) -> typing.Tuple[model.StyleProperty, typing.Any]:
+    def to_model(cls, context: StyleParsingContext, xml_element) -> typing.Tuple[typing.Type[model.StyleProperty], typing.Any]:
       return (
         styles.StyleProperties.Origin,
         cls.extract(context, xml_element.get(f"{{{cls.ns}}}{cls.local_name}"))
@@ -687,6 +689,22 @@ class StyleProperties:
     @classmethod
     def from_model(cls, xml_element, model_value: float):
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", f"{model_value}%")
+
+
+  class ShowBackground(StyleProperty):
+    '''Corresponds to tts:showBackground.'''
+
+    ns = xml_ns.TTS
+    local_name = "showBackground"
+    model_prop = styles.StyleProperties.ShowBackground
+    
+    @classmethod
+    def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      return styles.ShowBackgroundType[xml_attrib]
+
+    @classmethod
+    def from_model(cls, xml_element, model_value: styles.VisibilityType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
   class TextAlign(StyleProperty):
@@ -903,7 +921,7 @@ class StyleProperties:
       return False
 
     @classmethod
-    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
+    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[styles.TextOutlineType, styles.SpecialValues]:
       
       if xml_attrib == "none":
         return styles.SpecialValues.none
@@ -962,7 +980,7 @@ class StyleProperties:
       return False
 
     @classmethod
-    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[str, styles.TextOutlineType]:
+    def extract(cls, context: StyleParsingContext, xml_attrib: str) -> typing.Union[styles.TextShadowType, styles.SpecialValues]:
       
       if xml_attrib == "none":
         return styles.SpecialValues.none
@@ -1007,7 +1025,7 @@ class StyleProperties:
           )
         )
 
-      return styles.TextShadowType(shadows)
+      return styles.TextShadowType(tuple(shadows))
 
     @classmethod
     def from_model(cls, xml_element, model_value):
@@ -1136,11 +1154,11 @@ class StyleProperties:
     color_str = f"#{model_value.components[0]:02x}" \
                  f"{model_value.components[1]:02x}"  \
                  f"{model_value.components[2]:02x}"
-    if not model_value.components[3] & 0xFF:
+    if model_value.components[3] != 0xFF:
       color_str = f"{color_str}{model_value.components[3]:02x}"
     
     return color_str
 
   @staticmethod
   def to_ttml_length(model_value: styles.LengthType):
-    return f"{model_value.value}{model_value.units.value}"
+    return f"{model_value.value:g}{model_value.units.value}"

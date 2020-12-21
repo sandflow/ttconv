@@ -48,7 +48,7 @@ class TTMLElement:
   class ParsingContext(imsc_styles.StyleParsingContext):
     '''State information when parsing a TTML element'''
 
-    def __init__(self, ttml_class: TTMLElement, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
+    def __init__(self, ttml_class: typing.Type[TTMLElement], parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
 
       self.doc = parent_ctx.doc if parent_ctx is not None else model.ContentDocument()
 
@@ -56,9 +56,9 @@ class TTMLElement:
 
       self.temporal_context = parent_ctx.temporal_context if parent_ctx is not None else imsc_attr.TemporalAttributeParsingContext()
 
-      self.ttml_class: TTMLElement = ttml_class
+      self.ttml_class: typing.Type[TTMLElement] = ttml_class
 
-      self.lang: str = None
+      self.lang: typing.Optional[str] = None
 
       self.space: typing.Optional[model.WhiteSpaceHandling] = None
 
@@ -157,6 +157,22 @@ class TTElement(TTMLElement):
     if active_area is not None:
       tt_ctx.doc.set_active_area(active_area)
 
+    ittp_aspect_ratio = imsc_attr.AspectRatioAttribute.extract(xml_elem)
+
+    ttp_dar = imsc_attr.DisplayAspectRatioAttribute.extract(xml_elem)
+
+    if ttp_dar is not None:
+
+      tt_ctx.doc.set_display_aspect_ratio(ttp_dar)
+
+    elif ittp_aspect_ratio is not None:
+
+      tt_ctx.doc.set_display_aspect_ratio(ittp_aspect_ratio)
+
+    if ittp_aspect_ratio is not None and ttp_dar is not None:
+
+      LOGGER.warning("Both ittp:aspectRatio and ttp:displayAspectRatio specified on tt")
+
     tt_ctx.temporal_context.frame_rate = imsc_attr.FrameRateAttribute.extract(xml_elem)
 
     tt_ctx.temporal_context.tick_rate = imsc_attr.TickRateAttribute.extract(xml_elem)
@@ -227,6 +243,10 @@ class TTElement(TTMLElement):
         if StyleProperties.BY_MODEL_PROP[model_style_prop].has_px(element.get_style(model_style_prop)):
           has_px = True
           break
+      for animation_step in element.iter_animation_steps():
+        if StyleProperties.BY_MODEL_PROP[animation_step.style_property].has_px(animation_step.value):
+          has_px = True
+          break      
       if has_px:
         break
 
@@ -235,6 +255,12 @@ class TTElement(TTMLElement):
 
     if model_doc.get_active_area() is not None:
       imsc_attr.ActiveAreaAttribute.set(tt_element, model_doc.get_active_area())
+
+    if model_doc.get_display_aspect_ratio() is not None:
+      imsc_attr.DisplayAspectRatioAttribute.set(tt_element, model_doc.get_display_aspect_ratio())
+
+    if frame_rate is not None:
+      imsc_attr.FrameRateAttribute.set(tt_element, frame_rate)
 
     # Write the <head> section first
     head_element = HeadElement.from_model(ctx, model_doc)
@@ -527,8 +553,8 @@ class StyleElement(TTMLElement):
 
     def __init__(self, parent_ctx: typing.Optional[TTMLElement.ParsingContext] = None):
       self.styles: typing.Dict[model_styles.StyleProperty, typing.Any] = dict()
-      self.style_refs: typing.List[str] = None
-      self.id: str = None
+      self.style_refs: typing.Optional[typing.List[str]] = None
+      self.id: typing.Optional[str] = None
       super().__init__(StyleElement, parent_ctx)
 
   qn = f"{{{xml_ns.TTML}}}style"
@@ -667,7 +693,7 @@ class ContentElement(TTMLElement):
     '''
     def __init__(
         self,
-        ttml_class: typing.Optional[TTMLElement],
+        ttml_class: typing.Optional[typing.Type[ContentElement]],
         parent_ctx: TTMLElement.ParsingContext,
         model_element: typing.Optional[model.ContentElement] = None
       ):
@@ -693,7 +719,7 @@ class ContentElement(TTMLElement):
     def process_referential_styling(self, xml_elem):
       '''Processes referential styling
       '''
-      for style_ref in imsc_attr.StyleAttribute.extract(xml_elem):
+      for style_ref in reversed(imsc_attr.StyleAttribute.extract(xml_elem)):
         style_element = self.style_elements.get(style_ref)
 
         if style_element is None:
@@ -722,7 +748,7 @@ class ContentElement(TTMLElement):
 
           LOGGER.error("Error reading style property: %s", prop.__name__)
 
-    def process_set_style_properties(self, parent_ctx: TTMLElement, xml_elem):
+    def process_set_style_properties(self, parent_ctx: ContentElement.ParsingContext, xml_elem):
       '''Processes style properties on `<set>` element
       '''
       if parent_ctx.model_element is None:
@@ -826,7 +852,7 @@ class ContentElement(TTMLElement):
 
           if self.time_container.is_seq():
 
-            self.implicit_end = child_element.desired_end
+            self.implicit_end = None if child_element.desired_end is None else child_element.desired_end + self.desired_begin
 
           else:
 
@@ -1053,6 +1079,10 @@ class ContentElement(TTMLElement):
       return None
 
     xml_element = imsc_class.make_ttml_element()
+
+    if (model_element.parent() is None and model_element.get_space() is model.WhiteSpaceHandling.PRESERVE) or \
+      (model_element.parent() is not None and model_element.parent().get_space() != model_element.get_space()):
+      imsc_attr.XMLSpaceAttribute.set(xml_element, model_element.get_space())
 
     if imsc_class.has_region:
       if model_element.get_region() is not None:

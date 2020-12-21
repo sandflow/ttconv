@@ -46,7 +46,7 @@ class WhiteSpaceHandling(Enum):
 class DiscreteAnimationStep:
   '''Represents a discrete change in the value of a style property over time (see TTML `set` element)
   '''
-  style_property: StyleProperty
+  style_property: typing.Type[StyleProperty]
   begin: typing.Optional[Fraction]
   end: typing.Optional[Fraction]
   value: typing.Any

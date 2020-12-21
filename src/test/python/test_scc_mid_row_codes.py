@@ -135,3 +135,6 @@ class SCCMidRowCodesTest(unittest.TestCase):
 
     for mrc in other_code_values:
       self.assertIsNone(SccMidRowCode.find(mrc))
+
+if __name__ == '__main__':
+  unittest.main()

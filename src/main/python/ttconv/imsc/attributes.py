@@ -35,7 +35,6 @@ from enum import Enum
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
-#import xml.etree.ElementTree as et
 from ttconv.time_code import ClockTime
 
 LOGGER = logging.getLogger(__name__)
@@ -90,6 +89,9 @@ class XMLSpaceAttribute:
     
     return r
 
+  @staticmethod
+  def set(ttml_element, xml_space: model.WhiteSpaceHandling):
+    ttml_element.set(XMLSpaceAttribute.qn, xml_space.value)
 
 
 class RegionAttribute:
@@ -144,7 +146,7 @@ class ExtentAttribute:
   qn = f"{{{ns.TTS}}}extent"
 
   @staticmethod
-  def extract(ttml_element) -> model.PixelResolutionType:
+  def extract(ttml_element) -> typing.Optional[model.PixelResolutionType]:
 
     extent = ttml_element.attrib.get(ExtentAttribute.qn)
 
@@ -160,13 +162,16 @@ class ExtentAttribute:
         LOGGER.error("ttp:extent on <tt> does not use px units")
         return None
 
-      return model.PixelResolutionType(w, h)
+      if not w.is_integer() or not h.is_integer():
+        LOGGER.error("Pixel resolution dimensions must be integer values")
+
+      return model.PixelResolutionType(int(w), int(h))
 
     return None
 
   @staticmethod
   def set(ttml_element, res):
-    ttml_element.set(ExtentAttribute.qn, f"{res.width}px {res.height}px")
+    ttml_element.set(ExtentAttribute.qn, f"{res.width:g}px {res.height:g}px")
 
 class ActiveAreaAttribute:
   '''ittp:activeArea attribute on \\<tt\\>
@@ -175,7 +180,7 @@ class ActiveAreaAttribute:
   qn = f"{{{ns.ITTP}}}activeArea"
 
   @staticmethod
-  def extract(ttml_element) -> model.ActiveAreaType:
+  def extract(ttml_element) -> typing.Optional[model.ActiveAreaType]:
 
     aa = ttml_element.attrib.get(ActiveAreaAttribute.qn)
 
@@ -240,6 +245,76 @@ class TickRateAttribute:
 
     return 1
 
+class AspectRatioAttribute:
+  '''ittp:aspectRatio attribute
+  '''
+
+  qn = f"{{{ns.ITTP}}}aspectRatio"
+
+  _re = re.compile(r"(\d+) (\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> typing.Optional[Fraction]:
+
+    ar_raw = ttml_element.attrib.get(AspectRatioAttribute.qn)
+
+    if ar_raw is None:
+      return None
+
+    m = AspectRatioAttribute._re.match(ar_raw)
+
+    if m is None:
+      LOGGER.error("ittp:aspectRatio invalid syntax")
+      return None
+
+    try:
+
+      return Fraction(int(m.group(1)), int(m.group(2)))
+
+    except ZeroDivisionError:
+
+      LOGGER.error("ittp:aspectRatio denominator is 0")
+    
+    return None
+
+class DisplayAspectRatioAttribute:
+  '''ttp:displayAspectRatio attribute
+  '''
+
+  qn = f"{{{ns.TTP}}}displayAspectRatio"
+
+  _re = re.compile(r"(\d+) (\d+)")
+
+  @staticmethod
+  def extract(ttml_element) -> typing.Optional[Fraction]:
+
+    ar_raw = ttml_element.attrib.get(DisplayAspectRatioAttribute.qn)
+
+    if ar_raw is None:
+      return None
+
+    m = DisplayAspectRatioAttribute._re.match(ar_raw)
+
+    if m is None:
+      LOGGER.error("ttp:displayAspectRatio invalid syntax")
+      return None
+
+    try:
+
+      return Fraction(int(m.group(1)), int(m.group(2)))
+
+    except ZeroDivisionError:
+
+      LOGGER.error("ttp:displayAspectRatio denominator is 0")
+    
+    return None
+
+  @staticmethod
+  def set(ttml_element, display_aspect_ratio: Fraction):
+    ttml_element.set(
+      DisplayAspectRatioAttribute.qn, 
+      f"{display_aspect_ratio.numerator:g} {display_aspect_ratio.denominator:g}"
+    )
 
 class FrameRateAttribute:
   '''ttp:frameRate and ttp:frameRateMultiplier attribute
@@ -293,6 +368,24 @@ class FrameRateAttribute:
         LOGGER.error("ttp:frameRateMultiplier invalid syntax")
 
     return fr * frm
+
+  @staticmethod
+  def set(ttml_element, frame_rate: Fraction):
+    rounded_fps = round(frame_rate)
+
+    ttml_element.set(
+      FrameRateAttribute.frame_rate_qn, 
+      str(rounded_fps)
+    )
+
+    fps_multiplier = frame_rate / rounded_fps
+
+    if fps_multiplier != 1:
+
+      ttml_element.set(
+        FrameRateAttribute.frame_rate_multiplier_qn, 
+        f"{fps_multiplier.numerator:g} {fps_multiplier.denominator:g}"
+      )
 
 @dataclass
 class TemporalAttributeParsingContext:

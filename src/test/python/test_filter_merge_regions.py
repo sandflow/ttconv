@@ -27,14 +27,14 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
-from unittest import TestCase
+import unittest
 
 from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement
 
 
-class RegionsMergingFilterTest(TestCase):
+class RegionsMergingFilterTest(unittest.TestCase):
 
   @staticmethod
   def _get_filled_body(isd: ISD, text: str) -> Body:
@@ -97,3 +97,6 @@ class RegionsMergingFilterTest(TestCase):
 
     text = self._get_text_from_children(divs[1])
     self.assertEqual("Is there anyone here?", text)
+
+if __name__ == '__main__':
+  unittest.main()

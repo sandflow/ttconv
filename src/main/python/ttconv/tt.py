@@ -29,6 +29,7 @@ import logging
 import os
 import sys
 import json
+import typing
 import xml.etree.ElementTree as et
 from argparse import ArgumentParser
 from enum import Enum
@@ -40,15 +41,15 @@ import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 from ttconv.config import ModuleConfiguration
 from ttconv.config import GeneralConfiguration
-from ttconv.imsc.config import ImscWriterConfiguration
-from ttconv.isd import IsdConfiguration
+from ttconv.imsc.config import IMSCWriterConfiguration
+from ttconv.isd import ISDConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
 CONFIGURATIONS = [
   GeneralConfiguration,
-  ImscWriterConfiguration,
-  IsdConfiguration
+  IMSCWriterConfiguration,
+  ISDConfiguration
 ]
 
 
@@ -183,7 +184,7 @@ class FileTypes(Enum):
     return FileTypes(file_type)
 
 
-def read_config_from_json(config_class, json_data) -> ModuleConfiguration:
+def read_config_from_json(config_class, json_data) -> typing.Optional[ModuleConfiguration]:
   """Returns a requested configuration from json data"""
   if config_class is None or json_data is None:
     return None
@@ -312,7 +313,7 @@ def convert(args):
     #
     # Read the config
     #
-    writer_config = read_config_from_json(ImscWriterConfiguration, json_config_data)
+    writer_config = read_config_from_json(IMSCWriterConfiguration, json_config_data)
 
     #
     # Construct and configure the writer
@@ -326,9 +327,14 @@ def convert(args):
 
   elif writer_type is FileTypes.SRT:
     #
+    # Read the config
+    #
+    writer_config = read_config_from_json(ISDConfiguration, json_config_data)
+
+    #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, progress_callback_write)
+    srt_document = srt_writer.from_model(model, writer_config, progress_callback_write)
 
     #
     # Write out the converted file

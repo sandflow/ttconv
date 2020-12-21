@@ -43,7 +43,7 @@ class IMSCAppTest(unittest.TestCase):
 
     if not os.path.exists('build/config.json'):
       config_json = {}
-      config_json['general'] = {"progress_bar" : False}
+      config_json['general'] = {"progress_bar" : False, "log_level": "INFO"}
 
       with open('build/config.json', 'w') as outfile:
         json.dump(config_json, outfile)

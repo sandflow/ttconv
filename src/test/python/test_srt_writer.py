@@ -32,7 +32,6 @@ import unittest
 import xml.etree.ElementTree as et
 from fractions import Fraction
 from pathlib import Path
-from unittest import TestCase
 
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
@@ -41,7 +40,7 @@ from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, Cont
 from ttconv.style_properties import StyleProperties, DisplayType
 
 
-class SrtWriterTest(TestCase):
+class SrtWriterTest(unittest.TestCase):
 
   def test_srt_writer(self):
     doc = ContentDocument()
@@ -193,3 +192,6 @@ Pellentesque interdum lacinia sollicitudin.
       self.assertTrue(len(srt) > 0, msg=f"Could not convert {path}")
     else:
       self.assertEqual(0, len(srt), msg=f"Could not convert {path}")
+
+if __name__ == '__main__':
+  unittest.main()

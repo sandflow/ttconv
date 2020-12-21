@@ -54,7 +54,7 @@ class TimeExpressionEnum(Enum):
 
 
 @dataclass
-class ImscWriterConfiguration(ModuleConfiguration):
+class IMSCWriterConfiguration(ModuleConfiguration):
   """IMSC writer configuration"""
 
   class FractionDecoder:
