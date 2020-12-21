@@ -34,10 +34,13 @@ import re
 import sys
 import os
 import multiprocessing
+from dataclasses import dataclass
 from fractions import Fraction
 
 import ttconv.model as model
 import ttconv.style_properties as styles
+from ttconv.config import ModuleConfiguration
+
 
 class SignificantTimes:
   """Information on the temporal offsets at which a ContentDocument changes.
@@ -73,6 +76,17 @@ class SignificantTimes:
     return self._sig_times
 
 ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
+
+
+@dataclass
+class ISDConfiguration(ModuleConfiguration):
+  """ISD configuration"""
+  multi_thread: bool = True
+
+  @classmethod
+  def name(cls):
+    return "isd"
+
 
 class ISD(model.Document):
   '''Represents an Intermediate Synchronic Document, as described in TTML2, i.e. a snapshot

@@ -27,7 +27,7 @@
 
 import logging
 from fractions import Fraction
-from typing import List
+from typing import List, Optional
 
 import ttconv.model as model
 import ttconv.srt.style as style
@@ -36,7 +36,7 @@ from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFi
 from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
 from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
-from ttconv.isd import ISD
+from ttconv.isd import ISD, ISDConfiguration
 from ttconv.srt.paragraph import SrtParagraph
 from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
 
@@ -174,7 +174,7 @@ class SrtContext:
 #
 
 
-def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> str:
+def from_model(doc: model.ContentDocument, isd_config: Optional[ISDConfiguration] = None, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()
@@ -182,11 +182,11 @@ def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> 
   # split progress between ISD construction and SRT writing
 
   def _isd_progress(progress: float):
-    progress_callback(progress/2)
+    progress_callback(progress / 2)
 
   # Compute ISDs
 
-  isds = ISD.generate_isd_sequence(doc, _isd_progress)
+  isds = ISD.generate_isd_sequence(doc, _isd_progress, is_multithreaded=isd_config.multi_thread if isd_config is not None else True)
 
   # process ISDs
 
@@ -197,7 +197,7 @@ def from_model(doc: model.ContentDocument, progress_callback=lambda _: None) -> 
 
     srt.add_isd(isd, offset)
 
-    progress_callback(0.5 + (i + 1)/len(isds)/2)
+    progress_callback(0.5 + (i + 1) / len(isds) / 2)
 
   srt.finish()
 

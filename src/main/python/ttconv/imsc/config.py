@@ -23,48 +23,57 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''IMSC writer'''
+"""IMSC configuration"""
 
-import logging
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import Enum
 from fractions import Fraction
-import numbers
-import typing
-import xml.etree.ElementTree as et
-import ttconv.imsc.elements as imsc_elements
-import ttconv.imsc.namespaces as xml_ns
-import ttconv.model as model
-import ttconv.imsc.config as imsc_config
+from typing import Optional
 
-LOGGER = logging.getLogger(__name__)
+from ttconv.config import ModuleConfiguration
 
-#
-# imsc writer
-#
 
-def from_model(
-  model_doc: model.ContentDocument,
-  config: typing.Optional[imsc_config.IMSCWriterConfiguration] = None,
-  progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = lambda _: None
-  ):
-  '''Converts the data model to an IMSC document. The writer regularly the `progress_callback` function, if provided,
-  with a real between 0 and 1, indicating the relative progress of the process.
-  '''
+class TimeExpressionEnum(Enum):
+  """IMSC time expression configuration values"""
+  frames = "frames"
+  clock_time = "clock_time"
+
+  @staticmethod
+  def parse(config_value: str) -> Optional[TimeExpressionEnum]:
+    """Parse time expression from string value"""
+    if config_value is None:
+      return config_value
+
+    str_values = map(lambda e: e.value, list(TimeExpressionEnum))
+    if config_value not in str_values:
+      raise ValueError("Invalid time expression format", config_value)
+
+    return TimeExpressionEnum[config_value]
+
+
+@dataclass
+class IMSCWriterConfiguration(ModuleConfiguration):
+  """IMSC writer configuration"""
+
+  class FractionDecoder:
+    """Utility callable for converting string to Fraction"""
+
+    def __call__(self, value: str) -> Fraction:
+      [num, den] = value.split('/')
+
+      return Fraction(int(num), int(den))
   
-  et.register_namespace("ttml", xml_ns.TTML)
-  et.register_namespace("ttp", xml_ns.TTP)
-  et.register_namespace("tts", xml_ns.TTS)
-  et.register_namespace("ittp", xml_ns.ITTP)
-  et.register_namespace("itts", xml_ns.ITTS)
+  @classmethod
+  def name(cls):
+    return "imsc_writer"
 
-  if config is not None and config.time_format == imsc_config.TimeExpressionEnum.frames:
-    frame_rate = config.fps
-  else:
-    frame_rate = None
-  
-  return et.ElementTree(
-    imsc_elements.TTElement.from_model(
-      model_doc,
-      frame_rate,
-      progress_callback
+  time_format: TimeExpressionEnum = field(
+    default=TimeExpressionEnum.clock_time,
+    metadata={"decoder": TimeExpressionEnum.parse}
     )
-  )
+  fps: Fraction = field(
+    default="24/1",
+    metadata={"decoder": FractionDecoder()}
+    )

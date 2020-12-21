@@ -42,6 +42,8 @@ import ttconv.imsc.namespaces as xml_ns
 import ttconv.imsc.style_properties as imsc_styles
 import ttconv.imsc.attributes as attributes
 from ttconv.scc.utils import get_extent_from_dimensions
+import ttconv.imsc.config as imsc_config
+import ttconv.imsc.namespaces as imsc_ns
 
 def _get_set_style(imsc_style_prop, model_value):
   e = et.Element("p")
@@ -681,5 +683,24 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '2301f')
     
+
+class ConfigTest(unittest.TestCase):
+
+  def test_fps(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" >
+    <body begin="5s"/>
+    </tt>
+    """
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    
+    config = imsc_config.IMSCWriterConfiguration(time_format=imsc_config.TimeExpressionEnum.frames, fps=Fraction(30, 1))
+    xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
+
+    body_element = xml_from_model.find("tt:body", {"tt": imsc_ns.TTML})
+
+    self.assertEqual(body_element.get("begin"), "150f")
+
 if __name__ == '__main__':
   unittest.main()

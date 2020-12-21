@@ -25,19 +25,33 @@
 
 '''ttconv tt'''
 
-import os
 import logging
+import os
 import sys
-from argparse import ArgumentParser
+import json
+import typing
 import xml.etree.ElementTree as et
-from pathlib import Path
+from argparse import ArgumentParser
 from enum import Enum
+from pathlib import Path
+
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
-import ttconv.srt.writer as srt_writer
 import ttconv.scc.reader as scc_reader
+import ttconv.srt.writer as srt_writer
+from ttconv.config import ModuleConfiguration
+from ttconv.config import GeneralConfiguration
+from ttconv.imsc.config import IMSCWriterConfiguration
+from ttconv.isd import ISDConfiguration
 
 LOGGER = logging.getLogger("ttconv")
+
+CONFIGURATIONS = [
+  GeneralConfiguration,
+  IMSCWriterConfiguration,
+  ISDConfiguration
+]
+
 
 class ProgressConsoleHandler(logging.StreamHandler):
   """
@@ -54,6 +68,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
   def __init__(self):
     self.is_writing_progress_bar = False
     self.last_progress_msg = ""
+    self.display_progress_bar = True
     super().__init__()
 
   def emit(self, record):
@@ -67,7 +82,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
       fill = '█'
       filled_length = int(length * percent_progress)
       bar_val = fill * filled_length + '-' * (length - filled_length)
-      
+
       return f'\r{prefix} |{bar_val}| {100 * percent_progress:3.0f}% {suffix}'
 
     try:
@@ -78,6 +93,9 @@ class ProgressConsoleHandler(logging.StreamHandler):
       is_progress_bar_record = hasattr(record, 'progress_bar')
       percent_progress = None
 
+      if self.display_progress_bar == False and is_progress_bar_record:
+        return
+      
       if is_progress_bar_record:
         percent_progress = getattr(record, 'percent_progress')
         msg = progress_str(
@@ -85,7 +103,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
           float(percent_progress)
         )
         self.last_progress_msg = msg
-  
+
       if self.is_writing_progress_bar and not is_progress_bar_record:
         # erase and over write the progress bar
         stream.write('\r')
@@ -115,8 +133,9 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
     except (KeyboardInterrupt, SystemExit):
       raise
-    except: # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except
       self.handleError(record)
+
 
 def progress_callback_read(percent_progress: float):
   '''Callback handler used by reader and writer.'''
@@ -124,10 +143,11 @@ def progress_callback_read(percent_progress: float):
     "%d%%",
     percent_progress,
     extra={
-      'progress_bar': ProgressConsoleHandler.ProgressType.read, 
+      'progress_bar': ProgressConsoleHandler.ProgressType.read,
       'percent_progress': percent_progress,
     }
   )
+
 
 def progress_callback_write(percent_progress: float):
   '''Callback handler used by reader and writer.'''
@@ -135,10 +155,11 @@ def progress_callback_write(percent_progress: float):
     "%d%%",
     percent_progress,
     extra={
-      'progress_bar': ProgressConsoleHandler.ProgressType.write, 
+      'progress_bar': ProgressConsoleHandler.ProgressType.write,
       'percent_progress': percent_progress,
     }
   )
+
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -161,6 +182,19 @@ class FileTypes(Enum):
       return FileTypes(file_extension)
 
     return FileTypes(file_type)
+
+
+def read_config_from_json(config_class, json_data) -> typing.Optional[ModuleConfiguration]:
+  """Returns a requested configuration from json data"""
+  if config_class is None or json_data is None:
+    return None
+
+  json_config = json_data.get(config_class.name())
+
+  if json_config is None:
+    return None
+
+  return config_class.parse(json_config)
 
 # Argument parsing setup
 #
@@ -193,6 +227,7 @@ def subcommand(args=None, parent=subparsers):
       $ python cli.py subcommand -d
 
   """
+
   def decorator(func):
     parser = parent.add_parser(func.__name__, description=func.__doc__)
     for arg in args:
@@ -205,16 +240,38 @@ def subcommand(args=None, parent=subparsers):
 
 
 @subcommand([
-  argument("-i", "--input", help="Input file path", required=True), 
+  argument("-i", "--input", help="Input file path", required=True),
   argument("-o", "--output", help="Output file path", required=True),
   argument("--itype", help="Input file type", required=False),
-  argument("--otype", help="Output file type", required=False)
-  ])
-def convert(args):  
+  argument("--otype", help="Output file type", required=False),
+  argument("--config", help="Configuration in json. Overridden by --config_file.", required=False),
+  argument("--config_file", help="Configuration file. Overrides --config_file.", required=False)
+])
+def convert(args):
   '''Process input and output through the reader, converter, and writer'''
 
   inputfile = args.input
   outputfile = args.output
+
+  # Note - Loading config data from a file takes priority over 
+  # data passed in as a json string
+  json_config_data = None
+
+  if args.config is not None:
+    json_config_data = json.loads(args.config)
+  if args.config_file is not None:
+    with open(args.config_file) as json_file:
+      json_config_data = json.load(json_file)
+
+  general_config = read_config_from_json(GeneralConfiguration, json_config_data)
+
+  if general_config is not None:
+
+    if general_config.progress_bar is not None:
+      progress.display_progress_bar = general_config.progress_bar
+
+    if general_config.log_level is not None:
+      LOGGER.setLevel(general_config.log_level)
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -245,18 +302,23 @@ def convert(args):
     model = scc_reader.to_model(file_as_str, progress_callback_read)
   else:
     if args.itype is not None:
-      exit_str  = f'Input type {args.itype} is not supported'
+      exit_str = f'Input type {args.itype} is not supported'
     else:
-      exit_str  = f'Input file is {args.input} is not supported'
-    
+      exit_str = f'Input file is {args.input} is not supported'
+
     LOGGER.error(exit_str)
     sys.exit(exit_str)
 
   if writer_type is FileTypes.TTML:
     #
+    # Read the config
+    #
+    writer_config = read_config_from_json(IMSCWriterConfiguration, json_config_data)
+
+    #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, None, progress_callback_write)
+    tree_from_model = imsc_writer.from_model(model, writer_config, progress_callback_write)
 
     #
     # Write out the converted file
@@ -265,9 +327,14 @@ def convert(args):
 
   elif writer_type is FileTypes.SRT:
     #
+    # Read the config
+    #
+    writer_config = read_config_from_json(ISDConfiguration, json_config_data)
+
+    #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, progress_callback_write)
+    srt_document = srt_writer.from_model(model, writer_config, progress_callback_write)
 
     #
     # Write out the converted file
@@ -277,9 +344,9 @@ def convert(args):
 
   else:
     if args.otype is not None:
-      exit_str  = f'Output type {args.otype} is not supported'
+      exit_str = f'Output type {args.otype} is not supported'
     else:
-      exit_str  = f'Output file is {args.output} is not supported'
+      exit_str = f'Output file is {args.output} is not supported'
 
     LOGGER.error(exit_str)
     sys.exit(exit_str)
@@ -292,11 +359,13 @@ def validate(args):
   print(args.input)
   LOGGER.info("Input file is %s", args.input)
 
+
 # Ensure that the handler is added only once/globally
 # Otherwise the handler will be called multiple times
 progress = ProgressConsoleHandler()
 LOGGER.addHandler(progress)
-LOGGER.setLevel(logging.INFO) 
+LOGGER.setLevel(logging.INFO)
+
 
 def main(argv):
   '''Main application processing'''
@@ -306,6 +375,7 @@ def main(argv):
     cli.print_help()
   else:
     args.func(args)
+
 
 if __name__ == "__main__":
   main(sys.argv[1:])
