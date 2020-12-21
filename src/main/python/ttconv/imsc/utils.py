@@ -148,7 +148,7 @@ def parse_font_families(attr_value: str) -> typing.List[str]:
 
   return rslt
 
-def serialize_font_family(font_family: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]):
+def serialize_font_family(font_family: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType], ...]):
   '''Serialize model FontFamily to tts:fontFamily
   '''
 
