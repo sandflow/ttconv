@@ -30,6 +30,7 @@
 import os
 import unittest
 import logging
+import json
 from fractions import Fraction
 import xml.etree.ElementTree as et
 import xml.dom.minidom as minidom
@@ -60,13 +61,6 @@ class ReaderWriterTest(unittest.TestCase):
     if not os.path.exists('build'):
       os.makedirs('build')
 
-  def pretty_print(self, elem):
-    """Return a pretty-printed XML string for the Element.
-    """
-    rough_string = et.tostring(elem, 'utf-8')
-    reparsed = minidom.parseString(rough_string)
-    print(reparsed.toprettyxml(indent="\t"))
-
   def write_pretty_xml(self, tree: et.ElementTree, file_path):
     rough_string = et.tostring(tree.getroot(), 'utf-8')
     reparsed = minidom.parseString(rough_string)
@@ -88,8 +82,9 @@ class ReaderWriterTest(unittest.TestCase):
     self.write_pretty_xml(tree_from_model, 'build/out.ttml')
 
   def test_imsc_1_test_suite(self):
-    if not os.path.exists('build/imsc1'):
-      os.makedirs('build/imsc1')
+    manifest = []
+    base_path = "build/imsc1"
+
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
@@ -99,13 +94,28 @@ class ReaderWriterTest(unittest.TestCase):
             tree = et.parse(os.path.join(root, filename))
             test_model = imsc_reader.to_model(tree)
             tree_from_model = imsc_writer.from_model(test_model)
-            self.write_pretty_xml(tree_from_model, f'build/imsc1/{name}.ttml')
+
+            test_dir_relative_path = os.path.basename(root)
+
+            test_relative_path = os.path.join(test_dir_relative_path, filename)
+
+            os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
+
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
+              f.write(et.tostring(tree_from_model.getroot(), 'utf-8'))
+
+            manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
+
             if len(logs.output) > 1:
               self.fail(logs.output)
 
+    with open(os.path.join(base_path, "tests.json"), "w", encoding="utf8") as fp:
+      json.dump(manifest, fp)
+
   def test_imsc_1_1_test_suite(self):
-    if not os.path.exists('build/imsc1_1'):
-      os.makedirs('build/imsc1_1')
+    manifest = []
+    base_path = "build/imsc1_1"
+
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
@@ -115,9 +125,24 @@ class ReaderWriterTest(unittest.TestCase):
             tree = et.parse(os.path.join(root, filename))
             test_model = imsc_reader.to_model(tree)
             tree_from_model = imsc_writer.from_model(test_model)
-            self.write_pretty_xml(tree_from_model, f'build/imsc1_1/{name}.ttml')
+
+            test_dir_relative_path = os.path.basename(root)
+
+            test_relative_path = os.path.join(test_dir_relative_path, filename)
+
+            os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
+
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
+              f.write(et.tostring(tree_from_model.getroot(), 'utf-8'))
+
+            manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
+
             if len(logs.output) > 1:
               self.fail(logs.output)
+
+    with open(os.path.join(base_path, "tests.json"), "w", encoding="utf8") as fp:
+      json.dump(manifest, fp)
+
 
 class FromModelBodyWriterTest(unittest.TestCase):
 
@@ -149,8 +174,6 @@ class FromModelBodyWriterTest(unittest.TestCase):
 
     # write the document out to a file
     imsc_writer.from_model(doc).write('build/BodyElement.out.ttml', encoding='utf-8', xml_declaration=True)
-
-    #self.pretty_print(tree_from_model.getroot())
 
 class StylePropertyWriterTest(unittest.TestCase):
 
