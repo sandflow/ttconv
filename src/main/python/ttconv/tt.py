@@ -93,7 +93,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
       is_progress_bar_record = hasattr(record, 'progress_bar')
       percent_progress = None
 
-      if self.display_progress_bar == False and is_progress_bar_record:
+      if not self.display_progress_bar and is_progress_bar_record:
         return
       
       if is_progress_bar_record:

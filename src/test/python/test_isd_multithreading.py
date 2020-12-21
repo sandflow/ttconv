@@ -39,9 +39,10 @@ class MultithreadingTests(unittest.TestCase):
 
     regions = []
 
-    DOC_SIZE = 101
+    # size of the document in number of p elements
+    doc_size = 101
 
-    for i in range(DOC_SIZE):
+    for i in range(doc_size):
       r = model.Region(f"{i}", doc)
       r.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.whenActive)
       doc.put_region(r)
@@ -53,7 +54,7 @@ class MultithreadingTests(unittest.TestCase):
     div = model.Div(doc)
     body.push_child(div)
 
-    for i in range(DOC_SIZE):
+    for i in range(doc_size):
       p = model.P(doc)
       p.set_begin(i)
       p.set_end(i + 1)

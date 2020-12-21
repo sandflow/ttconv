@@ -43,7 +43,6 @@ import ttconv.imsc.style_properties as imsc_styles
 import ttconv.imsc.attributes as attributes
 from ttconv.scc.utils import get_extent_from_dimensions
 import ttconv.imsc.config as imsc_config
-import ttconv.imsc.namespaces as imsc_ns
 
 def _get_set_style(imsc_style_prop, model_value):
   e = et.Element("p")
@@ -466,14 +465,14 @@ class StylePropertyWriterTest(unittest.TestCase):
       False
     )
 
-  def test_style_property_Disparity_has_px(self):
+  def test_style_property_disparity_has_px(self):
     prop = styles.LengthType(1, styles.LengthType.units.em)
     self.assertEqual(imsc_styles.StyleProperties.Disparity.has_px(prop), False)
 
     prop = styles.LengthType(1, styles.LengthType.units.px)
     self.assertEqual(imsc_styles.StyleProperties.Disparity.has_px(prop), True)
 
-  def test_style_property_Extent_has_px(self):
+  def test_style_property_extent_has_px(self):
     prop = styles.ExtentType(styles.LengthType(1, styles.LengthType.units.px), 
       styles.LengthType(1, styles.LengthType.units.em))
     self.assertEqual(imsc_styles.StyleProperties.Extent.has_px(prop), True)
@@ -490,14 +489,14 @@ class StylePropertyWriterTest(unittest.TestCase):
       styles.LengthType(1, styles.LengthType.units.em))
     self.assertEqual(imsc_styles.StyleProperties.Extent.has_px(prop), False)
 
-  def test_style_property_FontSize_has_px(self):
+  def test_style_property_font_size_has_px(self):
     prop = styles.LengthType(1, styles.LengthType.units.em)
     self.assertEqual(imsc_styles.StyleProperties.FontSize.has_px(prop), False)
 
     prop = styles.LengthType(1, styles.LengthType.units.px)
     self.assertEqual(imsc_styles.StyleProperties.FontSize.has_px(prop), True)
 
-  def test_style_property_LineHeight_has_px(self):
+  def test_style_property_line_height_has_px(self):
     prop = styles.SpecialValues.normal
     self.assertEqual(imsc_styles.StyleProperties.LineHeight.has_px(prop), False)
 
@@ -507,7 +506,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     prop = styles.LengthType(1, styles.LengthType.units.px)
     self.assertEqual(imsc_styles.StyleProperties.LineHeight.has_px(prop), True)
 
-  def test_style_property_Origin_has_px(self):
+  def test_style_property_origin_has_px(self):
     prop = styles.PositionType(styles.LengthType(1, styles.LengthType.units.px), 
       styles.LengthType(1, styles.LengthType.units.em))
     self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), True)
@@ -524,7 +523,7 @@ class StylePropertyWriterTest(unittest.TestCase):
       styles.LengthType(1, styles.LengthType.units.em))
     self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), False)
 
-  def test_style_property_Padding_has_px(self):
+  def test_style_property_padding_has_px(self):
     prop = styles.PaddingType(
       before = styles.LengthType(10.1, styles.LengthType.units.px),
       end = styles.LengthType(20.2, styles.LengthType.units.em),
@@ -565,7 +564,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     )
     self.assertEqual(imsc_styles.StyleProperties.Padding.has_px(prop), False)
 
-  def test_style_property_RubyReserve_has_px(self):
+  def test_style_property_ruby_reserve_has_px(self):
     prop = styles.RubyReserveType(
       position=styles.RubyReserveType.Position.both,
       length=styles.LengthType(value=1.2, units=styles.LengthType.Units.px)
@@ -579,7 +578,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     self.assertEqual(imsc_styles.StyleProperties.RubyReserve.has_px(prop), False)
 
 
-  def test_style_property_TextOutline_has_px(self):
+  def test_style_property_text_outline_has_px(self):
     prop = styles.SpecialValues.none
     self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), False)
 
@@ -595,7 +594,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     )
     self.assertEqual(imsc_styles.StyleProperties.TextOutline.has_px(prop), True)
     
-  def test_style_property_TextShadow_has_px(self):
+  def test_style_property_text_shadow_has_px(self):
     prop = styles.TextShadowType(
       (
         styles.TextShadowType.Shadow(
@@ -698,7 +697,7 @@ class ConfigTest(unittest.TestCase):
     config = imsc_config.IMSCWriterConfiguration(time_format=imsc_config.TimeExpressionEnum.frames, fps=Fraction(30, 1))
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
 
-    body_element = xml_from_model.find("tt:body", {"tt": imsc_ns.TTML})
+    body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
 
     self.assertEqual(body_element.get("begin"), "150f")
 

@@ -342,7 +342,7 @@ class ISD(model.Document):
       parent_computed_end: typing.Optional[Fraction],
       element: model.ContentElement
   ) -> typing.Optional[model.ContentElement]:
-
+    # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
 
     # first check the activity cache and return immediate if the element is not active
 

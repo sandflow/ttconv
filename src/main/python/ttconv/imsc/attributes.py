@@ -215,8 +215,13 @@ class ActiveAreaAttribute:
 
   @staticmethod
   def set(ttml_element, active_area):
-    ttml_element.set(ActiveAreaAttribute.qn, 
-      f"{(active_area.left_offset * 100)}% {(active_area.top_offset * 100)}% {(active_area.width * 100)}% {active_area.height * 100}%")
+    ttml_element.set(
+      ActiveAreaAttribute.qn, 
+      f"{active_area.left_offset * 100:g}% "
+      f"{active_area.top_offset * 100:g}% "
+      f"{active_area.width * 100:g}% "
+      f"{active_area.height * 100:g}%"
+    )
 
 class TickRateAttribute:
   '''ttp:tickRate attribute
