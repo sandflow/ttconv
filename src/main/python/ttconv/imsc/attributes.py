@@ -43,7 +43,7 @@ class XMLIDAttribute:
   '''xml:id attribute
   '''
 
-  qn = '{{{ns.XML}}}id'
+  qn = f'{{{ns.XML}}}id'
 
   @staticmethod
   def extract(ttml_element):
@@ -57,7 +57,7 @@ class XMLLangAttribute:
   '''xml:lang attribute
   '''
 
-  qn = '{{{ns.XML}}}lang'
+  qn = f'{{{ns.XML}}}lang'
 
   @staticmethod
   def extract(ttml_element):
@@ -71,7 +71,7 @@ class XMLSpaceAttribute:
   '''xml:space attribute
   '''
 
-  qn = '{{{ns.XML}}}space'
+  qn = f'{{{ns.XML}}}space'
 
   @staticmethod
   def extract(ttml_element):
