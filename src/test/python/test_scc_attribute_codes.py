@@ -27,7 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116
 
-from unittest import TestCase
+import unittest
 
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 
@@ -37,7 +37,7 @@ VALID_VALUES = [0x1020, 0x1820, 0x1021, 0x1821, 0x1022, 0x1822, 0x1023, 0x1823, 
                 0x172F, 0x1F2F]
 
 
-class TestSccAttributeCode(TestCase):
+class TestSccAttributeCode(unittest.TestCase):
 
   def test_scc_attribute_codes(self):
     self.assertEqual(SccAttributeCode.BWO,
@@ -122,3 +122,6 @@ class TestSccAttributeCode(TestCase):
 
     for cc in other_code_values:
       self.assertIsNone(SccAttributeCode.find(cc))
+
+if __name__ == '__main__':
+  unittest.main()

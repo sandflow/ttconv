@@ -163,3 +163,6 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
     self.assertIsInstance(children[2], Span)
     self.assertEqual("World", list(children[2])[0].get_text())
+
+if __name__ == '__main__':
+  unittest.main()

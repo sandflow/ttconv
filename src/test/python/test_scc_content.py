@@ -76,3 +76,6 @@ class SccCaptionTextTest(unittest.TestCase):
 
     other_caption_text.add_style_property(StyleProperties.Color, NamedColors.fuchsia.value)
     self.assertTrue(caption_text.has_same_style_properties(other_caption_text))
+
+if __name__ == '__main__':
+  unittest.main()

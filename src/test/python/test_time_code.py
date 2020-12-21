@@ -28,12 +28,12 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 
 from fractions import Fraction
-from unittest import TestCase
+import unittest
 
 from ttconv.time_code import ClockTime
 
 
-class TimeCodeTest(TestCase):
+class TimeCodeTest(unittest.TestCase):
 
   def test_time_code(self):
     seconds = 123.45
@@ -72,3 +72,6 @@ class TimeCodeTest(TestCase):
     time_code.set_separator(",")
     self.assertEqual("00:00:01,500", str(time_code))
     self.assertEqual(seconds, time_code.to_seconds())
+
+if __name__ == '__main__':
+  unittest.main()

@@ -122,3 +122,6 @@ class SCCControlCodesTest(unittest.TestCase):
 
     for cc in other_code_values:
       self.assertIsNone(SccControlCode.find(cc))
+
+if __name__ == '__main__':
+  unittest.main()

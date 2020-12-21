@@ -125,3 +125,6 @@ class SccParagraphRegionTest(unittest.TestCase):
 
     self.assertEqual(62, region_extent.width.value)
     self.assertEqual(63, region_extent.height.value)
+
+if __name__ == '__main__':
+  unittest.main()

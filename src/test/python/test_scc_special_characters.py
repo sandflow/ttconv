@@ -27,12 +27,12 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
-from unittest import TestCase
+import unittest
 
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 
 
-class SccSpecialAndExtendedCharacterTest(TestCase):
+class SccSpecialAndExtendedCharacterTest(unittest.TestCase):
 
   def test_scc_special_character_values(self):
     special_char_codes = list(range(0x1130, 0x1140)) + list(range(0x1930, 0x1940))
@@ -691,3 +691,6 @@ class SccSpecialAndExtendedCharacterTest(TestCase):
     spec_char = SccSpecialAndExtendedCharacter.find(0x1B3F)
     self.assertEqual(SccSpecialAndExtendedCharacter.BOX_DRAWINGS_HEAVY_UP_AND_LEFT, spec_char)
     self.assertEqual('\u251B', spec_char.get_unicode_value())
+
+if __name__ == '__main__':
+  unittest.main()
