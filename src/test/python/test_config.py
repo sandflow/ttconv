@@ -31,8 +31,8 @@ from fractions import Fraction
 import unittest
 
 from ttconv.config import GeneralConfiguration
-from ttconv.imsc.config import TimeExpressionEnum, ImscWriterConfiguration
-from ttconv.isd import IsdConfiguration
+from ttconv.imsc.config import TimeExpressionEnum, IMSCWriterConfiguration
+from ttconv.isd import ISDConfiguration
 from ttconv.tt import CONFIGURATIONS
 
 
@@ -61,8 +61,8 @@ class ConfigurationTest(unittest.TestCase):
 
     expected_configurations = [
       GeneralConfiguration(log_level='INFO', progress_bar=False),
-      ImscWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
-      IsdConfiguration(multi_thread=False)
+      IMSCWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
+      ISDConfiguration(multi_thread=False)
     ]
 
     module_configurations = []
@@ -98,8 +98,8 @@ class ConfigurationTest(unittest.TestCase):
 
     expected_configurations = [
       GeneralConfiguration(),
-      ImscWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
-      IsdConfiguration()
+      IMSCWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
+      ISDConfiguration()
     ]
 
     module_configurations = []

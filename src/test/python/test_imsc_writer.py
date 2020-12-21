@@ -672,7 +672,7 @@ class ConfigTest(unittest.TestCase):
 
     ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
     
-    config = imsc_config.ImscWriterConfiguration(time_format=imsc_config.TimeExpressionEnum.frames, fps=Fraction(30, 1))
+    config = imsc_config.IMSCWriterConfiguration(time_format=imsc_config.TimeExpressionEnum.frames, fps=Fraction(30, 1))
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
 
     body_element = xml_from_model.find("tt:body", {"tt": imsc_ns.TTML})

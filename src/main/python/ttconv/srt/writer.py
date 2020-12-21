@@ -36,7 +36,7 @@ from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFi
 from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
 from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
-from ttconv.isd import ISD, IsdConfiguration
+from ttconv.isd import ISD, ISDConfiguration
 from ttconv.srt.paragraph import SrtParagraph
 from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
 
@@ -174,7 +174,7 @@ class SrtContext:
 #
 
 
-def from_model(doc: model.ContentDocument, isd_config: Optional[IsdConfiguration] = None, progress_callback=lambda _: None) -> str:
+def from_model(doc: model.ContentDocument, isd_config: Optional[ISDConfiguration] = None, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
   srt = SrtContext()

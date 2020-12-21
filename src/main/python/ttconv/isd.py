@@ -79,7 +79,7 @@ ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
 
 @dataclass
-class IsdConfiguration(ModuleConfiguration):
+class ISDConfiguration(ModuleConfiguration):
   """ISD configuration"""
   multi_thread: bool = True
 

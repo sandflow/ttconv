@@ -41,15 +41,15 @@ import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 from ttconv.config import ModuleConfiguration
 from ttconv.config import GeneralConfiguration
-from ttconv.imsc.config import ImscWriterConfiguration
-from ttconv.isd import IsdConfiguration
+from ttconv.imsc.config import IMSCWriterConfiguration
+from ttconv.isd import ISDConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
 CONFIGURATIONS = [
   GeneralConfiguration,
-  ImscWriterConfiguration,
-  IsdConfiguration
+  IMSCWriterConfiguration,
+  ISDConfiguration
 ]
 
 
@@ -313,7 +313,7 @@ def convert(args):
     #
     # Read the config
     #
-    writer_config = read_config_from_json(ImscWriterConfiguration, json_config_data)
+    writer_config = read_config_from_json(IMSCWriterConfiguration, json_config_data)
 
     #
     # Construct and configure the writer
@@ -329,7 +329,7 @@ def convert(args):
     #
     # Read the config
     #
-    writer_config = read_config_from_json(IsdConfiguration, json_config_data)
+    writer_config = read_config_from_json(ISDConfiguration, json_config_data)
 
     #
     # Construct and configure the writer
