@@ -362,16 +362,20 @@ class HeadElement(TTMLElement):
     `ctx` contains state information used in the process.
     '''
 
-    head_element = et.Element(HeadElement.qn)
+    head_element = None
 
     styling_element = StylingElement.from_model(ctx, model_doc)
 
     if styling_element is not None:
+      if head_element is None:
+        head_element = et.Element(HeadElement.qn)
       head_element.append(styling_element)
 
     layout_element = LayoutElement.from_model(ctx, model_doc)
 
     if layout_element is not None:
+      if head_element is None:
+        head_element = et.Element(HeadElement.qn)
       head_element.append(layout_element)
 
     return head_element
@@ -434,11 +438,13 @@ class LayoutElement(TTMLElement):
     `ctx` contains state information used in the process.
     '''
 
-    layout_element = et.Element(LayoutElement.qn)
+    layout_element = None
     
     for r in model_doc.iter_regions():
       region_element = RegionElement.from_model(ctx, r)
       if region_element is not None:
+        if layout_element is None:
+          layout_element = et.Element(LayoutElement.qn)
         layout_element.append(region_element)
 
     return layout_element
