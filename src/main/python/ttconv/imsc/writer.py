@@ -33,6 +33,7 @@ import xml.etree.ElementTree as et
 import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.model as model
+import ttconv.imsc.config as imsc_config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ LOGGER = logging.getLogger(__name__)
 
 def from_model(
   model_doc: model.ContentDocument,
-  frame_rate: Fraction = None,
+  config: typing.Optional[imsc_config.ImscWriterConfiguration] = None,
   progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = lambda _: None
   ):
   '''Converts the data model to an IMSC document. The writer regularly the `progress_callback` function, if provided,
@@ -54,7 +55,16 @@ def from_model(
   et.register_namespace("tts", xml_ns.TTS)
   et.register_namespace("ittp", xml_ns.ITTP)
   et.register_namespace("itts", xml_ns.ITTS)
-    
+
+  if config is not None and config.time_format == imsc_config.TimeExpressionEnum.frames:
+    frame_rate = config.fps
+  else:
+    frame_rate = None
+  
   return et.ElementTree(
-    imsc_elements.TTElement.from_model(model_doc, frame_rate, progress_callback)
+    imsc_elements.TTElement.from_model(
+      model_doc,
+      frame_rate,
+      progress_callback
     )
+  )

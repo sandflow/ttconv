@@ -183,18 +183,17 @@ class FileTypes(Enum):
     return FileTypes(file_type)
 
 
-def get_config(config_type, json_data) -> ModuleConfiguration:
+def read_config_from_json(config_class, json_data) -> ModuleConfiguration:
   """Returns a requested configuration from json data"""
-  if config_type is None or json_data is None:
+  if config_class is None or json_data is None:
     return None
 
-  for config_class in CONFIGURATIONS:
-    if config_class.name == config_type:
-      config_json = json_data.get(config_class.name)
-      module_config = config_class.parse(config_json)
-      return module_config
+  json_config = json_data.get(config_class.name())
 
-  return None
+  if json_config is None:
+    return None
+
+  return config_class.parse(json_config)
 
 # Argument parsing setup
 #
@@ -244,8 +243,8 @@ def subcommand(args=None, parent=subparsers):
   argument("-o", "--output", help="Output file path", required=True),
   argument("--itype", help="Input file type", required=False),
   argument("--otype", help="Output file type", required=False),
-  argument("--config", help="Configuration in json", required=False),
-  argument("--config_file", help="Configuration file", required=False)
+  argument("--config", help="Configuration in json. Overridden by --config_file.", required=False),
+  argument("--config_file", help="Configuration file. Overrides --config_file.", required=False)
 ])
 def convert(args):
   '''Process input and output through the reader, converter, and writer'''
@@ -255,19 +254,23 @@ def convert(args):
 
   # Note - Loading config data from a file takes priority over 
   # data passed in as a json string
-  config = None
+  json_config_data = None
+
   if args.config is not None:
-    config = json.loads(args.config)
+    json_config_data = json.loads(args.config)
   if args.config_file is not None:
     with open(args.config_file) as json_file:
-      config = json.load(json_file)
+      json_config_data = json.load(json_file)
 
-  config = get_config(GeneralConfiguration.name, config)
-  if config is not None:
-    if config.progress_bar is not None:
-      progress.display_progress_bar = config.progress_bar
-    if config.log_level is not None:
-      LOGGER.setLevel(config.log_level)
+  general_config = read_config_from_json(GeneralConfiguration, json_config_data)
+
+  if general_config is not None:
+
+    if general_config.progress_bar is not None:
+      progress.display_progress_bar = general_config.progress_bar
+
+    if general_config.log_level is not None:
+      LOGGER.setLevel(general_config.log_level)
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -307,9 +310,14 @@ def convert(args):
 
   if writer_type is FileTypes.TTML:
     #
+    # Read the config
+    #
+    writer_config = read_config_from_json(ImscWriterConfiguration, json_config_data)
+
+    #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, None, progress_callback_write)
+    tree_from_model = imsc_writer.from_model(model, writer_config, progress_callback_write)
 
     #
     # Write out the converted file

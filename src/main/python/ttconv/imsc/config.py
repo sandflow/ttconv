@@ -32,7 +32,7 @@ from enum import Enum
 from fractions import Fraction
 from typing import Optional
 
-from ttconv.config import ModuleConfiguration, TTConfig
+from ttconv.config import ModuleConfiguration
 
 
 class TimeExpressionEnum(Enum):
@@ -54,7 +54,6 @@ class TimeExpressionEnum(Enum):
 
 
 @dataclass
-@TTConfig(name="imsc_writer")
 class ImscWriterConfiguration(ModuleConfiguration):
   """IMSC writer configuration"""
 
@@ -65,6 +64,16 @@ class ImscWriterConfiguration(ModuleConfiguration):
       [num, den] = value.split('/')
 
       return Fraction(int(num), int(den))
+  
+  @classmethod
+  def name(cls):
+    return "imsc_writer"
 
-  time_expression_format: TimeExpressionEnum = field(metadata={"decoder": TimeExpressionEnum.parse})
-  fps: Fraction = field(metadata={"decoder": FractionDecoder()})
+  time_format: TimeExpressionEnum = field(
+    default=TimeExpressionEnum.clock_time,
+    metadata={"decoder": TimeExpressionEnum.parse}
+    )
+  fps: Fraction = field(
+    default="24/1",
+    metadata={"decoder": FractionDecoder()}
+    )

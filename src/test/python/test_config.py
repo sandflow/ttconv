@@ -47,7 +47,7 @@ class ConfigurationTest(unittest.TestCase):
       },
       "imsc_writer": {
         "fps": "30000/1001",
-        "time_expression_format": "frames"
+        "time_format": "frames"
       },
       "isd" : {
         "multi_thread": false
@@ -61,13 +61,13 @@ class ConfigurationTest(unittest.TestCase):
 
     expected_configurations = [
       GeneralConfiguration(log_level='INFO', progress_bar=False),
-      ImscWriterConfiguration(time_expression_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
+      ImscWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
       IsdConfiguration(multi_thread=False)
     ]
 
     module_configurations = []
     for config_class in CONFIGURATIONS:
-      config_value = config_dict.get(config_class.name)
+      config_value = config_dict.get(config_class.name())
 
       if config_value is None:
         continue
@@ -85,7 +85,7 @@ class ConfigurationTest(unittest.TestCase):
     config_json = """{
       "imsc_writer": {
         "fps": "30000/1001",
-        "time_expression_format": "frames"
+        "time_format": "frames"
       },
       "general": {},
       "isd" : {},
@@ -98,14 +98,14 @@ class ConfigurationTest(unittest.TestCase):
 
     expected_configurations = [
       GeneralConfiguration(),
-      ImscWriterConfiguration(time_expression_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
+      ImscWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
       IsdConfiguration()
     ]
 
     module_configurations = []
 
     for config_class in CONFIGURATIONS:
-      config_value = config_dict.get(config_class.name)
+      config_value = config_dict.get(config_class.name())
 
       if config_value is None:
         continue

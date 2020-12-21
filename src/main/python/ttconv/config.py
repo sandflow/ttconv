@@ -78,6 +78,11 @@ class ModuleConfiguration:
     return field.default
 
 
+  @classmethod
+  def name(cls):
+    raise NotImplementedError
+
+
 class TTConfig:
   """Module configuration class decorator"""
 
@@ -90,8 +95,11 @@ class TTConfig:
 
 
 @dataclass
-@TTConfig(name="general")
 class GeneralConfiguration(ModuleConfiguration):
   """TT general configuration"""
   log_level: Optional[str] = "WARN"
   progress_bar: Optional[bool] = True
+
+  @classmethod
+  def name(cls):
+    return "general"
