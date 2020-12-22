@@ -28,22 +28,40 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.imsc.utils import parse_font_families
+from ttconv.imsc.utils import parse_font_families, serialize_font_family
+import ttconv.style_properties as styles
 
 class IMSCReaderTest(unittest.TestCase):
 
-  tests = [
-    ["default", ["default"]],
+  _parse_tests = [
+    ["default", [styles.GenericFontFamilyType.default]],
+    ["'default'", ["default"]],
     ["foo, 'bar good'", ["foo", "bar good"]],
     ['foo, "bar good"', ["foo", "bar good"]],
     [r'foo, "bar \good"', ["foo", "bar good"]],
-    [r'foo, "bar \,good"', ["foo", "bar ,good"]]
+    [r'foo, "bar \,good"', ["foo", "bar ,good"]],
+    [r'foo, "bar,good"', ["foo", "bar,good"]]
   ]
 
-  def test_font_families(self):
-    for test in self.tests:
+  def test_parse_font_families(self):
+    for test in self._parse_tests:
       with self.subTest(test[0]):
         c = parse_font_families(test[0])
+        self.assertEqual(c, test[1])
+
+
+  _serialize_tests = [
+    [(styles.GenericFontFamilyType.default,), "default"],
+    [("default",), '"default"'],
+    [(styles.GenericFontFamilyType.proportionalSansSerif, "bar good"), 'proportionalSansSerif, "bar good"'],
+    [("foo", "bar, good"), r'"foo", "bar, good"'],
+    [("bar\"good",), r'"bar\"good"']
+  ]
+
+  def test_serialize_font_families(self):
+    for test in self._serialize_tests:
+      with self.subTest(test[0]):
+        c = serialize_font_family(test[0])
         self.assertEqual(c, test[1])
 
 if __name__ == '__main__':
