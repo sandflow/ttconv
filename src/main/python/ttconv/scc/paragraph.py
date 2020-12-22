@@ -35,7 +35,7 @@ from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_R
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
-from ttconv.style_properties import PositionType, ExtentType, StyleProperties, LengthType, DisplayAlignType
+from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class SccCaptionParagraph:
 
     self.set_row_offset(ROLL_UP_BASE_ROW)
 
-  def get_origin(self) -> PositionType:
+  def get_origin(self) -> CoordinateType:
     """Computes and returns the current paragraph origin, based on its content"""
     if len(self._caption_contents) > 0:
       x_offsets = [text.get_x_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
@@ -312,7 +312,7 @@ class _SccParagraphRegion:
 
   def _has_same_origin_as_region(self, region: Region) -> bool:
     """Checks whether the region origin is the same as the paragraph origin"""
-    region_origin: Optional[PositionType] = region.get_style(StyleProperties.Origin)
+    region_origin: Optional[CoordinateType] = region.get_style(StyleProperties.Origin)
 
     # Convert paragraph origin units into percentages
     paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
@@ -352,7 +352,7 @@ class _SccParagraphRegion:
     if paragraph_extent_pct.width.value > region_extent.width.value:
       # Resets the region width on the paragraph line width (up to the right of the safe area)
       # The region height always remains the same (depending on the region origin)
-      region_origin: PositionType = region.get_style(StyleProperties.Origin)
+      region_origin: CoordinateType = region.get_style(StyleProperties.Origin)
 
       # Convert right cells coordinate to percentages
       right_pct = self._right * 100 / self._doc.get_cell_resolution().columns

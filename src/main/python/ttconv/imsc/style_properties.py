@@ -444,7 +444,7 @@ class StyleProperties:
     model_prop = styles.StyleProperties.Origin
 
     @classmethod
-    def has_px(cls, attrib_value: styles.PositionType) -> bool:
+    def has_px(cls, attrib_value: styles.CoordinateType) -> bool:
       return attrib_value.x.units == styles.LengthType.Units.px or \
         attrib_value.y.units == styles.LengthType.Units.px
 
@@ -453,7 +453,7 @@ class StyleProperties:
 
       if xml_attrib == "auto":
 
-        r = styles.PositionType(
+        r = styles.CoordinateType(
           x=styles.LengthType(0, styles.LengthType.Units.pct),
           y=styles.LengthType(0, styles.LengthType.Units.pct)
         )
@@ -464,7 +464,7 @@ class StyleProperties:
         if len(s) != 2:
           raise ValueError("tts:origin has not two components")
 
-        r = styles.PositionType(
+        r = styles.CoordinateType(
           x=StyleProperties.ttml_length_to_model(context, s[0]),
           y=StyleProperties.ttml_length_to_model(context, s[1])
         )
@@ -557,7 +557,7 @@ class StyleProperties:
 
     ns = xml_ns.TTS
     local_name = "position"
-    model_prop = None
+    model_prop = styles.StyleProperties.Position
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
@@ -580,21 +580,17 @@ class StyleProperties:
         else:
           raise ValueError("Units other than px, pct, rh, rw used in tts:position")
 
-      return styles.PositionType(
+      return styles.CoordinateType(
         x=h_offset,
         y=v_offset
       )
 
     @classmethod
-    def to_model(cls, context: StyleParsingContext, xml_element) -> typing.Tuple[typing.Type[model.StyleProperty], typing.Any]:
-      return (
-        styles.StyleProperties.Origin,
-        cls.extract(context, xml_element.get(f"{{{cls.ns}}}{cls.local_name}"))
-      )
-
-    @classmethod
     def from_model(cls, xml_element, model_value):
-      raise NotImplementedError
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}", 
+        f"left {model_value.x.value}{model_value.x.units.value} top {model_value.y.value}{model_value.y.units.value}"
+      )
 
 
   class RubyAlign(StyleProperty):

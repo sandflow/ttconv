@@ -903,7 +903,7 @@ class StyleProcessors:
     @classmethod
     def compute(cls, parent: model.ContentElement, element: model.ContentElement):
 
-      style_value: styles.PositionType = element.get_style(cls.style_prop)
+      style_value: styles.CoordinateType = element.get_style(cls.style_prop)
 
       # height
 
@@ -927,7 +927,7 @@ class StyleProcessors:
 
       element.set_style(
         cls.style_prop,
-        styles.PositionType(
+        styles.CoordinateType(
           x=x,
           y=y
         )

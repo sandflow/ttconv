@@ -33,7 +33,7 @@ from typing import Union, Type
 from ttconv.model import Br, P, ContentElement, CellResolutionType
 from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.time_code import SmpteTimeCode, FPS_30
-from ttconv.style_properties import StyleProperties, PositionType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
+from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
@@ -153,7 +153,7 @@ class SccReaderTest(unittest.TestCase):
 
   def check_element_origin(self, elem: ContentElement, expected_x_origin: Union[int, float, Number],
                            expected_y_origin: Union[int, float, Number], unit=LengthType.Units.c):
-    expected_origin = PositionType(x=LengthType(value=expected_x_origin, units=unit),
+    expected_origin = CoordinateType(x=LengthType(value=expected_x_origin, units=unit),
                                    y=LengthType(value=expected_y_origin, units=unit))
     self.check_element_style(elem, StyleProperties.Origin, expected_origin)
 

@@ -346,13 +346,31 @@ class WritingModeType(Enum):
   tbrl = "tbrl" 
   tblr = "tblr" 
 
+
 @dataclass(frozen=True)
-class PositionType:
+class CoordinateType:
   '''Coordinates (`x`, `y`) in the root container region, as measure from the left and top edges, respectively.
   '''
   x: LengthType
   y: LengthType
 
+
+@dataclass(frozen=True)
+class PositionType:
+  '''Offsets (`h_offset`, `v_offset`) in the root container region, as measure from the `h_edge` and `v_edge` edges, respectively.
+  '''
+  class HEdge(Enum):
+    left = "left"
+    right = "right"
+
+  class VEdge(Enum):
+    top = "top"
+    bottom = "bottom"
+
+  h_offset: LengthType
+  v_offset: LengthType
+  h_edge: HEdge = HEdge.left
+  v_edge: VEdge = VEdge.top
 
 #
 # Style properties
@@ -654,14 +672,14 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return PositionType(
+      return CoordinateType(
         LengthType(0, LengthType.Units.pct),
         LengthType(0, LengthType.Units.pct)
       )
 
     @staticmethod
-    def validate(value: PositionType):
-      return isinstance(value, PositionType) \
+    def validate(value: CoordinateType):
+      return isinstance(value, CoordinateType) \
         and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
         and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
 
@@ -695,6 +713,25 @@ class StyleProperties:
     def validate(value):
       return isinstance(value, PaddingType)
 
+
+  class Position(StyleProperty):
+    '''Corresponds to tts:position.'''
+
+    is_inherited = False
+    is_animatable = True
+
+    @staticmethod
+    def make_initial_value():
+      return CoordinateType(
+        LengthType(0, LengthType.Units.pct),
+        LengthType(0, LengthType.Units.pct)
+      )
+
+    @staticmethod
+    def validate(value: CoordinateType):
+      return isinstance(value, CoordinateType) \
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
 
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
