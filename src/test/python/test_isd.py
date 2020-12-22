@@ -357,26 +357,14 @@ class ComputeStyleTest(unittest.TestCase):
 
     r1 = model.Region("r1", doc)
     r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
-    r1.set_style(
-      styles.StyleProperties.Extent,
-      styles.ExtentType(
-        width=styles.LengthType(20, styles.LengthType.Units.em),
-        height=styles.LengthType(3, styles.LengthType.Units.em)
+    with self.assertRaises(ValueError) as _context:
+      r1.set_style(
+        styles.StyleProperties.Extent,
+        styles.ExtentType(
+          width=styles.LengthType(20, styles.LengthType.Units.em),
+          height=styles.LengthType(3, styles.LengthType.Units.em)
+        )
       )
-    )
-    doc.put_region(r1)
-
-    isd = ISD.from_model(doc, 0)
-
-    region = list(isd.iter_regions())[0]
-
-    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
-
-    self.assertAlmostEqual(extent.width.value, 100*20/doc.get_cell_resolution().rows)
-    self.assertEqual(extent.width.units, styles.LengthType.Units.rh)
-
-    self.assertAlmostEqual(extent.height.value, 100*3/doc.get_cell_resolution().rows)
-    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
   def test_compute_padding(self):
     doc = model.ContentDocument()

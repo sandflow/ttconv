@@ -510,7 +510,9 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: ExtentType):
-      return isinstance(value, ExtentType) 
+      return isinstance(value, ExtentType) \
+        and value.width.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
+        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
 
 
   class FillLineGap(StyleProperty):

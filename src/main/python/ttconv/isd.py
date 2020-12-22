@@ -307,6 +307,7 @@ class ISD(model.Document):
     styles.StyleProperties.FontSize,
     styles.StyleProperties.Extent,
     styles.StyleProperties.Origin,
+    styles.StyleProperties.Position,
     styles.StyleProperties.LineHeight,
     styles.StyleProperties.LinePadding,
     styles.StyleProperties.RubyReserve,
@@ -910,7 +911,7 @@ class StyleProcessors:
       y = _compute_length(
         style_value.y,
         _make_rh_length(100),
-        element.get_style(styles.StyleProperties.FontSize),
+        None,
         _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
         _make_rh_length(100 / element.get_doc().get_px_resolution().height)
       )
@@ -920,7 +921,7 @@ class StyleProcessors:
       x = _compute_length(
         style_value.x,
         _make_rw_length(100),
-        element.get_style(styles.StyleProperties.FontSize),
+        None,
         _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
         _make_rw_length(100 / element.get_doc().get_px_resolution().width)
       )
@@ -991,6 +992,55 @@ class StyleProcessors:
         cls.style_prop,
         styles.PaddingType(c_before, c_end, c_after, c_start)
       )    
+
+  class Position(StyleProcessor):
+    style_prop = styles.StyleProperties.Position
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+
+      position : styles.PositionType = element.get_style(styles.StyleProperties.Position)
+
+      extent : styles.ExtentType = element.get_style(styles.StyleProperties.Extent)
+
+      assert extent.height.units is styles.LengthType.Units.rh
+      assert extent.width.units is styles.LengthType.Units.rw
+
+      v_offset = _compute_length(
+        position.v_offset,
+        _make_rh_length(100 - extent.height.value),
+        None,
+        _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+        _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+      )
+      
+      if position.v_edge is styles.PositionType.VEdge.bottom:
+        v_offset = styles.LengthType(
+          value=100 - v_offset.value,
+          units=v_offset.units
+        )
+
+      h_offset = _compute_length(
+        position.h_offset,
+        _make_rw_length(100 - extent.width.value),
+        None,
+        _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
+        _make_rw_length(100 / element.get_doc().get_px_resolution().width)
+      )
+
+      if position.h_edge is styles.PositionType.HEdge.right:
+        h_offset = styles.LengthType(
+          value=100 - h_offset.value,
+          units=h_offset.units
+        )
+
+      element.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+            x=h_offset,
+            y=v_offset
+          )
+      )
 
   class RubyAlign(StyleProcessor):
     style_prop = styles.StyleProperties.RubyAlign
