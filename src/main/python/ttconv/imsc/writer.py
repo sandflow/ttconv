@@ -26,7 +26,6 @@
 '''IMSC writer'''
 
 import logging
-from fractions import Fraction
 import numbers
 import typing
 import xml.etree.ElementTree as et

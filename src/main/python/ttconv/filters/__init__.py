@@ -33,4 +33,4 @@ class Filter:
 
   def process(self, isd: ISD):
     """Process the specified ISD and returns it."""
-    pass
+    raise NotImplementedError

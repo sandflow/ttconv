@@ -31,6 +31,8 @@ import ttconv.tt as tt
 
 LOGGER = logging.getLogger("ttconv")
 
+# pylint: disable=R0201,C0115,C0116
+
 class IMSCAppLoggingProgressBarTest(unittest.TestCase):
 
   def test_logging_info(self):

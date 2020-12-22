@@ -46,7 +46,7 @@ class StyleProperty:
 
   @property
   @classmethod
-  def ns(cls):
+  def ns(cls): # pylint: disable=invalid-name
     raise NotImplementedError
 
   @property
