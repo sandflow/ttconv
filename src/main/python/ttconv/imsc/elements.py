@@ -362,16 +362,20 @@ class HeadElement(TTMLElement):
     `ctx` contains state information used in the process.
     '''
 
-    head_element = et.Element(HeadElement.qn)
+    head_element = None
 
     styling_element = StylingElement.from_model(ctx, model_doc)
 
     if styling_element is not None:
+      if head_element is None:
+        head_element = et.Element(HeadElement.qn)
       head_element.append(styling_element)
 
     layout_element = LayoutElement.from_model(ctx, model_doc)
 
     if layout_element is not None:
+      if head_element is None:
+        head_element = et.Element(HeadElement.qn)
       head_element.append(layout_element)
 
     return head_element
@@ -434,11 +438,13 @@ class LayoutElement(TTMLElement):
     `ctx` contains state information used in the process.
     '''
 
-    layout_element = et.Element(LayoutElement.qn)
+    layout_element = None
     
     for r in model_doc.iter_regions():
       region_element = RegionElement.from_model(ctx, r)
       if region_element is not None:
+        if layout_element is None:
+          layout_element = et.Element(LayoutElement.qn)
         layout_element.append(region_element)
 
     return layout_element
@@ -527,9 +533,7 @@ class StylingElement(TTMLElement):
     styling_element = None
 
     for style_prop, style_value in model_doc.iter_initial_values():
-      if styling_element is None:
-        styling_element = et.Element(StylingElement.qn)
- 
+
       imsc_style_prop = imsc_styles.StyleProperties.BY_MODEL_PROP.get(style_prop)
 
       if imsc_style_prop is None:
@@ -538,6 +542,8 @@ class StylingElement(TTMLElement):
 
       initial_element = InitialElement.from_model(imsc_style_prop, style_value)
       if initial_element is not None:
+        if styling_element is None:
+          styling_element = et.Element(StylingElement.qn)
         styling_element.append(initial_element)
 
     return styling_element
