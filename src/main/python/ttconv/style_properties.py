@@ -722,16 +722,16 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return CoordinateType(
+      return PositionType(
         LengthType(0, LengthType.Units.pct),
         LengthType(0, LengthType.Units.pct)
       )
 
     @staticmethod
-    def validate(value: CoordinateType):
-      return isinstance(value, CoordinateType) \
-        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
+    def validate(value: PositionType):
+      return isinstance(value, PositionType) \
+        and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
+        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
 
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
