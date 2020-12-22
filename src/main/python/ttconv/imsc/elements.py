@@ -533,9 +533,7 @@ class StylingElement(TTMLElement):
     styling_element = None
 
     for style_prop, style_value in model_doc.iter_initial_values():
-      if styling_element is None:
-        styling_element = et.Element(StylingElement.qn)
- 
+
       imsc_style_prop = imsc_styles.StyleProperties.BY_MODEL_PROP.get(style_prop)
 
       if imsc_style_prop is None:
@@ -544,6 +542,8 @@ class StylingElement(TTMLElement):
 
       initial_element = InitialElement.from_model(imsc_style_prop, style_value)
       if initial_element is not None:
+        if styling_element is None:
+          styling_element = et.Element(StylingElement.qn)
         styling_element.append(initial_element)
 
     return styling_element
