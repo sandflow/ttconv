@@ -704,7 +704,7 @@ class ContentElement(TTMLElement):
     def process_region_property(self, xml_elem):
       '''Reads and processes the `region` attribute
       '''
-      rid = xml_elem.attrib.get('region')
+      rid = imsc_attr.RegionAttribute.extract(xml_elem)
 
       if rid is None:
         return

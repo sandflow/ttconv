@@ -26,6 +26,7 @@
  
 '''Holds XML namespaces defined by TTML'''
 
+XML = "http://www.w3.org/XML/1998/namespace"
 TTML = "http://www.w3.org/ns/ttml"
 TTP = "http://www.w3.org/ns/ttml#parameter"
 TTS = "http://www.w3.org/ns/ttml#styling"
