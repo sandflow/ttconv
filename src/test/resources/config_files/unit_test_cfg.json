@@ -1,0 +1,6 @@
+{
+    "general": {
+      "progress_bar": false,
+      "log_level": "INFO"
+    }
+  }

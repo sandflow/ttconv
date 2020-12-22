@@ -41,64 +41,104 @@ class IMSCAppTest(unittest.TestCase):
     if not os.path.exists('build'):
       os.makedirs('build')
 
-    if not os.path.exists('build/config.json'):
-      config_json = {}
-      config_json['general'] = {"progress_bar" : False, "log_level": "INFO"}
-
-      with open('build/config.json', 'w') as outfile:
-        json.dump(config_json, outfile)
-
   def test_convert(self):
-    # Note passing in the args using split
-    # This gets processed as 2 args being passed into
-    # the main function
-    #
-    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --config_file build/config.json".split())
+    tt.main(["convert",  
+      "-i",  "src/test/resources/ttml/body_only.ttml" ,
+      "-o", "build/body_only.out.ttml",
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_input_file_type_ttml(self):
-    tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype ttml -o build/body_only.out.ttml --config_file build/config.json".split())
+    tt.main(["convert",
+      "-i", "src/test/resources/ttml/body_only.ttml",
+      "--itype", "ttml",
+      "-o", "build/body_only.out.ttml",
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_output_file_type_ttml(self):
-    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --otype ttml --config_file build/config.json".split())
+    tt.main(["convert",
+      "-i", "src/test/resources/ttml/body_only.ttml",
+      "-o", "build/body_only.out.ttml",
+      "--otype", "ttml",
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_input_file_type_scc(self):
-    tt.main("convert -i src/test/resources/scc/pop-on.scc --itype scc -o build/pop-on.out.ttml --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/pop-on.scc",
+      "--itype", "scc", 
+      "-o", "build/pop-on.out.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_bad_input_file_name(self):
     with self.assertRaises(ValueError):
-      tt.main("convert -i src/test/resources/ttml/body_only.not_ttml -o build/body_only.out.ttml --config_file build/config.json".split())
+      tt.main(["convert", 
+      "-i", "src/test/resources/ttml/body_only.not_ttml", 
+      "-o", "build/body_only.out.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_bad_output_file_name(self):
     with self.assertRaises(ValueError):
-      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml --config_file build/config.json".split())
+      tt.main(["convert", 
+        "-i", "src/test/resources/ttml/body_only.ttml", 
+        "-o", "build/body_only.out.not_ttml", 
+        "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_bad_input_file_arg(self):
     with self.assertRaises(ValueError):
-      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --itype not_ttml --config_file build/config.json".split())
+      tt.main(["convert", 
+        "-i", "src/test/resources/ttml/body_only.ttml", 
+        "-o", "build/body_only.out.ttml", 
+        "--itype", "not_ttml", 
+        "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_bad_output_file_arg(self):
     with self.assertRaises(ValueError):
-      tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.not_ttml --otype not_ttml --config_file build/config.json".split())
+      tt.main(["convert", 
+        "-i", "src/test/resources/ttml/body_only.ttml", 
+        "-o", "build/body_only.out.not_ttml", 
+        "--otype", "not_ttml", 
+        "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_mismtach_file_type_and_file_name(self):
-    tt.main("convert -i src/test/resources/ttml/body_only.ttml --itype scc -o build/body_only123.out.ttml --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/ttml/body_only.ttml", 
+      "--itype", "scc", 
+      "-o", "build/body_only123.out.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_pop_on_scc(self):
-    tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.ttml --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/pop-on.scc", 
+      "-o", "build/pop-on.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
     self.assertTrue(os.path.exists("build/pop-on.ttml"))
-    tt.main("convert -i src/test/resources/scc/pop-on.scc -o build/pop-on.srt --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/pop-on.scc", 
+      "-o", "build/pop-on.srt", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
     self.assertTrue(os.path.exists("build/pop-on.srt"))
 
   def test_paint_on_scc(self):
-    tt.main("convert -i src/test/resources/scc/paint-on.scc -o build/paint-on.ttml --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/paint-on.scc", 
+      "-o", "build/paint-on.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
     self.assertTrue(os.path.exists("build/paint-on.ttml"))
-    tt.main("convert -i src/test/resources/scc/paint-on.scc -o build/paint-on.srt --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/paint-on.scc", 
+      "-o", "build/paint-on.srt", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
     self.assertTrue(os.path.exists("build/paint-on.srt"))
 
   def test_mix_rows_roll_up_scc(self):
-    tt.main("convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.ttml --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/mix-rows-roll-up.scc", 
+      "-o", "build/mix-rows-roll-up.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
     self.assertTrue(os.path.exists("build/mix-rows-roll-up.ttml"))
-    tt.main("convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.srt --config_file build/config.json --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/scc/mix-rows-roll-up.scc", 
+      "-o", "build/mix-rows-roll-up.srt", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
     self.assertTrue(os.path.exists("build/mix-rows-roll-up.srt"))
 
   def test_bad_function(self):
@@ -118,14 +158,18 @@ class IMSCAppTest(unittest.TestCase):
       '--config', '{"general": {"progress_bar":false, "log_level":"WARN"}}'])
 
   def test_with_config_file(self):
-    tt.main("convert -i src/test/resources/ttml/body_only.ttml -o build/body_only.out.ttml --config_file build/config.json".split())
+    tt.main(["convert", 
+      "-i", "src/test/resources/ttml/body_only.ttml", 
+      "-o", "build/body_only.out.ttml", 
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_validate(self):
     # Note passing in the args using split
     # This gets processed as 2 args being passed into
     # the main function
     #
-    tt.main("validate -i src/test/resources/ttml/body_only.ttml".split())
+    tt.main(["validate", 
+      "-i", "src/test/resources/ttml/body_only.ttml"])
 
   def test_file_types_by_type_and_string(self):
     
