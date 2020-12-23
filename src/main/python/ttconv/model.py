@@ -769,6 +769,7 @@ class Region(ContentElement):
     StyleProperties.Origin,
     StyleProperties.Overflow,
     StyleProperties.Padding,
+    StyleProperties.Position,
     StyleProperties.ShowBackground,
     StyleProperties.Visibility,
     StyleProperties.WritingMode

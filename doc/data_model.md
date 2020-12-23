@@ -86,10 +86,6 @@ Writer module can express temporal offsets in units of ticks, frames, etc. as de
 
 The `dur` timing attribute is not supported.
 
-### Position
-
-The `tts:position` style property is not supported and `tts:origin` is used instead.
-
 ### Lengths
 
-The constraints against length units specified in IMSC are relaxed, and lengths can be expressed in `c`, `%`, `rh`, `rw`, `em` and `px` units.
+Extent, origin and position lengths can be expressed in `c`, `%`, `rh`, `rw` and `px` units.

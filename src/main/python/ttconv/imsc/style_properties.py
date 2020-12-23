@@ -444,7 +444,7 @@ class StyleProperties:
     model_prop = styles.StyleProperties.Origin
 
     @classmethod
-    def has_px(cls, attrib_value: styles.PositionType) -> bool:
+    def has_px(cls, attrib_value: styles.CoordinateType) -> bool:
       return attrib_value.x.units == styles.LengthType.Units.px or \
         attrib_value.y.units == styles.LengthType.Units.px
 
@@ -453,7 +453,7 @@ class StyleProperties:
 
       if xml_attrib == "auto":
 
-        r = styles.PositionType(
+        r = styles.CoordinateType(
           x=styles.LengthType(0, styles.LengthType.Units.pct),
           y=styles.LengthType(0, styles.LengthType.Units.pct)
         )
@@ -464,7 +464,7 @@ class StyleProperties:
         if len(s) != 2:
           raise ValueError("tts:origin has not two components")
 
-        r = styles.PositionType(
+        r = styles.CoordinateType(
           x=StyleProperties.ttml_length_to_model(context, s[0]),
           y=StyleProperties.ttml_length_to_model(context, s[1])
         )
@@ -475,7 +475,7 @@ class StyleProperties:
     def from_model(cls, xml_element, model_value):
       xml_element.set(
         f"{{{cls.ns}}}{cls.local_name}", 
-        f"{model_value.x.value}{model_value.x.units.value} {model_value.y.value}{model_value.y.units.value}"
+        f"{model_value.x.value:g}{model_value.x.units.value} {model_value.y.value:g}{model_value.y.units.value}"
       )
 
 
@@ -557,44 +557,29 @@ class StyleProperties:
 
     ns = xml_ns.TTS
     local_name = "position"
-    model_prop = None
+    model_prop = styles.StyleProperties.Position
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
 
       (h_edge, h_offset, v_edge, v_offset) = utils.parse_position(xml_attrib)
 
-      if h_edge == "right":
-        if h_offset.units is styles.LengthType.Units.px:
-          h_offset = styles.LengthType(context.doc.get_px_resolution().width - h_offset.value, h_offset.units)
-        elif h_offset.units is styles.LengthType.Units.pct or h_offset.units is styles.LengthType.Units.rw:
-          h_offset = styles.LengthType(100 - h_offset.value, h_offset.units)
-        else:
-          raise ValueError("Units other than px, pct, rh, rw used in tts:position")
-
-      if v_edge == "bottom":
-        if v_offset.units is styles.LengthType.Units.px:
-          v_offset = styles.LengthType(context.doc.get_px_resolution().height - v_offset.value, v_offset.units)
-        elif v_offset.units is styles.LengthType.Units.pct or v_offset.units is styles.LengthType.Units.rh:
-          v_offset = styles.LengthType(100 - v_offset.value, v_offset.units)
-        else:
-          raise ValueError("Units other than px, pct, rh, rw used in tts:position")
-
       return styles.PositionType(
-        x=h_offset,
-        y=v_offset
+        h_offset=h_offset,
+        v_offset=v_offset,
+        h_edge=styles.PositionType.HEdge(h_edge),
+        v_edge=styles.PositionType.VEdge(v_edge)
       )
 
     @classmethod
-    def to_model(cls, context: StyleParsingContext, xml_element) -> typing.Tuple[typing.Type[model.StyleProperty], typing.Any]:
-      return (
-        styles.StyleProperties.Origin,
-        cls.extract(context, xml_element.get(f"{{{cls.ns}}}{cls.local_name}"))
+    def from_model(cls, xml_element, model_value: styles.PositionType):
+      xml_element.set(
+        f"{{{cls.ns}}}{cls.local_name}", 
+        f"{model_value.h_edge.value} " \
+        f"{model_value.h_offset.value:g}{model_value.h_offset.units.value} " \
+        f"{model_value.v_edge.value} " \
+        f"{model_value.v_offset.value:g}{model_value.v_offset.units.value}"
       )
-
-    @classmethod
-    def from_model(cls, xml_element, model_value):
-      raise NotImplementedError
 
 
   class RubyAlign(StyleProperty):

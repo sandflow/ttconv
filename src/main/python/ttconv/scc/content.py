@@ -32,7 +32,7 @@ from typing import Optional
 
 from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets
-from ttconv.style_properties import PositionType
+from ttconv.style_properties import CoordinateType
 
 ROLL_UP_BASE_ROW = 15
 
@@ -99,8 +99,8 @@ class SccCaptionText(SccCaptionContent):
     """Returns the y offset"""
     return self._y_offset
 
-  def get_position(self) -> PositionType:
-    """Returns current row and column offsets as a cell-based PositionType"""
+  def get_position(self) -> CoordinateType:
+    """Returns current row and column offsets as a cell-based CoordinateType"""
     return get_position_from_offsets(self._x_offset, self._y_offset)
 
   def get_style_properties(self) -> dict:

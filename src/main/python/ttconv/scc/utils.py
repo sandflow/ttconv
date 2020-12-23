@@ -28,15 +28,15 @@ from numbers import Number
 from typing import Union
 
 from ttconv.model import CellResolutionType
-from ttconv.style_properties import LengthType, PositionType, ExtentType
+from ttconv.style_properties import LengthType, CoordinateType, ExtentType
 
 
-def get_position_from_offsets(x_offset: int, y_offset: int, units=LengthType.Units.c) -> PositionType:
+def get_position_from_offsets(x_offset: int, y_offset: int, units=LengthType.Units.c) -> CoordinateType:
   """Converts offsets into position"""
   x_position = LengthType(value=x_offset, units=units)
   y_position = LengthType(value=y_offset, units=units)
 
-  return PositionType(x_position, y_position)
+  return CoordinateType(x_position, y_position)
 
 
 def get_extent_from_dimensions(width: Union[int, Number], height: Union[int, Number], units=LengthType.Units.c) -> ExtentType:
@@ -47,10 +47,10 @@ def get_extent_from_dimensions(width: Union[int, Number], height: Union[int, Num
   return ExtentType(height, width)
 
 
-def convert_cells_to_percentages(dimensions: Union[PositionType, ExtentType], cell_resolution: CellResolutionType) -> Union[
-  PositionType, ExtentType]:
+def convert_cells_to_percentages(dimensions: Union[CoordinateType, ExtentType], cell_resolution: CellResolutionType) -> Union[
+  CoordinateType, ExtentType]:
   """Converts dimensions from cell units to percentage units"""
-  if isinstance(dimensions, PositionType):
+  if isinstance(dimensions, CoordinateType):
     if dimensions.x.units is not LengthType.Units.c or dimensions.y.units is not LengthType.Units.c:
       raise ValueError("Dimensions to convert must be in cell units")
 

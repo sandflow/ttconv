@@ -307,6 +307,7 @@ class ISD(model.Document):
     styles.StyleProperties.FontSize,
     styles.StyleProperties.Extent,
     styles.StyleProperties.Origin,
+    styles.StyleProperties.Position,
     styles.StyleProperties.LineHeight,
     styles.StyleProperties.LinePadding,
     styles.StyleProperties.RubyReserve,
@@ -467,10 +468,22 @@ class ISD(model.Document):
         if isd_element.has_style(initial_style):
           continue
 
-        initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
-                          else initial_style.make_initial_value()
+        if doc.has_initial_value(initial_style):
+
+          initial_value = doc.get_initial_value(initial_style)
+
+        elif initial_style is not styles.StyleProperties.Position:
+
+          # the initial value of the Position style property is set to Origin as part of style computation
+
+          initial_value = initial_style.make_initial_value()
+
+        else:
+
+          initial_value = None
 
         styles_to_be_computed.add(initial_style)
+
         isd_element.set_style(initial_style, initial_value)
 
     # compute style properties
@@ -535,9 +548,9 @@ class ISD(model.Document):
 
     # remove styles that are not applicable
 
-    for computed_style_prop in list(isd_element.iter_styles()):
-      if not isd_element.is_style_applicable(computed_style_prop):
-        isd_element.set_style(computed_style_prop, None)
+    for style_prop in list(isd_element.iter_styles()):
+      if not isd_element.is_style_applicable(style_prop):
+        isd_element.set_style(style_prop, None)
     
     # prune or keep the element
 
@@ -903,14 +916,14 @@ class StyleProcessors:
     @classmethod
     def compute(cls, parent: model.ContentElement, element: model.ContentElement):
 
-      style_value: styles.PositionType = element.get_style(cls.style_prop)
+      style_value: styles.CoordinateType = element.get_style(cls.style_prop)
 
       # height
 
       y = _compute_length(
         style_value.y,
         _make_rh_length(100),
-        element.get_style(styles.StyleProperties.FontSize),
+        None,
         _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
         _make_rh_length(100 / element.get_doc().get_px_resolution().height)
       )
@@ -920,14 +933,14 @@ class StyleProcessors:
       x = _compute_length(
         style_value.x,
         _make_rw_length(100),
-        element.get_style(styles.StyleProperties.FontSize),
+        None,
         _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
         _make_rw_length(100 / element.get_doc().get_px_resolution().width)
       )
 
       element.set_style(
         cls.style_prop,
-        styles.PositionType(
+        styles.CoordinateType(
           x=x,
           y=y
         )
@@ -991,6 +1004,81 @@ class StyleProcessors:
         cls.style_prop,
         styles.PaddingType(c_before, c_end, c_after, c_start)
       )    
+
+  class Position(StyleProcessor):
+    style_prop = styles.StyleProperties.Position
+
+    @classmethod
+    def compute(cls, parent: model.ContentElement, element: model.ContentElement):
+
+      position : styles.PositionType = element.get_style(styles.StyleProperties.Position)
+
+      if position is None:
+
+        # if no Position style property was specified, use the value of the Origin style property
+
+        origin : styles.CoordinateType = element.get_style(styles.StyleProperties.Origin)
+
+        element.set_style(
+          styles.StyleProperties.Position,
+          styles.PositionType(
+              h_offset=origin.x,
+              v_offset=origin.y
+            )
+        )
+
+        return
+
+      extent : styles.ExtentType = element.get_style(styles.StyleProperties.Extent)
+
+      assert extent.height.units is styles.LengthType.Units.rh
+      assert extent.width.units is styles.LengthType.Units.rw
+
+      v_offset = _compute_length(
+        position.v_offset,
+        _make_rh_length(100 - extent.height.value),
+        None,
+        _make_rh_length(100 / element.get_doc().get_cell_resolution().rows),
+        _make_rh_length(100 / element.get_doc().get_px_resolution().height)
+      )
+      
+      if position.v_edge is styles.PositionType.VEdge.bottom:
+        v_offset = styles.LengthType(
+          value=100 - v_offset.value,
+          units=v_offset.units
+        )
+
+      h_offset = _compute_length(
+        position.h_offset,
+        _make_rw_length(100 - extent.width.value),
+        None,
+        _make_rw_length(100 / element.get_doc().get_cell_resolution().columns),
+        _make_rw_length(100 / element.get_doc().get_px_resolution().width)
+      )
+
+      if position.h_edge is styles.PositionType.HEdge.right:
+        h_offset = styles.LengthType(
+          value=100 - h_offset.value,
+          units=h_offset.units
+        )
+
+      # if specified, the Position style property overrides the Origin style property
+
+      element.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+            x=h_offset,
+            y=v_offset
+          )
+      )
+
+      element.set_style(
+        styles.StyleProperties.Position,
+        styles.PositionType(
+            h_offset=h_offset,
+            v_offset=v_offset
+          )
+      )
 
   class RubyAlign(StyleProcessor):
     style_prop = styles.StyleProperties.RubyAlign

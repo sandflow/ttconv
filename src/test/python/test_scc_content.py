@@ -30,7 +30,7 @@
 import unittest
 
 from ttconv.scc.content import SccCaptionText
-from ttconv.style_properties import PositionType, LengthType, StyleProperties, NamedColors
+from ttconv.style_properties import CoordinateType, LengthType, StyleProperties, NamedColors
 
 
 class SccCaptionTextTest(unittest.TestCase):
@@ -41,13 +41,13 @@ class SccCaptionTextTest(unittest.TestCase):
     caption_text.set_x_offset(None)
     caption_text.set_y_offset(None)
 
-    expected = PositionType(LengthType(value=0, units=LengthType.Units.c), LengthType(value=0, units=LengthType.Units.c))
+    expected = CoordinateType(LengthType(value=0, units=LengthType.Units.c), LengthType(value=0, units=LengthType.Units.c))
     self.assertEqual(expected, caption_text.get_position())
 
     caption_text.set_x_offset(12)
     caption_text.set_y_offset(8)
 
-    expected = PositionType(LengthType(value=12, units=LengthType.Units.c), LengthType(value=8, units=LengthType.Units.c))
+    expected = CoordinateType(LengthType(value=12, units=LengthType.Units.c), LengthType(value=8, units=LengthType.Units.c))
     self.assertEqual(expected, caption_text.get_position())
 
     other_caption_text = SccCaptionText()

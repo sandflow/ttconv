@@ -53,3 +53,7 @@ is:
 ```
 
 An ISD contains no timing information, i.e. no `begin` or `end` properties, or animation steps.
+
+Both the `Origin` and `Position` style properties are always equal.
+
+All lengths are expressed in root-relative units `rh` and `rw`.
