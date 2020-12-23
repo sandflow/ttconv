@@ -30,7 +30,6 @@
 import os
 import io
 import unittest
-import json
 from contextlib import redirect_stdout
 from contextlib import redirect_stderr
 import ttconv.tt as tt

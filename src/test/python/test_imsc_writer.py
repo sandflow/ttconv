@@ -506,7 +506,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     prop = styles.LengthType(1, styles.LengthType.units.px)
     self.assertEqual(imsc_styles.StyleProperties.LineHeight.has_px(prop), True)
 
-  def test_style_property_Origin_has_px(self):
+  def test_style_property_origin_has_px(self):
     prop = styles.CoordinateType(styles.LengthType(1, styles.LengthType.units.px), 
       styles.LengthType(1, styles.LengthType.units.em))
     self.assertEqual(imsc_styles.StyleProperties.Origin.has_px(prop), True)
