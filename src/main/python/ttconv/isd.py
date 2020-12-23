@@ -468,10 +468,22 @@ class ISD(model.Document):
         if isd_element.has_style(initial_style):
           continue
 
-        initial_value = doc.get_initial_value(initial_style) if doc.has_initial_value(initial_style) \
-                          else initial_style.make_initial_value()
+        if doc.has_initial_value(initial_style):
+
+          initial_value = doc.get_initial_value(initial_style)
+
+        elif initial_style is not styles.StyleProperties.Position:
+
+          # the initial value of the Position style property is set to Origin as part of style computation
+
+          initial_value = initial_style.make_initial_value()
+
+        else:
+
+          initial_value = None
 
         styles_to_be_computed.add(initial_style)
+
         isd_element.set_style(initial_style, initial_value)
 
     # compute style properties
@@ -536,9 +548,9 @@ class ISD(model.Document):
 
     # remove styles that are not applicable
 
-    for computed_style_prop in list(isd_element.iter_styles()):
-      if not isd_element.is_style_applicable(computed_style_prop):
-        isd_element.set_style(computed_style_prop, None)
+    for style_prop in list(isd_element.iter_styles()):
+      if not isd_element.is_style_applicable(style_prop):
+        isd_element.set_style(style_prop, None)
     
     # prune or keep the element
 
@@ -1001,6 +1013,22 @@ class StyleProcessors:
 
       position : styles.PositionType = element.get_style(styles.StyleProperties.Position)
 
+      if position is None:
+
+        # if no Position style property was specified, use the value of the Origin style property
+
+        origin : styles.CoordinateType = element.get_style(styles.StyleProperties.Origin)
+
+        element.set_style(
+          styles.StyleProperties.Position,
+          styles.PositionType(
+              h_offset=origin.x,
+              v_offset=origin.y
+            )
+        )
+
+        return
+
       extent : styles.ExtentType = element.get_style(styles.StyleProperties.Extent)
 
       assert extent.height.units is styles.LengthType.Units.rh
@@ -1034,11 +1062,21 @@ class StyleProcessors:
           units=h_offset.units
         )
 
+      # if specified, the Position style property overrides the Origin style property
+
       element.set_style(
         styles.StyleProperties.Origin,
         styles.CoordinateType(
             x=h_offset,
             y=v_offset
+          )
+      )
+
+      element.set_style(
+        styles.StyleProperties.Position,
+        styles.PositionType(
+            h_offset=h_offset,
+            v_offset=v_offset
           )
       )
 
