@@ -33,7 +33,7 @@ suggestions/contributions are welcome.
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
 
-## Command line quick start
+## Quick start
 
 ```sh
 pip install ttconv
