@@ -18,7 +18,7 @@ setup(
     author='Sandflow Consulting LLC',
     author_email='info@sandflow.com',
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'Environment :: Console',
