@@ -2,7 +2,8 @@
 
 ## Overview
 
-The SRT writer (`ttconv/srt/writer.py`) converts a [data model](./data-model.md) document into the [SRT](https://en.wikipedia.org/wiki/SubRip#File_format) format.
+The SRT writer (`ttconv/srt/writer.py`) converts a [data model](./data-model.md) document into the
+[SRT](https://en.wikipedia.org/wiki/SubRip#File_format) format.
 
 ## Usage
 
@@ -17,8 +18,8 @@ print(srt_writer.from_model(doc))
 
 ## Architecture
 
-The input document is processed to extract a list of ISDs ([Intermediate Synchronic Document](./isd.md)), which are
-passed through filters (in `ttconv/filters`) to:
+The input document is processed to extract a list of ISDs ([Intermediate Synchronic Document](./isd.md)), which are passed through
+filters (in `ttconv/filters`) to:
 
 * remove unsupported features
 * merge document elements
