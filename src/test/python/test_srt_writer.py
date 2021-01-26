@@ -168,7 +168,7 @@ Pellentesque interdum lacinia sollicitudin.
       if isinstance(child, P):
         return True
 
-      elif isinstance(child, Div):
+      if isinstance(child, Div):
         has_paragraphs = self._has_child_paragraphs(child)
 
     return has_paragraphs

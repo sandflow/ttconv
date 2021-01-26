@@ -162,14 +162,6 @@ class IMSCAppTest(unittest.TestCase):
       "-o", "build/body_only.out.ttml", 
       "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
-  def test_validate(self):
-    # Note passing in the args using split
-    # This gets processed as 2 args being passed into
-    # the main function
-    #
-    tt.main(["validate", 
-      "-i", "src/test/resources/ttml/body_only.ttml"])
-
   def test_file_types_by_type_and_string(self):
     
     self.assertEqual(None, tt.FileTypes.get_file_type(None, None))

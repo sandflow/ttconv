@@ -352,14 +352,6 @@ def convert(args):
     sys.exit(exit_str)
 
 
-@subcommand([argument("-i", "--input", help="Input file path", required=True)])
-def validate(args):
-  '''Process input through the validator'''
-
-  print(args.input)
-  LOGGER.info("Input file is %s", args.input)
-
-
 # Ensure that the handler is added only once/globally
 # Otherwise the handler will be called multiple times
 progress = ProgressConsoleHandler()
