@@ -76,6 +76,8 @@ Processing shared across multiple reader and writer modules is factored out in c
 several output formats require an instance of the canonical data model to be transformed into a sequence of discrete temporal
 snapshots – a process called ISD generation.
 
+The library uses the Python `logging` module to report non-fatal events.
+
 Unit tests illustrate the use of the library, e.g. `ReaderWriterTest.test_imsc_1_test_suite` at
 `src/test/python/test_imsc_writer.py`.
 
