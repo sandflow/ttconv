@@ -54,6 +54,7 @@ def from_model(
   et.register_namespace("tts", xml_ns.TTS)
   et.register_namespace("ittp", xml_ns.ITTP)
   et.register_namespace("itts", xml_ns.ITTS)
+  et.register_namespace("ebutts", xml_ns.EBUTTS)
 
   if config is not None and config.time_format == imsc_config.TimeExpressionEnum.frames:
     frame_rate = config.fps
