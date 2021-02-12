@@ -104,11 +104,11 @@ class SccSpecialAndExtendedCharacterTest(unittest.TestCase):
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1137)
     self.assertEqual(SccSpecialAndExtendedCharacter.MUSIC_NOTE, spec_char)
-    self.assertEqual('\u26AA', spec_char.get_unicode_value())
+    self.assertEqual('\u266A', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1937)
     self.assertEqual(SccSpecialAndExtendedCharacter.MUSIC_NOTE, spec_char)
-    self.assertEqual('\u26AA', spec_char.get_unicode_value())
+    self.assertEqual('\u266A', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1138)
     self.assertEqual(SccSpecialAndExtendedCharacter.LOWER_CASE_A_WITH_GRAVE_ACCENT, spec_char)
@@ -444,11 +444,11 @@ class SccSpecialAndExtendedCharacterTest(unittest.TestCase):
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1321)
     self.assertEqual(SccSpecialAndExtendedCharacter.LATIN_SMALL_LETTER_A_WITH_TILDE, spec_char)
-    self.assertEqual('\u00C3', spec_char.get_unicode_value())
+    self.assertEqual('\u00E3', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1B21)
     self.assertEqual(SccSpecialAndExtendedCharacter.LATIN_SMALL_LETTER_A_WITH_TILDE, spec_char)
-    self.assertEqual('\u00C3', spec_char.get_unicode_value())
+    self.assertEqual('\u00E3', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1322)
     self.assertEqual(SccSpecialAndExtendedCharacter.LATIN_CAPITAL_LETTER_I_WITH_ACUTE, spec_char)
@@ -508,19 +508,19 @@ class SccSpecialAndExtendedCharacterTest(unittest.TestCase):
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1329)
     self.assertEqual(SccSpecialAndExtendedCharacter.BRACE_OPENING, spec_char)
-    self.assertEqual('\u007D', spec_char.get_unicode_value())
+    self.assertEqual('\u007B', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1B29)
     self.assertEqual(SccSpecialAndExtendedCharacter.BRACE_OPENING, spec_char)
-    self.assertEqual('\u007D', spec_char.get_unicode_value())
+    self.assertEqual('\u007B', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x132A)
     self.assertEqual(SccSpecialAndExtendedCharacter.BRACE_CLOSING, spec_char)
-    self.assertEqual('\u007B', spec_char.get_unicode_value())
+    self.assertEqual('\u007D', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x1B2A)
     self.assertEqual(SccSpecialAndExtendedCharacter.BRACE_CLOSING, spec_char)
-    self.assertEqual('\u007B', spec_char.get_unicode_value())
+    self.assertEqual('\u007D', spec_char.get_unicode_value())
 
     spec_char = SccSpecialAndExtendedCharacter.find(0x132B)
     self.assertEqual(SccSpecialAndExtendedCharacter.REVERSE_SOLIDUS, spec_char)
