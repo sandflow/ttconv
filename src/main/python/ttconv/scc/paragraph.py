@@ -35,7 +35,7 @@ from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_R
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
-from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType
+from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -414,6 +414,9 @@ class _SccParagraphRegion:
     # Convert extent cells to percentages
     region_extent_pct = convert_cells_to_percentages(region_extent, self._doc.get_cell_resolution())
     region.set_style(StyleProperties.Extent, region_extent_pct)
+
+    # Set default region style properties
+    region.set_style(StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     self._doc.put_region(region)
 
