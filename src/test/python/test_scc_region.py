@@ -33,7 +33,7 @@ from ttconv.model import ContentDocument, CellResolutionType
 from ttconv.scc.content import SccCaptionLineBreak
 from ttconv.scc.paragraph import SccCaptionParagraph, _SccParagraphRegion
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.style_properties import StyleProperties
+from ttconv.style_properties import StyleProperties, ShowBackgroundType
 
 
 class SccParagraphRegionTest(unittest.TestCase):
@@ -95,6 +95,8 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertEqual("region1", region.get_id())
     self.assertTrue(paragraph_region._has_same_origin_as_region(region))
     self.assertEqual(region, paragraph_region._find_matching_region())
+
+    self.assertEqual(ShowBackgroundType.whenActive, region.get_style(StyleProperties.ShowBackground))
 
     region_extent = region.get_style(StyleProperties.Extent)
 

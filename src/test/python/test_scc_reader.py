@@ -34,7 +34,7 @@ from ttconv.model import Br, P, ContentElement, CellResolutionType
 from ttconv.scc.reader import SccWord, SccLine, to_model
 from ttconv.time_code import SmpteTimeCode, FPS_30
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
-  StyleProperty, ExtentType, ColorType, DisplayAlignType
+  StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -205,30 +205,35 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 26, 17, doc.get_cell_resolution())
     self.check_region_extent(region_1, 10, 1, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     region_2 = doc.get_region("pop2")
     self.assertIsNotNone(region_2)
     self.check_region_origin(region_2, 8, 17, doc.get_cell_resolution())
     self.check_region_extent(region_2, 11, 1, doc.get_cell_resolution())
     self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
     self.check_region_origin(region_3, 9, 16, doc.get_cell_resolution())
     self.check_region_extent(region_3, 18, 2, doc.get_cell_resolution())
     self.check_element_style(region_3, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_3, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     region_4 = doc.get_region("pop4")
     self.assertIsNotNone(region_4)
     self.check_region_origin(region_4, 4, 8, doc.get_cell_resolution())
     self.check_region_extent(region_4, 28, 10, doc.get_cell_resolution())
     self.check_element_style(region_4, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_4, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     region_5 = doc.get_region("pop5")
     self.assertIsNotNone(region_5)
     self.check_region_origin(region_5, 4, 15, doc.get_cell_resolution())
     self.check_region_extent(region_5, 32, 3, doc.get_cell_resolution())
     self.check_element_style(region_5, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_5, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -288,6 +293,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -342,6 +348,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -397,6 +404,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -481,6 +489,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 31, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -583,6 +592,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_region_origin(region_1, 8, 16, doc.get_cell_resolution())
     self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
