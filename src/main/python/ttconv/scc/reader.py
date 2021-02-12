@@ -41,7 +41,7 @@ from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptio
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.style_properties import StyleProperties, NamedColors
+from ttconv.style_properties import StyleProperties, NamedColors, LengthType
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOGGER = logging.getLogger(__name__)
@@ -538,6 +538,9 @@ def to_model(scc_content: str, progress_callback=lambda _: None):
   body = Body()
   body.set_doc(document)
   document.set_body(body)
+
+  # the default value of LineHeight ("normal") typically translates to 125% of the font size, which causes regions to overflow.
+  body.set_style(StyleProperties.LineHeight, LengthType(value=100, units=LengthType.Units.pct))
 
   context.div = Div()
   context.div.set_doc(document)

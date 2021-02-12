@@ -44,7 +44,7 @@ class SccSpecialAndExtendedCharacter(SccCode, Enum):
   TRADEMARK_SYMBOL = (0x1134, 0x1934, '\u2122')  # Trademark symbol
   CENTS_SIGN = (0x1135, 0x1935, '\u00A2')  # Cents sign
   POUNDS_STERLING_SIGN = (0x1136, 0x1936, '\u00A3')  # Pounds Sterling sign
-  MUSIC_NOTE = (0x1137, 0x1937, '\u26AA')  # Music note
+  MUSIC_NOTE = (0x1137, 0x1937, '\u266A')  # Music note
   LOWER_CASE_A_WITH_GRAVE_ACCENT = (0x1138, 0x1938, '\u00E0')  # Lower-case a with grave accent
   TRANSPARENT_SPACE = (0x1139, 0x1939, '\u0020')  # Transparent space
   LOWER_CASE_E_WITH_GRAVE_ACCENT = (0x113A, 0x193A, '\u00E8')  # Lower-case e with grave accent
@@ -94,7 +94,7 @@ class SccSpecialAndExtendedCharacter(SccCode, Enum):
 
   # Portuguese extended characters
   LATIN_CAPITAL_LETTER_A_WITH_TILDE = (0x1320, 0x1B20, '\u00C3')  # Ã capital A with tilde
-  LATIN_SMALL_LETTER_A_WITH_TILDE = (0x1321, 0x1B21, '\u00C3')  # ã small a with tilde
+  LATIN_SMALL_LETTER_A_WITH_TILDE = (0x1321, 0x1B21, '\u00E3')  # ã small a with tilde
   LATIN_CAPITAL_LETTER_I_WITH_ACUTE = (0x1322, 0x1B22, '\u00CD')  # Í capital I with acute accent
   LATIN_CAPITAL_LETTER_I_WITH_GRAVE = (0x1323, 0x1B23, '\u00CC')  # Ì capital I with grave accent
   LATIN_SMALL_LETTER_I_WITH_GRAVE = (0x1324, 0x1B24, '\u00EC')  # ì small i with grave accent
@@ -102,8 +102,8 @@ class SccSpecialAndExtendedCharacter(SccCode, Enum):
   LATIN_SMALL_LETTER_O_WITH_GRAVE = (0x1326, 0x1B26, '\u00F2')  # ò small o with grave accent
   LATIN_CAPITAL_LETTER_O_WITH_TILDE = (0x1327, 0x1B27, '\u00D5')  # Õ capital O with tilde
   LATIN_SMALL_LETTER_O_WITH_TILDE = (0x1328, 0x1B28, '\u00F5')  # õ small o with tilde
-  BRACE_OPENING = (0x1329, 0x1B29, '\u007D')  # { opening brace
-  BRACE_CLOSING = (0x132A, 0x1B2A, '\u007B')  # } closing brace
+  BRACE_OPENING = (0x1329, 0x1B29, '\u007B')  # { opening brace
+  BRACE_CLOSING = (0x132A, 0x1B2A, '\u007D')  # } closing brace
   REVERSE_SOLIDUS = (0x132B, 0x1B2B, '\u005C')  # \ backslash
   LATIN_SMALL_LETTER_TURNED_V = (0x132C, 0x1B2C, '\u028C')  # ^ caret
   LOW_LINE = (0x132D, 0x1B2D, '\u005F')  # _ Underbar
