@@ -31,10 +31,10 @@ from numbers import Number
 from typing import Union, Type
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
-from ttconv.scc.reader import SccLine, to_model
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.scc.reader import to_model
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
+from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -43,18 +43,6 @@ Integer luctus et ligula ac sagittis.
 Ut at diam sit amet nulla fringilla
 vestibulum nec vitae nisi.
 """
-
-
-class SccLineTest(unittest.TestCase):
-
-  def test_scc_line_from_str(self):
-    line_str = "01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f"
-    scc_line = SccLine.from_str(line_str)
-    self.assertEqual(18, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
-
-    self.assertIsNone(SccLine.from_str(""))
-    self.assertIsNone(SccLine.from_str("Hello world!"))
 
 
 class SccReaderTest(unittest.TestCase):
@@ -81,7 +69,7 @@ class SccReaderTest(unittest.TestCase):
   def check_element_origin(self, elem: ContentElement, expected_x_origin: Union[int, float, Number],
                            expected_y_origin: Union[int, float, Number], unit=LengthType.Units.c):
     expected_origin = CoordinateType(x=LengthType(value=expected_x_origin, units=unit),
-                                   y=LengthType(value=expected_y_origin, units=unit))
+                                     y=LengthType(value=expected_y_origin, units=unit))
     self.check_element_style(elem, StyleProperties.Origin, expected_origin)
 
   def check_element_extent(self, elem: ContentElement, width: Union[int, float, Number], height: Union[int, float, Number],

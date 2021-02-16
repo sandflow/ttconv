@@ -28,7 +28,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Optional, List
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType
@@ -38,16 +37,13 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
-from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
+from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties, NamedColors, LengthType
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
-
-SCC_LINE_PATTERN = '((' + SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
 
 
 class _SccContext:
@@ -285,63 +281,17 @@ class _SccContext:
         self.push_previous_caption(time_code)
       self.current_caption = None
 
-
-class SccLine:
-  """SCC line definition"""
-
-  def __init__(self, time_code: SmpteTimeCode, scc_words: List[SccWord]):
-    self.time_code = time_code
-    self.scc_words = scc_words
-
-  @staticmethod
-  def from_str(line: str) -> Optional[SccLine]:
-    """Creates a SCC line instance from the specified string"""
-    if not line:
-      return None
-
-    regex = re.compile(SCC_LINE_PATTERN)
-    match = regex.match(line)
-
-    if match is None:
-      return None
-
-    time_code = match.group(1)
-    time_offset = SmpteTimeCode.parse(time_code, FPS_30)
-
-    hex_words = line.split('\t')[1].split(' ')
-    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
-    return SccLine(time_offset, scc_words)
-
-  def get_style(self) -> SccCaptionStyle:
-    """Analyses the line words ordering to get the caption style"""
-    scc_words = self.scc_words
-    if not scc_words:
-      return SccCaptionStyle.Unknown
-
-    prefix = SccControlCode.find(scc_words[0].value)
-
-    if prefix in [SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4]:
-      return SccCaptionStyle.RollUp
-
-    if prefix is SccControlCode.RDC:
-      return SccCaptionStyle.PaintOn
-
-    if prefix is SccControlCode.RCL:
-      return SccCaptionStyle.PopOn
-
-    return SccCaptionStyle.Unknown
-
-  def to_model(self, context: _SccContext) -> SmpteTimeCode:
+  def process_line(self, line: SccLine) -> SmpteTimeCode:
     """Converts the SCC line to the data model"""
 
-    debug = str(self.time_code) + "\t"
+    debug = str(line.time_code) + "\t"
 
-    for scc_word in self.scc_words:
+    for scc_word in line.scc_words:
 
-      if context.previous_code == scc_word.value:
+      if self.previous_code == scc_word.value:
         continue
 
-      self.time_code.add_frames()
+      line.time_code.add_frames()
 
       if scc_word.value == 0x0000:
         continue
@@ -363,101 +313,40 @@ class SccLine:
           if pac.get_text_decoration() is not None:
             debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
-          context.process_preamble_address_code(pac, self.time_code)
+          self.process_preamble_address_code(pac, line.time_code)
 
         elif attribute_code is not None:
           debug += "[ATC/" + hex(scc_word.value) + "]"
-          context.process_attribute_code(attribute_code)
+          self.process_attribute_code(attribute_code)
 
         elif mid_row_code is not None:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
-          context.process_mid_row_code(mid_row_code)
+          self.process_mid_row_code(mid_row_code)
 
         elif control_code is not None:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
-          context.process_control_code(control_code, self.time_code)
+          self.process_control_code(control_code, line.time_code)
 
         elif spec_char is not None:
           word = spec_char.get_unicode_value()
           debug += word
-          context.process_text(word, self.time_code)
+          self.process_text(word, line.time_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
 
-        context.previous_code = scc_word.value
+        self.previous_code = scc_word.value
 
       else:
         word = scc_word.to_text()
         debug += word
-        context.process_text(word, self.time_code)
-        context.previous_code = scc_word.value
+        self.process_text(word, line.time_code)
+        self.previous_code = scc_word.value
 
     LOGGER.debug(debug)
 
-    return self.time_code
-
-  def to_disassembly(self) -> str:
-    """Converts SCC line into the disassembly format"""
-    disassembly_line = str(self.time_code) + "\t"
-
-    for scc_word in self.scc_words:
-
-      if scc_word.value == 0x0000:
-        disassembly_line += "{}"
-        continue
-
-      if scc_word.byte_1 < 0x20:
-
-        attribute_code = SccAttributeCode.find(scc_word.value)
-        control_code = SccControlCode.find(scc_word.value)
-        mid_row_code = SccMidRowCode.find(scc_word.value)
-        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
-
-        if pac is not None:
-          disassembly_line += f"{{{pac.get_row():02}"
-          color = pac.get_color()
-          indent = pac.get_indent()
-          if indent is not None and indent > 0:
-            disassembly_line += f"{indent :02}"
-          elif color is not None:
-            disassembly_line += get_color_disassembly(color)
-            disassembly_line += get_font_style_disassembly(pac.get_font_style())
-            disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
-          else:
-            disassembly_line += "00"
-          disassembly_line += "}"
-
-        elif attribute_code is not None:
-          disassembly_line += "{"
-          disassembly_line += "B" if attribute_code.is_background() else ""
-          disassembly_line += get_color_disassembly(attribute_code.get_color())
-          disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
-          disassembly_line += "}"
-
-        elif mid_row_code is not None:
-          disassembly_line += "{"
-          disassembly_line += get_color_disassembly(mid_row_code.get_color())
-          disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
-          disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
-          disassembly_line += "}"
-
-        elif control_code is not None:
-          disassembly_line += "{" + control_code.get_name() + "}"
-
-        elif spec_char is not None:
-          disassembly_line += spec_char.get_unicode_value()
-
-        else:
-          disassembly_line += "{??}"
-          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
-
-      else:
-        disassembly_line += scc_word.to_text()
-
-    return disassembly_line
+    return line.time_code
 
 
 #
@@ -501,7 +390,7 @@ def to_model(scc_content: str, progress_callback=lambda _: None):
     if scc_line is None:
       continue
 
-    time_code = scc_line.to_model(context)
+    time_code = context.process_line(scc_line)
 
   context.flush(time_code)
 
