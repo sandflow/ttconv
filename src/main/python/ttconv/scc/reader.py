@@ -41,14 +41,13 @@ from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptio
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties, NamedColors, LengthType
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOGGER = logging.getLogger(__name__)
 
 SCC_LINE_PATTERN = '((' + SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
-
-PARITY_BIT_MASK = 0b01111111
 
 
 class _SccContext:
@@ -285,64 +284,6 @@ class _SccContext:
       while len(self.previous_captions) > 0:
         self.push_previous_caption(time_code)
       self.current_caption = None
-
-
-class SccWord:
-  """SCC hexadecimal word definition"""
-
-  def __init__(self):
-    self.value = None
-    self.byte_1 = None
-    self.byte_2 = None
-
-  @staticmethod
-  def _is_hex_word(word: str) -> bool:
-    """Checks whether the specified word is a 2-bytes hexadecimal word"""
-    if len(word) != 4:
-      return False
-    try:
-      int(word, 16)
-    except ValueError:
-      return False
-    return True
-
-  @staticmethod
-  def _decipher_parity_bit(byte: int):
-    """Extracts the byte value removing the odd parity bit"""
-    return byte & PARITY_BIT_MASK
-
-  @staticmethod
-  def from_value(value: int) -> SccWord:
-    """Creates a SCC word from the specified integer value"""
-    if value > 0xFFFF:
-      raise ValueError("Expected a 2-bytes int value, instead got ", hex(value))
-    data = value.to_bytes(2, byteorder='big')
-    return SccWord.from_bytes(data[0], data[1])
-
-  @staticmethod
-  def from_bytes(byte_1: int, byte_2: int) -> SccWord:
-    """Creates a SCC word from the specified bytes"""
-    if byte_1 > 0xFF or byte_2 > 0xFF:
-      raise ValueError(f"Expected two 1-byte int values, instead got {hex(byte_1)} and {hex(byte_2)}")
-    scc_word = SccWord()
-    scc_word.byte_1 = SccWord._decipher_parity_bit(byte_1)
-    scc_word.byte_2 = SccWord._decipher_parity_bit(byte_2)
-    scc_word.value = scc_word.byte_1 * 0x100 + scc_word.byte_2
-
-    return scc_word
-
-  @staticmethod
-  def from_str(hex_word: str) -> SccWord:
-    """Extracts hexadecimal word bytes to create a SCC word"""
-    if not SccWord._is_hex_word(hex_word):
-      raise ValueError("Expected a 2-bytes hexadecimal word, instead got ", hex_word)
-
-    data = bytes.fromhex(hex_word)
-    return SccWord.from_bytes(data[0], data[1])
-
-  def to_text(self) -> str:
-    """Converts SCC word to text"""
-    return ''.join(chr(byte) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
 
 
 class SccLine:
