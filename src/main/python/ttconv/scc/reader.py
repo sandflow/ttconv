@@ -205,20 +205,19 @@ class _SccContext:
       self.init_current_caption(time_code)
       self.set_current_to_previous()
 
-    elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
-      # Erase displayed caption (Pop-On)
       if len(self.previous_captions) > 0:
         # Set line breaks depending on the position of the content
 
         contents = []
-        initial_length = len(self.previous_captions[0].get_contents())
+        last_caption = self.previous_captions[0]
+        initial_length = len(last_caption.get_contents())
 
         for index in range(0, initial_length):
-          content = self.previous_captions[0].get_contents()[index - 1]
+          content = last_caption.get_contents()[index - 1]
           if not isinstance(content, SccCaptionText):
             continue
 
-          next_content = self.previous_captions[0].get_contents()[index]
+          next_content = last_caption.get_contents()[index]
           if not isinstance(next_content, SccCaptionText):
             continue
 
@@ -227,8 +226,10 @@ class _SccContext:
 
           contents.append(next_content)
 
-        self.previous_captions[0].set_contents(contents)
+        last_caption.set_contents(contents)
 
+    elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
+      # Erase displayed caption (Pop-On)
       self.push_previous_caption(time_code)
 
     elif control_code is SccControlCode.TO1:

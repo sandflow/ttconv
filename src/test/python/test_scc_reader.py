@@ -188,6 +188,41 @@ class SccReaderTest(unittest.TestCase):
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
+  def test_scc_pop_on_content_unexpectedly_ended(self):
+    scc_content = """Scenarist_SCC V1.0
+
+00:00:02:16	942c
+
+00:00:03:01	9420 93F0 91ae 4c6f 7265 6d20 6970 7375 6d20 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:11:27	9420
+    """
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 3, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:04:06", "00:00:11:28", "Lorem ipsum ", Br, "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
   def test_2_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
 
