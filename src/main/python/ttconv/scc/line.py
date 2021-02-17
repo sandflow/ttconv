@@ -73,21 +73,22 @@ class SccLine:
     return SccLine(time_offset, scc_words)
 
   def get_style(self) -> SccCaptionStyle:
-    """Analyses the line words ordering to get the caption style"""
+    """Analyses the line words to find SCC control codes and define the caption style"""
     scc_words = self.scc_words
     if not scc_words:
       return SccCaptionStyle.Unknown
 
-    prefix = SccControlCode.find(scc_words[0].value)
+    for word in scc_words:
+      prefix = SccControlCode.find(word.value)
 
-    if prefix in [SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4]:
-      return SccCaptionStyle.RollUp
+      if prefix in [SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4]:
+        return SccCaptionStyle.RollUp
 
-    if prefix is SccControlCode.RDC:
-      return SccCaptionStyle.PaintOn
+      if prefix is SccControlCode.RDC:
+        return SccCaptionStyle.PaintOn
 
-    if prefix is SccControlCode.RCL:
-      return SccCaptionStyle.PopOn
+      if prefix is SccControlCode.RCL:
+        return SccCaptionStyle.PopOn
 
     return SccCaptionStyle.Unknown
 
