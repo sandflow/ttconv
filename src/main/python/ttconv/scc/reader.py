@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import logging
+from math import ceil
 from typing import Optional, List
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType
@@ -44,6 +45,12 @@ from ttconv.style_properties import StyleProperties, NamedColors, LengthType
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
+
+SCC_SAFE_AREA_CELL_RESOLUTION_ROWS = 15
+SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS = 32
+
+SCC_ROOT_CELL_RESOLUTION_ROWS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_ROWS / 0.80)
+SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 0.80)
 
 
 class _SccContext:
@@ -220,24 +227,30 @@ class _SccContext:
         # Set line breaks depending on the position of the content
 
         contents = []
-        last_caption = self.active_captions[0]
-        initial_length = len(last_caption.get_contents())
+        last_active_caption = self.active_captions[0]
+        initial_length = len(last_active_caption.get_contents())
+
+        minimum_x_offset = self.safe_area_x_offset + SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS
 
         for index in range(0, initial_length):
-          content = last_caption.get_contents()[index - 1]
+          content = last_active_caption.get_contents()[index - 1]
           if not isinstance(content, SccCaptionText):
             continue
 
-          next_content = last_caption.get_contents()[index]
+          next_content = last_active_caption.get_contents()[index]
           if not isinstance(next_content, SccCaptionText):
             continue
 
           if next_content.is_contiguous(content):
             contents.append(SccCaptionLineBreak())
 
+          # Left-align to the minimum X offset
+          minimum_x_offset = min(next_content.get_x_offset(), minimum_x_offset)
+          next_content.set_x_offset(minimum_x_offset)
+
           contents.append(next_content)
 
-        last_caption.set_contents(contents)
+        last_active_caption.set_contents(contents)
 
     elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
       # Erase displayed caption (Pop-On)
@@ -372,10 +385,11 @@ def to_model(scc_content: str, progress_callback=lambda _: None):
   document = ContentDocument()
 
   # Safe area must be a 32x15 grid, that represents 80% of the root area
-  root_cell_resolution = CellResolutionType(rows=19, columns=40)
+  root_cell_resolution = CellResolutionType(rows=SCC_ROOT_CELL_RESOLUTION_ROWS, columns=SCC_ROOT_CELL_RESOLUTION_COLUMNS)
   document.set_cell_resolution(root_cell_resolution)
 
-  context.set_safe_area(int((root_cell_resolution.columns - 32) / 2), int((root_cell_resolution.rows - 15) / 2))
+  context.set_safe_area(int((root_cell_resolution.columns - SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS) / 2),
+                        int((root_cell_resolution.rows - SCC_SAFE_AREA_CELL_RESOLUTION_ROWS) / 2))
 
   body = Body()
   body.set_doc(document)
