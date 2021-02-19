@@ -48,39 +48,49 @@ LOGGER = logging.getLogger(__name__)
 
 class _SccContext:
   def __init__(self):
+    # Caption paragraphs container
     self.div: Optional[Div] = None
+
+    # Caption paragraphs counter
     self.count: int = 0
+
+    # Screen safe area offsets
     self.safe_area_x_offset: int = 0
     self.safe_area_y_offset: int = 0
+
+    # Previously read SCC word value
     self.previous_code = 0
-    self.current_caption: Optional[SccCaptionParagraph] = None
-    self.previous_captions: List[SccCaptionParagraph] = []
+
+    # Buffered caption being built
+    self.buffered_caption: Optional[SccCaptionParagraph] = None
+    # Captions being displayed
+    self.active_captions: List[SccCaptionParagraph] = []
 
   def set_safe_area(self, safe_area_x_offset: int, safe_area_y_offset: int):
     """Sets the safe area"""
     self.safe_area_x_offset = safe_area_x_offset
     self.safe_area_y_offset = safe_area_y_offset
 
-  def set_current_to_previous(self):
-    """Rotates current caption to previous caption"""
-    if self.current_caption is not None and self.current_caption.get_current_text():
+  def init_buffered_caption(self, time_code: SmpteTimeCode):
+    """Initializes the current buffered caption with begin time"""
+    if self.buffered_caption is not None:
+      self.buffered_caption.set_begin(time_code)
 
-      if not self.current_caption.get_id():
+  def flip_buffered_to_active_captions(self):
+    """Send the current buffered caption to the active captions list"""
+    if self.buffered_caption is not None and self.buffered_caption.get_current_text():
+
+      if not self.buffered_caption.get_id():
         self.count += 1
-        self.current_caption.set_id("caption" + str(self.count))
+        self.buffered_caption.set_id("caption" + str(self.count))
 
-      self.previous_captions.append(self.current_caption)
-      self.current_caption = None
+      self.active_captions.append(self.buffered_caption)
+      self.buffered_caption = None
 
-  def init_current_caption(self, time_code: SmpteTimeCode):
-    """Initializes the current caption with begin time"""
-    if self.current_caption is not None:
-      self.current_caption.set_begin(time_code)
-
-  def push_previous_caption(self, time_code: SmpteTimeCode, index: int = 0):
-    """Sets previous caption end time, pushes it into the data model and resets it"""
-    if len(self.previous_captions) > 0:
-      previous_caption = self.previous_captions.pop(index)
+  def push_active_caption_to_model(self, time_code: SmpteTimeCode, index: int = 0):
+    """Sets end time to the last active caption, and pushes it into the data model"""
+    if len(self.active_captions) > 0:
+      previous_caption = self.active_captions.pop(index)
       previous_caption.set_end(time_code)
 
       if previous_caption.get_style_property(StyleProperties.BackgroundColor) is None:
@@ -90,126 +100,127 @@ class _SccContext:
 
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SmpteTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
-    if self.current_caption is None:
+    if self.buffered_caption is None:
       raise ValueError("No current SCC caption initialized")
 
     pac_row = pac.get_row()
     pac_indent = pac.get_indent()
 
-    if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
-      if self.current_caption.get_current_text() is not None \
-          and self.safe_area_y_offset + pac_row == self.current_caption.get_row_offset() + 1:
+    if self.buffered_caption.get_caption_style() is SccCaptionStyle.PaintOn:
+      if self.buffered_caption.get_current_text() is not None \
+          and self.safe_area_y_offset + pac_row == self.buffered_caption.get_row_offset() + 1:
         # Creates a new Paragraph if the new caption is contiguous (Paint-On)
-        self.set_current_to_previous()
+        self.flip_buffered_to_active_captions()
 
-        self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
-        self.init_current_caption(time_code)
+        self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
+        self.init_buffered_caption(time_code)
 
-      elif len(self.previous_captions) > 0 and self.previous_captions[0].get_current_text() is not None \
-          and self.safe_area_y_offset + pac_row == self.previous_captions[0].get_row_offset():
+      elif len(self.active_captions) > 0 and self.active_captions[0].get_current_text() is not None \
+          and self.safe_area_y_offset + pac_row == self.active_captions[0].get_row_offset():
         # Pushes and erases displayed row so that it can be replaced by current row (Paint-On)
-        self.push_previous_caption(self.current_caption.get_begin())
+        self.push_active_caption_to_model(self.buffered_caption.get_begin())
 
-    self.current_caption.new_caption_text()
+    self.buffered_caption.new_caption_text()
 
-    if self.current_caption.get_caption_style() is SccCaptionStyle.RollUp:
+    if self.buffered_caption.get_caption_style() is SccCaptionStyle.RollUp:
       # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
       if pac_row in range(5, 12):
-        self.current_caption.apply_current_text_offsets()
+        self.buffered_caption.apply_current_text_offsets()
         return
 
-      self.current_caption.set_column_offset(pac_indent)
+      self.buffered_caption.set_column_offset(pac_indent)
     else:
-      self.current_caption.set_row_offset(pac_row)
-      self.current_caption.set_column_offset(pac_indent)
+      self.buffered_caption.set_row_offset(pac_row)
+      self.buffered_caption.set_column_offset(pac_indent)
 
-    self.current_caption.get_current_text().add_style_property(StyleProperties.Color, pac.get_color())
-    self.current_caption.get_current_text().add_style_property(StyleProperties.FontStyle, pac.get_font_style())
-    self.current_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, pac.get_color())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, pac.get_font_style())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
 
-    self.current_caption.apply_current_text_offsets()
+    self.buffered_caption.apply_current_text_offsets()
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode):
     """Processes SCC Mid-Row Code to map it to the model"""
-    if self.current_caption is None:
+    if self.buffered_caption is None:
       raise ValueError("No current SCC caption initialized")
 
-    if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
-      self.current_caption.new_caption_text()
-      self.current_caption.apply_current_text_offsets()
+    if self.buffered_caption.get_current_text() is not None and self.buffered_caption.get_current_text().get_text():
+      self.buffered_caption.new_caption_text()
+      self.buffered_caption.apply_current_text_offsets()
 
-    self.current_caption.get_current_text().add_style_property(StyleProperties.Color, mid_row_code.get_color())
-    self.current_caption.get_current_text().add_style_property(StyleProperties.FontStyle, mid_row_code.get_font_style())
-    self.current_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, mid_row_code.get_text_decoration())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, mid_row_code.get_color())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, mid_row_code.get_font_style())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, mid_row_code.get_text_decoration())
 
   def process_attribute_code(self, attribute_code: SccAttributeCode):
     """Processes SCC Attribute Code to map it to the model"""
-    if self.current_caption is None or self.current_caption.get_current_text() is None:
+    if self.buffered_caption is None or self.buffered_caption.get_current_text() is None:
       raise ValueError("No current SCC caption nor content initialized")
 
-    if self.current_caption.get_current_text() is not None and self.current_caption.get_current_text().get_text():
-      self.current_caption.new_caption_text()
-      self.current_caption.apply_current_text_offsets()
+    if self.buffered_caption.get_current_text() is not None and self.buffered_caption.get_current_text().get_text():
+      self.buffered_caption.new_caption_text()
+      self.buffered_caption.apply_current_text_offsets()
 
     if attribute_code.is_background():
-      self.current_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
+      self.buffered_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
     else:
-      self.current_caption.get_current_text().add_style_property(StyleProperties.Color, attribute_code.get_color())
+      self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, attribute_code.get_color())
 
-    self.current_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, attribute_code.get_text_decoration())
+    self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration,
+                                                                attribute_code.get_text_decoration())
 
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
 
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
-      if self.current_caption is not None and self.current_caption.get_current_text() is not None:
-        self.set_current_to_previous()
+      if self.buffered_caption is not None and self.buffered_caption.get_current_text() is not None:
+        self.flip_buffered_to_active_captions()
 
-      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
+      self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
     elif control_code is SccControlCode.RDC:
       # Start a new Paint-On caption
-      self.set_current_to_previous()
+      self.flip_buffered_to_active_captions()
 
-      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
-      self.init_current_caption(time_code)
+      self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
+      self.init_buffered_caption(time_code)
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
       # Start a new Roll-Up caption
-      self.set_current_to_previous()
+      self.flip_buffered_to_active_captions()
 
       previous_last_lines: List[SccCaptionContent] = []
-      if len(self.previous_captions) > 0:
+      if len(self.active_captions) > 0:
 
         if control_code is SccControlCode.RU2:
-          previous_last_lines = self.previous_captions[0].get_last_caption_lines(1)
+          previous_last_lines = self.active_captions[0].get_last_caption_lines(1)
 
         elif control_code is SccControlCode.RU3:
-          previous_last_lines = self.previous_captions[0].get_last_caption_lines(2)
+          previous_last_lines = self.active_captions[0].get_last_caption_lines(2)
 
         elif control_code is SccControlCode.RU4:
-          previous_last_lines = self.previous_captions[0].get_last_caption_lines(3)
+          previous_last_lines = self.active_captions[0].get_last_caption_lines(3)
 
         previous_last_lines.append(SccCaptionLineBreak())
 
-      self.push_previous_caption(time_code)
+      self.push_active_caption_to_model(time_code)
 
-      self.current_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
-      self.current_caption.set_contents(previous_last_lines)
-      self.init_current_caption(time_code)
-      self.current_caption.apply_roll_up_row_offsets()
+      self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
+      self.buffered_caption.set_contents(previous_last_lines)
+      self.init_buffered_caption(time_code)
+      self.buffered_caption.apply_roll_up_row_offsets()
 
     elif control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
-      self.init_current_caption(time_code)
-      self.set_current_to_previous()
+      self.init_buffered_caption(time_code)
+      self.flip_buffered_to_active_captions()
 
-      if len(self.previous_captions) > 0:
+      if len(self.active_captions) > 0:
         # Set line breaks depending on the position of the content
 
         contents = []
-        last_caption = self.previous_captions[0]
+        last_caption = self.active_captions[0]
         initial_length = len(last_caption.get_contents())
 
         for index in range(0, initial_length):
@@ -230,16 +241,16 @@ class _SccContext:
 
     elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
       # Erase displayed caption (Pop-On)
-      self.push_previous_caption(time_code)
+      self.push_active_caption_to_model(time_code)
 
     elif control_code is SccControlCode.TO1:
-      self.current_caption.indent(1)
+      self.buffered_caption.indent(1)
 
     elif control_code is SccControlCode.TO2:
-      self.current_caption.indent(2)
+      self.buffered_caption.indent(2)
 
     elif control_code is SccControlCode.TO3:
-      self.current_caption.indent(3)
+      self.buffered_caption.indent(3)
 
     elif control_code is SccControlCode.CR:
       # Roll the display up one row (Roll-Up)
@@ -257,30 +268,30 @@ class _SccContext:
 
   def process_text(self, word: str, time_code: SmpteTimeCode):
     """Processes SCC text words"""
-    if self.current_caption.get_caption_style() is SccCaptionStyle.PaintOn:
+    if self.buffered_caption.get_caption_style() is SccCaptionStyle.PaintOn:
       if word.startswith(" "):
-        self.current_caption.new_caption_text()
-        self.current_caption.get_current_text().append(word)
-        self.current_caption.apply_current_text_offsets()
-        self.current_caption.get_current_text().set_begin(time_code)
+        self.buffered_caption.new_caption_text()
+        self.buffered_caption.get_current_text().append(word)
+        self.buffered_caption.apply_current_text_offsets()
+        self.buffered_caption.get_current_text().set_begin(time_code)
         return
 
       if word.endswith(" "):
-        self.current_caption.get_current_text().append(word)
-        self.current_caption.new_caption_text()
-        self.current_caption.apply_current_text_offsets()
-        self.current_caption.get_current_text().set_begin(time_code)
+        self.buffered_caption.get_current_text().append(word)
+        self.buffered_caption.new_caption_text()
+        self.buffered_caption.apply_current_text_offsets()
+        self.buffered_caption.get_current_text().set_begin(time_code)
         return
 
-    self.current_caption.get_current_text().append(word)
+    self.buffered_caption.get_current_text().append(word)
 
   def flush(self, time_code: SmpteTimeCode):
     """Flushes the remaining current caption"""
-    if self.current_caption is not None:
-      self.set_current_to_previous()
-      while len(self.previous_captions) > 0:
-        self.push_previous_caption(time_code)
-      self.current_caption = None
+    if self.buffered_caption is not None:
+      self.flip_buffered_to_active_captions()
+      while len(self.active_captions) > 0:
+        self.push_active_caption_to_model(time_code)
+      self.buffered_caption = None
 
   def process_line(self, line: SccLine) -> SmpteTimeCode:
     """Converts the SCC line to the data model"""
