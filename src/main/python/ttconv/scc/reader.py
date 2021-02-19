@@ -28,7 +28,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Optional, List
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType
@@ -38,17 +37,13 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
-from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
+from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.style_properties import StyleProperties, NamedColors, LengthType
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
-
-SCC_LINE_PATTERN = '((' + SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
-
-PARITY_BIT_MASK = 0b01111111
 
 
 class _SccContext:
@@ -210,20 +205,19 @@ class _SccContext:
       self.init_current_caption(time_code)
       self.set_current_to_previous()
 
-    elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
-      # Erase displayed caption (Pop-On)
       if len(self.previous_captions) > 0:
         # Set line breaks depending on the position of the content
 
         contents = []
-        initial_length = len(self.previous_captions[0].get_contents())
+        last_caption = self.previous_captions[0]
+        initial_length = len(last_caption.get_contents())
 
         for index in range(0, initial_length):
-          content = self.previous_captions[0].get_contents()[index - 1]
+          content = last_caption.get_contents()[index - 1]
           if not isinstance(content, SccCaptionText):
             continue
 
-          next_content = self.previous_captions[0].get_contents()[index]
+          next_content = last_caption.get_contents()[index]
           if not isinstance(next_content, SccCaptionText):
             continue
 
@@ -232,8 +226,10 @@ class _SccContext:
 
           contents.append(next_content)
 
-        self.previous_captions[0].set_contents(contents)
+        last_caption.set_contents(contents)
 
+    elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
+      # Erase displayed caption (Pop-On)
       self.push_previous_caption(time_code)
 
     elif control_code is SccControlCode.TO1:
@@ -286,121 +282,17 @@ class _SccContext:
         self.push_previous_caption(time_code)
       self.current_caption = None
 
-
-class SccWord:
-  """SCC hexadecimal word definition"""
-
-  def __init__(self):
-    self.value = None
-    self.byte_1 = None
-    self.byte_2 = None
-
-  @staticmethod
-  def _is_hex_word(word: str) -> bool:
-    """Checks whether the specified word is a 2-bytes hexadecimal word"""
-    if len(word) != 4:
-      return False
-    try:
-      int(word, 16)
-    except ValueError:
-      return False
-    return True
-
-  @staticmethod
-  def _decipher_parity_bit(byte: int):
-    """Extracts the byte value removing the odd parity bit"""
-    return byte & PARITY_BIT_MASK
-
-  @staticmethod
-  def from_value(value: int) -> SccWord:
-    """Creates a SCC word from the specified integer value"""
-    if value > 0xFFFF:
-      raise ValueError("Expected a 2-bytes int value, instead got ", hex(value))
-    data = value.to_bytes(2, byteorder='big')
-    return SccWord.from_bytes(data[0], data[1])
-
-  @staticmethod
-  def from_bytes(byte_1: int, byte_2: int) -> SccWord:
-    """Creates a SCC word from the specified bytes"""
-    if byte_1 > 0xFF or byte_2 > 0xFF:
-      raise ValueError(f"Expected two 1-byte int values, instead got {hex(byte_1)} and {hex(byte_2)}")
-    scc_word = SccWord()
-    scc_word.byte_1 = SccWord._decipher_parity_bit(byte_1)
-    scc_word.byte_2 = SccWord._decipher_parity_bit(byte_2)
-    scc_word.value = scc_word.byte_1 * 0x100 + scc_word.byte_2
-
-    return scc_word
-
-  @staticmethod
-  def from_str(hex_word: str) -> SccWord:
-    """Extracts hexadecimal word bytes to create a SCC word"""
-    if not SccWord._is_hex_word(hex_word):
-      raise ValueError("Expected a 2-bytes hexadecimal word, instead got ", hex_word)
-
-    data = bytes.fromhex(hex_word)
-    return SccWord.from_bytes(data[0], data[1])
-
-  def to_text(self) -> str:
-    """Converts SCC word to text"""
-    return ''.join(chr(byte) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
-
-
-class SccLine:
-  """SCC line definition"""
-
-  def __init__(self, time_code: SmpteTimeCode, scc_words: List[SccWord]):
-    self.time_code = time_code
-    self.scc_words = scc_words
-
-  @staticmethod
-  def from_str(line: str) -> Optional[SccLine]:
-    """Creates a SCC line instance from the specified string"""
-    if not line:
-      return None
-
-    regex = re.compile(SCC_LINE_PATTERN)
-    match = regex.match(line)
-
-    if match is None:
-      return None
-
-    time_code = match.group(1)
-    time_offset = SmpteTimeCode.parse(time_code, FPS_30)
-
-    hex_words = line.split('\t')[1].split(' ')
-    scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
-    return SccLine(time_offset, scc_words)
-
-  def get_style(self) -> SccCaptionStyle:
-    """Analyses the line words ordering to get the caption style"""
-    scc_words = self.scc_words
-    if not scc_words:
-      return SccCaptionStyle.Unknown
-
-    prefix = SccControlCode.find(scc_words[0].value)
-
-    if prefix in [SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4]:
-      return SccCaptionStyle.RollUp
-
-    if prefix is SccControlCode.RDC:
-      return SccCaptionStyle.PaintOn
-
-    if prefix is SccControlCode.RCL:
-      return SccCaptionStyle.PopOn
-
-    return SccCaptionStyle.Unknown
-
-  def to_model(self, context: _SccContext) -> SmpteTimeCode:
+  def process_line(self, line: SccLine) -> SmpteTimeCode:
     """Converts the SCC line to the data model"""
 
-    debug = str(self.time_code) + "\t"
+    debug = str(line.time_code) + "\t"
 
-    for scc_word in self.scc_words:
+    for scc_word in line.scc_words:
 
-      if context.previous_code == scc_word.value:
+      if self.previous_code == scc_word.value:
         continue
 
-      self.time_code.add_frames()
+      line.time_code.add_frames()
 
       if scc_word.value == 0x0000:
         continue
@@ -422,101 +314,40 @@ class SccLine:
           if pac.get_text_decoration() is not None:
             debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
-          context.process_preamble_address_code(pac, self.time_code)
+          self.process_preamble_address_code(pac, line.time_code)
 
         elif attribute_code is not None:
           debug += "[ATC/" + hex(scc_word.value) + "]"
-          context.process_attribute_code(attribute_code)
+          self.process_attribute_code(attribute_code)
 
         elif mid_row_code is not None:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
-          context.process_mid_row_code(mid_row_code)
+          self.process_mid_row_code(mid_row_code)
 
         elif control_code is not None:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
-          context.process_control_code(control_code, self.time_code)
+          self.process_control_code(control_code, line.time_code)
 
         elif spec_char is not None:
           word = spec_char.get_unicode_value()
           debug += word
-          context.process_text(word, self.time_code)
+          self.process_text(word, line.time_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
 
-        context.previous_code = scc_word.value
+        self.previous_code = scc_word.value
 
       else:
         word = scc_word.to_text()
         debug += word
-        context.process_text(word, self.time_code)
-        context.previous_code = scc_word.value
+        self.process_text(word, line.time_code)
+        self.previous_code = scc_word.value
 
     LOGGER.debug(debug)
 
-    return self.time_code
-
-  def to_disassembly(self) -> str:
-    """Converts SCC line into the disassembly format"""
-    disassembly_line = str(self.time_code) + "\t"
-
-    for scc_word in self.scc_words:
-
-      if scc_word.value == 0x0000:
-        disassembly_line += "{}"
-        continue
-
-      if scc_word.byte_1 < 0x20:
-
-        attribute_code = SccAttributeCode.find(scc_word.value)
-        control_code = SccControlCode.find(scc_word.value)
-        mid_row_code = SccMidRowCode.find(scc_word.value)
-        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
-
-        if pac is not None:
-          disassembly_line += f"{{{pac.get_row():02}"
-          color = pac.get_color()
-          indent = pac.get_indent()
-          if indent is not None and indent > 0:
-            disassembly_line += f"{indent :02}"
-          elif color is not None:
-            disassembly_line += get_color_disassembly(color)
-            disassembly_line += get_font_style_disassembly(pac.get_font_style())
-            disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
-          else:
-            disassembly_line += "00"
-          disassembly_line += "}"
-
-        elif attribute_code is not None:
-          disassembly_line += "{"
-          disassembly_line += "B" if attribute_code.is_background() else ""
-          disassembly_line += get_color_disassembly(attribute_code.get_color())
-          disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
-          disassembly_line += "}"
-
-        elif mid_row_code is not None:
-          disassembly_line += "{"
-          disassembly_line += get_color_disassembly(mid_row_code.get_color())
-          disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
-          disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
-          disassembly_line += "}"
-
-        elif control_code is not None:
-          disassembly_line += "{" + control_code.get_name() + "}"
-
-        elif spec_char is not None:
-          disassembly_line += spec_char.get_unicode_value()
-
-        else:
-          disassembly_line += "{??}"
-          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
-
-      else:
-        disassembly_line += scc_word.to_text()
-
-    return disassembly_line
+    return line.time_code
 
 
 #
@@ -560,7 +391,7 @@ def to_model(scc_content: str, progress_callback=lambda _: None):
     if scc_line is None:
       continue
 
-    time_code = scc_line.to_model(context)
+    time_code = context.process_line(scc_line)
 
   context.flush(time_code)
 

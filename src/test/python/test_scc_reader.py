@@ -31,10 +31,10 @@ from numbers import Number
 from typing import Union, Type
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
-from ttconv.scc.reader import SccWord, SccLine, to_model
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.scc.reader import to_model
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
+from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -43,91 +43,6 @@ Integer luctus et ligula ac sagittis.
 Ut at diam sit amet nulla fringilla
 vestibulum nec vitae nisi.
 """
-
-
-class SccWordTest(unittest.TestCase):
-
-  def test_scc_word_is_hex_word(self):
-    self.assertTrue(SccWord._is_hex_word("0000"))
-    self.assertTrue(SccWord._is_hex_word("FFFF"))
-    self.assertFalse(SccWord._is_hex_word("000"))
-    self.assertFalse(SccWord._is_hex_word("12345"))
-    self.assertFalse(SccWord._is_hex_word("GHIJ"))
-
-  def test_scc_word_decipher_parity_bit(self):
-    self.assertEqual(0b00000000, SccWord._decipher_parity_bit(0b10000000))
-    self.assertEqual(0b00000010, SccWord._decipher_parity_bit(0b00000010))
-    self.assertEqual(0b00001010, SccWord._decipher_parity_bit(0b10001010))
-
-    translated_values = [
-      0x80, 0x01, 0x02, 0x83, 0x04, 0x85, 0x86, 0x07, 0x08, 0x89, 0x8a, 0x0b, 0x8c, 0x0d, 0x0e, 0x8f,
-      0x10, 0x91, 0x92, 0x13, 0x94, 0x15, 0x16, 0x97, 0x98, 0x19, 0x1a, 0x9b, 0x1c, 0x9d, 0x9e, 0x1f,
-      0x20, 0xa1, 0xa2, 0x23, 0xa4, 0x25, 0x26, 0xa7, 0xa8, 0x29, 0x2a, 0xab, 0x2c, 0xad, 0xae, 0x2f,
-      0xb0, 0x31, 0x32, 0xb3, 0x34, 0xb5, 0xb6, 0x37, 0x38, 0xb9, 0xba, 0x3b, 0xbc, 0x3d, 0x3e, 0xbf,
-      0x40, 0xc1, 0xc2, 0x43, 0xc4, 0x45, 0x46, 0xc7, 0xc8, 0x49, 0x4a, 0xcb, 0x4c, 0xcd, 0xce, 0x4f,
-      0xd0, 0x51, 0x52, 0xd3, 0x54, 0xd5, 0xd6, 0x57, 0x58, 0xd9, 0xda, 0x5b, 0xdc, 0x5d, 0x5e, 0xdf,
-      0xe0, 0x61, 0x62, 0xe3, 0x64, 0xe5, 0xe6, 0x67, 0x68, 0xe9, 0xea, 0x6b, 0xec, 0x6d, 0x6e, 0xef,
-      0x70, 0xf1, 0xf2, 0x73, 0xf4, 0x75, 0x76, 0xf7, 0xf8, 0x79, 0x7a, 0xfb, 0x7c, 0xfd, 0xfe, 0x7f
-    ]
-
-    for i in range(0x00, 0x80):
-      self.assertEqual(i, SccWord._decipher_parity_bit(translated_values[i]))
-
-  def test_scc_word_from_value(self):
-    scc_word = SccWord.from_value(0x01)
-    self.assertEqual((0x00, 0x01, 0x0001), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_value(0x0000)
-    self.assertEqual((0x00, 0x00, 0x0000), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_value(0x1a2b)
-    self.assertEqual((0x1a, 0x2b, 0x1a2b), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_value(0xffff)
-    self.assertEqual((0x7f, 0x7f, 0x7f7f), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-
-    self.assertRaises(ValueError, SccWord.from_value, 0x12345)
-
-  def test_scc_word_from_bytes(self):
-    scc_word = SccWord.from_bytes(0x00, 0x00)
-    self.assertEqual((0x00, 0x00, 0x0000), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_bytes(0x1a, 0x2b)
-    self.assertEqual((0x1a, 0x2b, 0x1a2b), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_bytes(0xff, 0xff)
-    self.assertEqual((0x7f, 0x7f, 0x7f7f), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-
-    self.assertRaises(ValueError, SccWord.from_bytes, 0x123, 0x45)
-    self.assertRaises(ValueError, SccWord.from_bytes, 0x12, 0x345)
-
-  def test_scc_word_from_str(self):
-    scc_word = SccWord.from_str("0000")
-    self.assertEqual((0x00, 0x00, 0x0000), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_str("1a2b")
-    self.assertEqual((0x1a, 0x2b, 0x1a2b), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_str("ffff")
-    self.assertEqual((0x7f, 0x7f, 0x7f7f), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-
-    self.assertRaises(ValueError, SccWord.from_str, "ttml")
-    self.assertRaises(ValueError, SccWord.from_str, "Hello")
-
-  def test_scc_word_to_text(self):
-    scc_word = SccWord.from_value(0x1234)
-    self.assertEqual('\x12\x34', scc_word.to_text())
-    scc_word = SccWord.from_value(0xFF00)
-    self.assertEqual('\x7f', scc_word.to_text())
-    scc_word = SccWord.from_value(0x01)
-    self.assertEqual('\x01', scc_word.to_text())
-
-    self.assertRaises(ValueError, SccWord.from_value, 0x01020304)
-
-
-class SccLineTest(unittest.TestCase):
-
-  def test_scc_line_from_str(self):
-    line_str = "01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f"
-    scc_line = SccLine.from_str(line_str)
-    self.assertEqual(18, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
-
-    self.assertIsNone(SccLine.from_str(""))
-    self.assertIsNone(SccLine.from_str("Hello world!"))
 
 
 class SccReaderTest(unittest.TestCase):
@@ -154,7 +69,7 @@ class SccReaderTest(unittest.TestCase):
   def check_element_origin(self, elem: ContentElement, expected_x_origin: Union[int, float, Number],
                            expected_y_origin: Union[int, float, Number], unit=LengthType.Units.c):
     expected_origin = CoordinateType(x=LengthType(value=expected_x_origin, units=unit),
-                                   y=LengthType(value=expected_y_origin, units=unit))
+                                     y=LengthType(value=expected_y_origin, units=unit))
     self.check_element_style(elem, StyleProperties.Origin, expected_origin)
 
   def check_element_extent(self, elem: ContentElement, width: Union[int, float, Number], height: Union[int, float, Number],
@@ -272,6 +187,41 @@ class SccReaderTest(unittest.TestCase):
 
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+
+  def test_scc_pop_on_content_unexpectedly_ended(self):
+    scc_content = """Scenarist_SCC V1.0
+
+00:00:02:16	942c
+
+00:00:03:01	9420 93F0 91ae 4c6f 7265 6d20 6970 7375 6d20 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:11:27	9420
+    """
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 3, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:04:06", "00:00:11:28", "Lorem ipsum ", Br, "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
 
   def test_2_rows_roll_up_content(self):
     scc_content = """Scenarist_SCC V1.0
