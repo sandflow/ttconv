@@ -28,100 +28,184 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
+
 from ttconv.scc.codes.control_codes import SccControlCode
 
-CONTROL_CODE_VALUES = [0X1422, 0x1C22, 0X1423, 0x1C23, 0X1421, 0x1C21, 0X142D, 0x1C2D, 0X1424,
-                       0x1C24, 0X142C, 0x1C2C, 0X142E, 0x1C2E, 0X142F, 0x1C2F, 0X1428, 0x1C28,
-                       0X1429, 0x1C29, 0X142B, 0x1C2B, 0X1721, 0x1F21, 0X1722, 0x1F22, 0X1723,
-                       0x1F23, 0X142A, 0x1C2A, 0X1420, 0x1C20, 0X1425, 0x1C25, 0X1426, 0x1C26,
-                       0X1427, 0x1C27]
+FIELD_1_CONTROL_CODE_VALUES = [0X1422, 0x1C22, 0X1423, 0x1C23, 0X1421, 0x1C21, 0X142D, 0x1C2D, 0X1424,
+                               0x1C24, 0X142C, 0x1C2C, 0X142E, 0x1C2E, 0X142F, 0x1C2F, 0X1428, 0x1C28,
+                               0X1429, 0x1C29, 0X142B, 0x1C2B, 0X1721, 0x1F21, 0X1722, 0x1F22, 0X1723,
+                               0x1F23, 0X142A, 0x1C2A, 0X1420, 0x1C20, 0X1425, 0x1C25, 0X1426, 0x1C26,
+                               0X1427, 0x1C27]
+
+FIELD_2_CONTROL_CODE_VALUES = [0x1522, 0x1D22, 0x1523, 0x1D23, 0x1521, 0x1D21, 0x152D, 0x1D2D, 0x1524, 0x1D24,
+                               0x152C, 0x1D2C, 0x152E, 0x1D2E, 0x152F, 0x1D2F, 0x1528, 0x1D28, 0x1529, 0x1D29,
+                               0x152B, 0x1D2B, 0x1721, 0x1F21, 0x1722, 0x1F22, 0x1723, 0x1F23, 0x152A, 0x1D2A,
+                               0x1520, 0x1D20, 0x1525, 0x1D25, 0x1526, 0x1D26, 0x1527, 0x1D27]
 
 
 class SCCControlCodesTest(unittest.TestCase):
 
   def test_scc_control_codes(self):
     self.assertEqual(SccControlCode.AOF,
-                     SccControlCode.find(CONTROL_CODE_VALUES[0]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[0]))
     self.assertEqual(SccControlCode.AOF,
-                     SccControlCode.find(CONTROL_CODE_VALUES[1]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[0]))
+    self.assertEqual(SccControlCode.AOF,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[1]))
+    self.assertEqual(SccControlCode.AOF,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[1]))
     self.assertEqual(SccControlCode.AON,
-                     SccControlCode.find(CONTROL_CODE_VALUES[2]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[2]))
     self.assertEqual(SccControlCode.AON,
-                     SccControlCode.find(CONTROL_CODE_VALUES[3]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[2]))
+    self.assertEqual(SccControlCode.AON,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[3]))
+    self.assertEqual(SccControlCode.AON,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[3]))
     self.assertEqual(SccControlCode.BS,
-                     SccControlCode.find(CONTROL_CODE_VALUES[4]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[4]))
     self.assertEqual(SccControlCode.BS,
-                     SccControlCode.find(CONTROL_CODE_VALUES[5]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[4]))
+    self.assertEqual(SccControlCode.BS,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[5]))
+    self.assertEqual(SccControlCode.BS,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[5]))
     self.assertEqual(SccControlCode.CR,
-                     SccControlCode.find(CONTROL_CODE_VALUES[6]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[6]))
     self.assertEqual(SccControlCode.CR,
-                     SccControlCode.find(CONTROL_CODE_VALUES[7]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[6]))
+    self.assertEqual(SccControlCode.CR,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[7]))
+    self.assertEqual(SccControlCode.CR,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[7]))
     self.assertEqual(SccControlCode.DER,
-                     SccControlCode.find(CONTROL_CODE_VALUES[8]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[8]))
     self.assertEqual(SccControlCode.DER,
-                     SccControlCode.find(CONTROL_CODE_VALUES[9]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[8]))
+    self.assertEqual(SccControlCode.DER,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[9]))
+    self.assertEqual(SccControlCode.DER,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[9]))
     self.assertEqual(SccControlCode.EDM,
-                     SccControlCode.find(CONTROL_CODE_VALUES[10]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[10]))
     self.assertEqual(SccControlCode.EDM,
-                     SccControlCode.find(CONTROL_CODE_VALUES[11]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[10]))
+    self.assertEqual(SccControlCode.EDM,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[11]))
+    self.assertEqual(SccControlCode.EDM,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[11]))
     self.assertEqual(SccControlCode.ENM,
-                     SccControlCode.find(CONTROL_CODE_VALUES[12]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[12]))
     self.assertEqual(SccControlCode.ENM,
-                     SccControlCode.find(CONTROL_CODE_VALUES[13]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[12]))
+    self.assertEqual(SccControlCode.ENM,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[13]))
+    self.assertEqual(SccControlCode.ENM,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[13]))
     self.assertEqual(SccControlCode.EOC,
-                     SccControlCode.find(CONTROL_CODE_VALUES[14]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[14]))
     self.assertEqual(SccControlCode.EOC,
-                     SccControlCode.find(CONTROL_CODE_VALUES[15]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[14]))
+    self.assertEqual(SccControlCode.EOC,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[15]))
+    self.assertEqual(SccControlCode.EOC,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[15]))
     self.assertEqual(SccControlCode.FON,
-                     SccControlCode.find(CONTROL_CODE_VALUES[16]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[16]))
     self.assertEqual(SccControlCode.FON,
-                     SccControlCode.find(CONTROL_CODE_VALUES[17]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[16]))
+    self.assertEqual(SccControlCode.FON,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[17]))
+    self.assertEqual(SccControlCode.FON,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[17]))
     self.assertEqual(SccControlCode.RDC,
-                     SccControlCode.find(CONTROL_CODE_VALUES[18]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[18]))
     self.assertEqual(SccControlCode.RDC,
-                     SccControlCode.find(CONTROL_CODE_VALUES[19]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[18]))
+    self.assertEqual(SccControlCode.RDC,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[19]))
+    self.assertEqual(SccControlCode.RDC,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[19]))
     self.assertEqual(SccControlCode.RTD,
-                     SccControlCode.find(CONTROL_CODE_VALUES[20]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[20]))
     self.assertEqual(SccControlCode.RTD,
-                     SccControlCode.find(CONTROL_CODE_VALUES[21]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[20]))
+    self.assertEqual(SccControlCode.RTD,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[21]))
+    self.assertEqual(SccControlCode.RTD,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[21]))
     self.assertEqual(SccControlCode.TO1,
-                     SccControlCode.find(CONTROL_CODE_VALUES[22]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[22]))
     self.assertEqual(SccControlCode.TO1,
-                     SccControlCode.find(CONTROL_CODE_VALUES[23]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[22]))
+    self.assertEqual(SccControlCode.TO1,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[23]))
+    self.assertEqual(SccControlCode.TO1,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[23]))
     self.assertEqual(SccControlCode.TO2,
-                     SccControlCode.find(CONTROL_CODE_VALUES[24]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[24]))
     self.assertEqual(SccControlCode.TO2,
-                     SccControlCode.find(CONTROL_CODE_VALUES[25]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[24]))
+    self.assertEqual(SccControlCode.TO2,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[25]))
+    self.assertEqual(SccControlCode.TO2,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[25]))
     self.assertEqual(SccControlCode.TO3,
-                     SccControlCode.find(CONTROL_CODE_VALUES[26]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[26]))
     self.assertEqual(SccControlCode.TO3,
-                     SccControlCode.find(CONTROL_CODE_VALUES[27]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[26]))
+    self.assertEqual(SccControlCode.TO3,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[27]))
+    self.assertEqual(SccControlCode.TO3,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[27]))
     self.assertEqual(SccControlCode.TR,
-                     SccControlCode.find(CONTROL_CODE_VALUES[28]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[28]))
     self.assertEqual(SccControlCode.TR,
-                     SccControlCode.find(CONTROL_CODE_VALUES[29]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[28]))
+    self.assertEqual(SccControlCode.TR,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[29]))
+    self.assertEqual(SccControlCode.TR,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[29]))
     self.assertEqual(SccControlCode.RCL,
-                     SccControlCode.find(CONTROL_CODE_VALUES[30]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[30]))
     self.assertEqual(SccControlCode.RCL,
-                     SccControlCode.find(CONTROL_CODE_VALUES[31]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[30]))
+    self.assertEqual(SccControlCode.RCL,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[31]))
+    self.assertEqual(SccControlCode.RCL,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[31]))
     self.assertEqual(SccControlCode.RU2,
-                     SccControlCode.find(CONTROL_CODE_VALUES[32]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[32]))
     self.assertEqual(SccControlCode.RU2,
-                     SccControlCode.find(CONTROL_CODE_VALUES[33]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[32]))
+    self.assertEqual(SccControlCode.RU2,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[33]))
+    self.assertEqual(SccControlCode.RU2,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[33]))
     self.assertEqual(SccControlCode.RU3,
-                     SccControlCode.find(CONTROL_CODE_VALUES[34]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[34]))
     self.assertEqual(SccControlCode.RU3,
-                     SccControlCode.find(CONTROL_CODE_VALUES[35]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[34]))
+    self.assertEqual(SccControlCode.RU3,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[35]))
+    self.assertEqual(SccControlCode.RU3,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[35]))
     self.assertEqual(SccControlCode.RU4,
-                     SccControlCode.find(CONTROL_CODE_VALUES[36]))
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[36]))
     self.assertEqual(SccControlCode.RU4,
-                     SccControlCode.find(CONTROL_CODE_VALUES[37]))
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[36]))
+    self.assertEqual(SccControlCode.RU4,
+                     SccControlCode.find(FIELD_1_CONTROL_CODE_VALUES[37]))
+    self.assertEqual(SccControlCode.RU4,
+                     SccControlCode.find(FIELD_2_CONTROL_CODE_VALUES[37]))
 
   def test_scc_control_codes_invalid(self):
-    other_code_values = [code for code in range(0x0000, 0xFFFF) if code not in CONTROL_CODE_VALUES]
+    other_code_values = [code for code in range(0x0000, 0xFFFF) if
+                         (code not in FIELD_1_CONTROL_CODE_VALUES) and code not in FIELD_2_CONTROL_CODE_VALUES]
 
     for cc in other_code_values:
       self.assertIsNone(SccControlCode.find(cc))
+
 
 if __name__ == '__main__':
   unittest.main()
