@@ -33,6 +33,8 @@ import unittest
 from ttconv.config import GeneralConfiguration
 from ttconv.imsc.config import TimeExpressionEnum, IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
+from ttconv.scc.config import SccReaderConfiguration
+from ttconv.style_properties import TextAlignType
 from ttconv.tt import CONFIGURATIONS
 
 
@@ -54,7 +56,9 @@ class ConfigurationTest(unittest.TestCase):
       },
       "imsc_reader" : {},
       "srt_writer" : {},
-      "scc_reader" : {}
+      "scc_reader" : {
+        "text_align": "right"
+      }
     }
     """
     config_dict = json.loads(config_json)
@@ -62,7 +66,8 @@ class ConfigurationTest(unittest.TestCase):
     expected_configurations = [
       GeneralConfiguration(log_level='INFO', progress_bar=False),
       IMSCWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
-      ISDConfiguration(multi_thread=False)
+      ISDConfiguration(multi_thread=False),
+      SccReaderConfiguration(text_align=TextAlignType.end)
     ]
 
     module_configurations = []
@@ -99,7 +104,8 @@ class ConfigurationTest(unittest.TestCase):
     expected_configurations = [
       GeneralConfiguration(),
       IMSCWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
-      ISDConfiguration()
+      ISDConfiguration(),
+      SccReaderConfiguration()
     ]
 
     module_configurations = []

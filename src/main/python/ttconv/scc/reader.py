@@ -37,11 +37,12 @@ from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
+from ttconv.scc.config import SccReaderConfiguration
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
 from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.style_properties import StyleProperties, NamedColors, LengthType
+from ttconv.style_properties import StyleProperties, NamedColors, LengthType, TextAlignType
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
@@ -54,7 +55,7 @@ SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 
 
 
 class _SccContext:
-  def __init__(self):
+  def __init__(self, config: Optional[SccReaderConfiguration] = None):
     # Caption paragraphs container
     self.div: Optional[Div] = None
 
@@ -72,6 +73,9 @@ class _SccContext:
     self.buffered_caption: Optional[SccCaptionParagraph] = None
     # Captions being displayed
     self.active_captions: List[SccCaptionParagraph] = []
+
+    # Text alignment
+    self.text_alignment = TextAlignType.start if config is None else config.text_align
 
   def set_safe_area(self, safe_area_x_offset: int, safe_area_y_offset: int):
     """Sets the safe area"""
@@ -252,6 +256,8 @@ class _SccContext:
 
         last_active_caption.set_contents(contents)
 
+        # Apply text alignment
+        last_active_caption.add_style_property(StyleProperties.TextAlign, self.text_alignment)
     elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
       # Erase displayed caption (Pop-On)
       self.push_active_caption_to_model(time_code)
@@ -378,10 +384,10 @@ class _SccContext:
 # SCC reader
 #
 
-def to_model(scc_content: str, progress_callback=lambda _: None):
+def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts a SCC document to the data model"""
 
-  context = _SccContext()
+  context = _SccContext(config)
   document = ContentDocument()
 
   # Safe area must be a 32x15 grid, that represents 80% of the root area
