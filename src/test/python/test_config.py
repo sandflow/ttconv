@@ -27,14 +27,13 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 import json
-from fractions import Fraction
 import unittest
+from fractions import Fraction
 
 from ttconv.config import GeneralConfiguration
 from ttconv.imsc.config import TimeExpressionEnum, IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
-from ttconv.scc.config import SccReaderConfiguration
-from ttconv.style_properties import TextAlignType
+from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.tt import CONFIGURATIONS
 
 
@@ -67,7 +66,7 @@ class ConfigurationTest(unittest.TestCase):
       GeneralConfiguration(log_level='INFO', progress_bar=False),
       IMSCWriterConfiguration(time_format=TimeExpressionEnum.frames, fps=Fraction(30000, 1001)),
       ISDConfiguration(multi_thread=False),
-      SccReaderConfiguration(text_align=TextAlignType.end)
+      SccReaderConfiguration(text_align=TextAlignment.RIGHT)
     ]
 
     module_configurations = []
@@ -123,6 +122,7 @@ class ConfigurationTest(unittest.TestCase):
 
     for exp_config in expected_configurations:
       self.assertTrue(exp_config in module_configurations)
+
 
 if __name__ == '__main__':
   unittest.main()

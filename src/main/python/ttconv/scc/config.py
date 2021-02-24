@@ -25,37 +25,44 @@
 
 """SCC configuration"""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from enum import Enum
 
 from ttconv.config import ModuleConfiguration
 from ttconv.style_properties import TextAlignType
+
+
+class TextAlignment(Enum):
+  LEFT = ("left", TextAlignType.start)
+  CENTER = ("center", TextAlignType.center)
+  RIGHT = ("right", TextAlignType.end)
+  AUTO = ("auto", TextAlignType.start)
+
+  def __init__(self, label: str, text_align: TextAlignType):
+    self.label = label
+    self.text_align = text_align
+
+  @staticmethod
+  def from_value(value: [str, TextAlignment]) -> TextAlignment:
+    if isinstance(value, TextAlignment):
+      return value
+
+    for text_alignment in list(TextAlignment):
+      if value.lower() == text_alignment.label.lower():
+        return text_alignment
+
+    raise ValueError(f"Invalid text align '{value}' value. Expect: 'left', 'center', 'right' or 'auto'.")
 
 
 @dataclass
 class SccReaderConfiguration(ModuleConfiguration):
   """SCC reader configuration"""
 
-  class TextAlignDecoder:
-    """Utility callable for converting string to Fraction"""
-
-    def __call__(self, value: [str, TextAlignType]) -> TextAlignType:
-      if isinstance(value, TextAlignType):
-        return value
-
-      if value == "left":
-        return TextAlignType.start
-
-      if value == "center":
-        return TextAlignType.center
-
-      if value == "right":
-        return TextAlignType.end
-
-      raise ValueError(f"Invalid text align '{value}' value. Expect: 'left', 'center' or 'right'.")
-
-  text_align: TextAlignType = field(
-    default=TextAlignType.start,
-    metadata={"decoder": TextAlignDecoder()}
+  text_align: TextAlignment = field(
+    default=TextAlignment.LEFT,
+    metadata={"decoder": TextAlignment.from_value}
   )
 
   @classmethod

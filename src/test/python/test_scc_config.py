@@ -29,11 +29,18 @@
 import json
 import unittest
 
-from ttconv.scc.config import SccReaderConfiguration
-from ttconv.style_properties import TextAlignType
+from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 
 
 class SccReaderConfigurationTest(unittest.TestCase):
+
+  def test_scc_reader_config_text_alignment(self):
+    self.assertEqual(TextAlignment.LEFT, TextAlignment.from_value("left"))
+    self.assertEqual(TextAlignment.RIGHT, TextAlignment.from_value("right"))
+    self.assertEqual(TextAlignment.CENTER, TextAlignment.from_value("center"))
+    self.assertEqual(TextAlignment.AUTO, TextAlignment.from_value("auto"))
+    self.assertRaisesRegex(ValueError, "Invalid text align 'other' value. Expect: 'left', 'center', 'right' or 'auto'",
+                           TextAlignment.from_value, "other")
 
   def test_scc_reader_config_parsing_default_value(self):
     config_json = "{}"
@@ -41,7 +48,7 @@ class SccReaderConfigurationTest(unittest.TestCase):
 
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
-    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignType.start))
+    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.LEFT))
 
   def test_scc_reader_config_parsing_right_value(self):
     config_json = """{"text_align": "right" }"""
@@ -49,7 +56,7 @@ class SccReaderConfigurationTest(unittest.TestCase):
 
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
-    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignType.end))
+    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.RIGHT))
 
   def test_scc_reader_config_parsing_left_value(self):
     config_json = """{"text_align": "left" }"""
@@ -57,7 +64,7 @@ class SccReaderConfigurationTest(unittest.TestCase):
 
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
-    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignType.start))
+    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.LEFT))
 
   def test_scc_reader_config_parsing_center_value(self):
     config_json = """{"text_align": "center" }"""
@@ -65,7 +72,15 @@ class SccReaderConfigurationTest(unittest.TestCase):
 
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
-    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignType.center))
+    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.CENTER))
+
+  def test_scc_reader_config_parsing_auto_value(self):
+    config_json = """{"text_align": "auto" }"""
+    config_dict = json.loads(config_json)
+
+    scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
+
+    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.AUTO))
 
 
 if __name__ == '__main__':

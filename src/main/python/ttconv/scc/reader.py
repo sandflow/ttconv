@@ -28,7 +28,6 @@
 from __future__ import annotations
 
 import logging
-from math import ceil
 from typing import Optional, List
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType
@@ -37,21 +36,16 @@ from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
-from ttconv.scc.config import SccReaderConfiguration
+from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
 from ttconv.scc.line import SccLine
-from ttconv.scc.paragraph import SccCaptionParagraph
+from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
+  SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.style_properties import StyleProperties, NamedColors, LengthType, TextAlignType
+from ttconv.style_properties import StyleProperties, NamedColors, LengthType
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
-
-SCC_SAFE_AREA_CELL_RESOLUTION_ROWS = 15
-SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS = 32
-
-SCC_ROOT_CELL_RESOLUTION_ROWS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_ROWS / 0.80)
-SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 0.80)
 
 
 class _SccContext:
@@ -75,7 +69,7 @@ class _SccContext:
     self.active_captions: List[SccCaptionParagraph] = []
 
     # Text alignment
-    self.text_alignment = TextAlignType.start if config is None else config.text_align
+    self.text_alignment = TextAlignment.LEFT if config is None else config.text_align
 
   def set_safe_area(self, safe_area_x_offset: int, safe_area_y_offset: int):
     """Sets the safe area"""
@@ -250,14 +244,19 @@ class _SccContext:
 
           # Left-align to the minimum X offset
           minimum_x_offset = min(next_content.get_x_offset(), minimum_x_offset)
-          next_content.set_x_offset(minimum_x_offset)
 
           contents.append(next_content)
 
         last_active_caption.set_contents(contents)
 
+        if self.text_alignment == TextAlignment.AUTO:
+          text_alignment = last_active_caption.guess_text_alignment()
+        else:
+          text_alignment = self.text_alignment.text_align
+
         # Apply text alignment
-        last_active_caption.add_style_property(StyleProperties.TextAlign, self.text_alignment)
+        last_active_caption.add_style_property(StyleProperties.TextAlign, text_alignment)
+
     elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
       # Erase displayed caption (Pop-On)
       self.push_active_caption_to_model(time_code)
