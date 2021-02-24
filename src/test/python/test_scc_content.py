@@ -55,10 +55,17 @@ class SccCaptionTextTest(unittest.TestCase):
     other_caption_text.set_y_offset(8)
 
     self.assertTrue(caption_text.has_same_origin(other_caption_text))
+    self.assertFalse(caption_text.is_strictly_contiguous(other_caption_text))
     self.assertFalse(caption_text.is_contiguous(other_caption_text))
 
     caption_text.set_y_offset(9)
     self.assertFalse(caption_text.has_same_origin(other_caption_text))
+    self.assertTrue(caption_text.is_strictly_contiguous(other_caption_text))
+    self.assertTrue(caption_text.is_contiguous(other_caption_text))
+
+    caption_text.set_x_offset(13)
+    self.assertFalse(caption_text.has_same_origin(other_caption_text))
+    self.assertFalse(caption_text.is_strictly_contiguous(other_caption_text))
     self.assertTrue(caption_text.is_contiguous(other_caption_text))
 
   def test_style_properties(self):
