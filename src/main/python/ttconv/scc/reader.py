@@ -323,8 +323,14 @@ class _SccContext:
 
       if scc_word.byte_1 < 0x20:
 
-        attribute_code = SccAttributeCode.find(scc_word.value)
         control_code = SccControlCode.find(scc_word.value)
+        if control_code is not None \
+            and control_code is SccControlCode.find(self.previous_code):
+          # Skip duplicated control code from 'Field 2'
+          line.time_code.add_frames(-1)
+          continue
+
+        attribute_code = SccAttributeCode.find(scc_word.value)
         mid_row_code = SccMidRowCode.find(scc_word.value)
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
         spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
