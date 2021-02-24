@@ -333,7 +333,7 @@ class _SccParagraphRegion:
   def _find_matching_region(self) -> Optional[Region]:
     """Looks for a region that origin matches with the paragraph origin"""
     for region in self._doc.iter_regions():
-      if self._has_same_origin_as_region(region):
+      if self._has_same_origin_as_region(region) and region.get_id().startswith(self._get_region_prefix()):
         return region
     return None
 
