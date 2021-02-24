@@ -69,7 +69,7 @@ class _SccContext:
     self.active_captions: List[SccCaptionParagraph] = []
 
     # Text alignment
-    self.text_alignment = TextAlignment.LEFT if config is None else config.text_align
+    self.text_alignment = TextAlignment.AUTO if config is None else config.text_align
 
   def set_safe_area(self, safe_area_x_offset: int, safe_area_y_offset: int):
     """Sets the safe area"""
@@ -228,8 +228,6 @@ class _SccContext:
         last_active_caption = self.active_captions[0]
         initial_length = len(last_active_caption.get_contents())
 
-        minimum_x_offset = self.safe_area_x_offset + SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS
-
         for index in range(0, initial_length):
           content = last_active_caption.get_contents()[index - 1]
           if not isinstance(content, SccCaptionText):
@@ -241,9 +239,6 @@ class _SccContext:
 
           if next_content.is_contiguous(content):
             contents.append(SccCaptionLineBreak())
-
-          # Left-align to the minimum X offset
-          minimum_x_offset = min(next_content.get_x_offset(), minimum_x_offset)
 
           contents.append(next_content)
 

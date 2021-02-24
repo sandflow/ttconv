@@ -48,7 +48,7 @@ class SccReaderConfigurationTest(unittest.TestCase):
 
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
-    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.LEFT))
+    self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.AUTO))
 
   def test_scc_reader_config_parsing_right_value(self):
     config_json = """{"text_align": "right" }"""

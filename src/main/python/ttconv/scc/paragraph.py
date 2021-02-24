@@ -284,6 +284,7 @@ class SccCaptionParagraph:
       return TextAlignType.center
 
     # default is left-aligned
+    LOGGER.warning("Cannot define the paragraph text alignment. Set it to default left-aligned.")
     return TextAlignType.start
 
   def to_paragraph(self, doc: ContentDocument) -> P:

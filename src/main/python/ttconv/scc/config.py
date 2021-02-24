@@ -61,7 +61,7 @@ class SccReaderConfiguration(ModuleConfiguration):
   """SCC reader configuration"""
 
   text_align: TextAlignment = field(
-    default=TextAlignment.LEFT,
+    default=TextAlignment.AUTO,
     metadata={"decoder": TextAlignment.from_value}
   )
 
