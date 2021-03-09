@@ -144,7 +144,7 @@ class _SccContext:
 
     self.buffered_caption.apply_current_text_offsets()
 
-  def process_mid_row_code(self, mid_row_code: SccMidRowCode):
+  def process_mid_row_code(self, mid_row_code: SccMidRowCode, time_code: SmpteTimeCode):
     """Processes SCC Mid-Row Code to map it to the model"""
     if self.buffered_caption is None:
       raise ValueError("No current SCC caption initialized")
@@ -156,6 +156,12 @@ class _SccContext:
     self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, mid_row_code.get_color())
     self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, mid_row_code.get_font_style())
     self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, mid_row_code.get_text_decoration())
+
+    # The cursor moves one column to the right after each Mid-Row Code
+    self.buffered_caption.get_current_text().append(" ")
+
+    if self.buffered_caption.get_caption_style() is SccCaptionStyle.PaintOn:
+      self.buffered_caption.get_current_text().set_begin(time_code)
 
   def process_attribute_code(self, attribute_code: SccAttributeCode):
     """Processes SCC Attribute Code to map it to the model"""
@@ -359,7 +365,7 @@ class _SccContext:
 
         elif mid_row_code is not None:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
-          self.process_mid_row_code(mid_row_code)
+          self.process_mid_row_code(mid_row_code, line.time_code)
 
         elif control_code is not None:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"

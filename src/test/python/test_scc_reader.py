@@ -132,14 +132,14 @@ class SccReaderTest(unittest.TestCase):
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
     self.check_region_origin(region_3, 9, 16, doc.get_cell_resolution())
-    self.check_region_extent(region_3, 18, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 20, 2, doc.get_cell_resolution())
     self.check_element_style(region_3, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_3, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     region_4 = doc.get_region("pop4")
     self.assertIsNotNone(region_4)
     self.check_region_origin(region_4, 4, 8, doc.get_cell_resolution())
-    self.check_region_extent(region_4, 28, 10, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 29, 10, doc.get_cell_resolution())
     self.check_element_style(region_4, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_4, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -167,11 +167,11 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[1], "caption2", "01:03:28:12", "01:11:31:28", "HEY, THE®E.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", "test", " Captions")
+    self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", " test", "  Captions")
     self.assertEqual(region_3, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", "Lorem ipsum ", Br, "dolor sit amet,", Br,
-                       "consectetur adipiscing elit.")
+    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", " Lorem ipsum ", Br, "dolor sit amet,", Br,
+                       " consectetur adipiscing elit.")
     self.assertEqual(region_4, p_list[3].get_region())
 
     self.check_caption(p_list[4], "caption5", "01:20:56:24", "01:22:19:24", "entesque interdum lacinia sollicitudin.")
@@ -193,7 +193,7 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:02:16	942c
 
-00:00:03:01	9420 93F0 91ae 4c6f 7265 6d20 6970 7375 6d20 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+00:00:03:01	9420 93F0 91ae 9421 4c6f 7265 6d20 6970 7375 6d20 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
 
 00:00:11:27	9420
     """
@@ -219,7 +219,7 @@ class SccReaderTest(unittest.TestCase):
     p_list = list(div)
     self.assertEqual(1, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:04:06", "00:00:11:28", "Lorem ipsum ", Br, "dolor sit amet,", Br,
+    self.check_caption(p_list[0], "caption1", "00:00:04:07", "00:00:11:28", "Lorem ipsum ", Br, "dolor sit amet,", Br,
                        "consectetur adipiscing elit.")
     self.assertEqual(region_1, p_list[0].get_region())
 
@@ -437,7 +437,7 @@ class SccReaderTest(unittest.TestCase):
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 31, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -467,10 +467,10 @@ class SccReaderTest(unittest.TestCase):
     self.assertEqual(region_1, p_list[3].get_region())
 
     self.check_caption(p_list[4], "caption5", "00:00:09;22", "00:00:11;08", "HELPING THE LOCAL NEIGHBORHOODS", Br, "AND ",
-                       "IMPROVING ", "THE LIVES OF ALL")
+                       " IMPROVING ", " THE LIVES OF ALL")
     self.assertEqual(region_1, p_list[4].get_region())
 
-    self.check_caption(p_list[5], "caption6", "00:00:11;08", "00:00:12;08", "AND ", "IMPROVING ", "THE LIVES OF ALL", Br,
+    self.check_caption(p_list[5], "caption6", "00:00:11;08", "00:00:12;08", "AND ", " IMPROVING ", " THE LIVES OF ALL", Br,
                        "WE SERVE.")
     self.assertEqual(region_1, p_list[5].get_region())
 
