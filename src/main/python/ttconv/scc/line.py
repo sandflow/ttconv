@@ -35,7 +35,7 @@ from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
-from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
+from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.word import SccWord
@@ -108,7 +108,8 @@ class SccLine:
         control_code = SccControlCode.find(scc_word.value)
         mid_row_code = SccMidRowCode.find(scc_word.value)
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
+        spec_char = SccSpecialCharacter.find(scc_word.value)
+        extended_char = SccExtendedCharacter.find(scc_word.value)
 
         if pac is not None:
           disassembly_line += f"{{{pac.get_row():02}"
@@ -143,6 +144,9 @@ class SccLine:
 
         elif spec_char is not None:
           disassembly_line += spec_char.get_unicode_value()
+
+        elif extended_char is not None:
+          disassembly_line += extended_char.get_unicode_value()
 
         else:
           disassembly_line += "{??}"

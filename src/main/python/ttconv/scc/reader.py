@@ -35,7 +35,7 @@ from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
-from ttconv.scc.codes.special_characters import SccSpecialAndExtendedCharacter
+from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.scc.content import SccCaptionContent, SccCaptionLineBreak, SccCaptionText
 from ttconv.scc.line import SccLine
@@ -199,13 +199,13 @@ class _SccContext:
       if len(self.active_captions) > 0:
 
         if control_code is SccControlCode.RU2:
-          previous_last_lines = self.active_captions[0].get_last_caption_lines(1)
+          previous_last_lines = self.active_captions[-1].get_last_caption_lines(1)
 
         elif control_code is SccControlCode.RU3:
-          previous_last_lines = self.active_captions[0].get_last_caption_lines(2)
+          previous_last_lines = self.active_captions[-1].get_last_caption_lines(2)
 
         elif control_code is SccControlCode.RU4:
-          previous_last_lines = self.active_captions[0].get_last_caption_lines(3)
+          previous_last_lines = self.active_captions[-1].get_last_caption_lines(3)
 
         previous_last_lines.append(SccCaptionLineBreak())
 
@@ -225,7 +225,7 @@ class _SccContext:
         # Set line breaks depending on the position of the content
 
         contents = []
-        last_active_caption = self.active_captions[0]
+        last_active_caption = self.active_captions[-1]
         initial_length = len(last_active_caption.get_contents())
 
         for index in range(0, initial_length):
@@ -278,6 +278,12 @@ class _SccContext:
       # Not used in this implementation since this SCC reader does not map the text overlapping into
       # the model (i.e. a row is erased when a PAC is received, so before a new caption is written onto it).
       pass
+
+    elif control_code is SccControlCode.BS:
+      # Backspace
+      # When a Backspace is received, the cursor moves to the left one column position erasing
+      # the character or Mid-Row Code occupying that location, unless the cursor is in Column 1
+      self.buffered_caption.get_current_text().backspace()
 
   def process_text(self, word: str, time_code: SmpteTimeCode):
     """Processes SCC text words"""
@@ -333,7 +339,8 @@ class _SccContext:
         attribute_code = SccAttributeCode.find(scc_word.value)
         mid_row_code = SccMidRowCode.find(scc_word.value)
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialAndExtendedCharacter.find(scc_word.value)
+        spec_char = SccSpecialCharacter.find(scc_word.value)
+        extended_char = SccExtendedCharacter.find(scc_word.value)
 
         if pac is not None:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
@@ -360,6 +367,12 @@ class _SccContext:
 
         elif spec_char is not None:
           word = spec_char.get_unicode_value()
+          debug += word
+          self.process_text(word, line.time_code)
+
+        elif extended_char is not None:
+          self.buffered_caption.get_current_text().backspace()
+          word = extended_char.get_unicode_value()
           debug += word
           self.process_text(word, line.time_code)
 

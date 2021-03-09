@@ -83,6 +83,10 @@ class SccCaptionText(SccCaptionContent):
     """Concatenates text content to caption text"""
     self._text += text
 
+  def backspace(self):
+    """Remove last character"""
+    self._text = self._text[:-1]
+
   def set_x_offset(self, indent: Optional[int]):
     """Sets the x offset"""
     self._x_offset = indent if indent is not None else 0
