@@ -31,7 +31,7 @@ from numbers import Number
 from typing import Union, Type, Optional
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
-from ttconv.scc.reader import to_model
+from ttconv.scc.reader import to_model, to_disassembly
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
 from ttconv.time_code import SmpteTimeCode, FPS_30
@@ -114,6 +114,20 @@ class SccReaderTest(unittest.TestCase):
 01:22:19:23	942c 942c
 """
 
+    scc_disassembly = """\
+01:02:53:14	{ENM}{ENM}{RCL}{RCL}{1520}{1520}{TO2}{TO2}( horn honking ){EDM}{EDM}{}{}{EOC}{EOC}
+01:02:55:14	{EDM}{EDM}
+01:03:27:29	{ENM}{ENM}{RCL}{RCL}{1504}{1504}HEY, THE®E.{EDM}{EDM}{}{}{EOC}{EOC}
+01:11:31:01	{RCL}{RCL}{1404}{1404}{TO1}{TO1}Test ½ Caption {1504}{1504}{TO1}{TO1}Test {I}{I}test{Wh}{Wh} Captions{EDM}{EDM}{EOC}{EOC}
+01:11:33:14	{EDM}{EDM}
+01:16:17:15	{RCL}{RCL}{0600}{0600}{I}{I}Lorem ipsum {07R}{07R}dolor sit amet,{0800}{0800}{I}{I}consectetur adipiscing elit.{EDM}{EDM}{EOC}{EOC}
+01:16:19:23	{EDM}{EDM}
+01:20:56:00	{RCL}{RCL}{1300}{1300}entesque interdum lacinia sollicitudin.{EDM}{EDM}{EOC}{EOC}
+01:22:19:23	{EDM}{EDM}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
@@ -191,14 +205,23 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_pop_on_content_unexpectedly_ended(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:02:16	942c
 
 00:00:03:01	9420 93F0 91ae 9421 4c6f 7265 6d20 6970 7375 6d20 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
 
 00:00:11:27	9420
-    """
+"""
+
+    scc_disassembly = """\
+00:00:02:16	{EDM}
+00:00:03:01	{RCL}{1300}{I}{BS}Lorem ipsum {1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:11:27	{RCL}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
@@ -226,7 +249,8 @@ class SccReaderTest(unittest.TestCase):
     self.assertEqual(region_1, p_list[0].get_region())
 
   def test_2_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:00:22	9425 9425 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
@@ -237,6 +261,16 @@ class SccReaderTest(unittest.TestCase):
 00:00:06:04	9425 9425 94ad 94ad 9470 9470 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 
 """
+
+    scc_disassembly = """\
+00:00:00:22	{RU2}{RU2}{CR}{CR}{1500}{1500}Lorem ipsum dolor sit amet,
+00:00:02:23	{RU2}{RU2}{CR}{CR}{0804}{0804}consectetur adipiscing elit.
+00:00:04:17	{RU2}{RU2}{CR}{CR}{1504}{1504}Pellentesque interdum lacinia sollicitudin.
+00:00:06:04	{RU2}{RU2}{CR}{CR}{1500}{1500}Integer luctus et ligula ac sagittis.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
@@ -282,7 +316,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:17;01	9426 9426 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
@@ -292,6 +327,16 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:21;24	9426 9426 94ad 94ad 9470 9470 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 """
+
+    scc_disassembly = """\
+00:00:17;01	{RU3}{RU3}{CR}{CR}{1500}{1500}Lorem ipsum dolor sit amet,
+00:00:18;19	{RU3}{RU3}{CR}{CR}{1500}{1500}consectetur adipiscing elit.
+00:00:20;06	{RU3}{RU3}{CR}{CR}{1500}{1500}Pellentesque interdum lacinia sollicitudin.
+00:00:21;24	{RU3}{RU3}{CR}{CR}{1500}{1500}Integer luctus et ligula ac sagittis.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
@@ -333,7 +378,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_4_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:34;27	94a7 94ad 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
@@ -347,6 +393,17 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:50;23	94a7 94ad 9470 7665 7374 6962 756c 756d 206e 6563 2076 6974 6165 206e 6973 692e
 """
+
+    scc_disassembly = """\
+00:00:34;27	{RU4}{CR}{1500}Lorem ipsum dolor sit amet,
+00:00:36;12	{RU4}{CR}{1500}consectetur adipiscing elit.
+00:00:44;08	{RU4}{CR}{1500}Pellentesque interdum lacinia sollicitudin.
+00:00:47;12	{RU4}{CR}{1500}Integer luctus et ligula ac sagittis.
+00:00:49;03	{RU4}{CR}{1500}Ut at diam sit amet nulla fringilla
+00:00:50;23	{RU4}{CR}{1500}vestibulum nec vitae nisi.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
@@ -397,7 +454,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_mix_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:00;22	9425 9425 94ad 94ad 9470 9470 3e3e 3e20 c849 ae80
 
@@ -432,6 +490,27 @@ class SccReaderTest(unittest.TestCase):
 00:00:44;08	94a7 94ad 9470 3e3e 20c2 e96b e520 49ef f761 2c20 79ef 75f2 2073 ef75 f2e3 e520 e6ef f280
 
 """
+
+    scc_disassembly = """\
+00:00:00;22	{RU2}{RU2}{CR}{CR}{1500}{1500}>>> HI.
+00:00:02;23	{RU2}{RU2}{CR}{CR}{1500}{1500}I'M KEVIN CUNNING AND AT
+00:00:04;17	{RU2}{RU2}{CR}{CR}{1500}{1500}INVESTOR'S BANK WE BELIEVE IN
+00:00:06;04	{RU2}{RU2}{CR}{CR}{1500}{1500}HELPING THE LOCAL NEIGHBORHOODS
+00:00:09;21	{RU2}{RU2}{CR}{CR}{1500}{1500}AND {I}{I}IMPROVING {Wh}{Wh}THE LIVES OF ALL
+00:00:11;07	{RU2}{RU2}{CR}{CR}{1500}{1500}WE SERVE.
+00:00:12;07	{RU2}{RU2}{CR}{CR}{1500}{1500}®°½½
+00:00:13;07	{RU2}{RU2}{CR}{CR}{1500}{1500}ABCDEû
+00:00:14;07	{RU2}{RU2}{CR}{CR}{1500}{1500}AÁEÉOÓ ¡
+00:00:17;01	{RU3}{RU3}{CR}{CR}{1500}{1500}WHERE YOU'RE STANDING NOW,
+00:00:18;19	{RU3}{RU3}{CR}{CR}{1500}{1500}LOOKING OUT THERE, THAT'S ALL
+00:00:20;06	{RU3}{RU3}{CR}{CR}{1500}{1500}THE CROWD.
+00:00:21;24	{RU3}{RU3}{CR}{CR}{1500}{1500}>> IT WAS {BMaS}{BMaS}GOOD{BBk}{BBk} TO BE IN THE
+00:00:34;27	{RU4}{CR}{1500}And restore Iowa's land, water
+00:00:36;12	{RU4}{CR}{1500}And wildlife.
+00:00:44;08	{RU4}{CR}{1500}>> Bike Iowa, your source for
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
@@ -526,7 +605,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:02:53:14	9429 9429 94d2 94d2 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 94f2 94f2 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
@@ -535,6 +615,14 @@ class SccReaderTest(unittest.TestCase):
 00:02:56:25	9429 9429 94f2 94f2 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 
 """
+
+    scc_disassembly = """\
+00:02:53:14	{RDC}{RDC}{1404}{1404}Lorem ipsum dolor sit amet,{1504}{1504}consectetur adipiscing elit.
+00:02:56:00	{RDC}{RDC}{1404}{1404}Pellentesque interdum lacinia sollicitudin.
+00:02:56:25	{RDC}{RDC}{1504}{1504}Integer luctus et ligula ac sagittis.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
