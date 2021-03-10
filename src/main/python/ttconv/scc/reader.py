@@ -76,12 +76,12 @@ class _SccContext:
     self.safe_area_x_offset = safe_area_x_offset
     self.safe_area_y_offset = safe_area_y_offset
 
-  def init_buffered_caption(self, time_code: SmpteTimeCode):
+  def set_buffered_caption_begin_time(self, time_code: SmpteTimeCode):
     """Initializes the current buffered caption with begin time"""
     if self.buffered_caption is not None:
       self.buffered_caption.set_begin(time_code)
 
-  def flip_buffered_to_active_captions(self):
+  def push_buffered_to_active_captions(self):
     """Send the current buffered caption to the active captions list"""
     if self.buffered_caption is not None and self.buffered_caption.get_current_text():
 
@@ -91,6 +91,18 @@ class _SccContext:
 
       self.active_captions.append(self.buffered_caption)
       self.buffered_caption = None
+
+  def flip_buffered_to_active_captions(self):
+    """Flip the current buffered caption with the last active captions list"""
+    temporary_caption = None
+
+    if len(self.active_captions) > 0:
+      temporary_caption = self.active_captions[-1]
+
+    self.push_buffered_to_active_captions()
+
+    if temporary_caption is not None:
+      self.buffered_caption = temporary_caption
 
   def push_active_caption_to_model(self, time_code: SmpteTimeCode, index: int = 0):
     """Sets end time to the last active caption, and pushes it into the data model"""
@@ -115,10 +127,10 @@ class _SccContext:
       if self.buffered_caption.get_current_text() is not None \
           and self.safe_area_y_offset + pac_row == self.buffered_caption.get_row_offset() + 1:
         # Creates a new Paragraph if the new caption is contiguous (Paint-On)
-        self.flip_buffered_to_active_captions()
+        self.push_buffered_to_active_captions()
 
         self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
-        self.init_buffered_caption(time_code)
+        self.set_buffered_caption_begin_time(time_code)
 
       elif len(self.active_captions) > 0 and self.active_captions[0].get_current_text() is not None \
           and self.safe_area_y_offset + pac_row == self.active_captions[0].get_row_offset():
@@ -185,21 +197,18 @@ class _SccContext:
 
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
-      if self.buffered_caption is not None and self.buffered_caption.get_current_text() is not None:
-        self.flip_buffered_to_active_captions()
-
       self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
     elif control_code is SccControlCode.RDC:
       # Start a new Paint-On caption
-      self.flip_buffered_to_active_captions()
+      self.push_buffered_to_active_captions()
 
       self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
-      self.init_buffered_caption(time_code)
+      self.set_buffered_caption_begin_time(time_code)
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
       # Start a new Roll-Up caption
-      self.flip_buffered_to_active_captions()
+      self.push_buffered_to_active_captions()
 
       previous_last_lines: List[SccCaptionContent] = []
       if len(self.active_captions) > 0:
@@ -219,12 +228,12 @@ class _SccContext:
 
       self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
       self.buffered_caption.set_contents(previous_last_lines)
-      self.init_buffered_caption(time_code)
+      self.set_buffered_caption_begin_time(time_code)
       self.buffered_caption.apply_roll_up_row_offsets()
 
     elif control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
-      self.init_buffered_caption(time_code)
+      self.set_buffered_caption_begin_time(time_code)
       self.flip_buffered_to_active_captions()
 
       if len(self.active_captions) > 0:
@@ -258,9 +267,14 @@ class _SccContext:
         # Apply text alignment
         last_active_caption.add_style_property(StyleProperties.TextAlign, text_alignment)
 
-    elif control_code in (SccControlCode.EDM, SccControlCode.ENM):
-      # Erase displayed caption (Pop-On)
-      self.push_active_caption_to_model(time_code)
+    elif control_code is SccControlCode.EDM:
+      # Erase displayed captions
+      while len(self.active_captions) > 0:
+        self.push_active_caption_to_model(time_code)
+
+    elif control_code is SccControlCode.ENM:
+      # Erase buffered caption
+      self.buffered_caption = None
 
     elif control_code is SccControlCode.TO1:
       self.buffered_caption.indent(1)
@@ -313,7 +327,7 @@ class _SccContext:
   def flush(self, time_code: SmpteTimeCode):
     """Flushes the remaining current caption"""
     if self.buffered_caption is not None:
-      self.flip_buffered_to_active_captions()
+      self.push_buffered_to_active_captions()
       while len(self.active_captions) > 0:
         self.push_active_caption_to_model(time_code)
       self.buffered_caption = None
