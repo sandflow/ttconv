@@ -76,6 +76,10 @@ class _SccContext:
     self.safe_area_x_offset = safe_area_x_offset
     self.safe_area_y_offset = safe_area_y_offset
 
+  def has_active_captions(self):
+    """Returns whether captions are being displayed or not"""
+    return len(self.active_captions) > 0
+
   def set_buffered_caption_begin_time(self, time_code: SmpteTimeCode):
     """Initializes the current buffered caption with begin time"""
     if self.buffered_caption is not None:
@@ -98,11 +102,14 @@ class _SccContext:
     """
     temporary_caption = None
 
-    if len(self.active_captions) > 0:
+    if self.has_active_captions():
+      # FIXME should be every active captions
       temporary_caption = self.active_captions[-1]
 
       if time_code is not None:
-        self.push_active_caption_to_model(time_code)
+        # End of display of active captions
+        while self.has_active_captions():
+          self.push_active_caption_to_model(time_code)
 
     self.push_buffered_to_active_captions()
 
@@ -111,7 +118,7 @@ class _SccContext:
 
   def push_active_caption_to_model(self, time_code: Optional[SmpteTimeCode], index: int = 0):
     """Sets end time to the last active caption, and pushes it into the data model"""
-    if len(self.active_captions) > 0:
+    if self.has_active_captions():
       previous_caption = self.active_captions.pop(index)
       previous_caption.set_end(time_code)
 
@@ -137,8 +144,9 @@ class _SccContext:
         self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PaintOn)
         self.set_buffered_caption_begin_time(time_code)
 
-      elif len(self.active_captions) > 0 and self.active_captions[0].get_current_text() is not None \
-          and self.safe_area_y_offset + pac_row == self.active_captions[0].get_row_offset():
+      elif self.has_active_captions() and self.active_captions[0].get_current_text() is not None \
+          and self.safe_area_y_offset + pac_row == self.active_captions[0].get_row_offset() \
+          and self.active_captions[0].get_caption_style() is SccCaptionStyle.PaintOn:
         # Pushes and erases displayed row so that it can be replaced by current row (Paint-On)
         self.push_active_caption_to_model(self.buffered_caption.get_begin())
 
@@ -216,7 +224,7 @@ class _SccContext:
       self.push_buffered_to_active_captions()
 
       previous_last_lines: List[SccCaptionContent] = []
-      if len(self.active_captions) > 0:
+      if self.has_active_captions():
 
         if control_code is SccControlCode.RU2:
           previous_last_lines = self.active_captions[-1].get_last_caption_lines(1)
@@ -241,7 +249,7 @@ class _SccContext:
       self.set_buffered_caption_begin_time(time_code)
       self.flip_buffered_to_active_captions(time_code)
 
-      if len(self.active_captions) > 0:
+      if self.has_active_captions():
         # Set line breaks depending on the position of the content
 
         contents = []
@@ -274,7 +282,7 @@ class _SccContext:
 
     elif control_code is SccControlCode.EDM:
       # Erase displayed captions
-      while len(self.active_captions) > 0:
+      while self.has_active_captions():
         self.push_active_caption_to_model(time_code)
 
     elif control_code is SccControlCode.ENM:
@@ -335,7 +343,7 @@ class _SccContext:
       self.push_buffered_to_active_captions()
       self.buffered_caption = None
 
-    while len(self.active_captions) > 0:
+    while self.has_active_captions():
       self.push_active_caption_to_model(time_code)
 
   def process_line(self, line: SccLine) -> SmpteTimeCode:
