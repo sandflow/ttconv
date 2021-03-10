@@ -175,7 +175,9 @@ class _SccContext:
     if self.buffered_caption is None:
       raise ValueError("No current SCC caption initialized")
 
-    if self.buffered_caption.get_current_text() is not None and self.buffered_caption.get_current_text().get_text():
+    if self.buffered_caption.get_current_text() is not None \
+        and self.buffered_caption.get_current_text().get_text() \
+        and not self.buffered_caption.get_current_text().get_text().isspace():
       self.buffered_caption.new_caption_text()
       self.buffered_caption.apply_current_text_offsets()
 
