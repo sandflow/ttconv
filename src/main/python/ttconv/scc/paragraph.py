@@ -224,8 +224,9 @@ class SccCaptionParagraph:
     return last_lines
 
   def guess_text_alignment(self) -> TextAlignType:
+    """Tries to detect the text alignment according to the content indentation"""
 
-    class ParagraphLine:
+    class _ParagraphLine:
       def __init__(self, text: SccCaptionText = None):
         self.caption_texts = []
         self.row = 0
@@ -238,6 +239,7 @@ class SccCaptionParagraph:
           self.row = text.get_y_offset()
 
       def add_text(self, text: SccCaptionText):
+        """Adds the specified text to the current paragraph line"""
         if text is None:
           return
 
@@ -245,7 +247,7 @@ class SccCaptionParagraph:
           raise ValueError(
             f"Cannot add a caption text to line, Y offset {text.get_y_offset()} does not match with {self.row} line row.")
 
-        if len(self.caption_texts) is 0:
+        if len(self.caption_texts) == 0:
           self.row = text.get_y_offset()
           self.left_offset = text.get_x_offset()
 
@@ -257,14 +259,14 @@ class SccCaptionParagraph:
         return str(self.__dict__)
 
     paragraph_lines = []
-    paragraph_line = ParagraphLine()
+    paragraph_line = _ParagraphLine()
     for content in self._caption_contents:
       if isinstance(content, SccCaptionText):
         paragraph_line.add_text(content)
 
       if isinstance(content, SccCaptionLineBreak):
         paragraph_lines.append(paragraph_line)
-        paragraph_line = ParagraphLine()
+        paragraph_line = _ParagraphLine()
 
     paragraph_lines.append(paragraph_line)
 

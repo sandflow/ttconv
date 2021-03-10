@@ -35,6 +35,8 @@ from ttconv.style_properties import TextAlignType
 
 
 class TextAlignment(Enum):
+  """Text alignment descriptions"""
+
   LEFT = ("left", TextAlignType.start)
   CENTER = ("center", TextAlignType.center)
   RIGHT = ("right", TextAlignType.end)
@@ -46,6 +48,7 @@ class TextAlignment(Enum):
 
   @staticmethod
   def from_value(value: [str, TextAlignment]) -> TextAlignment:
+    """Try to create a text alignment instance from the specified value"""
     if isinstance(value, TextAlignment):
       return value
 
