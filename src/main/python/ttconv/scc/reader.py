@@ -158,7 +158,8 @@ class _SccContext:
         self.buffered_caption.apply_current_text_offsets()
         return
 
-      self.buffered_caption.set_column_offset(pac_indent)
+      # Force roll-up paragraph to belong to the same region
+      # self.buffered_caption.set_column_offset(pac_indent)
     else:
       self.buffered_caption.set_row_offset(pac_row)
       self.buffered_caption.set_column_offset(pac_indent)
