@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 import unittest
 from numbers import Number
-from typing import Union, Type
+from typing import Union, Type, Optional
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
 from ttconv.scc.reader import to_model
@@ -47,10 +47,12 @@ vestibulum nec vitae nisi.
 
 class SccReaderTest(unittest.TestCase):
 
-  def check_caption(self, paragraph: P, caption_id: str, begin: str, end: str, *children):
+  def check_caption(self, paragraph: P, caption_id: str, begin: str, end: Optional[str], *children):
     self.assertEqual(caption_id, paragraph.get_id())
     self.assertEqual(SmpteTimeCode.parse(begin, FPS_30).to_temporal_offset(), paragraph.get_begin())
-    self.assertEqual(SmpteTimeCode.parse(end, FPS_30).to_temporal_offset(), paragraph.get_end())
+
+    if end is not None:
+      self.assertEqual(SmpteTimeCode.parse(end, FPS_30).to_temporal_offset(), paragraph.get_end())
 
     p_children = list(paragraph)
     self.assertEqual(len(children), len(p_children))
@@ -219,7 +221,7 @@ class SccReaderTest(unittest.TestCase):
     p_list = list(div)
     self.assertEqual(1, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:04:07", "00:00:11:28", "Lorem ipsum ", Br, "dolor sit amet,", Br,
+    self.check_caption(p_list[0], "caption1", "00:00:04:07", None, "Lorem ipsum ", Br, "dolor sit amet,", Br,
                        "consectetur adipiscing elit.")
     self.assertEqual(region_1, p_list[0].get_region())
 
@@ -270,7 +272,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
-    self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
+    self.check_caption(p_list[3], "caption4", "00:00:06:05", None, expected_text[2], Br, expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
     self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
@@ -323,7 +325,7 @@ class SccReaderTest(unittest.TestCase):
                        expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:21;25", "00:00:22;16", expected_text[1], Br, expected_text[2], Br,
+    self.check_caption(p_list[3], "caption4", "00:00:21;25", None, expected_text[1], Br, expected_text[2], Br,
                        expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
@@ -387,7 +389,7 @@ class SccReaderTest(unittest.TestCase):
                        expected_text[3], Br, expected_text[4])
     self.assertEqual(region_1, p_list[4].get_region())
 
-    self.check_caption(p_list[5], "caption6", "00:00:50;24", "00:00:51;09", expected_text[2], Br, expected_text[3], Br,
+    self.check_caption(p_list[5], "caption6", "00:00:50;24", None, expected_text[2], Br, expected_text[3], Br,
                        expected_text[4], Br, expected_text[5])
     self.assertEqual(region_1, p_list[5].get_region())
 
@@ -507,7 +509,7 @@ class SccReaderTest(unittest.TestCase):
                        "And restore Iowa's land, water", Br, "And wildlife.")
     self.assertEqual(region_1, p_list[14].get_region())
 
-    self.check_caption(p_list[15], "caption16", "00:00:44;09", "00:00:44;26", ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
+    self.check_caption(p_list[15], "caption16", "00:00:44;09", None, ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_1, p_list[15].get_region())
 
@@ -572,7 +574,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertAlmostEqual(0.2, float(list(p_list[1])[1].get_begin()), delta=0.0001)
     self.assertAlmostEqual(0.4, float(list(p_list[1])[2].get_begin()), delta=0.0001)
 
-    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ",
+    self.check_caption(p_list[2], "caption3", "00:02:56:01", None, "Pellentesque", " interdum ", "lacinia ",
                        "sollicitudin.")
     self.assertEqual(region_1, p_list[2].get_region())
 
@@ -581,7 +583,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertAlmostEqual(0.4, float(list(p_list[2])[2].get_begin()), delta=0.0001)
     self.assertAlmostEqual(0.5333, float(list(p_list[2])[3].get_begin()), delta=0.0001)
 
-    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
+    self.check_caption(p_list[3], "caption4", "00:02:56:26", None, "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
     self.assertEqual(region_1, p_list[3].get_region())
 

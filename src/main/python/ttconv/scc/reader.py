@@ -84,7 +84,6 @@ class _SccContext:
   def push_buffered_to_active_captions(self):
     """Send the current buffered caption to the active captions list"""
     if self.buffered_caption is not None and self.buffered_caption.get_current_text():
-
       if not self.buffered_caption.get_id():
         self.count += 1
         self.buffered_caption.set_id("caption" + str(self.count))
@@ -92,19 +91,25 @@ class _SccContext:
       self.active_captions.append(self.buffered_caption)
       self.buffered_caption = None
 
-  def flip_buffered_to_active_captions(self):
-    """Flip the current buffered caption with the last active captions list"""
+  def flip_buffered_to_active_captions(self, time_code: Optional[SmpteTimeCode] = None):
+    """
+    Flip the current buffered caption with the last active captions list,
+    and push to model if an end time code is specified.
+    """
     temporary_caption = None
 
     if len(self.active_captions) > 0:
       temporary_caption = self.active_captions[-1]
+
+      if time_code is not None:
+        self.push_active_caption_to_model(time_code)
 
     self.push_buffered_to_active_captions()
 
     if temporary_caption is not None:
       self.buffered_caption = temporary_caption
 
-  def push_active_caption_to_model(self, time_code: SmpteTimeCode, index: int = 0):
+  def push_active_caption_to_model(self, time_code: Optional[SmpteTimeCode], index: int = 0):
     """Sets end time to the last active caption, and pushes it into the data model"""
     if len(self.active_captions) > 0:
       previous_caption = self.active_captions.pop(index)
@@ -234,7 +239,7 @@ class _SccContext:
     elif control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
       self.set_buffered_caption_begin_time(time_code)
-      self.flip_buffered_to_active_captions()
+      self.flip_buffered_to_active_captions(time_code)
 
       if len(self.active_captions) > 0:
         # Set line breaks depending on the position of the content
@@ -324,13 +329,14 @@ class _SccContext:
 
     self.buffered_caption.get_current_text().append(word)
 
-  def flush(self, time_code: SmpteTimeCode):
+  def flush(self, time_code: Optional[SmpteTimeCode] = None):
     """Flushes the remaining current caption"""
     if self.buffered_caption is not None:
       self.push_buffered_to_active_captions()
-      while len(self.active_captions) > 0:
-        self.push_active_caption_to_model(time_code)
       self.buffered_caption = None
+
+    while len(self.active_captions) > 0:
+      self.push_active_caption_to_model(time_code)
 
   def process_line(self, line: SccLine) -> SmpteTimeCode:
     """Converts the SCC line to the data model"""
@@ -441,8 +447,6 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
   context.div.set_doc(document)
   body.push_child(context.div)
 
-  time_code = None
-
   lines = scc_content.splitlines()
   nb_lines = len(lines)
 
@@ -455,9 +459,9 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
     if scc_line is None:
       continue
 
-    time_code = context.process_line(scc_line)
+    context.process_line(scc_line)
 
-  context.flush(time_code)
+  context.flush()
 
   return document
 
