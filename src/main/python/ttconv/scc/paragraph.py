@@ -28,16 +28,24 @@
 import copy
 import logging
 import math
+from math import ceil
 from typing import Optional, List
 
 from ttconv.model import Region, ContentDocument, P, Br, Span, Text
 from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_ROW, SccCaptionLineBreak
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
-from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType
+from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType, \
+  TextAlignType
+from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
+
+SCC_SAFE_AREA_CELL_RESOLUTION_ROWS = 15
+SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS = 32
+
+SCC_ROOT_CELL_RESOLUTION_ROWS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_ROWS / 0.80)
+SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 0.80)
 
 
 class SccCaptionParagraph:
@@ -215,6 +223,72 @@ class SccCaptionParagraph:
 
     return last_lines
 
+  def guess_text_alignment(self) -> TextAlignType:
+    """Tries to detect the text alignment according to the content indentation"""
+
+    class _ParagraphLine:
+      def __init__(self, text: SccCaptionText = None):
+        self.caption_texts = []
+        self.row = 0
+        self.left_offset = 0
+        self.right_offset = 0
+        self.length = 0
+
+        if text is not None:
+          self.caption_texts.append(text)
+          self.row = text.get_y_offset()
+
+      def add_text(self, text: SccCaptionText):
+        """Adds the specified text to the current paragraph line"""
+        if text is None:
+          return
+
+        if len(self.caption_texts) > 0 and text.get_y_offset() is not self.row:
+          raise ValueError(
+            f"Cannot add a caption text to line, Y offset {text.get_y_offset()} does not match with {self.row} line row.")
+
+        if len(self.caption_texts) == 0:
+          self.row = text.get_y_offset()
+          self.left_offset = text.get_x_offset()
+
+        self.caption_texts.append(text)
+        self.length += len(text.get_text())
+        self.right_offset = 40 - (self.left_offset + self.length)
+
+      def __repr__(self):
+        return str(self.__dict__)
+
+    paragraph_lines = []
+    paragraph_line = _ParagraphLine()
+    for content in self._caption_contents:
+      if isinstance(content, SccCaptionText):
+        paragraph_line.add_text(content)
+
+      if isinstance(content, SccCaptionLineBreak):
+        paragraph_lines.append(paragraph_line)
+        paragraph_line = _ParagraphLine()
+
+    paragraph_lines.append(paragraph_line)
+
+    left_border = int(self.get_origin().x.value)
+    right_border = int(SCC_ROOT_CELL_RESOLUTION_COLUMNS - self.get_origin().x.value - self.get_extent().width.value)
+
+    # is the text left-aligned?
+    if all(l.left_offset - left_border == 0 for l in paragraph_lines):
+      return TextAlignType.start
+
+    # is the text right-aligned?
+    if all(l.right_offset - right_border == 0 for l in paragraph_lines):
+      return TextAlignType.end
+
+    # is the text centered?
+    if all(abs(l.left_offset - left_border - (l.right_offset - right_border)) < 2 for l in paragraph_lines):
+      return TextAlignType.center
+
+    # default is left-aligned
+    LOGGER.warning("Cannot define the paragraph text alignment. Set it to default left-aligned.")
+    return TextAlignType.start
+
   def to_paragraph(self, doc: ContentDocument) -> P:
     """Converts and returns current caption paragraph into P instance"""
 
@@ -325,15 +399,15 @@ class _SccParagraphRegion:
              and region_origin.y.value <= paragraph_origin.y.value
 
     return region_origin \
-       and region_origin.x.units is paragraph_origin.x.units \
-       and region_origin.y.units is paragraph_origin.y.units \
-       and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
-       and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
+           and region_origin.x.units is paragraph_origin.x.units \
+           and region_origin.y.units is paragraph_origin.y.units \
+           and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
+           and math.isclose(region_origin.y.value, paragraph_origin.y.value, abs_tol=0.001)
 
   def _find_matching_region(self) -> Optional[Region]:
     """Looks for a region that origin matches with the paragraph origin"""
     for region in self._doc.iter_regions():
-      if self._has_same_origin_as_region(region):
+      if self._has_same_origin_as_region(region) and region.get_id().startswith(self._get_region_prefix()):
         return region
     return None
 

@@ -83,6 +83,10 @@ class SccCaptionText(SccCaptionContent):
     """Concatenates text content to caption text"""
     self._text += text
 
+  def backspace(self):
+    """Remove last character"""
+    self._text = self._text[:-1]
+
   def set_x_offset(self, indent: Optional[int]):
     """Sets the x offset"""
     self._x_offset = indent if indent is not None else 0
@@ -113,9 +117,13 @@ class SccCaptionText(SccCaptionContent):
       return
     self._style_properties[style_property] = value
 
+  def is_strictly_contiguous(self, other: SccCaptionText) -> bool:
+    """Returns whether the current text is contiguous according to the other text, based on rows and columns"""
+    return self._x_offset == other.get_x_offset() and self.is_contiguous(other)
+
   def is_contiguous(self, other: SccCaptionText) -> bool:
-    """Returns whether the current text is contiguous according to the other text"""
-    return self._x_offset == other.get_x_offset() and self._y_offset == other.get_y_offset() + 1
+    """Returns whether the current text is contiguous according to the other text, only based on rows"""
+    return self._y_offset == other.get_y_offset() + 1
 
   def has_same_style_properties(self, other):
     """Returns whether the current text has the same style properties as the other text"""

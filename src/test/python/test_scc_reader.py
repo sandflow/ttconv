@@ -28,13 +28,13 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 import unittest
 from numbers import Number
-from typing import Union, Type
+from typing import Union, Type, Optional
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType
-from ttconv.scc.reader import SccWord, SccLine, to_model
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.scc.reader import to_model, to_disassembly
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
+from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -45,97 +45,14 @@ vestibulum nec vitae nisi.
 """
 
 
-class SccWordTest(unittest.TestCase):
-
-  def test_scc_word_is_hex_word(self):
-    self.assertTrue(SccWord._is_hex_word("0000"))
-    self.assertTrue(SccWord._is_hex_word("FFFF"))
-    self.assertFalse(SccWord._is_hex_word("000"))
-    self.assertFalse(SccWord._is_hex_word("12345"))
-    self.assertFalse(SccWord._is_hex_word("GHIJ"))
-
-  def test_scc_word_decipher_parity_bit(self):
-    self.assertEqual(0b00000000, SccWord._decipher_parity_bit(0b10000000))
-    self.assertEqual(0b00000010, SccWord._decipher_parity_bit(0b00000010))
-    self.assertEqual(0b00001010, SccWord._decipher_parity_bit(0b10001010))
-
-    translated_values = [
-      0x80, 0x01, 0x02, 0x83, 0x04, 0x85, 0x86, 0x07, 0x08, 0x89, 0x8a, 0x0b, 0x8c, 0x0d, 0x0e, 0x8f,
-      0x10, 0x91, 0x92, 0x13, 0x94, 0x15, 0x16, 0x97, 0x98, 0x19, 0x1a, 0x9b, 0x1c, 0x9d, 0x9e, 0x1f,
-      0x20, 0xa1, 0xa2, 0x23, 0xa4, 0x25, 0x26, 0xa7, 0xa8, 0x29, 0x2a, 0xab, 0x2c, 0xad, 0xae, 0x2f,
-      0xb0, 0x31, 0x32, 0xb3, 0x34, 0xb5, 0xb6, 0x37, 0x38, 0xb9, 0xba, 0x3b, 0xbc, 0x3d, 0x3e, 0xbf,
-      0x40, 0xc1, 0xc2, 0x43, 0xc4, 0x45, 0x46, 0xc7, 0xc8, 0x49, 0x4a, 0xcb, 0x4c, 0xcd, 0xce, 0x4f,
-      0xd0, 0x51, 0x52, 0xd3, 0x54, 0xd5, 0xd6, 0x57, 0x58, 0xd9, 0xda, 0x5b, 0xdc, 0x5d, 0x5e, 0xdf,
-      0xe0, 0x61, 0x62, 0xe3, 0x64, 0xe5, 0xe6, 0x67, 0x68, 0xe9, 0xea, 0x6b, 0xec, 0x6d, 0x6e, 0xef,
-      0x70, 0xf1, 0xf2, 0x73, 0xf4, 0x75, 0x76, 0xf7, 0xf8, 0x79, 0x7a, 0xfb, 0x7c, 0xfd, 0xfe, 0x7f
-    ]
-
-    for i in range(0x00, 0x80):
-      self.assertEqual(i, SccWord._decipher_parity_bit(translated_values[i]))
-
-  def test_scc_word_from_value(self):
-    scc_word = SccWord.from_value(0x01)
-    self.assertEqual((0x00, 0x01, 0x0001), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_value(0x0000)
-    self.assertEqual((0x00, 0x00, 0x0000), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_value(0x1a2b)
-    self.assertEqual((0x1a, 0x2b, 0x1a2b), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_value(0xffff)
-    self.assertEqual((0x7f, 0x7f, 0x7f7f), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-
-    self.assertRaises(ValueError, SccWord.from_value, 0x12345)
-
-  def test_scc_word_from_bytes(self):
-    scc_word = SccWord.from_bytes(0x00, 0x00)
-    self.assertEqual((0x00, 0x00, 0x0000), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_bytes(0x1a, 0x2b)
-    self.assertEqual((0x1a, 0x2b, 0x1a2b), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_bytes(0xff, 0xff)
-    self.assertEqual((0x7f, 0x7f, 0x7f7f), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-
-    self.assertRaises(ValueError, SccWord.from_bytes, 0x123, 0x45)
-    self.assertRaises(ValueError, SccWord.from_bytes, 0x12, 0x345)
-
-  def test_scc_word_from_str(self):
-    scc_word = SccWord.from_str("0000")
-    self.assertEqual((0x00, 0x00, 0x0000), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_str("1a2b")
-    self.assertEqual((0x1a, 0x2b, 0x1a2b), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-    scc_word = SccWord.from_str("ffff")
-    self.assertEqual((0x7f, 0x7f, 0x7f7f), (scc_word.byte_1, scc_word.byte_2, scc_word.value))
-
-    self.assertRaises(ValueError, SccWord.from_str, "ttml")
-    self.assertRaises(ValueError, SccWord.from_str, "Hello")
-
-  def test_scc_word_to_text(self):
-    scc_word = SccWord.from_value(0x1234)
-    self.assertEqual('\x12\x34', scc_word.to_text())
-    scc_word = SccWord.from_value(0xFF00)
-    self.assertEqual('\x7f', scc_word.to_text())
-    scc_word = SccWord.from_value(0x01)
-    self.assertEqual('\x01', scc_word.to_text())
-
-    self.assertRaises(ValueError, SccWord.from_value, 0x01020304)
-
-
-class SccLineTest(unittest.TestCase):
-
-  def test_scc_line_from_str(self):
-    line_str = "01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f"
-    scc_line = SccLine.from_str(line_str)
-    self.assertEqual(18, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
-
-    self.assertIsNone(SccLine.from_str(""))
-    self.assertIsNone(SccLine.from_str("Hello world!"))
-
-
 class SccReaderTest(unittest.TestCase):
 
-  def check_caption(self, paragraph: P, caption_id: str, begin: str, end: str, *children):
+  def check_caption(self, paragraph: P, caption_id: str, begin: str, end: Optional[str], *children):
     self.assertEqual(caption_id, paragraph.get_id())
     self.assertEqual(SmpteTimeCode.parse(begin, FPS_30).to_temporal_offset(), paragraph.get_begin())
-    self.assertEqual(SmpteTimeCode.parse(end, FPS_30).to_temporal_offset(), paragraph.get_end())
+
+    if end is not None:
+      self.assertEqual(SmpteTimeCode.parse(end, FPS_30).to_temporal_offset(), paragraph.get_end())
 
     p_children = list(paragraph)
     self.assertEqual(len(children), len(p_children))
@@ -154,7 +71,7 @@ class SccReaderTest(unittest.TestCase):
   def check_element_origin(self, elem: ContentElement, expected_x_origin: Union[int, float, Number],
                            expected_y_origin: Union[int, float, Number], unit=LengthType.Units.c):
     expected_origin = CoordinateType(x=LengthType(value=expected_x_origin, units=unit),
-                                   y=LengthType(value=expected_y_origin, units=unit))
+                                     y=LengthType(value=expected_y_origin, units=unit))
     self.check_element_style(elem, StyleProperties.Origin, expected_origin)
 
   def check_element_extent(self, elem: ContentElement, width: Union[int, float, Number], height: Union[int, float, Number],
@@ -197,6 +114,20 @@ class SccReaderTest(unittest.TestCase):
 01:22:19:23	942c 942c
 """
 
+    scc_disassembly = """\
+01:02:53:14	{ENM}{ENM}{RCL}{RCL}{1520}{1520}{TO2}{TO2}( horn honking ){EDM}{EDM}{}{}{EOC}{EOC}
+01:02:55:14	{EDM}{EDM}
+01:03:27:29	{ENM}{ENM}{RCL}{RCL}{1504}{1504}HEY, THE®E.{EDM}{EDM}{}{}{EOC}{EOC}
+01:11:31:01	{RCL}{RCL}{1404}{1404}{TO1}{TO1}Test ½ Caption {1504}{1504}{TO1}{TO1}Test {I}{I}test{Wh}{Wh} Captions{EDM}{EDM}{EOC}{EOC}
+01:11:33:14	{EDM}{EDM}
+01:16:17:15	{RCL}{RCL}{0600}{0600}{I}{I}Lorem ipsum {07R}{07R}dolor sit amet,{0800}{0800}{I}{I}consectetur adipiscing elit.{EDM}{EDM}{EOC}{EOC}
+01:16:19:23	{EDM}{EDM}
+01:20:56:00	{RCL}{RCL}{1300}{1300}entesque interdum lacinia sollicitudin.{EDM}{EDM}{EOC}{EOC}
+01:22:19:23	{EDM}{EDM}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
@@ -217,14 +148,14 @@ class SccReaderTest(unittest.TestCase):
     region_3 = doc.get_region("pop3")
     self.assertIsNotNone(region_3)
     self.check_region_origin(region_3, 9, 16, doc.get_cell_resolution())
-    self.check_region_extent(region_3, 18, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 20, 2, doc.get_cell_resolution())
     self.check_element_style(region_3, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_3, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     region_4 = doc.get_region("pop4")
     self.assertIsNotNone(region_4)
     self.check_region_origin(region_4, 4, 8, doc.get_cell_resolution())
-    self.check_region_extent(region_4, 28, 10, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 29, 10, doc.get_cell_resolution())
     self.check_element_style(region_4, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_4, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -252,11 +183,11 @@ class SccReaderTest(unittest.TestCase):
     self.check_caption(p_list[1], "caption2", "01:03:28:12", "01:11:31:28", "HEY, THE®E.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", "test", " Captions")
+    self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", " test", "  Captions")
     self.assertEqual(region_3, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", "Lorem ipsum ", Br, "dolor sit amet,", Br,
-                       "consectetur adipiscing elit.")
+    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", " Lorem ipsum ", Br, "dolor sit amet,", Br,
+                       " consectetur adipiscing elit.")
     self.assertEqual(region_4, p_list[3].get_region())
 
     self.check_caption(p_list[4], "caption5", "01:20:56:24", "01:22:19:24", "entesque interdum lacinia sollicitudin.")
@@ -273,8 +204,53 @@ class SccReaderTest(unittest.TestCase):
     for p in p_list:
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
+  def test_scc_pop_on_content_unexpectedly_ended(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:02:16	942c
+
+00:00:03:01	9420 93F0 91ae 9421 4c6f 7265 6d20 6970 7375 6d20 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:11:27	9420
+"""
+
+    scc_disassembly = """\
+00:00:02:16	{EDM}
+00:00:03:01	{RCL}{1300}{I}{BS}Lorem ipsum {1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:11:27	{RCL}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 3, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:04:07", None, "Lorem ipsum ", Br, "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
   def test_2_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:00:22	9425 9425 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
@@ -285,6 +261,16 @@ class SccReaderTest(unittest.TestCase):
 00:00:06:04	9425 9425 94ad 94ad 9470 9470 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 
 """
+
+    scc_disassembly = """\
+00:00:00:22	{RU2}{RU2}{CR}{CR}{1500}{1500}Lorem ipsum dolor sit amet,
+00:00:02:23	{RU2}{RU2}{CR}{CR}{0804}{0804}consectetur adipiscing elit.
+00:00:04:17	{RU2}{RU2}{CR}{CR}{1504}{1504}Pellentesque interdum lacinia sollicitudin.
+00:00:06:04	{RU2}{RU2}{CR}{CR}{1500}{1500}Integer luctus et ligula ac sagittis.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
@@ -320,7 +306,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
-    self.check_caption(p_list[3], "caption4", "00:00:06:05", "00:00:06:26", expected_text[2], Br, expected_text[3])
+    self.check_caption(p_list[3], "caption4", "00:00:06:05", None, expected_text[2], Br, expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
     self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
@@ -330,7 +316,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:17;01	9426 9426 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
@@ -340,6 +327,16 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:21;24	9426 9426 94ad 94ad 9470 9470 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 """
+
+    scc_disassembly = """\
+00:00:17;01	{RU3}{RU3}{CR}{CR}{1500}{1500}Lorem ipsum dolor sit amet,
+00:00:18;19	{RU3}{RU3}{CR}{CR}{1500}{1500}consectetur adipiscing elit.
+00:00:20;06	{RU3}{RU3}{CR}{CR}{1500}{1500}Pellentesque interdum lacinia sollicitudin.
+00:00:21;24	{RU3}{RU3}{CR}{CR}{1500}{1500}Integer luctus et ligula ac sagittis.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
@@ -373,7 +370,7 @@ class SccReaderTest(unittest.TestCase):
                        expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:21;25", "00:00:22;16", expected_text[1], Br, expected_text[2], Br,
+    self.check_caption(p_list[3], "caption4", "00:00:21;25", None, expected_text[1], Br, expected_text[2], Br,
                        expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
@@ -381,7 +378,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_4_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:34;27	94a7 94ad 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
@@ -395,6 +393,17 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:50;23	94a7 94ad 9470 7665 7374 6962 756c 756d 206e 6563 2076 6974 6165 206e 6973 692e
 """
+
+    scc_disassembly = """\
+00:00:34;27	{RU4}{CR}{1500}Lorem ipsum dolor sit amet,
+00:00:36;12	{RU4}{CR}{1500}consectetur adipiscing elit.
+00:00:44;08	{RU4}{CR}{1500}Pellentesque interdum lacinia sollicitudin.
+00:00:47;12	{RU4}{CR}{1500}Integer luctus et ligula ac sagittis.
+00:00:49;03	{RU4}{CR}{1500}Ut at diam sit amet nulla fringilla
+00:00:50;23	{RU4}{CR}{1500}vestibulum nec vitae nisi.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
@@ -437,7 +446,7 @@ class SccReaderTest(unittest.TestCase):
                        expected_text[3], Br, expected_text[4])
     self.assertEqual(region_1, p_list[4].get_region())
 
-    self.check_caption(p_list[5], "caption6", "00:00:50;24", "00:00:51;09", expected_text[2], Br, expected_text[3], Br,
+    self.check_caption(p_list[5], "caption6", "00:00:50;24", None, expected_text[2], Br, expected_text[3], Br,
                        expected_text[4], Br, expected_text[5])
     self.assertEqual(region_1, p_list[5].get_region())
 
@@ -445,7 +454,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_mix_rows_roll_up_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:00:00;22	9425 9425 94ad 94ad 9470 9470 3e3e 3e20 c849 ae80
 
@@ -463,7 +473,7 @@ class SccReaderTest(unittest.TestCase):
 
 00:00:13;07	9425 9425 94ad 94ad 9470 9470 c1c2 c3c4 c580 91bf
 
-00:00:14;07	9425 9425 94ad 94ad 9470 9470 9220 9220 92a1 92a2 92a7
+00:00:14;07	9425 9425 94ad 94ad 9470 9470 c180 9220 c580 92a1 4f80 92a2 2080 92a7
 
 00:00:17;01	9426 9426 94ad 94ad 9470 9470 57c8 4552 4520 d94f d5a7 5245 20d3 54c1 cec4 49ce c720 ce4f 572c
 
@@ -481,13 +491,34 @@ class SccReaderTest(unittest.TestCase):
 
 """
 
+    scc_disassembly = """\
+00:00:00;22	{RU2}{RU2}{CR}{CR}{1500}{1500}>>> HI.
+00:00:02;23	{RU2}{RU2}{CR}{CR}{1500}{1500}I'M KEVIN CUNNING AND AT
+00:00:04;17	{RU2}{RU2}{CR}{CR}{1500}{1500}INVESTOR'S BANK WE BELIEVE IN
+00:00:06;04	{RU2}{RU2}{CR}{CR}{1500}{1500}HELPING THE LOCAL NEIGHBORHOODS
+00:00:09;21	{RU2}{RU2}{CR}{CR}{1500}{1500}AND {I}{I}IMPROVING {Wh}{Wh}THE LIVES OF ALL
+00:00:11;07	{RU2}{RU2}{CR}{CR}{1500}{1500}WE SERVE.
+00:00:12;07	{RU2}{RU2}{CR}{CR}{1500}{1500}®°½½
+00:00:13;07	{RU2}{RU2}{CR}{CR}{1500}{1500}ABCDEû
+00:00:14;07	{RU2}{RU2}{CR}{CR}{1500}{1500}AÁEÉOÓ ¡
+00:00:17;01	{RU3}{RU3}{CR}{CR}{1500}{1500}WHERE YOU'RE STANDING NOW,
+00:00:18;19	{RU3}{RU3}{CR}{CR}{1500}{1500}LOOKING OUT THERE, THAT'S ALL
+00:00:20;06	{RU3}{RU3}{CR}{CR}{1500}{1500}THE CROWD.
+00:00:21;24	{RU3}{RU3}{CR}{CR}{1500}{1500}>> IT WAS {BMaS}{BMaS}GOOD{BBk}{BBk} TO BE IN THE
+00:00:34;27	{RU4}{CR}{1500}And restore Iowa's land, water
+00:00:36;12	{RU4}{CR}{1500}And wildlife.
+00:00:44;08	{RU4}{CR}{1500}>> Bike Iowa, your source for
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 31, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -517,10 +548,10 @@ class SccReaderTest(unittest.TestCase):
     self.assertEqual(region_1, p_list[3].get_region())
 
     self.check_caption(p_list[4], "caption5", "00:00:09;22", "00:00:11;08", "HELPING THE LOCAL NEIGHBORHOODS", Br, "AND ",
-                       "IMPROVING ", "THE LIVES OF ALL")
+                       " IMPROVING ", " THE LIVES OF ALL")
     self.assertEqual(region_1, p_list[4].get_region())
 
-    self.check_caption(p_list[5], "caption6", "00:00:11;08", "00:00:12;08", "AND ", "IMPROVING ", "THE LIVES OF ALL", Br,
+    self.check_caption(p_list[5], "caption6", "00:00:11;08", "00:00:12;08", "AND ", " IMPROVING ", " THE LIVES OF ALL", Br,
                        "WE SERVE.")
     self.assertEqual(region_1, p_list[5].get_region())
 
@@ -557,7 +588,7 @@ class SccReaderTest(unittest.TestCase):
                        "And restore Iowa's land, water", Br, "And wildlife.")
     self.assertEqual(region_1, p_list[14].get_region())
 
-    self.check_caption(p_list[15], "caption16", "00:00:44;09", "00:00:44;26", ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
+    self.check_caption(p_list[15], "caption16", "00:00:44;09", None, ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_1, p_list[15].get_region())
 
@@ -574,7 +605,8 @@ class SccReaderTest(unittest.TestCase):
       self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = """\
+Scenarist_SCC V1.0
 
 00:02:53:14	9429 9429 94d2 94d2 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 94f2 94f2 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
@@ -583,6 +615,14 @@ class SccReaderTest(unittest.TestCase):
 00:02:56:25	9429 9429 94f2 94f2 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 7361 6769 7474 6973 2e80
 
 """
+
+    scc_disassembly = """\
+00:02:53:14	{RDC}{RDC}{1404}{1404}Lorem ipsum dolor sit amet,{1504}{1504}consectetur adipiscing elit.
+00:02:56:00	{RDC}{RDC}{1404}{1404}Pellentesque interdum lacinia sollicitudin.
+00:02:56:25	{RDC}{RDC}{1504}{1504}Integer luctus et ligula ac sagittis.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
@@ -622,7 +662,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertAlmostEqual(0.2, float(list(p_list[1])[1].get_begin()), delta=0.0001)
     self.assertAlmostEqual(0.4, float(list(p_list[1])[2].get_begin()), delta=0.0001)
 
-    self.check_caption(p_list[2], "caption3", "00:02:56:01", "00:02:57:16", "Pellentesque", " interdum ", "lacinia ",
+    self.check_caption(p_list[2], "caption3", "00:02:56:01", None, "Pellentesque", " interdum ", "lacinia ",
                        "sollicitudin.")
     self.assertEqual(region_1, p_list[2].get_region())
 
@@ -631,7 +671,7 @@ class SccReaderTest(unittest.TestCase):
     self.assertAlmostEqual(0.4, float(list(p_list[2])[2].get_begin()), delta=0.0001)
     self.assertAlmostEqual(0.5333, float(list(p_list[2])[3].get_begin()), delta=0.0001)
 
-    self.check_caption(p_list[3], "caption4", "00:02:56:26", "00:02:57:16", "Integer ", "luctus", " et ", "ligula", " ac ",
+    self.check_caption(p_list[3], "caption4", "00:02:56:26", None, "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
     self.assertEqual(region_1, p_list[3].get_region())
 

@@ -25,10 +25,10 @@
 
 '''ttconv tt'''
 
+import json
 import logging
 import os
 import sys
-import json
 import typing
 import xml.etree.ElementTree as et
 from argparse import ArgumentParser
@@ -39,17 +39,19 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
-from ttconv.config import ModuleConfiguration
 from ttconv.config import GeneralConfiguration
+from ttconv.config import ModuleConfiguration
 from ttconv.imsc.config import IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
+from ttconv.scc.config import SccReaderConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
 CONFIGURATIONS = [
   GeneralConfiguration,
   IMSCWriterConfiguration,
-  ISDConfiguration
+  ISDConfiguration,
+  SccReaderConfiguration
 ]
 
 
@@ -95,7 +97,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
 
       if not self.display_progress_bar and is_progress_bar_record:
         return
-      
+
       if is_progress_bar_record:
         percent_progress = getattr(record, 'percent_progress')
         msg = progress_str(
@@ -196,10 +198,12 @@ def read_config_from_json(config_class, json_data) -> typing.Optional[ModuleConf
 
   return config_class.parse(json_config)
 
+
 # Argument parsing setup
 #
 cli = ArgumentParser()
 subparsers = cli.add_subparsers(dest="subcommand")
+
 
 def argument(*name_or_flags, **kwargs):
   """Convenience function to properly format arguments to pass to the
@@ -297,9 +301,14 @@ def convert(args):
     file_as_str = Path(inputfile).read_text()
 
     #
+    # Read the config
+    #
+    reader_config = read_config_from_json(SccReaderConfiguration, json_config_data)
+
+    #
     # Pass the parsed xml to the reader
     #
-    model = scc_reader.to_model(file_as_str, progress_callback_read)
+    model = scc_reader.to_model(file_as_str, reader_config, progress_callback_read)
   else:
     if args.itype is not None:
       exit_str = f'Input type {args.itype} is not supported'
