@@ -201,8 +201,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[3])[2], StyleProperties.Color, NamedColors.red.value)
     self.check_element_style(list(p_list[3])[4], StyleProperties.FontStyle, FontStyleType.italic)
 
-    for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+    self.check_element_style(p_list[0][0], StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_pop_on_content_unexpectedly_ended(self):
     scc_content = """\
@@ -312,8 +311,7 @@ Scenarist_SCC V1.0
     self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
-    for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+    self.check_element_style(p_list[0][0], StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
     scc_content = """\
@@ -374,8 +372,8 @@ Scenarist_SCC V1.0
                        expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
-    for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+    self.check_element_style(p_list[0][0], StyleProperties.BackgroundColor, NamedColors.black.value)
+
 
   def test_4_rows_roll_up_content(self):
     scc_content = """\
@@ -450,8 +448,8 @@ Scenarist_SCC V1.0
                        expected_text[4], Br, expected_text[5])
     self.assertEqual(region_1, p_list[5].get_region())
 
-    for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+    self.check_element_style(p_list[0][0], StyleProperties.BackgroundColor, NamedColors.black.value)
+
 
   def test_mix_rows_roll_up_content(self):
     scc_content = """\
@@ -601,8 +599,7 @@ Scenarist_SCC V1.0
     self.check_element_style(list(p_list[14])[3], StyleProperties.BackgroundColor, semi_transparent_magenta)
     self.check_element_style(list(p_list[15])[1], StyleProperties.BackgroundColor, semi_transparent_magenta)
 
-    for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+    self.check_element_style(p_list[0][0], StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content(self):
     scc_content = """\
@@ -682,8 +679,7 @@ Scenarist_SCC V1.0
     self.assertAlmostEqual(0.4666, float(list(p_list[3])[4].get_begin()), delta=0.0001)
     self.assertAlmostEqual(0.5, float(list(p_list[3])[5].get_begin()), delta=0.0001)
 
-    for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+    self.check_element_style(p_list[0][0], StyleProperties.BackgroundColor, NamedColors.black.value)
 
 
 if __name__ == '__main__':

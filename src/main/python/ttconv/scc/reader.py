@@ -42,7 +42,7 @@ from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.style_properties import StyleProperties, NamedColors, LengthType
+from ttconv.style_properties import StyleProperties, NamedColors, LengthType, GenericFontFamilyType
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
@@ -121,9 +121,6 @@ class _SccContext:
     if self.has_active_captions():
       previous_caption = self.active_captions.pop(index)
       previous_caption.set_end(time_code)
-
-      if previous_caption.get_style_property(StyleProperties.BackgroundColor) is None:
-        previous_caption.add_style_property(StyleProperties.BackgroundColor, NamedColors.black.value)
 
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
@@ -453,6 +450,12 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
 
   # the default value of LineHeight ("normal") typically translates to 125% of the font size, which causes regions to overflow.
   body.set_style(StyleProperties.LineHeight, LengthType(value=100, units=LengthType.Units.pct))
+
+  # use a more readable font than the default Courier
+  body.set_style(StyleProperties.FontFamily, ("Consolas", "Monaco", GenericFontFamilyType.monospace))
+
+  # add line padding
+  body.set_style(StyleProperties.LinePadding, LengthType(value=0.25, units=LengthType.Units.c))
 
   context.div = Div()
   context.div.set_doc(document)
