@@ -30,7 +30,7 @@ from __future__ import annotations
 import logging
 from typing import Optional, List
 
-from ttconv.model import ContentDocument, Body, Div, CellResolutionType
+from ttconv.model import ContentDocument, Body, Div, CellResolutionType, ActiveAreaType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
@@ -42,7 +42,7 @@ from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.style import SccCaptionStyle
-from ttconv.style_properties import StyleProperties, NamedColors, LengthType, GenericFontFamilyType
+from ttconv.style_properties import StyleProperties, LengthType, GenericFontFamilyType
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
@@ -443,6 +443,15 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
 
   context.set_safe_area(int((root_cell_resolution.columns - SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS) / 2),
                         int((root_cell_resolution.rows - SCC_SAFE_AREA_CELL_RESOLUTION_ROWS) / 2))
+
+  # The active area is equivalent to the safe area
+  active_area = ActiveAreaType(
+    left_offset=context.safe_area_x_offset / root_cell_resolution.columns,
+    top_offset=context.safe_area_y_offset / root_cell_resolution.rows,
+    width=(root_cell_resolution.columns - (context.safe_area_x_offset * 2)) / root_cell_resolution.columns,
+    height=(root_cell_resolution.rows - (context.safe_area_y_offset * 2)) / root_cell_resolution.rows,
+  )
+  document.set_active_area(active_area)
 
   body = Body()
   body.set_doc(document)
