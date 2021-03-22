@@ -30,11 +30,12 @@ import unittest
 from numbers import Number
 from typing import Union, Type, Optional
 
-from ttconv.model import Br, P, ContentElement, CellResolutionType
+from ttconv.model import Br, P, ContentElement, CellResolutionType, Span
 from ttconv.scc.reader import to_model, to_disassembly
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
 from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -202,7 +203,8 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_style(list(p_list[3])[4], StyleProperties.FontStyle, FontStyleType.italic)
 
     for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+        self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_pop_on_content_unexpectedly_ended(self):
     scc_content = """\
@@ -313,7 +315,8 @@ Scenarist_SCC V1.0
                              TextDecorationType(underline=True))
 
     for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+        self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
     scc_content = """\
@@ -375,7 +378,9 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[3].get_region())
 
     for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+        self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
+
 
   def test_4_rows_roll_up_content(self):
     scc_content = """\
@@ -451,7 +456,9 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[5].get_region())
 
     for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+        self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
+
 
   def test_mix_rows_roll_up_content(self):
     scc_content = """\
@@ -602,7 +609,9 @@ Scenarist_SCC V1.0
     self.check_element_style(list(p_list[15])[1], StyleProperties.BackgroundColor, semi_transparent_magenta)
 
     for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+        if span.get_style(StyleProperties.BackgroundColor) != SccAttributeCode.BMS.value[2]:
+          self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content(self):
     scc_content = """\
@@ -683,7 +692,8 @@ Scenarist_SCC V1.0
     self.assertAlmostEqual(0.5, float(list(p_list[3])[5].get_begin()), delta=0.0001)
 
     for p in p_list:
-      self.check_element_style(p, StyleProperties.BackgroundColor, NamedColors.black.value)
+      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+        self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
 
 if __name__ == '__main__':

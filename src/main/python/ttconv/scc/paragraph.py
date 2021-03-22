@@ -36,7 +36,7 @@ from ttconv.scc.content import SccCaptionText, SccCaptionContent, ROLL_UP_BASE_R
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
 from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType, \
-  TextAlignType
+  TextAlignType, NamedColors
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
@@ -342,6 +342,9 @@ class SccCaptionParagraph:
 
         for (prop, value) in caption_content.get_style_properties().items():
           span.set_style(prop, value)
+
+        if StyleProperties.BackgroundColor not in caption_content.get_style_properties():
+          span.set_style(StyleProperties.BackgroundColor, NamedColors.black.value)
 
         span.push_child(Text(doc, caption_content.get_text()))
 
