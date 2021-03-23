@@ -181,9 +181,9 @@ class FileTypes(Enum):
       if len(file_extension) > 0 and file_extension[0] == '.':
         file_extension = file_extension[1:len(file_extension)]
 
-      return FileTypes(file_extension)
+      return FileTypes(file_extension.lower())
 
-    return FileTypes(file_type)
+    return FileTypes(file_type.lower())
 
 
 def read_config_from_json(config_class, json_data) -> typing.Optional[ModuleConfiguration]:
