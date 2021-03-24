@@ -180,7 +180,7 @@ class SccCaptionParagraph:
     """Computes and returns the current paragraph origin, based on its content"""
     if len(self._caption_contents) > 0:
       x_offsets = [text.get_x_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
-      y_offsets = [text.get_y_offset() for text in self._caption_contents if isinstance(text, SccCaptionText)]
+      y_offsets = [text.get_y_offset() - 1 for text in self._caption_contents if isinstance(text, SccCaptionText)]
 
       return get_position_from_offsets(min(x_offsets), min(y_offsets))
 
@@ -483,7 +483,7 @@ class _SccParagraphRegion:
       region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.after)
     else:
       # The region height extends from its origin to the bottom of the safe area
-      region_height = self._bottom - int(paragraph_origin.y.value)
+      region_height = self._bottom - int(paragraph_origin.y.value) - 1
       region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.before)
 
     region_extent = get_extent_from_dimensions(region_width, region_height)
