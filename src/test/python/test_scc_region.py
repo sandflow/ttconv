@@ -81,7 +81,7 @@ class SccParagraphRegionTest(unittest.TestCase):
 
     origin = caption_paragraph.get_origin()
     self.assertEqual(11, origin.x.value)
-    self.assertEqual(6, origin.y.value)
+    self.assertEqual(5, origin.y.value)
 
     extent = caption_paragraph.get_extent()
     self.assertEqual(20, extent.width.value)
@@ -111,7 +111,7 @@ class SccParagraphRegionTest(unittest.TestCase):
 
     origin = caption_paragraph.get_origin()
     self.assertEqual(11, origin.x.value)
-    self.assertEqual(6, origin.y.value)
+    self.assertEqual(5, origin.y.value)
 
     extent = caption_paragraph.get_extent()
     self.assertEqual(34, extent.width.value)
