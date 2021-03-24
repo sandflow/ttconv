@@ -115,9 +115,10 @@ docker run -it --rm ttconv:latest bash
 
 ### Example
 
-From `src/test/python/test_tt.py`:
+From the root directory of the project:
 
 ```sh
+mkdir build
 export PYTHONPATH=src/main/python
 python src/main/python/ttconv/tt.py convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.ttml
 ```

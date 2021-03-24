@@ -53,11 +53,25 @@ class IMSCAppTest(unittest.TestCase):
       "-o", "build/body_only.out.ttml",
       "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
+  def test_convert_input_file_type_TTML(self):
+    tt.main(["convert",
+      "-i", "src/test/resources/ttml/body_only.ttml",
+      "--itype", "TTML",
+      "-o", "build/body_only.out.ttml",
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
+
   def test_convert_output_file_type_ttml(self):
     tt.main(["convert",
       "-i", "src/test/resources/ttml/body_only.ttml",
       "-o", "build/body_only.out.ttml",
       "--otype", "ttml",
+      "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
+
+  def test_convert_output_file_type_TTML(self):
+    tt.main(["convert",
+      "-i", "src/test/resources/ttml/body_only.ttml",
+      "-o", "build/body_only.out.ttml",
+      "--otype", "TTML",
       "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
   def test_convert_input_file_type_scc(self):
