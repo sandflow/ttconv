@@ -62,17 +62,35 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(caption_paragraph.get_current_line(), caption_paragraph.get_lines()[4])
     self.assertEqual(4, caption_paragraph.get_current_line().get_row())
     self.assertEqual(4, caption_paragraph.get_current_line().get_indent())
+    self.assertEqual(0, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(0, caption_paragraph.get_current_text().get_cursor())
 
     caption_paragraph.indent_cursor(3)
     self.assertEqual((4, 7), caption_paragraph.get_cursor())
     self.assertEqual(4, caption_paragraph.get_current_line().get_row())
     self.assertEqual(7, caption_paragraph.get_current_line().get_indent())
+    self.assertEqual(0, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(0, caption_paragraph.get_current_text().get_cursor())
 
     caption_paragraph.append_text("Hello")
-    caption_paragraph.indent_cursor(2)
-    self.assertEqual((4, 14), caption_paragraph.get_cursor())
+    self.assertEqual(5, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(5, caption_paragraph.get_current_text().get_cursor())
+
+    caption_paragraph.set_cursor_at(4, 10)
+    self.assertEqual((4, 10), caption_paragraph.get_cursor())
     self.assertEqual(4, caption_paragraph.get_current_line().get_row())
     self.assertEqual(7, caption_paragraph.get_current_line().get_indent())
+
+    self.assertEqual(3, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(3, caption_paragraph.get_current_text().get_cursor())
+
+    caption_paragraph.indent_cursor(2)
+    self.assertEqual((4, 12), caption_paragraph.get_cursor())
+    self.assertEqual(4, caption_paragraph.get_current_line().get_row())
+    self.assertEqual(7, caption_paragraph.get_current_line().get_indent())
+
+    self.assertEqual(5, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(5, caption_paragraph.get_current_text().get_cursor())
 
     self.assertListEqual([], caption_paragraph.get_last_caption_lines(0))
     self.assertListEqual([caption_paragraph.get_current_line()], caption_paragraph.get_last_caption_lines(1))
@@ -80,6 +98,8 @@ class SccCaptionParagraphTest(unittest.TestCase):
     caption_paragraph.set_cursor_at(2, 4)
     caption_paragraph.new_caption_text()
     caption_paragraph.append_text("World")
+    self.assertEqual(5, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(5, caption_paragraph.get_current_text().get_cursor())
 
     self.assertRaisesRegex(RuntimeError, "Cannot roll-Up Unknown-styled caption.",
                            caption_paragraph.roll_up)
@@ -107,6 +127,8 @@ class SccCaptionParagraphTest(unittest.TestCase):
     caption_paragraph.set_cursor_at(15, 0)
     caption_paragraph.new_caption_text()
     caption_paragraph.append_text("!!!")
+    self.assertEqual(3, caption_paragraph.get_current_line().get_cursor())
+    self.assertEqual(3, caption_paragraph.get_current_text().get_cursor())
 
     caption_paragraph.roll_up()
     self.assertEqual(3, len(caption_paragraph.get_lines()))

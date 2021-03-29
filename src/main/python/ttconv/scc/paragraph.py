@@ -121,7 +121,7 @@ class SccCaptionParagraph:
 
   def append_text(self, text: str):
     """Append text to current line text content"""
-    self.get_current_text().append(text)
+    self.get_current_line().add_text(text)
     self.indent_cursor(len(text))
 
   def set_lines(self, lines: Union[List[SccCaptionLine], Dict[int, SccCaptionLine]]):
@@ -150,8 +150,14 @@ class SccCaptionParagraph:
   def set_cursor_at(self, row: int, indent: Optional[int] = None):
     """Set cursor position and initialize a new line if necessary"""
     self._cursor = (row, indent if indent is not None else 0)
+
     if self._caption_lines.get(row) is None:
       self.new_caption_line()
+
+    self._current_line = self._caption_lines.get(row)
+
+    if indent is not None:
+      self._current_line.set_cursor(self._cursor[1] - self._current_line.get_indent())
 
   def get_cursor(self) -> (int, int):
     """Returns cursor coordinates"""
@@ -164,6 +170,8 @@ class SccCaptionParagraph:
     if self._current_line.is_empty():
       # If the current line is empty, set cursor indent as a line tabulation
       self._current_line.indent(indent)
+    else:
+      self._current_line.set_cursor(self._cursor[1] - self._current_line.get_indent())
 
   def get_lines(self) -> Dict[int, SccCaptionLine]:
     """Returns the paragraph lines per row"""
@@ -178,8 +186,6 @@ class SccCaptionParagraph:
       for orig_text in orig_line.get_texts():
         new_text = SccCaptionText()
         new_text.append(orig_text.get_text())
-        new_text.set_x_offset(orig_text.get_x_offset())
-        new_text.set_y_offset(orig_text.get_y_offset())
         new_line.add_text(new_text)
       lines_copy[row] = new_line
 
