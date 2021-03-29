@@ -28,28 +28,80 @@
 from __future__ import annotations
 
 import copy
-from typing import Optional
+from typing import Optional, List, Union
 
-from ttconv.time_code import SmpteTimeCode
 from ttconv.scc.utils import get_position_from_offsets
 from ttconv.style_properties import CoordinateType
+from ttconv.time_code import SmpteTimeCode
 
 ROLL_UP_BASE_ROW = 15
 
 
-class SccCaptionContent:
-  """Caption content base class"""
+class SccCaptionLine:
+  """Caption paragraph line"""
 
+  def __init__(self, row: int, indent: int):
+    self._texts: List[SccCaptionText] = []
+    self._row: int = row  # Row in the active area
+    self._indent: int = indent  # Indentation in the active area
 
-class SccCaptionLineBreak(SccCaptionContent):
-  """Caption line break element"""
+  def add_text(self, text: Union[SccCaptionText, str]):
+    """Add text to line"""
+
+    if isinstance(text, SccCaptionText):
+      self._texts.append(text)
+
+    elif isinstance(text, str):
+
+      if len(self._texts) == 0:
+        self._texts.append(SccCaptionText())
+      self._texts[-1].append(text)
+
+    else:
+      raise ValueError("Unsupported text type for SCC caption line")
+
+  def indent(self, indent: int):
+    """Indent current line"""
+    self._indent += indent
+
+  def get_current_text(self) -> Optional[SccCaptionText]:
+    """Returns current text content"""
+
+    if len(self._texts) == 0:
+      return None
+    return self._texts[-1]
+
+  def get_texts(self) -> List[SccCaptionText]:
+    """Returns the text contents of the line"""
+    return self._texts
+
+  def get_length(self) -> int:
+    """Returns the total text length"""
+    return sum([len(text.get_text()) for text in self._texts])
+
+  def set_row(self, row: int):
+    """Sets the line row"""
+    self._row = row
+
+  def get_row(self) -> int:
+    """Returns the line row"""
+    return self._row
+
+  def get_indent(self) -> int:
+    """Returns the line indentation"""
+    return self._indent
+
+  def is_empty(self) -> bool:
+    """Returns whether the line text is empty or not"""
+    # no caption texts or an empty text
+    return len(self._texts) == 0 or (len(self._texts) == 1 and self._texts[-1].get_text() == "")
 
   def __repr__(self):
-    return "<" + self.__class__.__name__ + ">"
+    return "<" + self.__class__.__name__ + " " + str(self.__dict__) + ">"
 
 
-class SccCaptionText(SccCaptionContent):
-  """Caption text content"""
+class SccCaptionText:
+  """Caption text content with specific positional, temporal and styling attributes"""
 
   def __init__(self):
     self._begin: Optional[SmpteTimeCode] = None

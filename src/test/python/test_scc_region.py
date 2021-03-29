@@ -30,7 +30,6 @@
 import unittest
 
 from ttconv.model import ContentDocument, CellResolutionType
-from ttconv.scc.content import SccCaptionLineBreak
 from ttconv.scc.paragraph import SccCaptionParagraph, _SccParagraphRegion
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.style_properties import StyleProperties, ShowBackgroundType
@@ -67,15 +66,8 @@ class SccParagraphRegionTest(unittest.TestCase):
     safe_area_y_offset = 2
 
     caption_paragraph = SccCaptionParagraph(safe_area_x_offset, safe_area_y_offset)
+    caption_paragraph.set_cursor_at(4, 7)
     caption_paragraph.new_caption_text()
-
-    caption_paragraph.set_row_offset(4)
-    caption_paragraph.set_column_offset(4)
-    caption_paragraph.apply_current_text_offsets()
-    caption_paragraph.indent(3)
-
-    self.assertEqual(6, caption_paragraph.get_current_text().get_y_offset())
-    self.assertEqual(11, caption_paragraph.get_current_text().get_x_offset())
 
     caption_paragraph.get_current_text().append("A 20-char long line.")
 
@@ -103,10 +95,8 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertEqual(50, region_extent.width.value)
     self.assertEqual(63, region_extent.height.value)
 
-    caption_paragraph._caption_contents.append(SccCaptionLineBreak())
-
+    caption_paragraph.set_cursor_at(5, 7)
     caption_paragraph.new_caption_text()
-    caption_paragraph.apply_current_text_offsets()
     caption_paragraph.get_current_text().append("This is another 34-char long line.")
 
     origin = caption_paragraph.get_origin()
@@ -127,6 +117,7 @@ class SccParagraphRegionTest(unittest.TestCase):
 
     self.assertEqual(62, region_extent.width.value)
     self.assertEqual(63, region_extent.height.value)
+
 
 if __name__ == '__main__':
   unittest.main()
