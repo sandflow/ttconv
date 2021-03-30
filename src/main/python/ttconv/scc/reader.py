@@ -136,6 +136,7 @@ class _SccContext:
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
+    """Initialize active caption for paint-on style"""
     active_style = SccCaptionStyle.PaintOn
     copied_lines = []
     cursor = (0, 0)
@@ -401,7 +402,7 @@ class _SccContext:
 
     debug = str(line.time_code) + "\t"
 
-    for index, scc_word in enumerate(line.scc_words):
+    for scc_word in line.scc_words:
 
       if self.previous_code == scc_word.value:
         continue

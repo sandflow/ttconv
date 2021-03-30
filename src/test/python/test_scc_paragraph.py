@@ -34,6 +34,7 @@ from ttconv.model import ContentDocument, Span, Br
 from ttconv.scc.content import SccCaptionLine
 from ttconv.scc.paragraph import SccCaptionParagraph
 from ttconv.scc.style import SccCaptionStyle
+from ttconv.style_properties import TextAlignType
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
 
@@ -152,6 +153,48 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertListEqual(
       [caption_paragraph.get_lines().get(0), caption_paragraph.get_lines().get(2), caption_paragraph.get_lines().get(14)],
       caption_paragraph.get_last_caption_lines(3))
+
+  def test_paragraph_alignment_detection_left(self):
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(0, 0)
+    caption_paragraph.append_text("0123456789")
+
+    caption_paragraph.set_cursor_at(1, 0)
+    caption_paragraph.append_text("012345")
+
+    caption_paragraph.set_cursor_at(2, 0)
+    caption_paragraph.append_text("0123")
+
+    self.assertEqual(TextAlignType.start, caption_paragraph.guess_text_alignment())
+
+  def test_paragraph_alignment_detection_center(self):
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(0, 0)
+    caption_paragraph.append_text("0123456789")
+
+    caption_paragraph.set_cursor_at(1, 2)
+    caption_paragraph.append_text("012345")
+
+    caption_paragraph.set_cursor_at(2, 3)
+    caption_paragraph.append_text("0123")
+
+    self.assertEqual(TextAlignType.center, caption_paragraph.guess_text_alignment())
+
+  def test_paragraph_alignment_detection_right(self):
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(0, 0)
+    caption_paragraph.append_text("0123456789")
+
+    caption_paragraph.set_cursor_at(1, 4)
+    caption_paragraph.append_text("012345")
+
+    caption_paragraph.set_cursor_at(2, 6)
+    caption_paragraph.append_text("0123")
+
+    self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
 
   def test_to_paragraph(self):
     caption_paragraph = SccCaptionParagraph()

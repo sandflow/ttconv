@@ -109,7 +109,7 @@ class SccCaptionLine:
   def set_cursor(self, column: int):
     """Set cursor position"""
     if column > self.get_length():
-      LOGGER.warning("Expected cursor position overflows line length, set it at the end")  # FIXME reformulate
+      LOGGER.warning("Expected cursor position is beyond the line length: force cursor at the end of the line.")
       column = self.get_length()
 
     self._cursor = column
