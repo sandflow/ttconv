@@ -79,7 +79,7 @@ class SignificantTimes:
 class _SingleRegionDocumentCache:
   interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]
   doc: model.ContentDocument
-
+  content_interval: typing.Optional[typing.Tuple[Fraction, typing.Optional[Fraction]]]
 
 ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
@@ -189,14 +189,26 @@ class ISD(model.Document):
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
     increasing order'''
 
+    def compute_sig_times(
+      interval_cache,
+      content_interval,
+      s_times,
+      element: model.ContentElement,
+      parent_begin: Fraction,
+      parent_end: typing.Optional[Fraction]
+      ):
 
-    def compute_sig_times(interval_cache, s_times, element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
-
-      # add signficant times for the element
+      # compute element interval
 
       begin_time, end_time = ISD._make_absolute(element.get_begin(), element.get_end(), parent_begin, parent_end)
 
       interval_cache[element] = (begin_time, end_time)
+
+      if isinstance(element, (model.Br, model.Span)):
+        content_interval[0] = begin_time if content_interval[0] is None else min(begin_time, content_interval[0])
+        content_interval[1] = None if end_time is None else max(end_time, content_interval[1])
+
+      # add significant times for the element
 
       s_times.add(begin_time)
 
@@ -216,7 +228,7 @@ class ISD(model.Document):
       # add signficant times for the children of the element 
 
       for child_element in iter(element):
-        compute_sig_times(interval_cache, s_times, child_element, begin_time, end_time)
+        compute_sig_times(interval_cache, content_interval, s_times, child_element, begin_time, end_time)
 
     single_regions_docs = []
 
@@ -240,14 +252,20 @@ class ISD(model.Document):
       # add significant times for regions
 
       for region in cached_doc.iter_regions():
-        compute_sig_times(interval_cache, s_times, region, 0, None)
+        compute_sig_times(interval_cache, None, s_times, region, 0, None)
 
       # add significant times for body and its descendents
 
-      if cached_doc.get_body() is not None:
-        compute_sig_times(interval_cache, s_times, cached_doc.get_body(), 0, None) 
+      content_interval = [None, 0]
 
-      cache.append(_SingleRegionDocumentCache(interval_cache, cached_doc))
+      if cached_doc.get_body() is not None:
+        compute_sig_times(interval_cache, content_interval, s_times, cached_doc.get_body(), 0, None)
+
+      cache.append(_SingleRegionDocumentCache(
+        interval_cache,
+        cached_doc,
+        tuple(content_interval) if content_interval[0] is not None else None
+        ))
 
     return SignificantTimes(sorted(s_times), tuple(cache))
 
@@ -261,9 +279,16 @@ class ISD(model.Document):
     '''
     isd = ISD(doc)
 
-    cache = (_SingleRegionDocumentCache({}, doc),) if sig_times is None else sig_times.cache()
+    cache = (_SingleRegionDocumentCache({}, doc, None),) if sig_times is None else sig_times.cache()
 
     for cached_doc in cache:
+      if cached_doc.content_interval is not None:
+        if (
+          cached_doc.content_interval[0] > offset or 
+          (cached_doc.content_interval[1] is not None and cached_doc.content_interval[1] <= offset)
+        ):
+          continue
+
       regions = tuple(cached_doc.doc.iter_regions())
 
       activity_cache = {}
