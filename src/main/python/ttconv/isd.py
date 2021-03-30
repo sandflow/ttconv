@@ -206,7 +206,7 @@ class ISD(model.Document):
 
       if isinstance(element, (model.Br, model.Span)):
         content_interval[0] = begin_time if content_interval[0] is None else min(begin_time, content_interval[0])
-        content_interval[1] = None if end_time is None else max(end_time, content_interval[1])
+        content_interval[1] = None if end_time is None or content_interval[1] is None else max(end_time, content_interval[1])
 
       # add significant times for the element
 
