@@ -140,6 +140,12 @@ class SccCaptionLine:
     """Returns the line indentation"""
     return self._indent
 
+  def clear(self):
+    """Clears the line text contents"""
+    self._texts.clear()
+    self._current_text = None
+    self.set_cursor(0)
+
   def is_empty(self) -> bool:
     """Returns whether the line text is empty or not"""
     # no caption texts or an empty text

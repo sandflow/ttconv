@@ -131,6 +131,11 @@ class SccCaptionLineTest(unittest.TestCase):
     self.assertEqual(16, caption_line.get_length())
     self.assertListEqual([caption_text, another_caption_text], caption_line.get_texts())
 
+    caption_line.clear()
+    self.assertEqual(0, caption_line.get_cursor())
+    self.assertEqual(0, caption_line.get_length())
+    self.assertListEqual([], caption_line.get_texts())
+
 
 class SccCaptionTextTest(unittest.TestCase):
 

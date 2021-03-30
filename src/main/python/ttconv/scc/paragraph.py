@@ -149,6 +149,11 @@ class SccCaptionParagraph:
 
   def set_cursor_at(self, row: int, indent: Optional[int] = None):
     """Set cursor position and initialize a new line if necessary"""
+
+    # Remove current line if empty (useless)
+    if self._current_line is not None and self._current_line.is_empty():
+      del self._caption_lines[self._current_line.get_row()]
+
     self._cursor = (row, indent if indent is not None else 0)
 
     if self._caption_lines.get(row) is None:
