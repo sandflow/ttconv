@@ -44,16 +44,17 @@ from ttconv.config import ModuleConfiguration
 
 class SignificantTimes:
   """Information on the temporal offsets at which a ContentDocument changes.
-  The class emulates the behavior of a list containing temporal offsets where the document changes, in increasing order
+  The class emulates the behavior of a list containing temporal offsets where the document changes,
+  in increasing order
   """
   def __init__(
     self,
     sig_times: typing.List[Fraction],
-    interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]] = None
+    doc_cache: typing.Optional[typing.Tuple[_SingleRegionDocumentCache]] = None
     ):
 
     self._sig_times = tuple(sig_times)
-    self._cache = interval_cache or {}
+    self._cache = doc_cache or []
 
   def __getitem__(self, key):
     return self._sig_times[key]
@@ -64,9 +65,8 @@ class SignificantTimes:
   def __iter__(self):
     return iter(self._sig_times)
 
-  def interval_cache(self) -> typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]:
-    """Returns a dictionary that maps content elements to their respective absolute begin and end times.
-    This dictionary is optionally used by `ISD.from_model` to increase performance.
+  def cache(self) -> typing.Optional[typing.Tuple[_SingleRegionDocumentCache]]:
+    """Returns document cache. This dictionary is optionally used by `ISD.from_model` to increase performance.
     """
     return self._cache
 
@@ -74,6 +74,12 @@ class SignificantTimes:
     """Returns a list of temporal offsets where the document changes, in increasing order.
     """
     return self._sig_times
+
+@dataclass(frozen=True)
+class _SingleRegionDocumentCache:
+  interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]
+  doc: model.ContentDocument
+
 
 ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
@@ -183,9 +189,8 @@ class ISD(model.Document):
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
     increasing order'''
 
-    interval_cache = {}
 
-    def sig_times(element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
+    def compute_sig_times(interval_cache, s_times, element: model.ContentElement, parent_begin: Fraction, parent_end: typing.Optional[Fraction]):
 
       # add signficant times for the element
 
@@ -211,21 +216,40 @@ class ISD(model.Document):
       # add signficant times for the children of the element 
 
       for child_element in iter(element):
-        sig_times(child_element, begin_time, end_time)
+        compute_sig_times(interval_cache, s_times, child_element, begin_time, end_time)
+
+    single_regions_docs = []
 
     s_times = set()
 
-    # add significant times for regions
+    doc_regions = list(doc.iter_regions())
 
-    for region in doc.iter_regions():
-      sig_times(region, 0, None)
+    if len(doc_regions) > 1:
+      for region in doc.iter_regions():
+        single_regions_docs.append(_clone_doc_with_one_region(doc, region.get_id()))
+    else:
+      single_regions_docs.append(doc)
 
-    # add significant times for body and its descendents
 
-    if doc.get_body() is not None:
-      sig_times(doc.get_body(), 0, None) 
+    cache = []
 
-    return SignificantTimes(sorted(s_times), interval_cache)
+    for cached_doc in single_regions_docs:
+
+      interval_cache = {}
+
+      # add significant times for regions
+
+      for region in cached_doc.iter_regions():
+        compute_sig_times(interval_cache, s_times, region, 0, None)
+
+      # add significant times for body and its descendents
+
+      if cached_doc.get_body() is not None:
+        compute_sig_times(interval_cache, s_times, cached_doc.get_body(), 0, None) 
+
+      cache.append(_SingleRegionDocumentCache(interval_cache, cached_doc))
+
+    return SignificantTimes(sorted(s_times), tuple(cache))
 
   @staticmethod
   def from_model(
@@ -237,21 +261,23 @@ class ISD(model.Document):
     '''
     isd = ISD(doc)
 
-    regions = tuple(doc.iter_regions())
+    cache = (_SingleRegionDocumentCache({}, doc),) if sig_times is None else sig_times.cache()
 
-    interval_cache = {} if sig_times is None else sig_times.interval_cache()
-    activity_cache = {}
+    for cached_doc in cache:
+      regions = tuple(cached_doc.doc.iter_regions())
 
-    if regions:
-      for region in regions:
-        isd_region = ISD._process_element(interval_cache, activity_cache, isd, offset, region, None, None, None, None, region)
+      activity_cache = {}
+
+      if regions:
+        for region in regions:
+          isd_region = ISD._process_element(cached_doc.interval_cache, activity_cache, isd, offset, region, None, None, None, None, region)
+          if isd_region is not None:
+            isd.put_region(isd_region)
+      else:
+        default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
+        isd_region = ISD._process_element(cached_doc.interval_cache, activity_cache, isd, offset, None, None, None, None, None, default_region)
         if isd_region is not None:
           isd.put_region(isd_region)
-    else:
-      default_region = model.Region(ISD.DEFAULT_REGION_ID, doc)
-      isd_region = ISD._process_element(interval_cache, activity_cache, isd, offset, None, None, None, None, None, default_region)
-      if isd_region is not None:
-        isd.put_region(isd_region)
 
     return isd
 
@@ -1290,3 +1316,67 @@ class StyleProcessors:
 def _generate_isd(args):
   doc, offset, sig_times = args
   return ISD.from_model(doc, offset, sig_times)
+
+
+def _clone_doc_with_one_region(doc: model.ContentDocument, region_id: str):
+
+  def _copy_content_element(
+    new_doc: model.ContentDocument,
+    selected_region: model.Region,
+    inherited_region: model.Region,
+    element: model.ContentElement
+  ):
+    if element is None:
+      return None
+
+    # associated region is that associated with the element, or inherited otherwise
+
+    associated_region = element.get_region() if element.get_region() is not None else inherited_region
+
+    # prune the element if either:
+    # * the element has children and the associated region is neither the default nor the root region
+    # * the element has no children and the associated region is not the root region
+
+    if (
+        associated_region is not selected_region and
+        (not element.has_children() or associated_region is not None)
+      ):
+      return None
+
+    new_element = type(element)(new_doc)
+    element.copy(new_element)
+
+    region = element.get_region()
+
+    if region is not None:
+      new_element.set_region(new_doc.get_region(region.get_id()))
+    
+    new_children = []
+
+    for child in element:
+      new_child = _copy_content_element(new_doc, selected_region, associated_region, child)
+      if new_child is not None:
+        new_children.append(new_child)
+
+    if len(new_children) > 0:
+      new_element.push_children(new_children)
+
+    return new_element
+
+  new_doc = model.ContentDocument()
+
+  doc.copy(new_doc)
+
+  region = doc.get_region(region_id)
+
+  new_region = model.Region(region_id, new_doc)
+
+  region.copy(new_region)
+
+  new_doc.put_region(new_region)
+
+  new_body = _copy_content_element(new_doc, doc.get_region(region_id), None, doc.get_body())
+
+  new_doc.set_body(new_body)
+
+  return new_doc
