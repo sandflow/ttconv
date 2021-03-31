@@ -150,6 +150,32 @@ class SccCaptionLine:
     # no caption texts or an empty text
     return len(self._texts) == 0 or (len(self._texts) == 1 and self._texts[-1].get_text() == "")
 
+  def get_leading_spaces(self) -> int:
+    """Returns the number of leading space characters of the line"""
+    index = 0
+    leading_spaces = 0
+    first_text = self.get_texts()[index].get_text()
+
+    while first_text.isspace() and index < len(self.get_texts()):
+      leading_spaces += len(first_text)
+      index += 1
+      first_text = self.get_texts()[index].get_text()
+
+    return leading_spaces + len(first_text) - len(first_text.lstrip())
+
+  def get_trailing_spaces(self) -> int:
+    """Returns the number of trailing space characters of the line"""
+    index = 1
+    trailing_spaces = 0
+    last_text = self.get_texts()[-index].get_text()
+
+    while last_text.isspace() and index < len(self.get_texts()):
+      trailing_spaces += len(last_text)
+      index += 1
+      last_text = self.get_texts()[-index].get_text()
+
+    return trailing_spaces + len(last_text) - len(last_text.rstrip())
+
   def __repr__(self):
     return "<" + self.__class__.__name__ + " " + str(self.__dict__) + ">"
 

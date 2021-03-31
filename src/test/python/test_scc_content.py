@@ -135,6 +135,35 @@ class SccCaptionLineTest(unittest.TestCase):
     self.assertEqual(0, caption_line.get_length())
     self.assertListEqual([], caption_line.get_texts())
 
+  def test_line_text_leading_and_trailing_spaces(self):
+    line = SccCaptionLine(0, 0)
+    line.add_text("123")
+    self.assertEqual(0, line.get_leading_spaces())
+    self.assertEqual(0, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text("   123")
+    self.assertEqual(3, line.get_leading_spaces())
+    self.assertEqual(0, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text("123   ")
+    self.assertEqual(0, line.get_leading_spaces())
+    self.assertEqual(3, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text(" 123  ")
+    self.assertEqual(1, line.get_leading_spaces())
+    self.assertEqual(2, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text("   ")
+    line.add_text(SccCaptionText(" 123 "))
+    line.add_text(SccCaptionText(" "))
+    line.add_text(SccCaptionText("  "))
+    self.assertEqual(4, line.get_leading_spaces())
+    self.assertEqual(4, line.get_trailing_spaces())
+
 
 class SccCaptionTextTest(unittest.TestCase):
 

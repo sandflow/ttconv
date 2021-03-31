@@ -255,22 +255,27 @@ class SccCaptionParagraph:
   def guess_text_alignment(self) -> TextAlignType:
     """Tries to detect the text alignment according to the content indentation"""
 
-    left_border = int(self.get_origin().x.value)
-    right_border = int(SCC_ROOT_CELL_RESOLUTION_COLUMNS - self.get_origin().x.value - self.get_extent().width.value)
-
     def get_line_right_offset(line: SccCaptionLine) -> int:
       return SCC_ROOT_CELL_RESOLUTION_COLUMNS - (line.get_indent() + line.get_length())
 
+    # look for longest line
+    longest_line = max(self._caption_lines.values(), key=lambda line: line.get_length())
+
+    # define borders based on the longest line
+    left_border = longest_line.get_indent() + longest_line.get_leading_spaces()
+    right_border = get_line_right_offset(longest_line) + longest_line.get_trailing_spaces()
+
     # is the text left-aligned?
-    if all(l.get_indent() - left_border == 0 for l in self._caption_lines.values()):
+    if all(l.get_indent() + l.get_leading_spaces() - left_border == 0 for l in self._caption_lines.values()):
       return TextAlignType.start
 
     # is the text right-aligned?
-    if all(get_line_right_offset(l) - right_border == 0 for l in self._caption_lines.values()):
+    if all(get_line_right_offset(l) + l.get_trailing_spaces() - right_border == 0 for l in self._caption_lines.values()):
       return TextAlignType.end
 
     # is the text centered?
-    if all(abs(l.get_indent() - left_border - (get_line_right_offset(l) - right_border)) < 2 for l in self._caption_lines.values()):
+    if all(abs(l.get_indent() + l.get_leading_spaces() - left_border - (
+        get_line_right_offset(l) + l.get_trailing_spaces() - right_border)) < 2 for l in self._caption_lines.values()):
       return TextAlignType.center
 
     # default is left-aligned

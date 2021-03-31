@@ -196,6 +196,74 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
     self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
 
+  def test_paragraph_content_alignment_detection_left(self):
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(0, 0)
+    caption_paragraph.append_text("  0123456789")
+
+    caption_paragraph.set_cursor_at(1, 0)
+    caption_paragraph.append_text("  012345")
+
+    caption_paragraph.set_cursor_at(2, 0)
+    caption_paragraph.append_text("  0123")
+
+    self.assertEqual(TextAlignType.start, caption_paragraph.guess_text_alignment())
+
+  def test_paragraph_content_alignment_detection_center(self):
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(0, 2)
+    caption_paragraph.append_text("0123456789")
+
+    caption_paragraph.set_cursor_at(1, 2)
+    caption_paragraph.append_text("  012345")
+
+    caption_paragraph.set_cursor_at(2, 2)
+    caption_paragraph.append_text("   0123")
+
+    self.assertEqual(TextAlignType.center, caption_paragraph.guess_text_alignment())
+
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(0, 0)
+    caption_paragraph.append_text("  0123456789")
+
+    caption_paragraph.set_cursor_at(1, 2)
+    caption_paragraph.append_text("  012345")
+
+    caption_paragraph.set_cursor_at(2, 5)
+    caption_paragraph.append_text("0123")
+
+    self.assertEqual(TextAlignType.center, caption_paragraph.guess_text_alignment())
+
+  def test_paragraph_content_alignment_detection_right(self):
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(10, 0)
+    caption_paragraph.append_text("0123456789")
+
+    caption_paragraph.set_cursor_at(11, 0)
+    caption_paragraph.append_text("    012345")
+
+    caption_paragraph.set_cursor_at(12, 0)
+    caption_paragraph.append_text("      0123")
+
+    self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
+
+    caption_paragraph = SccCaptionParagraph()
+
+    caption_paragraph.set_cursor_at(10, 0)
+    caption_paragraph.append_text("0123456789")
+
+    caption_paragraph.set_cursor_at(11, 0)
+    caption_paragraph.append_text("    012345")
+
+    caption_paragraph.set_cursor_at(12, 4)
+    caption_paragraph.append_text("  0123")
+
+    self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
+
   def test_to_paragraph(self):
     caption_paragraph = SccCaptionParagraph()
     doc = ContentDocument()
