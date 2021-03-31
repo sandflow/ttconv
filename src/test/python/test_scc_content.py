@@ -70,8 +70,7 @@ class SccCaptionLineTest(unittest.TestCase):
     self.assertEqual(6, caption_line.get_length())
     self.assertListEqual([caption_text], caption_line.get_texts())
 
-    another_caption_text = SccCaptionText()
-    another_caption_text.append("World!")
+    another_caption_text = SccCaptionText("World!")
 
     caption_line.add_text(another_caption_text)
 

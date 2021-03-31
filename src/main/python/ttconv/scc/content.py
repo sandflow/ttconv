@@ -61,9 +61,8 @@ class SccCaptionLine:
 
       if self._current_text is None:
         # Initialize a new text element if necessary
-        self._texts.append(SccCaptionText())
+        self._texts.append(SccCaptionText(text))
         self._current_text = self._texts[-1]
-        self._current_text.append(text)
         self._cursor = self._current_text.get_length()
 
       else:
@@ -158,12 +157,15 @@ class SccCaptionLine:
 class SccCaptionText:
   """Caption text content with specific positional, temporal and styling attributes"""
 
-  def __init__(self):
+  def __init__(self, text: Optional[str] = ""):
     self._begin: Optional[SmpteTimeCode] = None
     self._end: Optional[SmpteTimeCode] = None
     self._style_properties = {}
     self._text: str = ""
     self._cursor = 0  # Cursor in the text
+
+    if text is not None and text != "":
+      self.append(text)
 
   def set_begin(self, time_code: SmpteTimeCode):
     """Sets begin time code"""

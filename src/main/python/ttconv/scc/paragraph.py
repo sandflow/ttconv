@@ -189,8 +189,7 @@ class SccCaptionParagraph:
       new_line = SccCaptionLine(orig_line.get_row(), orig_line.get_indent())
 
       for orig_text in orig_line.get_texts():
-        new_text = SccCaptionText()
-        new_text.append(orig_text.get_text())
+        new_text = SccCaptionText(orig_text.get_text())
         new_line.add_text(new_text)
       lines_copy[row] = new_line
 
