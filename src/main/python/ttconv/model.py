@@ -112,7 +112,13 @@ class ContentElement:
 
     self._id = None
 
-  def copy(self, dest: ContentElement):
+  def copy_to(self, dest: ContentElement):
+    '''Copy all information but children to a different instance.
+    '''
+
+    if dest is self:
+      return
+
     dest.set_begin(self.get_begin())
     dest.set_end(self.get_end())
     dest.set_id(self.get_id())
@@ -544,7 +550,7 @@ class Br(ContentElement):
   def set_region(self, region):
     raise RuntimeError("Br elements are not associated with a region")
 
-  def copy(self, dest: Br):
+  def copy_to(self, dest: Br):
     dest.set_id(self.get_id())
     dest.set_lang(self.get_lang())
     dest.set_space(self.get_space())
@@ -738,7 +744,7 @@ class Text(ContentElement):
     self._text = text
     super().__init__(doc=doc)
 
-  def copy(self, dest: Text):
+  def copy_to(self, dest: Text):
     dest.set_text(self.get_text())
 
   # children
@@ -816,7 +822,7 @@ class Region(ContentElement):
 
     self._id = str(region_id)
 
-  def copy(self, dest: Region):
+  def copy_to(self, dest: Region):
     dest.set_lang(self.get_lang())
     dest.set_space(self.get_space())
 
@@ -901,6 +907,21 @@ class Document:
     self._dar = None
     self._lang = ""
 
+  
+  def copy_to(self, dest: Document):
+    '''Copy all information but children to a different instance.
+    '''
+
+    if dest is self:
+      return
+
+    dest.set_active_area(self.get_active_area())
+    dest.set_cell_resolution(self.get_cell_resolution())
+    dest.set_display_aspect_ratio(self.get_display_aspect_ratio())
+    dest.set_lang(self.get_lang())
+    dest.set_px_resolution(self.get_px_resolution())
+
+
   # active area
 
   def get_active_area(self) -> typing.Optional[ActiveAreaType]:
@@ -970,16 +991,6 @@ class Document:
 
     self._px_resolution = px_resolution
 
-
-  # clone
-
-  def copy(self, dest: Document):
-    dest.set_active_area(self.get_active_area())
-    dest.set_cell_resolution(self.get_cell_resolution())
-    dest.set_display_aspect_ratio(self.get_display_aspect_ratio())
-    dest.set_lang(self.get_lang())
-    dest.set_px_resolution(self.get_px_resolution())
-
 class ContentDocument(Document):
   '''TTML document'''
 
@@ -989,11 +1000,11 @@ class ContentDocument(Document):
     self._initial_values = {}
     super().__init__()
 
-  def copy(self, dest: ContentDocument):
-    super().copy(dest)
+  def copy_to(self, dest: ContentDocument):
+    super().copy_to(dest)
 
     for style_prop, style_value in self.iter_initial_values():
-      self.put_initial_value(style_prop, style_value)
+      dest.put_initial_value(style_prop, style_value)
 
   # body
 

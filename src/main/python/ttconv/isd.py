@@ -322,6 +322,10 @@ class ISD(model.Document):
 
     progress_callback(0.1)
 
+    # disable multi-threading until picking of recursive structures is solved
+
+    is_multithreaded = False
+
     # Compute ISDs
 
     isds = []
@@ -1369,7 +1373,7 @@ def _clone_doc_with_one_region(doc: model.ContentDocument, region_id: str):
       return None
 
     new_element = type(element)(new_doc)
-    element.copy(new_element)
+    element.copy_to(new_element)
 
     region = element.get_region()
 
@@ -1390,13 +1394,13 @@ def _clone_doc_with_one_region(doc: model.ContentDocument, region_id: str):
 
   new_doc = model.ContentDocument()
 
-  doc.copy(new_doc)
+  doc.copy_to(new_doc)
 
   region = doc.get_region(region_id)
 
   new_region = model.Region(region_id, new_doc)
 
-  region.copy(new_region)
+  region.copy_to(new_region)
 
   new_doc.put_region(new_region)
 

@@ -30,6 +30,7 @@
 import unittest
 import ttconv.model as model
 import ttconv.style_properties as styles
+from fractions import Fraction
 
 class ContentElementTest(unittest.TestCase):
 
@@ -291,6 +292,75 @@ class ContentElementTest(unittest.TestCase):
 
     self.assertListEqual([s1, s3], list(p.iter_animation_steps()))
 
+  def test_lang(self):
+    p = model.ContentElement()
+
+    self.assertEqual(p.get_lang(), "")
+
+    lang = "fr-CA"
+
+    p.set_lang(lang)
+
+    self.assertEqual(p.get_lang(), lang)
+
+  def test_space(self):
+    p = model.ContentElement()
+
+    self.assertEqual(p.get_space(), model.WhiteSpaceHandling.DEFAULT)
+
+    space = model.WhiteSpaceHandling.PRESERVE
+
+    p.set_space(space)
+
+    self.assertEqual(p.get_space(), space)
+
+  def test_begin(self):
+    p = model.ContentElement()
+
+    self.assertIsNone(p.get_begin())
+
+    f = Fraction(1, 2)
+
+    p.set_begin(f)
+
+    self.assertEqual(p.get_begin(), f)
+
+  def test_end(self):
+    p = model.ContentElement()
+
+    self.assertIsNone(p.get_end())
+
+    f = Fraction(1, 3)
+
+    p.set_end(f)
+
+    self.assertEqual(p.get_end(), f)
+
+  def test_copy_to(self):
+    src = model.ContentElement()
+
+    src.set_begin(Fraction(1, 2))
+    src.set_end(Fraction(1, 3))
+    src.set_lang("fr")
+    src.set_space(model.WhiteSpaceHandling.PRESERVE)
+    src.set_id("hello")
+
+    src.add_animation_step(model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, styles.NamedColors.aqua.value))
+    src.set_style(styles.StyleProperties.Color, styles.NamedColors.green.value)
+
+    dest = model.ContentElement()
+
+    src.copy_to(dest)
+
+    self.assertEqual(dest.get_begin(), src.get_begin())
+    self.assertEqual(dest.get_end(), src.get_end())
+    self.assertEqual(dest.get_lang(), src.get_lang())
+    self.assertEqual(dest.get_space(), src.get_space())
+    self.assertEqual(dest.get_id(), src.get_id())
+
+    self.assertSequenceEqual(list(dest.iter_animation_steps()), list(src.iter_animation_steps()))
+
+    self.assertSequenceEqual(list(dest.iter_styles()), list(src.iter_styles()))
 
 class BodyTest(unittest.TestCase):
 
@@ -346,6 +416,31 @@ class SpanTest(unittest.TestCase):
     with self.assertRaises(TypeError):
       s.push_child(model.P())
 
+class BrTest(unittest.TestCase):
+
+  def test_copy_to(self):
+    src = model.Br()
+
+    src.set_lang("fr")
+    src.set_space(model.WhiteSpaceHandling.PRESERVE)
+    src.set_id("hello")
+
+    src.add_animation_step(model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, styles.NamedColors.aqua.value))
+    src.set_style(styles.StyleProperties.Color, styles.NamedColors.green.value)
+
+    dest = model.Br()
+
+    src.copy_to(dest)
+
+    self.assertEqual(dest.get_lang(), src.get_lang())
+    self.assertEqual(dest.get_space(), src.get_space())
+    self.assertEqual(dest.get_id(), src.get_id())
+
+    self.assertSequenceEqual(list(dest.iter_animation_steps()), list(src.iter_animation_steps()))
+
+    self.assertSequenceEqual(list(dest.iter_styles()), list(src.iter_styles()))
+
+
 class TextTest(unittest.TestCase):
 
   def test_push_child(self):
@@ -369,6 +464,17 @@ class TextTest(unittest.TestCase):
 
     with self.assertRaises(TypeError):
       t.set_text(None)
+
+  def test_copy_to(self):
+    src = model.Text()
+
+    src.set_text("hello")
+
+    dest = model.Text()
+
+    src.copy_to(dest)
+
+    self.assertEqual(dest.get_text(), src.get_text())
 
 class RegionTest(unittest.TestCase):
 
@@ -394,6 +500,30 @@ class RegionTest(unittest.TestCase):
 
     with self.assertRaises(RuntimeError):
       r1.set_region(r2)
+
+  def test_copy_to(self):
+    src = model.Region("hello")
+
+    src.set_begin(Fraction(1, 2))
+    src.set_end(Fraction(1, 3))
+    src.set_lang("fr")
+    src.set_space(model.WhiteSpaceHandling.PRESERVE)
+
+    src.add_animation_step(model.DiscreteAnimationStep(styles.StyleProperties.Color, 0, 1, styles.NamedColors.aqua.value))
+    src.set_style(styles.StyleProperties.Color, styles.NamedColors.green.value)
+
+    dest = model.Region("hello")
+
+    src.copy_to(dest)
+
+    self.assertEqual(dest.get_begin(), src.get_begin())
+    self.assertEqual(dest.get_end(), src.get_end())
+    self.assertEqual(dest.get_lang(), src.get_lang())
+    self.assertEqual(dest.get_space(), src.get_space())
+
+    self.assertSequenceEqual(list(dest.iter_animation_steps()), list(src.iter_animation_steps()))
+
+    self.assertSequenceEqual(list(dest.iter_styles()), list(src.iter_styles()))
 
 class RubyTest(unittest.TestCase):
 
