@@ -209,7 +209,7 @@ class _SccContext:
     else:  # Pop-On Style
 
       if self.buffered_caption is None:
-        raise ValueError("No current SCC buffered caption initialized")
+        self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
       # set cursor in paragraph and create line or text if necessary
       self.buffered_caption.set_cursor_at(pac_row, pac_indent)
@@ -274,7 +274,6 @@ class _SccContext:
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
       self.current_style = SccCaptionStyle.PopOn
-      self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
     elif control_code is SccControlCode.RDC:
       # Start a new Paint-On caption
