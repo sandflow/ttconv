@@ -29,44 +29,172 @@
 
 import unittest
 
-from ttconv.scc.content import SccCaptionText
-from ttconv.style_properties import CoordinateType, LengthType, StyleProperties, NamedColors
+from ttconv.scc.content import SccCaptionText, SccCaptionLine
+from ttconv.style_properties import StyleProperties, NamedColors
+
+
+class SccCaptionLineTest(unittest.TestCase):
+
+  def test_line(self):
+    row = 6
+    indent = 2
+    caption_line = SccCaptionLine(row, indent)
+
+    self.assertEqual(row, caption_line.get_row())
+    self.assertEqual(indent, caption_line.get_indent())
+
+    caption_line.set_row(7)
+    caption_line.indent(2)
+
+    self.assertEqual(7, caption_line.get_row())
+    self.assertEqual(4, caption_line.get_indent())
+
+    self.assertIsNone(caption_line.get_current_text())
+    self.assertEqual(0, caption_line.get_cursor())
+    self.assertEqual(0, caption_line.get_length())
+    self.assertTrue(caption_line.is_empty())
+    self.assertListEqual([], caption_line.get_texts())
+
+    caption_line.set_cursor(10)
+    self.assertEqual(0, caption_line.get_cursor())
+
+    caption_line.add_text("Hello ")
+    caption_text = caption_line.get_current_text()
+
+    self.assertIsNotNone(caption_text)
+    self.assertEqual("Hello ", caption_text.get_text())
+    self.assertEqual(6, caption_text.get_cursor())
+    self.assertEqual(6, caption_text.get_length())
+
+    self.assertEqual(6, caption_line.get_cursor())
+    self.assertEqual(6, caption_line.get_length())
+    self.assertListEqual([caption_text], caption_line.get_texts())
+
+    another_caption_text = SccCaptionText("World!")
+
+    caption_line.add_text(another_caption_text)
+
+    self.assertEqual(another_caption_text, caption_line.get_current_text())
+    self.assertEqual("World!", another_caption_text.get_text())
+    self.assertEqual(6, another_caption_text.get_cursor())
+    self.assertEqual(6, another_caption_text.get_length())
+
+    self.assertEqual(12, caption_line.get_cursor())
+    self.assertEqual(12, caption_line.get_length())
+    self.assertListEqual([caption_text, another_caption_text], caption_line.get_texts())
+
+    caption_line.set_cursor(6)
+    self.assertEqual(another_caption_text, caption_line.get_current_text())
+
+    caption_line.add_text("hello")
+
+    self.assertEqual("hello!", another_caption_text.get_text())
+    self.assertEqual(5, another_caption_text.get_cursor())
+    self.assertEqual(6, another_caption_text.get_length())
+
+    self.assertEqual(11, caption_line.get_cursor())
+    self.assertEqual(12, caption_line.get_length())
+    self.assertListEqual([caption_text, another_caption_text], caption_line.get_texts())
+
+    caption_line.set_cursor(5)
+    self.assertEqual(caption_text, caption_line.get_current_text())
+    self.assertEqual(5, caption_text.get_cursor())
+
+    caption_line.add_text(", abcd")
+
+    self.assertEqual("Hello,", caption_text.get_text())
+    self.assertEqual(6, caption_text.get_cursor())
+    self.assertEqual(6, caption_text.get_length())
+
+    self.assertEqual(another_caption_text, caption_line.get_current_text())
+    self.assertEqual(" abcd!", another_caption_text.get_text())
+    self.assertEqual(5, another_caption_text.get_cursor())
+    self.assertEqual(6, another_caption_text.get_length())
+
+    self.assertEqual(11, caption_line.get_cursor())
+    self.assertEqual(12, caption_line.get_length())
+    self.assertListEqual([caption_text, another_caption_text], caption_line.get_texts())
+
+    caption_line.set_cursor(7)
+    self.assertEqual(another_caption_text, caption_line.get_current_text())
+    self.assertEqual(1, another_caption_text.get_cursor())
+
+    caption_line.add_text("123456789")
+
+    self.assertEqual(another_caption_text, caption_line.get_current_text())
+    self.assertEqual(" 123456789", another_caption_text.get_text())
+    self.assertEqual(10, another_caption_text.get_cursor())
+    self.assertEqual(10, another_caption_text.get_length())
+
+    self.assertEqual(16, caption_line.get_cursor())
+    self.assertEqual(16, caption_line.get_length())
+    self.assertListEqual([caption_text, another_caption_text], caption_line.get_texts())
+
+    caption_line.clear()
+    self.assertEqual(0, caption_line.get_cursor())
+    self.assertEqual(0, caption_line.get_length())
+    self.assertListEqual([], caption_line.get_texts())
+
+  def test_line_text_leading_and_trailing_spaces(self):
+    line = SccCaptionLine(0, 0)
+    line.add_text("123")
+    self.assertEqual(0, line.get_leading_spaces())
+    self.assertEqual(0, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text("   123")
+    self.assertEqual(3, line.get_leading_spaces())
+    self.assertEqual(0, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text("123   ")
+    self.assertEqual(0, line.get_leading_spaces())
+    self.assertEqual(3, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text(" 123  ")
+    self.assertEqual(1, line.get_leading_spaces())
+    self.assertEqual(2, line.get_trailing_spaces())
+
+    line = SccCaptionLine(0, 0)
+    line.add_text("   ")
+    line.add_text(SccCaptionText(" 123 "))
+    line.add_text(SccCaptionText(" "))
+    line.add_text(SccCaptionText("  "))
+    self.assertEqual(4, line.get_leading_spaces())
+    self.assertEqual(4, line.get_trailing_spaces())
 
 
 class SccCaptionTextTest(unittest.TestCase):
 
-  def test_offsets_and_position(self):
+  def test_text_insertion(self):
     caption_text = SccCaptionText()
+    self.assertEqual(0, caption_text.get_cursor())
+    caption_text.append("Lorem ")
+    self.assertEqual(6, caption_text.get_cursor())
+    self.assertEqual("Lorem ", caption_text.get_text())
 
-    caption_text.set_x_offset(None)
-    caption_text.set_y_offset(None)
+    caption_text.append("ipsum")
+    self.assertEqual(11, caption_text.get_cursor())
+    self.assertEqual("Lorem ipsum", caption_text.get_text())
 
-    expected = CoordinateType(LengthType(value=0, units=LengthType.Units.c), LengthType(value=0, units=LengthType.Units.c))
-    self.assertEqual(expected, caption_text.get_position())
+    caption_text.set_cursor_at(0)
+    self.assertEqual(0, caption_text.get_cursor())
+    self.assertEqual("Lorem ipsum", caption_text.get_text())
 
-    caption_text.set_x_offset(12)
-    caption_text.set_y_offset(8)
+    caption_text.append("Hello")
+    self.assertEqual(5, caption_text.get_cursor())
+    self.assertEqual("Hello ipsum", caption_text.get_text())
 
-    expected = CoordinateType(LengthType(value=12, units=LengthType.Units.c), LengthType(value=8, units=LengthType.Units.c))
-    self.assertEqual(expected, caption_text.get_position())
+    caption_text.set_cursor_at(6)
+    caption_text.append("World!")
+    self.assertEqual(12, caption_text.get_cursor())
+    self.assertEqual("Hello World!", caption_text.get_text())
 
-    other_caption_text = SccCaptionText()
-    other_caption_text.set_x_offset(12)
-    other_caption_text.set_y_offset(8)
-
-    self.assertTrue(caption_text.has_same_origin(other_caption_text))
-    self.assertFalse(caption_text.is_strictly_contiguous(other_caption_text))
-    self.assertFalse(caption_text.is_contiguous(other_caption_text))
-
-    caption_text.set_y_offset(9)
-    self.assertFalse(caption_text.has_same_origin(other_caption_text))
-    self.assertTrue(caption_text.is_strictly_contiguous(other_caption_text))
-    self.assertTrue(caption_text.is_contiguous(other_caption_text))
-
-    caption_text.set_x_offset(13)
-    self.assertFalse(caption_text.has_same_origin(other_caption_text))
-    self.assertFalse(caption_text.is_strictly_contiguous(other_caption_text))
-    self.assertTrue(caption_text.is_contiguous(other_caption_text))
+    caption_text.set_cursor_at(5)
+    caption_text.append("! Abc")
+    self.assertEqual(10, caption_text.get_cursor())
+    self.assertEqual("Hello! Abcd!", caption_text.get_text())
 
   def test_style_properties(self):
     caption_text = SccCaptionText()
@@ -83,6 +211,7 @@ class SccCaptionTextTest(unittest.TestCase):
 
     other_caption_text.add_style_property(StyleProperties.Color, NamedColors.fuchsia.value)
     self.assertTrue(caption_text.has_same_style_properties(other_caption_text))
+
 
 if __name__ == '__main__':
   unittest.main()

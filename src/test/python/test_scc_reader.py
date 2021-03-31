@@ -381,7 +381,6 @@ Scenarist_SCC V1.0
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
-
   def test_4_rows_roll_up_content(self):
     scc_content = """\
 Scenarist_SCC V1.0
@@ -458,7 +457,6 @@ Scenarist_SCC V1.0
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
-
 
   def test_mix_rows_roll_up_content(self):
     scc_content = """\
@@ -655,41 +653,59 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(4, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:02:53:15", "00:02:56:01", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
-    self.assertEqual(region_1, p_list[0].get_region())
+    paragraph = p_list[0]
+    self.check_caption(paragraph, "caption1", "00:02:53:16", "00:02:54:01", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
+    self.assertEqual(region_1, paragraph.get_region())
 
-    self.assertIsNone(list(p_list[0])[0].get_begin())
-    self.assertAlmostEqual(0.1333, float(list(p_list[0])[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.2333, float(list(p_list[0])[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.3333, float(list(p_list[0])[3].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.4, float(list(p_list[0])[4].get_begin()), delta=0.0001)
+    self.assertIsNone(list(paragraph)[0].get_begin())
+    self.assertAlmostEqual(0.100, float(list(paragraph)[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.200, float(list(paragraph)[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.300, float(list(paragraph)[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.3666, float(list(paragraph)[4].get_begin()), delta=0.0001)
 
-    self.check_caption(p_list[1], "caption2", "00:02:54:01", "00:02:56:26", "consectetur ", "adipiscing", " elit.")
-    self.assertEqual(region_1, p_list[1].get_region())
+    paragraph = p_list[1]
+    self.check_caption(paragraph, "caption2", "00:02:54:01", "00:02:56:02", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,", Br,
+                       "consectetur ", "adipiscing", " elit.")
+    self.assertEqual(region_1, paragraph.get_region())
 
-    self.assertIsNone(list(p_list[1])[0].get_begin())
-    self.assertAlmostEqual(0.2, float(list(p_list[1])[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.4, float(list(p_list[1])[2].get_begin()), delta=0.0001)
+    self.assertIsNone(list(paragraph)[0].get_begin())
+    self.assertIsNone(list(paragraph)[1].get_begin())
+    self.assertIsNone(list(paragraph)[2].get_begin())
+    self.assertIsNone(list(paragraph)[3].get_begin())
+    self.assertIsNone(list(paragraph)[4].get_begin())
+    self.assertIsNone(list(paragraph)[6].get_begin())
+    self.assertAlmostEqual(0.200, float(list(paragraph)[7].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.400, float(list(paragraph)[8].get_begin()), delta=0.0001)
 
-    self.check_caption(p_list[2], "caption3", "00:02:56:01", None, "Pellentesque", " interdum ", "lacinia ",
-                       "sollicitudin.")
-    self.assertEqual(region_1, p_list[2].get_region())
+    paragraph = p_list[2]
+    self.check_caption(paragraph, "caption3", "00:02:56:02", "00:02:56:27", "Pellentesque", " interdum ", "lacinia ",
+                       "sollicitudin.", Br, "consectetur ", "adipiscing", " elit.")
+    self.assertEqual(region_1, paragraph.get_region())
 
-    self.assertIsNone(list(p_list[2])[0].get_begin())
-    self.assertAlmostEqual(0.2666, float(list(p_list[2])[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.4, float(list(p_list[2])[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.5333, float(list(p_list[2])[3].get_begin()), delta=0.0001)
+    self.assertIsNone(list(paragraph)[0].get_begin())
+    self.assertAlmostEqual(0.2333, float(list(paragraph)[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.3666, float(list(paragraph)[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.5000, float(list(paragraph)[3].get_begin()), delta=0.0001)
+    self.assertIsNone(list(paragraph)[5].get_begin())
+    self.assertIsNone(list(paragraph)[6].get_begin())
+    self.assertIsNone(list(paragraph)[7].get_begin())
 
-    self.check_caption(p_list[3], "caption4", "00:02:56:26", None, "Integer ", "luctus", " et ", "ligula", " ac ",
+    paragraph = p_list[3]
+    self.check_caption(paragraph, "caption4", "00:02:56:27", None, "Pellentesque", " interdum ", "lacinia ",
+                       "sollicitudin.", Br, "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
-    self.assertEqual(region_1, p_list[3].get_region())
+    self.assertEqual(region_1, paragraph.get_region())
 
-    self.assertIsNone(list(p_list[3])[0].get_begin())
-    self.assertAlmostEqual(0.1666, float(list(p_list[3])[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.3, float(list(p_list[3])[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.3333, float(list(p_list[3])[3].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.4666, float(list(p_list[3])[4].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.5, float(list(p_list[3])[5].get_begin()), delta=0.0001)
+    self.assertIsNone(list(paragraph)[0].get_begin())
+    self.assertIsNone(list(paragraph)[1].get_begin())
+    self.assertIsNone(list(paragraph)[2].get_begin())
+    self.assertIsNone(list(paragraph)[3].get_begin())
+    self.assertIsNone(list(paragraph)[5].get_begin())
+    self.assertAlmostEqual(0.1333, float(list(paragraph)[6].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.2666, float(list(paragraph)[7].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.3000, float(list(paragraph)[8].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.4333, float(list(paragraph)[9].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(0.4666, float(list(paragraph)[10].get_begin()), delta=0.0001)
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
