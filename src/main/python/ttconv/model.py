@@ -112,6 +112,25 @@ class ContentElement:
 
     self._id = None
 
+  def copy_to(self, dest: ContentElement):
+    '''Copy all information but children to a different instance.
+    '''
+
+    if dest is self:
+      return
+
+    dest.set_begin(self.get_begin())
+    dest.set_end(self.get_end())
+    dest.set_id(self.get_id())
+    dest.set_lang(self.get_lang())
+    dest.set_space(self.get_space())
+    
+    for style_prop in self.iter_styles():
+      dest.set_style(style_prop, self.get_style(style_prop))
+
+    for anim_step in self.iter_animation_steps():
+      dest.add_animation_step(anim_step)
+
   # document
 
   def is_attached(self) -> bool:
@@ -531,6 +550,17 @@ class Br(ContentElement):
   def set_region(self, region):
     raise RuntimeError("Br elements are not associated with a region")
 
+  def copy_to(self, dest: Br):
+    dest.set_id(self.get_id())
+    dest.set_lang(self.get_lang())
+    dest.set_space(self.get_space())
+    
+    for style_prop in self.iter_styles():
+      dest.set_style(style_prop, self.get_style(style_prop))
+
+    for anim_step in self.iter_animation_steps():
+      dest.add_animation_step(anim_step)
+
 
 class Ruby(ContentElement):
   '''Ruby element, as specified in TTML2'''
@@ -714,6 +744,11 @@ class Text(ContentElement):
     self._text = text
     super().__init__(doc=doc)
 
+  def copy_to(self, dest: Text):
+    dest.set_text(self.get_text())
+
+  # children
+
   def push_child(self, child):
     raise RuntimeError("Text nodes cannot have children")
 
@@ -787,6 +822,19 @@ class Region(ContentElement):
 
     self._id = str(region_id)
 
+  def copy_to(self, dest: Region):
+    dest.set_lang(self.get_lang())
+    dest.set_space(self.get_space())
+
+    dest.set_begin(self.get_begin())
+    dest.set_end(self.get_end())
+    
+    for style_prop in self.iter_styles():
+      dest.set_style(style_prop, self.get_style(style_prop))
+
+    for anim_step in self.iter_animation_steps():
+      dest.add_animation_step(anim_step)
+
   def set_id(self, element_id):
     if element_id != self.get_id():
       raise RuntimeError("Region id is immutable")
@@ -858,6 +906,21 @@ class Document:
     self._active_area = None
     self._dar = None
     self._lang = ""
+
+  
+  def copy_to(self, dest: Document):
+    '''Copy all information but children to a different instance.
+    '''
+
+    if dest is self:
+      return
+
+    dest.set_active_area(self.get_active_area())
+    dest.set_cell_resolution(self.get_cell_resolution())
+    dest.set_display_aspect_ratio(self.get_display_aspect_ratio())
+    dest.set_lang(self.get_lang())
+    dest.set_px_resolution(self.get_px_resolution())
+
 
   # active area
 
@@ -936,6 +999,12 @@ class ContentDocument(Document):
     self._body = None
     self._initial_values = {}
     super().__init__()
+
+  def copy_to(self, dest: ContentDocument):
+    super().copy_to(dest)
+
+    for style_prop, style_value in self.iter_initial_values():
+      dest.put_initial_value(style_prop, style_value)
 
   # body
 

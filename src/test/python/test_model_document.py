@@ -326,6 +326,28 @@ class ContentDocumentTest(unittest.TestCase):
     with self.assertRaises(TypeError):
       d.set_display_aspect_ratio("hello")
 
+  def test_copy_to(self):
+    src = model.ContentDocument()
+
+    src.set_display_aspect_ratio(Fraction(16, 9))
+    src.set_active_area(model.ActiveAreaType(0.1, 0.15, 0.8, 0.7))
+    src.set_px_resolution(model.PixelResolutionType(height=480, width=640))
+    src.set_lang("fr")
+    src.set_cell_resolution(model.CellResolutionType(rows=10, columns=20))
+
+    src.put_initial_value(styles.StyleProperties.Color, styles.ColorType((12, 23, 43, 56)))
+
+    dest = model.ContentDocument()
+
+    src.copy_to(dest)
+
+    self.assertEqual(dest.get_display_aspect_ratio(), src.get_display_aspect_ratio())
+    self.assertEqual(dest.get_active_area(), src.get_active_area())
+    self.assertEqual(dest.get_px_resolution(), src.get_px_resolution())
+    self.assertEqual(dest.get_lang(), src.get_lang())
+    self.assertEqual(dest.get_cell_resolution(), src.get_cell_resolution())
+
+    self.assertSequenceEqual(list(dest.iter_initial_values()), list(src.iter_initial_values()))
 
 if __name__ == '__main__':
   unittest.main()
