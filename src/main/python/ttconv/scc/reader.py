@@ -233,14 +233,27 @@ class _SccContext:
     text_decoration = mid_row_code.get_text_decoration()
 
     if self.previous_code_type is not SccMidRowCode:
-
       # In case of multiple mid-row codes, move right only after the first code
-      if text_decoration is None:
-        processed_caption.new_caption_text()
-        processed_caption.append_text(" ")
+
+      # If there is already text on the current line
+      if processed_caption.get_current_text() is not None \
+          and processed_caption.get_current_text().get_text() != "":
+
+        # In case of paint-on replacing text
+        if self.current_style is SccCaptionStyle.PaintOn \
+            and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
+          processed_caption.append_text(" ")
+
+        else:
+          if text_decoration is None:
+            processed_caption.new_caption_text()
+            processed_caption.append_text(" ")
+          else:
+            processed_caption.append_text(" ")
+            processed_caption.new_caption_text()
+
       else:
         processed_caption.append_text(" ")
-        processed_caption.new_caption_text()
 
       self.current_color = color
       self.current_font_style = font_style
