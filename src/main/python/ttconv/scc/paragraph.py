@@ -190,6 +190,8 @@ class SccCaptionParagraph:
 
       for orig_text in orig_line.get_texts():
         new_text = SccCaptionText(orig_text.get_text())
+        for style_type, style_value in orig_text.get_style_properties().items():
+          new_text.add_style_property(style_type, style_value)
         new_line.add_text(new_text)
       lines_copy[row] = new_line
 
