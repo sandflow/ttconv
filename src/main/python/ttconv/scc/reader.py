@@ -62,6 +62,7 @@ class _SccContext:
 
     # Previously read SCC word value
     self.previous_code = 0
+    self.previous_code_type = None
 
     # Buffered caption being built
     self.buffered_caption: Optional[SccCaptionParagraph] = None
@@ -69,6 +70,10 @@ class _SccContext:
     self.active_caption: Optional[SccCaptionParagraph] = None
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style: Optional[SccCaptionStyle] = None
+
+    self.current_text_decoration = None
+    self.current_color = None
+    self.current_font_style = None
 
     # Text alignment
     self.text_alignment = TextAlignment.AUTO if config is None else config.text_align
@@ -182,10 +187,6 @@ class _SccContext:
       if self.active_caption.get_current_text() is None:
         self.active_caption.new_caption_text()
 
-      self.active_caption.get_current_text().add_style_property(StyleProperties.Color, pac.get_color())
-      self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, pac.get_font_style())
-      self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
-
     elif self.current_style is SccCaptionStyle.RollUp:
 
       if self.active_caption is None:
@@ -202,10 +203,6 @@ class _SccContext:
 
       self.active_caption.new_caption_text()
 
-      self.active_caption.get_current_text().add_style_property(StyleProperties.Color, pac.get_color())
-      self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, pac.get_font_style())
-      self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
-
     else:  # Pop-On Style
 
       if self.buffered_caption is None:
@@ -216,9 +213,9 @@ class _SccContext:
 
       self.buffered_caption.new_caption_text()
 
-      self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, pac.get_color())
-      self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, pac.get_font_style())
-      self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, pac.get_text_decoration())
+    self.current_color = pac.get_color()
+    self.current_font_style = pac.get_font_style()
+    self.current_text_decoration = pac.get_text_decoration()
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode, time_code: SmpteTimeCode):
     """Processes SCC Mid-Row Code to map it to the model"""
@@ -231,17 +228,47 @@ class _SccContext:
     if processed_caption is None:
       raise ValueError("No current SCC caption initialized")
 
-    if processed_caption.get_current_text() is not None \
-        and processed_caption.get_current_text().get_text() \
-        and not processed_caption.get_current_text().get_text().isspace():
+    color = mid_row_code.get_color()
+    font_style = mid_row_code.get_font_style()
+    text_decoration = mid_row_code.get_text_decoration()
+
+    if self.previous_code_type is not SccMidRowCode:
+      # In case of multiple mid-row codes, move right only after the first code
+
+      # If there is already text on the current line
+      if processed_caption.get_current_text() is not None \
+          and processed_caption.get_current_text().get_text() != "":
+
+        # In case of paint-on replacing text
+        if self.current_style is SccCaptionStyle.PaintOn \
+            and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
+          processed_caption.append_text(" ")
+
+        else:
+          if text_decoration is None:
+            processed_caption.new_caption_text()
+            processed_caption.append_text(" ")
+          else:
+            processed_caption.append_text(" ")
+            processed_caption.new_caption_text()
+
+      else:
+        processed_caption.append_text(" ")
+
+      self.current_color = color
+      self.current_font_style = font_style
+      self.current_text_decoration = text_decoration
+
+    else:
+      if color is not None:
+        self.current_color = color
+      if font_style is not None:
+        self.current_font_style = font_style
+      if text_decoration is not None:
+        self.current_text_decoration = text_decoration
+
+      processed_caption.append_text(" ")
       processed_caption.new_caption_text()
-
-    processed_caption.get_current_text().add_style_property(StyleProperties.Color, mid_row_code.get_color())
-    processed_caption.get_current_text().add_style_property(StyleProperties.FontStyle, mid_row_code.get_font_style())
-    processed_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, mid_row_code.get_text_decoration())
-
-    # The cursor moves one column to the right after each Mid-Row Code
-    processed_caption.append_text(" ")
 
     if processed_caption.get_caption_style() is SccCaptionStyle.PaintOn:
       processed_caption.get_current_text().set_begin(time_code)
@@ -380,11 +407,23 @@ class _SccContext:
       else:
         self.active_caption.append_text(word)
 
+      self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
+      self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
+      self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+
     elif self.current_style is SccCaptionStyle.RollUp:
       self.active_caption.append_text(word)
 
+      self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
+      self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
+      self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+
     else:
       self.buffered_caption.append_text(word)
+
+      self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
+      self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
+      self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
 
   def flush(self, time_code: Optional[SmpteTimeCode] = None):
     """Flushes the remaining current caption"""
@@ -436,23 +475,29 @@ class _SccContext:
             debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
           self.process_preamble_address_code(pac, line.time_code)
+          self.previous_code_type = type(pac)
 
         elif attribute_code is not None:
           debug += "[ATC/" + hex(scc_word.value) + "]"
           self.process_attribute_code(attribute_code)
+          self.previous_code_type = type(attribute_code)
 
         elif mid_row_code is not None:
           debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
           self.process_mid_row_code(mid_row_code, line.time_code)
+          self.previous_code_type = type(mid_row_code)
 
         elif control_code is not None:
           debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
           self.process_control_code(control_code, line.time_code)
+          self.previous_code_type = type(control_code)
+
 
         elif spec_char is not None:
           word = spec_char.get_unicode_value()
           debug += word
           self.process_text(word, line.time_code)
+          self.previous_code_type = type(spec_char)
 
         elif extended_char is not None:
           if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
@@ -463,18 +508,20 @@ class _SccContext:
           word = extended_char.get_unicode_value()
           debug += word
           self.process_text(word, line.time_code)
+          self.previous_code_type = type(extended_char)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
-
-        self.previous_code = scc_word.value
+          self.previous_code_type = None
 
       else:
         word = scc_word.to_text()
         debug += word
         self.process_text(word, line.time_code)
-        self.previous_code = scc_word.value
+        self.previous_code_type = str
+
+      self.previous_code = scc_word.value
 
     LOGGER.debug(debug)
 
