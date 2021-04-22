@@ -446,6 +446,7 @@ class Body(ContentElement):
   '''Body element, as specified in TTML2'''
 
   _applicableStyles = frozenset([
+    StyleProperties.BackgroundColor,
     StyleProperties.Display,
     StyleProperties.Opacity,
     StyleProperties.Visibility
