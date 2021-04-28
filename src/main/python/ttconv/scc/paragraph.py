@@ -182,6 +182,10 @@ class SccCaptionParagraph:
     """Returns the paragraph lines per row"""
     return self._caption_lines
 
+  def is_empty(self) -> bool:
+    """Returns whether the paragraph contains any content"""
+    return len(self._caption_lines) == 0
+
   def copy_lines(self) -> Dict[int, SccCaptionLine]:
     """Copy paragraph lines (without time attributes)"""
     lines_copy = {}
