@@ -69,7 +69,7 @@ class _SccContext:
     # Captions being displayed
     self.active_caption: Optional[SccCaptionParagraph] = None
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
-    self.current_style: Optional[SccCaptionStyle] = SccCaptionStyle.PaintOn
+    self.current_style: Optional[SccCaptionStyle] = None
 
     self.current_text_decoration = None
     self.current_color = None
@@ -138,8 +138,7 @@ class _SccContext:
       previous_caption.set_end(time_code)
       self.active_caption = None
 
-      if not previous_caption.is_empty():
-        self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
+      self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
     """Initialize active caption for paint-on style"""
@@ -309,12 +308,10 @@ class _SccContext:
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
       # Start a new Roll-Up caption
-      old_style = self.current_style
-
       self.current_style = SccCaptionStyle.RollUp
 
       previous_last_lines: List[SccCaptionLine] = []
-      if self.has_active_caption() and old_style == SccCaptionStyle.RollUp:
+      if self.has_active_caption():
 
         if control_code is SccControlCode.RU2:
           previous_last_lines = self.active_caption.get_last_caption_lines(1)
@@ -352,9 +349,6 @@ class _SccContext:
       if self.has_active_caption():
         self.push_active_caption_to_model(time_code)
 
-      self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, self.current_style)
-      self.initialize_active_caption(time_code)
-
     elif control_code is SccControlCode.ENM:
       # Erase buffered caption
       self.buffered_caption = None
@@ -370,10 +364,7 @@ class _SccContext:
 
     elif control_code is SccControlCode.CR:
       # Roll the display up one row (Roll-Up)
-      if self.active_caption is not None:
-        self.active_caption.roll_up()
-      else:
-        LOGGER.warning("Carriage Return control code without active text")
+      self.active_caption.roll_up()
 
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
