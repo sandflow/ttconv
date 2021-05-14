@@ -296,19 +296,19 @@ Scenarist_SCC V1.0
 
     expected_text = LOREM_IPSUM.splitlines()
 
-    self.check_caption(p_list[0], "caption1", "00:00:00:23", "00:00:02:24", expected_text[0])
+    self.check_caption(p_list[0], "caption1", "00:00:00:25", "00:00:02:25", expected_text[0])
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "00:00:02:24", "00:00:04:18", expected_text[0], Br, expected_text[1])
+    self.check_caption(p_list[1], "caption2", "00:00:02:25", "00:00:04:19", expected_text[0], Br, expected_text[1])
     self.assertEqual(region_1, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:04:18", "00:00:06:05", expected_text[1], Br, expected_text[2])
+    self.check_caption(p_list[2], "caption3", "00:00:04:19", "00:00:06:06", expected_text[1], Br, expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
     self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
-    self.check_caption(p_list[3], "caption4", "00:00:06:05", None, expected_text[2], Br, expected_text[3])
+    self.check_caption(p_list[3], "caption4", "00:00:06:06", None, expected_text[2], Br, expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
     self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
@@ -363,17 +363,17 @@ Scenarist_SCC V1.0
 
     expected_text = LOREM_IPSUM.splitlines()
 
-    self.check_caption(p_list[0], "caption1", "00:00:17;02", "00:00:18;20", expected_text[0])
+    self.check_caption(p_list[0], "caption1", "00:00:17;04", "00:00:18;21", expected_text[0])
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "00:00:18;20", "00:00:20;07", expected_text[0], Br, expected_text[1])
+    self.check_caption(p_list[1], "caption2", "00:00:18;21", "00:00:20;08", expected_text[0], Br, expected_text[1])
     self.assertEqual(region_1, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:20;07", "00:00:21;25", expected_text[0], Br, expected_text[1], Br,
+    self.check_caption(p_list[2], "caption3", "00:00:20;08", "00:00:21;26", expected_text[0], Br, expected_text[1], Br,
                        expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:21;25", None, expected_text[1], Br, expected_text[2], Br,
+    self.check_caption(p_list[3], "caption4", "00:00:21;26", None, expected_text[1], Br, expected_text[2], Br,
                        expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
@@ -432,25 +432,25 @@ Scenarist_SCC V1.0
 
     expected_text = LOREM_IPSUM.splitlines()
 
-    self.check_caption(p_list[0], "caption1", "00:00:34;28", "00:00:36;13", expected_text[0])
+    self.check_caption(p_list[0], "caption1", "00:00:35;00", "00:00:36;14", expected_text[0])
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "00:00:36;13", "00:00:44;09", expected_text[0], Br, expected_text[1])
+    self.check_caption(p_list[1], "caption2", "00:00:36;14", "00:00:44;10", expected_text[0], Br, expected_text[1])
     self.assertEqual(region_1, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:44;09", "00:00:47;13", expected_text[0], Br, expected_text[1], Br,
+    self.check_caption(p_list[2], "caption3", "00:00:44;10", "00:00:47;14", expected_text[0], Br, expected_text[1], Br,
                        expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:47;13", "00:00:49;04", expected_text[0], Br, expected_text[1], Br,
+    self.check_caption(p_list[3], "caption4", "00:00:47;14", "00:00:49;05", expected_text[0], Br, expected_text[1], Br,
                        expected_text[2], Br, expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
-    self.check_caption(p_list[4], "caption5", "00:00:49;04", "00:00:50;24", expected_text[1], Br, expected_text[2], Br,
+    self.check_caption(p_list[4], "caption5", "00:00:49;05", "00:00:50;25", expected_text[1], Br, expected_text[2], Br,
                        expected_text[3], Br, expected_text[4])
     self.assertEqual(region_1, p_list[4].get_region())
 
-    self.check_caption(p_list[5], "caption6", "00:00:50;24", None, expected_text[2], Br, expected_text[3], Br,
+    self.check_caption(p_list[5], "caption6", "00:00:50;25", None, expected_text[2], Br, expected_text[3], Br,
                        expected_text[4], Br, expected_text[5])
     self.assertEqual(region_1, p_list[5].get_region())
 
@@ -538,62 +538,62 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(16, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:00;23", "00:00:02;24", ">>> HI.")
+    self.check_caption(p_list[0], "caption1", "00:00:00;25", "00:00:02;25", ">>> HI.")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "00:00:02;24", "00:00:04;18", ">>> HI.", Br, "I'M KEVIN CUNNING AND AT")
+    self.check_caption(p_list[1], "caption2", "00:00:02;25", "00:00:04;19", ">>> HI.", Br, "I'M KEVIN CUNNING AND AT")
     self.assertEqual(region_1, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:04;18", "00:00:06;05", "I'M KEVIN CUNNING AND AT", Br,
+    self.check_caption(p_list[2], "caption3", "00:00:04;19", "00:00:06;06", "I'M KEVIN CUNNING AND AT", Br,
                        "INVESTOR'S BANK WE BELIEVE IN")
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:06;05", "00:00:09;22", "INVESTOR'S BANK WE BELIEVE IN", Br,
+    self.check_caption(p_list[3], "caption4", "00:00:06;06", "00:00:09;23", "INVESTOR'S BANK WE BELIEVE IN", Br,
                        "HELPING THE LOCAL NEIGHBORHOODS")
     self.assertEqual(region_1, p_list[3].get_region())
 
-    self.check_caption(p_list[4], "caption5", "00:00:09;22", "00:00:11;08", "HELPING THE LOCAL NEIGHBORHOODS", Br, "AND ",
+    self.check_caption(p_list[4], "caption5", "00:00:09;23", "00:00:11;09", "HELPING THE LOCAL NEIGHBORHOODS", Br, "AND ",
                        " IMPROVING ", " THE LIVES OF ALL")
     self.assertEqual(region_1, p_list[4].get_region())
 
-    self.check_caption(p_list[5], "caption6", "00:00:11;08", "00:00:12;08", "AND ", " IMPROVING ", " THE LIVES OF ALL", Br,
+    self.check_caption(p_list[5], "caption6", "00:00:11;09", "00:00:12;09", "AND ", " IMPROVING ", " THE LIVES OF ALL", Br,
                        "WE SERVE.")
     self.assertEqual(region_1, p_list[5].get_region())
 
-    self.check_caption(p_list[6], "caption7", "00:00:12;08", "00:00:13;08", "WE SERVE.", Br, "®°½")
+    self.check_caption(p_list[6], "caption7", "00:00:12;09", "00:00:13;09", "WE SERVE.", Br, "®°½")
     self.assertEqual(region_1, p_list[6].get_region())
 
-    self.check_caption(p_list[7], "caption8", "00:00:13;08", "00:00:14;08", "®°½", Br, "ABCDEû")
+    self.check_caption(p_list[7], "caption8", "00:00:13;09", "00:00:14;09", "®°½", Br, "ABCDEû")
     self.assertEqual(region_1, p_list[7].get_region())
 
-    self.check_caption(p_list[8], "caption9", "00:00:14;08", "00:00:17;02", "ABCDEû", Br, "ÁÉÓ¡")
+    self.check_caption(p_list[8], "caption9", "00:00:14;09", "00:00:17;03", "ABCDEû", Br, "ÁÉÓ¡")
     self.assertEqual(region_1, p_list[8].get_region())
 
-    self.check_caption(p_list[9], "caption10", "00:00:17;02", "00:00:18;20", "ABCDEû", Br, "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,")
+    self.check_caption(p_list[9], "caption10", "00:00:17;03", "00:00:18;21", "ABCDEû", Br, "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,")
     self.assertEqual(region_1, p_list[9].get_region())
 
-    self.check_caption(p_list[10], "caption11", "00:00:18;20", "00:00:20;07", "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,", Br,
+    self.check_caption(p_list[10], "caption11", "00:00:18;21", "00:00:20;08", "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,", Br,
                        "LOOKING OUT THERE, THAT'S ALL")
     self.assertEqual(region_1, p_list[10].get_region())
 
-    self.check_caption(p_list[11], "caption12", "00:00:20;07", "00:00:21;25", "WHERE YOU'RE STANDING NOW,", Br,
+    self.check_caption(p_list[11], "caption12", "00:00:20;08", "00:00:21;26", "WHERE YOU'RE STANDING NOW,", Br,
                        "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.")
     self.assertEqual(region_1, p_list[11].get_region())
 
-    self.check_caption(p_list[12], "caption13", "00:00:21;25", "00:00:34;28", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
+    self.check_caption(p_list[12], "caption13", "00:00:21;26", "00:00:34;29", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
                        ">> IT WAS ", "GOOD", " TO BE IN THE")
     self.assertEqual(region_1, p_list[12].get_region())
 
-    self.check_caption(p_list[13], "caption14", "00:00:34;28", "00:00:36;13", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
+    self.check_caption(p_list[13], "caption14", "00:00:34;29", "00:00:36;14", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
                        ">> IT WAS ", "GOOD", " TO BE IN THE", Br, "And restore Iowa's land, water")
     self.assertEqual(region_1, p_list[13].get_region())
 
-    self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS ", "GOOD",
+    self.check_caption(p_list[14], "caption15", "00:00:36;14", "00:00:44;10", "THE CROWD.", Br, ">> IT WAS ", "GOOD",
                        " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.")
     self.assertEqual(region_1, p_list[14].get_region())
 
-    self.check_caption(p_list[15], "caption16", "00:00:44;09", None, ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
+    self.check_caption(p_list[15], "caption16", "00:00:44;10", None, ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_1, p_list[15].get_region())
 
@@ -710,6 +710,66 @@ Scenarist_SCC V1.0
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
+
+  def test_scc_mid_row_erase_displayed_memory_control_code(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9150 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 942c 8080 8080 942f
+
+00:00:01:14	9426 942c 94ad 9050 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+
+00:00:02:00	9426 94ad 942c 9350 5065 6c6c 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80
+
+"""
+
+    scc_disassembly = """\
+00:00:00:00	{RCL}{0100}Lorem ipsum dolor sit amet,{EDM}{}{}{EOC}
+00:00:01:14	{RU3}{EDM}{CR}{1100}consectetur adipiscing elit.
+00:00:02:00	{RU3}{CR}{EDM}{1200}Pellentesque interdum lacinia sollicitudin.
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 27, 15, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 32, 15, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(4, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:00:20", "00:00:01:16", "Lorem ipsum dolor sit amet,")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "00:00:01:18", "00:00:02:02", "consectetur adipiscing elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:03", "consectetur adipiscing elit.")
+    self.assertEqual(region_2, p_list[2].get_region())
+
+    self.check_caption(p_list[3], "caption4", "00:00:02:04", None, "Pellentesque interdum lacinia sollicitudin.")
+    self.assertEqual(region_2, p_list[3].get_region())
 
 
 if __name__ == '__main__':
