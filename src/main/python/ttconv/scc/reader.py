@@ -28,7 +28,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, List
+from typing import Optional
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType, ActiveAreaType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
@@ -37,7 +37,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
-from ttconv.scc.content import SccCaptionLine, ROLL_UP_BASE_ROW
+from ttconv.scc.content import ROLL_UP_BASE_ROW
 from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
@@ -70,6 +70,12 @@ class _SccContext:
     self.active_caption: Optional[SccCaptionParagraph] = None
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style: Optional[SccCaptionStyle] = None
+
+    # Roll-up caption number of lines
+    self.roll_up_depth: int = 0
+
+    # Cursor position in the active area
+    self.active_cursor: (int, int) = (0, 0)
 
     self.current_text_decoration = None
     self.current_color = None
@@ -131,12 +137,16 @@ class _SccContext:
     if temporary_caption is not None:
       self.buffered_caption = temporary_caption
 
-  def push_active_caption_to_model(self, time_code: Optional[SmpteTimeCode]):
+  def push_active_caption_to_model(self, time_code: SmpteTimeCode, clear_active_caption: bool = True):
     """Sets end time to the last active caption, and pushes it into the data model"""
     if self.has_active_caption():
+      self.active_cursor = self.active_caption.get_cursor()
+
       previous_caption = self.active_caption
       previous_caption.set_end(time_code)
-      self.active_caption = None
+
+      if clear_active_caption:
+        self.active_caption = None
 
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
@@ -144,7 +154,7 @@ class _SccContext:
     """Initialize active caption for paint-on style"""
     active_style = SccCaptionStyle.PaintOn
     copied_lines = []
-    cursor = (0, 0)
+    cursor = self.active_cursor
 
     if self.has_active_caption():
       active_style = self.active_caption.get_caption_style()
@@ -189,8 +199,10 @@ class _SccContext:
 
     elif self.current_style is SccCaptionStyle.RollUp:
 
-      if self.active_caption is None:
-        raise ValueError("No current SCC active caption initialized")
+      if not self.has_active_caption():
+        # If there is no current active caption, initialize an empty new paragraph
+        self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
+        self.initialize_active_caption(time_code)
 
       # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
       if pac_row in range(5, 12):
@@ -216,6 +228,9 @@ class _SccContext:
     self.current_color = pac.get_color()
     self.current_font_style = pac.get_font_style()
     self.current_text_decoration = pac.get_text_decoration()
+
+    if self.has_active_caption():
+      self.active_cursor = self.active_caption.get_cursor()
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode, time_code: SmpteTimeCode):
     """Processes SCC Mid-Row Code to map it to the model"""
@@ -310,24 +325,14 @@ class _SccContext:
       # Start a new Roll-Up caption
       self.current_style = SccCaptionStyle.RollUp
 
-      previous_last_lines: List[SccCaptionLine] = []
-      if self.has_active_caption():
+      if control_code is SccControlCode.RU2:
+        self.roll_up_depth = 2
 
-        if control_code is SccControlCode.RU2:
-          previous_last_lines = self.active_caption.get_last_caption_lines(1)
+      elif control_code is SccControlCode.RU3:
+        self.roll_up_depth = 3
 
-        elif control_code is SccControlCode.RU3:
-          previous_last_lines = self.active_caption.get_last_caption_lines(2)
-
-        elif control_code is SccControlCode.RU4:
-          previous_last_lines = self.active_caption.get_last_caption_lines(3)
-
-      self.push_active_caption_to_model(time_code)
-
-      self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
-      self.initialize_active_caption(time_code)
-
-      self.active_caption.set_lines(previous_last_lines)
+      elif control_code is SccControlCode.RU4:
+        self.roll_up_depth = 4
 
     elif control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
@@ -363,8 +368,22 @@ class _SccContext:
       self.buffered_caption.indent_cursor(3)
 
     elif control_code is SccControlCode.CR:
-      # Roll the display up one row (Roll-Up)
-      self.active_caption.roll_up()
+      # Roll the displayed caption up one row (Roll-Up)
+
+      if self.has_active_caption():
+        # Push active caption to model (but don't erase it)
+        self.push_active_caption_to_model(time_code, False)
+        # Roll the active caption up
+        self.active_caption.roll_up()
+        # Get the remaining lines to initialize the following caption with the expected depth
+        previous_lines = self.active_caption.get_last_caption_lines(self.roll_up_depth - 1)
+
+        # Initialize the new caption with the previous lines
+        self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.RollUp)
+        self.initialize_active_caption(time_code)
+        self.active_caption.set_lines(previous_lines)
+
+        self.active_caption.set_cursor_at(self.active_cursor[0], self.active_cursor[1])
 
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
@@ -405,6 +424,9 @@ class _SccContext:
           self.active_caption.get_current_text().set_begin(time_code)
 
       else:
+        if not self.has_active_caption():
+          self.paint_on_active_caption(time_code)
+
         self.active_caption.append_text(word)
 
       self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
@@ -424,6 +446,9 @@ class _SccContext:
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+
+    if self.has_active_caption():
+      self.active_cursor = self.active_caption.get_cursor()
 
   def flush(self, time_code: Optional[SmpteTimeCode] = None):
     """Flushes the remaining current caption"""
