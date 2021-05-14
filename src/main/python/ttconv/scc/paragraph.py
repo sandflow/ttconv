@@ -316,6 +316,11 @@ class SccCaptionParagraph:
       last_row = row
 
       for caption_text in caption_line.get_texts():
+
+        # Skip empty texts
+        if caption_text.is_empty():
+          continue
+
         span = Span(doc)
 
         if caption_text.get_begin() is not None:
