@@ -721,12 +721,15 @@ Scenarist_SCC V1.0
 
 00:00:02:00	9426 94ad 942c 9350 5065 6c6c 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80
 
+00:00:03:00	9429 942c 9370 496e 7465 6765 7220 6c75 6374 7573 2065 7420 6c69 6775 6c61 2061 6320 942c 7361 6769 7474 6973 2e80
+
 """
 
     scc_disassembly = """\
 00:00:00:00	{RCL}{0100}Lorem ipsum dolor sit amet,{EDM}{}{}{EOC}
 00:00:01:14	{RU3}{EDM}{CR}{1100}consectetur adipiscing elit.
 00:00:02:00	{RU3}{CR}{EDM}{1200}Pellentesque interdum lacinia sollicitudin.
+00:00:03:00	{RDC}{EDM}{1300}Integer luctus et ligula ac {EDM}sagittis.
 """
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
@@ -748,6 +751,20 @@ Scenarist_SCC V1.0
     self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
+    region_3 = doc.get_region("paint3")
+    self.assertIsNotNone(region_3)
+    self.check_region_origin(region_3, 4, 14, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 28, 3, doc.get_cell_resolution())
+    self.check_element_style(region_3, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_3, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_4 = doc.get_region("paint4")
+    self.assertIsNotNone(region_4)
+    self.check_region_origin(region_4, 32, 14, doc.get_cell_resolution())
+    self.check_region_extent(region_4, 4, 3, doc.get_cell_resolution())
+    self.check_element_style(region_4, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_4, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
     body = doc.get_body()
     self.assertIsNotNone(body)
 
@@ -757,7 +774,7 @@ Scenarist_SCC V1.0
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(4, len(p_list))
+    self.assertEqual(6, len(p_list))
 
     self.check_caption(p_list[0], "caption1", "00:00:00:20", "00:00:01:16", "Lorem ipsum dolor sit amet,")
     self.assertEqual(region_1, p_list[0].get_region())
@@ -765,11 +782,17 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[1], "caption2", "00:00:01:18", "00:00:02:02", "consectetur adipiscing elit.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:03", "consectetur adipiscing elit.")
+    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:03", "consectetur adipiscing elit.", Br)
     self.assertEqual(region_2, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:02:04", None, "Pellentesque interdum lacinia sollicitudin.")
+    self.check_caption(p_list[3], "caption4", "00:00:02:04", "00:00:03:02", "Pellentesque interdum lacinia sollicitudin.")
     self.assertEqual(region_2, p_list[3].get_region())
+
+    self.check_caption(p_list[4], "caption5", "00:00:03:03", "00:00:03:18", "Integer ", "luctus", " et ", "ligula", " ac ")
+    self.assertEqual(region_3, p_list[4].get_region())
+
+    self.check_caption(p_list[5], "caption6", "00:00:03:19", None, "sagittis.")
+    self.assertEqual(region_4, p_list[5].get_region())
 
 
 if __name__ == '__main__':

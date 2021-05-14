@@ -217,6 +217,10 @@ class SccCaptionText:
     """Returns text length"""
     return len(self._text)
 
+  def is_empty(self) -> bool:
+    """Returns whether the text is empty or not"""
+    return self.get_length() == 0
+
   def append(self, text: str):
     """Add or replace text content at cursor position"""
     # print("Append text: ", text, "to", self._text, "at", self._cursor)
