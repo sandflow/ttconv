@@ -506,7 +506,10 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return ExtentType()
+      return ExtentType(
+        height=LengthType(value=100, units=LengthType.Units.pct),
+        width=LengthType(value=100, units=LengthType.Units.pct)
+      )
 
     @staticmethod
     def validate(value: ExtentType):

@@ -134,10 +134,13 @@ class SupportedStylePropertiesFilterTest(unittest.TestCase):
 
     self.assertEqual(2, len(r1._styles))
     self.assertEqual(NamedColors.red.value, r1.get_style(StyleProperties.BackgroundColor))
-    self.assertEqual(ExtentType(
-      height=LengthType(value=0.0, units=LengthType.Units.rh),
-      width=LengthType(value=0.0, units=LengthType.Units.rw)
-    ), r1.get_style(StyleProperties.Extent))
+    self.assertEqual(
+      ExtentType(
+        height=LengthType(value=100, units=LengthType.Units.rh),
+        width=LengthType(value=100, units=LengthType.Units.rw)
+      ),
+      r1.get_style(StyleProperties.Extent)
+    )
 
     self.assertEqual(0, len(p1._styles))
     self.assertIsNone(p1.get_style(StyleProperties.BackgroundColor))
