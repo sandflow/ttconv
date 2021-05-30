@@ -99,10 +99,11 @@ class StyleProperties:
 
     @classmethod
     def from_model(cls, xml_element, model_value: styles.ColorType):
-      xml_element.set(
-        f"{{{cls.ns}}}{cls.local_name}",
-        StyleProperties.to_ttml_color(model_value)
-      )
+      if model_value != styles.NamedColors.transparent.value:
+        xml_element.set(
+          f"{{{cls.ns}}}{cls.local_name}",
+          StyleProperties.to_ttml_color(model_value)
+        )
 
   class Color(StyleProperty):
     '''Corresponds to tts:color.'''

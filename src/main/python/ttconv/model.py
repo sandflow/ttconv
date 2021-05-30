@@ -173,6 +173,14 @@ class ContentElement:
     '''Returns whether the element has children elements.'''
     return self._first_child is not None
 
+  def first_child(self) -> typing.Optional[ContentElement]:
+    '''Returns the first child of the element, or `None` if the element has no children.'''
+    return self._first_child
+
+  def last_child(self) -> typing.Optional[ContentElement]:
+    '''Returns the last child of the element, or `None` if the element has no children.'''
+    return self._last_child
+
   def root(self) -> ContentElement:
     '''Returns the root of the tree to which the element belongs.'''
     root = self
