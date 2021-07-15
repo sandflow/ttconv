@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Optional
 
@@ -143,7 +144,11 @@ class _SccContext:
       self.active_cursor = self.active_caption.get_cursor()
 
       previous_caption = self.active_caption
-      previous_caption.set_end(time_code)
+      if time_code is not None:
+        # End time is exclusive in the model, set it to the next frame
+        end_time_code = copy.copy(time_code)
+        end_time_code.add_frames()
+        previous_caption.set_end(end_time_code)
 
       if clear_active_caption:
         self.active_caption = None
