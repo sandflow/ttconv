@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Optional
 
@@ -352,7 +353,14 @@ class _SccContext:
     elif control_code is SccControlCode.EDM:
       # Erase displayed captions
       if self.has_active_caption():
-        self.push_active_caption_to_model(time_code)
+        if time_code is not None:
+          # End time is exclusive in the model, set it to the next frame
+          end_time_code = copy.copy(time_code)
+          end_time_code.add_frames()
+        else:
+          end_time_code = time_code
+
+        self.push_active_caption_to_model(end_time_code)
 
     elif control_code is SccControlCode.ENM:
       # Erase buffered caption
