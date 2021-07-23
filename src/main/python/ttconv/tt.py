@@ -346,7 +346,7 @@ def convert(args):
     #
     # Write out the converted file
     #
-    tree_from_model.write(outputfile)
+    tree_from_model.write(outputfile, encoding="utf-8")
 
   elif writer_type is FileTypes.SRT:
     #
