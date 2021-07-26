@@ -40,5 +40,21 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0224-001.stl", "rb") as f:
       ttconv.stl.reader.to_model(f)
 
+  def test_irt_requirement_0213_001(self):
+    with open("src/test/resources/stl/irt/requirement-0213-001.stl", "rb") as f:
+      ttconv.stl.reader.to_model(f)
+
+  def test_irt_requirement_0213_002(self):
+    with open("src/test/resources/stl/irt/requirement-0213-002.stl", "rb") as f:
+      ttconv.stl.reader.to_model(f)
+
+  def test_irt_requirement_0213_003(self):
+    with open("src/test/resources/stl/irt/requirement-0213-003.stl", "rb") as f:
+      ttconv.stl.reader.to_model(f)
+
+  def test_irt_requirement_0213_004(self):
+    with open("src/test/resources/stl/irt/requirement-0213-004.stl", "rb") as f:
+      ttconv.stl.reader.to_model(f)
+
 if __name__ == '__main__':
   unittest.main()

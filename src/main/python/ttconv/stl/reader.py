@@ -607,6 +607,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
       tti_cs = tti_block.CS
       tti_tci = SmpteTimeCode(tti_block.TCIh, tti_block.TCIm, tti_block.TCIs, tti_block.TCIf, gsi_fps)
       tti_tco = SmpteTimeCode(tti_block.TCOh, tti_block.TCOm, tti_block.TCOs, tti_block.TCOf, gsi_fps)
+      tti_jc = tti_block.JC
 
     # continue accumulating if we have an extension block
 
@@ -634,6 +635,14 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
       # create the p that will hold the subtitle
 
       sub_element = model.P(doc)
+
+      if tti_jc == 0x01:
+        sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.start)
+      elif tti_jc == 0x03:
+        sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
+      else:
+        sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
+
       cur_div.push_child(sub_element)
 
     if tti_cs in (0x01, 0x02, 0x03):
