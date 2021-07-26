@@ -555,7 +555,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
     gsi_fps = Fraction(30000, 1001)
   elif gsi_block.DFC == b'STL50.01':
     gsi_fps = Fraction(50)
-    LOGGER.warn("Non-standard 50 fps frame rate")
+    LOGGER.warning("Non-standard 50 fps frame rate")
   else:
     LOGGER.error("Unknown frame rate %s, defaulting to 25 fps", gsi_block.DFC)
     gsi_fps = Fraction(25)
@@ -564,14 +564,32 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
   # language code LC
 
+  # max number of rows
+
+  if gsi_block.DSC in (0x31, 0x32):
+    # teletext
+    gsi_mnr = 23
+  else:
+    # open or undefined
+    gsi_mnr = int(gsi_block.MNR)
+
   tti_block_count = int(gsi_block.TNB)
 
   doc = model.ContentDocument()
+
+  # assume 44x23 character matrix within a ‘Subtitle Safe Area’ of ~90% of the width and ~80% height of the related video object
+  doc.set_cell_resolution(
+    model.CellResolutionType(
+      columns=44,
+      rows=29)
+  )
 
   body = model.Body(doc)
   doc.set_body(body)
 
   sgn_map = {}
+
+  region_map = {}
 
   last_sn = None
 
@@ -617,6 +635,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
       tti_tci = SmpteTimeCode(tti_block.TCIh, tti_block.TCIm, tti_block.TCIs, tti_block.TCIf, gsi_fps)
       tti_tco = SmpteTimeCode(tti_block.TCOh, tti_block.TCOm, tti_block.TCOs, tti_block.TCOf, gsi_fps)
       tti_jc = tti_block.JC
+      tti_vp = tti_block.VP
 
     # continue accumulating if we have an extension block
 
@@ -651,6 +670,62 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
         sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
       else:
         sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
+
+      # assume that VP < MNR/2 means bottom-aligned and otherwise top-aligned
+      # probably should offer an option to override this
+
+      if tti_vp > gsi_mnr / 2:
+        region = region_map.get(0)
+
+        if region is None:
+          region = model.Region("bottom", doc)
+          region.set_style(
+            styles.StyleProperties.Extent,
+            styles.ExtentType(
+              height=styles.LengthType(value=80, units=styles.LengthType.Units.pct),
+              width=styles.LengthType(value=90, units=styles.LengthType.Units.pct),
+            )
+          )
+          region.set_style(
+            styles.StyleProperties.Origin,
+            styles.CoordinateType(
+              x=styles.LengthType(5, styles.LengthType.Units.pct),
+              y=styles.LengthType(10, styles.LengthType.Units.pct)
+            )
+          )
+          region.set_style(
+            styles.StyleProperties.DisplayAlign,
+            styles.DisplayAlignType.after
+          )
+          doc.put_region(region)
+          region_map[0] = region
+      else:
+        region = region_map.get(1)
+
+        if region is None:
+          region = model.Region("top", doc)
+          region.set_style(
+            styles.StyleProperties.Extent,
+            styles.ExtentType(
+              height=styles.LengthType(value=80, units=styles.LengthType.Units.pct),
+              width=styles.LengthType(value=90, units=styles.LengthType.Units.pct),
+            )
+          )
+          region.set_style(
+            styles.StyleProperties.Origin,
+            styles.CoordinateType(
+              x=styles.LengthType(5, styles.LengthType.Units.pct),
+              y=styles.LengthType(10, styles.LengthType.Units.pct)
+            )
+          )
+          region.set_style(
+            styles.StyleProperties.DisplayAlign,
+            styles.DisplayAlignType.before
+          )
+          doc.put_region(region)
+          region_map[1] = region
+
+      sub_element.set_region(region)
 
       cur_div.push_child(sub_element)
 
