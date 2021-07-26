@@ -549,7 +549,16 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
     )
   )
 
-  gsi_fps = Fraction(25) if gsi_block.DFC == b'STL25.01' else Fraction(30000, 1001)
+  if gsi_block.DFC == b'STL25.01':
+    gsi_fps = Fraction(25)
+  elif gsi_block.DFC == b'STL30.01':
+    gsi_fps = Fraction(30000, 1001)
+  elif gsi_block.DFC == b'STL50.01':
+    gsi_fps = Fraction(50)
+    LOGGER.warn("Non-standard 50 fps frame rate")
+  else:
+    LOGGER.error("Unknown frame rate %s, defaulting to 25 fps", gsi_block.DFC)
+    gsi_fps = Fraction(25)
 
   gsi_cct = gsi_block.CCT
 
