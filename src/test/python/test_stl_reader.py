@@ -32,8 +32,12 @@ import ttconv.stl.reader
 
 class STLReaderTests(unittest.TestCase):
 
-  def test_body_only(self):
+  def test_irt_requirement_0164_001(self):
     with open("src/test/resources/stl/irt/requirement-0164-001.stl", "rb") as f:
+      ttconv.stl.reader.to_model(f)
+
+  def test_irt_requirement_0224_001(self):
+    with open("src/test/resources/stl/irt/requirement-0224-001.stl", "rb") as f:
       ttconv.stl.reader.to_model(f)
 
 if __name__ == '__main__':

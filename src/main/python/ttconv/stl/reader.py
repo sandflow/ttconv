@@ -398,9 +398,9 @@ codecs.register_error("note", note_decode_error)
 
 def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
   
-  fg_color = styles.NamedColors.black
+  fg_color = styles.NamedColors.white.value
 
-  bg_color = styles.NamedColors.transparent
+  bg_color = styles.NamedColors.transparent.value
 
   is_italic = False
 
@@ -439,10 +439,15 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
 
   def start_span():
     nonlocal span_element
+    nonlocal bg_color
+    nonlocal fg_color
+    nonlocal is_underline
+    nonlocal is_italic
+
     if span_element is None:
       span_element = model.Span(element.get_doc())
-      span_element.set_style(styles.StyleProperties.BackgroundColor, bg_color.value)
-      span_element.set_style(styles.StyleProperties.Color, fg_color.value)
+      span_element.set_style(styles.StyleProperties.BackgroundColor, bg_color)
+      span_element.set_style(styles.StyleProperties.Color, fg_color)
       if is_underline:
         span_element.set_style(
           styles.StyleProperties.TextDecoration,
@@ -485,7 +490,7 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
       break
 
     if is_character_code(c):
-      start_span()
+      # start_span()
       append_character(c)
 
     elif is_newline_code(c):
@@ -494,14 +499,36 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
     elif is_control_code(c):
       end_span()
 
-      if c in (0x84, 0x0B):
-        bg_color = styles.NamedColors.black
-      elif c in (0x85, 0x0A):
-        bg_color = styles.NamedColors.transparent
+      if c in (0x84, 0x0B, 0x1C):
+        bg_color = styles.NamedColors.black.value
+      elif c == 0x85:
+        bg_color = styles.NamedColors.transparent.value
+      elif c == 0x1D:
+        bg_color = fg_color
+      elif c == 0x00:
+        fg_color = styles.NamedColors.black.value
+      elif c == 0x01:
+        fg_color = styles.NamedColors.red.value
+      elif c == 0x02:
+        fg_color = styles.NamedColors.lime.value
+      elif c == 0x03:
+        fg_color = styles.NamedColors.yellow.value
+      elif c == 0x04:
+        fg_color = styles.NamedColors.blue.value
+      elif c == 0x05:
+        fg_color = styles.NamedColors.magenta.value
+      elif c == 0x06:
+        fg_color = styles.NamedColors.cyan.value
+      elif c == 0x07:
+        fg_color = styles.NamedColors.white.value
       elif c == 0x80:
         is_italic = True
       elif c == 0x81:
         is_italic = False
+      elif c == 0x82:
+        is_underline = True
+      elif c == 0x83:
+        is_underline = False
 
       append_character(0x20)
 
