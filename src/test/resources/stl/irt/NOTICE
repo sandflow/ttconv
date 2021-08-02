@@ -1,0 +1,14 @@
+Copyright/Attribution Notice
+
+The STL test files in this directory are a modified versions of the STL 
+test files developed by Institut fuer Rundfunktechnik as part of 
+the Subtitle Conversion Framework ("SCF") 
+(https://github.com/irt-open-source/scf).
+
+The Subtitle Conversion Framework ("SCF") offered by Institut fuer 
+Rundfunktechnik on GitHub is subject to the Apache 2.0 license.
+
+The STL test files have been translated from an XML representation
+to a binary representation that conforms to the EBU-STL specification.
+
+Copyright (c) 2020, Sandflow Consulting LLC
