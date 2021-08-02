@@ -29,6 +29,8 @@
 
 import unittest
 import ttconv.stl.reader
+import ttconv.style_properties as styles
+from ttconv.time_code import SmpteTimeCode, FPS_25
 
 class STLReaderTests(unittest.TestCase):
 
@@ -73,7 +75,10 @@ class STLReaderTests(unittest.TestCase):
   '''  
   def test_irt_requirement_0061_001(self):
     with open("src/test/resources/stl/irt/requirement-0061-001.stl", "rb") as f:
-      ttconv.stl.reader.to_model(f)
+      doc = ttconv.stl.reader.to_model(f)
+      p = doc.get_body().first_child().first_child()
+      self.assertEqual(SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset(), \
+                       p.get_begin())
 
   '''ASSERT
   context: / 
@@ -267,7 +272,14 @@ class STLReaderTests(unittest.TestCase):
   '''  
   def test_irt_requirement_0067_001(self):
     with open("src/test/resources/stl/irt/requirement-0067-001.stl", "rb") as f:
-      ttconv.stl.reader.to_model(f)
+      doc = ttconv.stl.reader.to_model(f)
+      body = doc.get_body()
+      div = body.first_child()
+      p = div.first_child()
+      span = p.first_child()
+      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),\
+                      styles.TextAlignType.start)
+      self.assertEqual(span.first_child().get_text(), "Test Text")      
 
   '''ASSERT
   context: / 
@@ -310,7 +322,10 @@ class STLReaderTests(unittest.TestCase):
   '''  
   def test_irt_requirement_0068_001(self):
     with open("src/test/resources/stl/irt/requirement-0068-001.stl", "rb") as f:
-      ttconv.stl.reader.to_model(f)
+      doc = ttconv.stl.reader.to_model(f)
+      p = doc.get_body().first_child().first_child()
+      p_text_align = p.get_style(styles.StyleProperties.TextAlign)
+      self.assertEqual(p_text_align, styles.TextAlignType.center)
 
   '''ASSERT
   context: / 
