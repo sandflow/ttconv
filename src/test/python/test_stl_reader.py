@@ -28,6 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
+from ttconv.model import Br
 import ttconv.stl.reader
 import ttconv.style_properties as styles
 from ttconv.time_code import SmpteTimeCode, FPS_25
@@ -106,7 +107,10 @@ class STLReaderTests(unittest.TestCase):
     '''TODO:  Testing that the newline element is mapped the tt:br element,
       Expected value: count(tt:br) = 1 '''
     with open("src/test/resources/stl/irt/requirement-0074-001.stl", "rb") as f:
-      ttconv.stl.reader.to_model(f)
+      doc = ttconv.stl.reader.to_model(f)
+      p_childs = list(doc.get_body().first_child().first_child())
+      self.assertTrue(isinstance(p_childs[1], Br))
+      
   
   def test_irt_requirement_0076_001(self):
     '''Testing Control Codes mapping for AlphaBlack'''
