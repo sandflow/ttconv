@@ -39,7 +39,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0061-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_begin(),\
+      self.assertEqual(p.get_begin(),
                       SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
    
   def test_irt_requirement_0061_004(self):
@@ -47,7 +47,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0061-004.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_begin(),\
+      self.assertEqual(p.get_begin(),
                       SmpteTimeCode.parse("23:59:59:24",FPS_25).to_temporal_offset())
 
   def test_irt_requirement_0062_001(self):
@@ -55,7 +55,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0062-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_end(),\
+      self.assertEqual(p.get_end(),
                       SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
 
   def test_irt_requirement_0062_002(self):
@@ -63,7 +63,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0062-002.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_end(),\
+      self.assertEqual(p.get_end(),
                        SmpteTimeCode.parse("23:59:59:24",FPS_25).to_temporal_offset())
 
   def test_irt_requirement_0067_001(self):
@@ -71,7 +71,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0067-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),\
+      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),
                        styles.TextAlignType.start)
 
   def test_irt_requirement_0068_001(self):
@@ -79,7 +79,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0068-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),\
+      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),
                        styles.TextAlignType.center)
 
   def test_irt_requirement_0069_001(self):
@@ -87,7 +87,7 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0069-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),\
+      self.assertEqual(p.get_style(styles.StyleProperties.TextAlign),
                        styles.TextAlignType.end)
   
   def test_irt_requirement_0071_002(self):
@@ -100,7 +100,7 @@ class STLReaderTests(unittest.TestCase):
                 .first_child()\
                 .first_child()\
                 .get_text()
-      self.assertEqual(text, "Test1 Test2")          
+      self.assertEqual(text, "Test1 Test2") 
   
   def test_irt_requirement_0073_001(self):
     '''TODO: Testing DoubleHeight element mapping, Expected value: "1c 2c"'''
@@ -185,7 +185,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       self.assertEqual(background_color_first_span, styles.NamedColors.white.value)
-      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)  
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
  
   def test_irt_requirement_0077_001(self):
     '''Testing DSC with value "1" and no style information'''
@@ -230,7 +230,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.cyan.value)      
+      self.assertEqual(color_first_span, styles.NamedColors.cyan.value)
   
   def test_irt_requirement_0090_004(self):
     '''Testing BlackBackground with AlphaGreen'''
@@ -240,7 +240,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.lime.value)      
+      self.assertEqual(color_first_span, styles.NamedColors.lime.value)
   
   def test_irt_requirement_0090_005(self):
     '''Testing BlackBackground with AlphaMagenta'''
@@ -250,7 +250,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.magenta.value)      
+      self.assertEqual(color_first_span, styles.NamedColors.magenta.value)
   
   def test_irt_requirement_0090_006(self):
     '''Testing BlackBackground with AlphaRed'''
@@ -260,7 +260,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.red.value)      
+      self.assertEqual(color_first_span, styles.NamedColors.red.value)
   
   def test_irt_requirement_0090_007(self):
     '''Testing BlackBackground with AlphaWhite'''
@@ -270,7 +270,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.white.value)      
+      self.assertEqual(color_first_span, styles.NamedColors.white.value)
   
   def test_irt_requirement_0090_008(self):
     '''Testing BlackBackground with AlphaYellow'''
@@ -280,7 +280,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.yellow.value)      
+      self.assertEqual(color_first_span, styles.NamedColors.yellow.value)
   
   def test_irt_requirement_0090_009(self):
     '''Testing unchanging BlackBackground'''
@@ -290,7 +290,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       color_first_span = spans[0].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.white.value)       
+      self.assertEqual(color_first_span, styles.NamedColors.white.value)
   
 if __name__ == '__main__':
   unittest.main()
