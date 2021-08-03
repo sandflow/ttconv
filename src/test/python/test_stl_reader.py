@@ -101,11 +101,6 @@ class STLReaderTests(unittest.TestCase):
                 .first_child()\
                 .get_text()
       self.assertEqual(text, "Test1 Test2") 
-  
-  def test_irt_requirement_0073_001(self):
-    '''TODO: Testing DoubleHeight element mapping, Expected value: "1c 2c"'''
-    with open("src/test/resources/stl/irt/requirement-0073-001.stl", "rb") as f:
-      ttconv.stl.reader.to_model(f)
 
   def test_irt_requirement_0074_001(self):
     '''TODO:  Testing that the newline element is mapped the tt:br element,
