@@ -208,7 +208,21 @@ class STLReaderTests(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
       spans = [s for s in list(p) if isinstance(s, Span)]
-      self.assertTrue(len(spans), 3)
+      self.assertEqual(len(spans), 3)
+
+  def test_irt_requirement_0087_001(self):
+    '''Testing StartBox element mapping with 3x2 StartBox elements 
+      and with referencing a style with the appropriate background 
+      and foreground color'''
+    with open("src/test/resources/stl/irt/requirement-0087-001.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      p = doc.get_body().first_child().first_child()
+      spans = [s for s in list(p) if isinstance(s, Span)]
+      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
+      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
+      self.assertEqual(len(spans), 3)
+      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
+      self.assertEqual(color_first_span, styles.NamedColors.white.value)   
 
   def test_irt_requirement_0090_001(self):
     '''Testing BlackBackground with AlphaBlack'''
