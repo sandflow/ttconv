@@ -104,8 +104,7 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(text, "Test1 Test2") 
 
   def test_irt_requirement_0074_001(self):
-    '''TODO:  Testing that the newline element is mapped the tt:br element,
-      Expected value: count(tt:br) = 1 '''
+    '''Testing that the newline element is mapped the tt:br element'''
     with open("src/test/resources/stl/irt/requirement-0074-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p_childs = list(doc.get_body().first_child().first_child())
