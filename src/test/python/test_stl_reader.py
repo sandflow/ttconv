@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.model import Br
+from ttconv.model import Br, Span
 import ttconv.stl.reader
 import ttconv.style_properties as styles
 from ttconv.time_code import SmpteTimeCode, FPS_25
@@ -200,6 +200,15 @@ class STLReaderTests(unittest.TestCase):
       spans = list(doc.get_body().first_child().first_child())
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
+
+  def test_irt_requirement_0086_001(self):
+    '''Testing EndBox element mapping with three closing EndBox 
+       elements and without changing the colors'''
+    with open("src/test/resources/stl/irt/requirement-0086-001.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      p = doc.get_body().first_child().first_child()
+      spans = [s for s in list(p) if isinstance(s, Span)]
+      self.assertTrue(len(spans), 3)
 
   def test_irt_requirement_0090_001(self):
     '''Testing BlackBackground with AlphaBlack'''
