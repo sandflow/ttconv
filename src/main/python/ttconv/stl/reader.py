@@ -437,6 +437,9 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
     tf_i = min(tf_i + 1, len(tti_tf))
     return c
 
+  def cur_char() -> int:
+    return _UNUSED_SPACE_CODE if tf_i >= len(tti_tf) else tti_tf[tf_i]
+
   def start_span():
     nonlocal span_element
     nonlocal bg_color
@@ -484,7 +487,7 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
 
   while True:
 
-    c = next_char()
+    c = cur_char()
 
     if is_unused_space_code(c):
       break
@@ -531,6 +534,8 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
         is_underline = False
 
       append_character(0x20)
+
+    next_char()
 
   end_span()
 
