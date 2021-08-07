@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-# Copyright (c) 2020, Sandflow Consulting LLC
+# Copyright (c) 2021, Sandflow Consulting LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -29,31 +29,17 @@ from __future__ import annotations
 
 import logging
 import typing
-import collections
-import struct
 import itertools
 import codecs
-from fractions import Fraction
 
-from ttconv.time_code import SmpteTimeCode 
+
 from ttconv import model
 import ttconv.style_properties as styles
 from ttconv.stl.config import STLReaderConfiguration
-import ttconv.stl.iso6937 as iso6937
+from ttconv.stl import iso6937
+from ttconv.stl import blocks
 
 LOGGER = logging.getLogger(__name__)
-
-
-GSIBlock = collections.namedtuple(
-  "GSI",
-  ["CPN", "DFC", "DSC", "CCT", "LC", "OPT", "OET", "TPT", "TET", "TN", "TCD", "SLR", "CD", "RD", "RN", \
-    "TNB", "TNS", "TNG", "MNC", "MNR", "TCS", "TCP", "TCF", "TND", "DSN", "CO", "PUB", "EN", "ECD", "UDA"]
-)
-
-TTIBlock = collections.namedtuple(
-  "TTI",
-  ["SGN", "SN", "EBN", "CS", "TCIh", "TCIm", "TCIs", "TCIf", "TCOh", "TCOm", "TCOs", "TCOf", "VP", "JC", "CF", "TF"]
-)
 
 _UNUSED_SPACE_CODE = 0x8F
 
@@ -181,7 +167,6 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
       break
 
     if is_character_code(c):
-      # start_span()
       append_character(c)
 
     elif is_newline_code(c):
@@ -227,7 +212,6 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
 
   end_span()
 
-
 #
 # STL reader
 #
@@ -235,38 +219,7 @@ def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
 def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts an STL document to the data model"""
 
-  gsi_block = GSIBlock._make(
-    struct.unpack(
-      '3s8sc2s2s32s32s32s32s32s32s16s6s6s2s5s5s3s2s2s1s8s8s1s1s3s32s32s32s75x576s',
-      stl_document.read(1024)
-    )
-  )
-
-  if gsi_block.DFC == b'STL25.01':
-    gsi_fps = Fraction(25)
-  elif gsi_block.DFC == b'STL30.01':
-    gsi_fps = Fraction(30000, 1001)
-  elif gsi_block.DFC == b'STL50.01':
-    gsi_fps = Fraction(50)
-    LOGGER.warning("Non-standard 50 fps frame rate")
-  else:
-    LOGGER.error("Unknown frame rate %s, defaulting to 25 fps", gsi_block.DFC)
-    gsi_fps = Fraction(25)
-
-  gsi_cct = gsi_block.CCT
-
-  # language code LC
-
-  # max number of rows
-
-  if gsi_block.DSC in (0x31, 0x32):
-    # teletext
-    gsi_mnr = 23
-  else:
-    # open or undefined
-    gsi_mnr = int(gsi_block.MNR)
-
-  tti_block_count = int(gsi_block.TNB)
+  gsi_block = blocks.GSI(stl_document.read(1024))
 
   doc = model.ContentDocument()
 
@@ -288,51 +241,27 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
   is_in_extension = False
 
-  tti_tf = b''
-
   for i in itertools.count():
     
-    buf = stl_document.read(128)
+    tti_buf = stl_document.read(128)
 
-    if not buf:
+    if not tti_buf:
       break
 
-    tti_block = TTIBlock._make(
-      struct.unpack(
-        '<BHBBBBBBBBBBBBB112s',
-        buf
-      )
-    )
+    tti = blocks.TTI(gsi_block, tti_buf)
 
-    tti_ebn = tti_block.EBN
-
-    if 0xEF < tti_ebn < 0xFF:
+    if 0xEF < tti.get_ebn() < 0xFF:
       # skip user data and reserved blocks
       continue
 
-    if is_in_extension:
+    if not is_in_extension:
+      tti_tf = b''
 
-      # if we are within an extension block, only accumulate the text information
-
-      tti_tf += tti_block.TF
-      
-    else:
-
-      # otherwise, initilialize the subtitle information
-
-      tti_tf = tti_block.TF
-
-      tti_sn = tti_block.SN
-      tti_sgn = int(tti_block.SGN)
-      tti_cs = tti_block.CS
-      tti_tci = SmpteTimeCode(tti_block.TCIh, tti_block.TCIm, tti_block.TCIs, tti_block.TCIf, gsi_fps)
-      tti_tco = SmpteTimeCode(tti_block.TCOh, tti_block.TCOm, tti_block.TCOs, tti_block.TCOf, gsi_fps)
-      tti_jc = tti_block.JC
-      tti_vp = tti_block.VP
+    tti_tf += tti.get_tf()
 
     # continue accumulating if we have an extension block
 
-    if tti_ebn != 0xFF:
+    if tti.get_ebn() != 0xFF:
       is_in_extension = True
       continue
 
@@ -340,26 +269,26 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
     # create a new subtitle if SN changes and we are not in cumulative mode
 
-    if tti_sn is not last_sn and tti_cs in (0x00, 0x01):
+    if tti.get_sn() is not last_sn and tti.get_cs() in (0x00, 0x01):
 
       # find the div to which the subtitle belongs, based on SGN
 
-      cur_div = sgn_map.get(tti_sgn)
+      cur_div = sgn_map.get(tti.get_sgn())
 
       # create the div if it does not exist
 
       if cur_div is None:
         cur_div = model.Div(doc)
         body.push_child(cur_div)
-        sgn_map[tti_sgn] = cur_div
+        sgn_map[tti.get_sgn()] = cur_div
 
       # create the p that will hold the subtitle
 
       sub_element = model.P(doc)
 
-      if tti_jc == 0x01:
+      if tti.get_jc() == 0x01:
         sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.start)
-      elif tti_jc == 0x03:
+      elif tti.get_jc() == 0x03:
         sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
       else:
         sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
@@ -367,7 +296,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
       # assume that VP < MNR/2 means bottom-aligned and otherwise top-aligned
       # probably should offer an option to override this
 
-      if tti_vp > gsi_mnr / 2:
+      if tti.get_vp() > gsi_block.get_mnr() / 2:
         region = region_map.get(0)
 
         if region is None:
@@ -375,8 +304,8 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
           region.set_style(
             styles.StyleProperties.Extent,
             styles.ExtentType(
-              height=styles.LengthType(value=80, units=styles.LengthType.Units.pct),
-              width=styles.LengthType(value=90, units=styles.LengthType.Units.pct),
+              height=styles.LengthType(80, styles.LengthType.Units.pct),
+              width=styles.LengthType(90, styles.LengthType.Units.pct),
             )
           )
           region.set_style(
@@ -400,8 +329,8 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
           region.set_style(
             styles.StyleProperties.Extent,
             styles.ExtentType(
-              height=styles.LengthType(value=80, units=styles.LengthType.Units.pct),
-              width=styles.LengthType(value=90, units=styles.LengthType.Units.pct),
+              height=styles.LengthType(80, styles.LengthType.Units.pct),
+              width=styles.LengthType(90, styles.LengthType.Units.pct),
             )
           )
           region.set_style(
@@ -422,7 +351,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
       cur_div.push_child(sub_element)
 
-    if tti_cs in (0x01, 0x02, 0x03):
+    if tti.get_cs() in (0x01, 0x02, 0x03):
 
       # create a nested span if we are in cumulative mode
 
@@ -434,9 +363,9 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
       cur_element = sub_element
 
-    cur_element.set_begin(tti_tci.to_temporal_offset())
-    cur_element.set_end(tti_tco.to_temporal_offset())
-    process_tti_tf(cur_element, gsi_cct, tti_tf)
-    progress_callback(i/tti_block_count)
+    cur_element.set_begin(tti.get_tci().to_temporal_offset())
+    cur_element.set_end(tti.get_tco().to_temporal_offset())
+    process_tti_tf(cur_element, gsi_block.get_cct(), tti_tf)
+    progress_callback(i/gsi_block.get_block_count())
 
   return doc
