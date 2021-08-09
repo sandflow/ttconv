@@ -30,6 +30,7 @@ from __future__ import annotations
 import typing
 import itertools
 import logging
+from numbers import Number
 
 
 from ttconv import model
@@ -45,26 +46,87 @@ LOGGER = logging.getLogger(__name__)
 # STL reader
 #
 
+DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT = 5
+DEFAULT_VERTICAL_SAFE_MARGIN_PCT = 10
+DEFAULT_TELETEXT_ROWS = 23
+DEFAULT_TELETEXT_COLS = 40
+DEFAULT_LINE_HEIGHT_PCT = 125
+DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT = 80
+DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT = 160
+
+def get_region(doc: model.ContentDocument, x_origin: Number, y_origin: Number, width: Number, height: Number, display_align: styles.DisplayAlignType):
+
+  found_region = None
+
+  regions = list(doc.iter_regions())
+
+  for r in regions:
+    r_origin: styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    assert r_origin is not None
+    assert r_origin.x.units is styles.LengthType.Units.pct
+    assert r_origin.y.units is styles.LengthType.Units.pct
+    if r_origin.x.value != x_origin or r_origin.y.value != y_origin:
+      continue
+
+    r_extent: styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    assert r_extent is not None
+    assert r_extent.height.units is styles.LengthType.Units.pct
+    assert r_extent.width.units is styles.LengthType.Units.pct
+    if r_extent.height.value != height or r_extent.width.value != width:
+      continue  
+
+    r_display_align: styles.DisplayAlignType = r.get_style(styles.StyleProperties.DisplayAlign)
+    assert r_display_align is not None
+    if r_display_align != display_align:
+      continue
+
+    found_region = r
+    break
+
+  if found_region is None:
+    found_region = model.Region(f"r{len(regions)}", doc)
+    found_region.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        height=styles.LengthType(height, styles.LengthType.Units.pct),
+        width=styles.LengthType(width, styles.LengthType.Units.pct),
+      )
+      )
+    found_region.set_style(
+      styles.StyleProperties.Origin,
+      styles.CoordinateType(
+        x=styles.LengthType(x_origin, styles.LengthType.Units.pct),
+        y=styles.LengthType(y_origin, styles.LengthType.Units.pct)
+      )
+    )
+    found_region.set_style(
+      styles.StyleProperties.DisplayAlign,
+      display_align
+    )
+    doc.put_region(found_region)
+  
+  return found_region
+
 def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts an STL document to the data model"""
 
-  gsi_block = blocks.GSI(stl_document.read(1024))
-
   doc = model.ContentDocument()
 
-  # assume 44x23 character matrix within a ‘Subtitle Safe Area’ of ~90% of the width and ~80% height of the related video object
+  gsi = blocks.GSI(stl_document.read(1024))
+
   doc.set_cell_resolution(
     model.CellResolutionType(
-      columns=44,
-      rows=29)
+      columns=round(100 * DEFAULT_TELETEXT_COLS / DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 2),
+      rows=round(100 * DEFAULT_TELETEXT_ROWS / DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 2))
   )
 
   body = model.Body(doc)
+  
+  body.set_style(styles.StyleProperties.LineHeight, styles.LengthType(DEFAULT_LINE_HEIGHT_PCT, styles.LengthType.Units.pct))
+
   doc.set_body(body)
 
   sgn_map = {}
-
-  region_map = {}
 
   last_sn = None
 
@@ -77,7 +139,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
     if not tti_buf:
       break
 
-    tti = blocks.TTI(gsi_block, tti_buf)
+    tti = blocks.TTI(gsi, tti_buf)
 
     if 0xEF < tti.get_ebn() < 0xFF:
       # skip user data and reserved blocks
@@ -102,99 +164,63 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
       # find the div to which the subtitle belongs, based on SGN
 
-      cur_div = sgn_map.get(tti.get_sgn())
+      div_element = sgn_map.get(tti.get_sgn())
 
       # create the div if it does not exist
 
-      if cur_div is None:
-        cur_div = model.Div(doc)
-        body.push_child(cur_div)
-        sgn_map[tti.get_sgn()] = cur_div
+      if div_element is None:
+        div_element = model.Div(doc)
+        body.push_child(div_element)
+        sgn_map[tti.get_sgn()] = div_element
 
       # create the p that will hold the subtitle
 
-      sub_element = model.P(doc)
+      p_element = model.P(doc)
 
       if tti.get_jc() == 0x01:
-        sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.start)
+        p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.start)
       elif tti.get_jc() == 0x03:
-        sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
+        p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
       else:
-        sub_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
+        p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
 
       # assume that VP < MNR/2 means bottom-aligned and otherwise top-aligned
       # probably should offer an option to override this
 
-      if tti.get_vp() > gsi_block.get_mnr() / 2:
-        region = region_map.get(0)
-
-        if region is None:
-          region = model.Region("bottom", doc)
-          region.set_style(
-            styles.StyleProperties.Extent,
-            styles.ExtentType(
-              height=styles.LengthType(80, styles.LengthType.Units.pct),
-              width=styles.LengthType(90, styles.LengthType.Units.pct),
-            )
-          )
-          region.set_style(
-            styles.StyleProperties.Origin,
-            styles.CoordinateType(
-              x=styles.LengthType(5, styles.LengthType.Units.pct),
-              y=styles.LengthType(10, styles.LengthType.Units.pct)
-            )
-          )
-          region.set_style(
-            styles.StyleProperties.DisplayAlign,
-            styles.DisplayAlignType.after
-          )
-          doc.put_region(region)
-          region_map[0] = region
+      if tti.get_vp() > gsi.get_mnr() / 2:
+        region = get_region(doc, 5, 10, 90, 80, styles.DisplayAlignType.after)
       else:
-        region = region_map.get(1)
+        region = get_region(doc, 5, 10, 90, 80, styles.DisplayAlignType.before)
 
-        if region is None:
-          region = model.Region("top", doc)
-          region.set_style(
-            styles.StyleProperties.Extent,
-            styles.ExtentType(
-              height=styles.LengthType(80, styles.LengthType.Units.pct),
-              width=styles.LengthType(90, styles.LengthType.Units.pct),
-            )
-          )
-          region.set_style(
-            styles.StyleProperties.Origin,
-            styles.CoordinateType(
-              x=styles.LengthType(5, styles.LengthType.Units.pct),
-              y=styles.LengthType(10, styles.LengthType.Units.pct)
-            )
-          )
-          region.set_style(
-            styles.StyleProperties.DisplayAlign,
-            styles.DisplayAlignType.before
-          )
-          doc.put_region(region)
-          region_map[1] = region
+      p_element.set_region(region)
 
-      sub_element.set_region(region)
-
-      cur_div.push_child(sub_element)
+      div_element.push_child(p_element)
 
     if tti.get_cs() in (0x01, 0x02, 0x03):
 
       # create a nested span if we are in cumulative mode
 
-      cur_element = model.Span(doc)
-      sub_element.push_child(cur_element)
-      sub_element.push_child(model.Br(doc))
+      sub_element = model.Span(doc)
+      p_element.push_child(sub_element)
+      p_element.push_child(model.Br(doc))
 
     else :
 
-      cur_element = sub_element
+      sub_element = p_element
 
-    cur_element.set_begin(tti.get_tci().to_temporal_offset())
-    cur_element.set_end(tti.get_tco().to_temporal_offset())
-    ttconv.stl.tf.process_tti_tf(cur_element, gsi_block.get_cct(), tti_tf)
-    progress_callback(i/gsi_block.get_block_count())
+    sub_element.set_begin(tti.get_tci().to_temporal_offset())
+    sub_element.set_end(tti.get_tco().to_temporal_offset())
+
+    sub_element.set_style(
+      styles.StyleProperties.FontSize,
+      styles.LengthType(
+        DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT if ttconv.stl.tf.is_double_height(tti_tf) else DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT,
+        styles.LengthType.Units.pct
+      )
+    )
+
+    ttconv.stl.tf.to_model(sub_element, gsi.get_cct(), tti_tf)
+
+    progress_callback(i/gsi.get_block_count())
 
   return doc

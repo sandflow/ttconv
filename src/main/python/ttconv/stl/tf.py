@@ -69,7 +69,13 @@ def note_decode_error(error):
 
 codecs.register_error("note", note_decode_error)
 
-def process_tti_tf(element: model.ContentElement, tti_cct, tti_tf):
+def line_count(text_field) -> int:
+  return sum(map(is_newline_code, text_field)) + 1
+
+def is_double_height(text_field) -> bool:
+  return any(map(lambda c: c == 0x0D, text_field))
+
+def to_model(element: model.ContentElement, tti_cct, tti_tf):
   
   fg_color = styles.NamedColors.white.value
 
