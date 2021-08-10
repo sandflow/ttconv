@@ -405,5 +405,13 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(background_color_second_span, styles.NamedColors.lime.value)
       self.assertEqual(color_second_span, styles.NamedColors.black.value)
 
+  def test_setting_background_before_startbox(self):
+    '''Testing NewBackground Control Code before StartBox'''    
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      spans = list(doc.get_body().first_child().first_child())
+      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
+      self.assertEqual(background_color_first_span, styles.NamedColors.yellow.value)
+
 if __name__ == '__main__':
   unittest.main()
