@@ -70,16 +70,15 @@ class GSI:
 
     self.cct = self.fields.CCT
 
-    if self.fields.DSC in (0x31, 0x32):
-      # teletext
-      self.mnr = 23
-    else:
-      # open or undefined
-      self.mnr = int(self.fields.MNR)
+
+    self.mnr = int(self.fields.MNR)
 
     self.block_count = int(self.fields.TNB)
 
     self.language = GSI._LC_BCP47_MAP.get(self.fields.LC, "")
+
+  def get_dsc(self) -> int:
+    return self.fields.DSC
 
   def get_language(self) -> str:
     return self.language

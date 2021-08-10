@@ -116,8 +116,9 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
   doc.set_cell_resolution(
     model.CellResolutionType(
-      columns=round(100 * DEFAULT_TELETEXT_COLS / DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 2),
-      rows=round(100 * DEFAULT_TELETEXT_ROWS / DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 2))
+      columns=round(100 * DEFAULT_TELETEXT_COLS / (100 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT)),
+      rows=round(100 * DEFAULT_TELETEXT_ROWS / (100 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT))
+    )
   )
 
   body = model.Body(doc)
@@ -126,7 +127,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
   doc.set_body(body)
 
-  sgn_map = {}
+  sgn_to_div_map = {}
 
   last_sn = None
 
@@ -162,16 +163,18 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
 
     if tti.get_sn() is not last_sn and tti.get_cs() in (0x00, 0x01):
 
+      last_sn =  tti.get_sn()
+
       # find the div to which the subtitle belongs, based on SGN
 
-      div_element = sgn_map.get(tti.get_sgn())
+      div_element = sgn_to_div_map.get(tti.get_sgn())
 
       # create the div if it does not exist
 
       if div_element is None:
         div_element = model.Div(doc)
         body.push_child(div_element)
-        sgn_map[tti.get_sgn()] = div_element
+        sgn_to_div_map[tti.get_sgn()] = div_element
 
       # create the p that will hold the subtitle
 
@@ -184,13 +187,56 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
       else:
         p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
 
-      # assume that VP < MNR/2 means bottom-aligned and otherwise top-aligned
-      # probably should offer an option to override this
+      
+      if gsi.get_dsc() in (0x20, 0x30):
+        # use large region and always align at the bottom for undefined and open subtitles
 
-      if tti.get_vp() > gsi.get_mnr() / 2:
-        region = get_region(doc, 5, 10, 90, 80, styles.DisplayAlignType.after)
+        region = get_region(
+          doc,
+          round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
+          round(DEFAULT_VERTICAL_SAFE_MARGIN_PCT),
+          round(100 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
+           round(100 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT),
+          styles.DisplayAlignType.after
+          )
+
       else:
-        region = get_region(doc, 5, 10, 90, 80, styles.DisplayAlignType.before)
+
+        safe_area_height =  round(100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT * 2)
+        safe_area_width =  round(100 - DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT * 2)
+
+        # assume that VP < MNR/2 means bottom-aligned and otherwise top-aligned
+        # probably should offer an option to override this
+
+        if tti.get_vp() < DEFAULT_TELETEXT_ROWS // 2:
+          # top-aligned large region
+          
+
+          r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT + ((tti.get_vp() - 1) / DEFAULT_TELETEXT_ROWS) * safe_area_height
+          r_height = 100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT - r_y
+          
+          region = get_region(
+            doc,
+            round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
+            r_y,
+            safe_area_width,
+            r_height,
+            styles.DisplayAlignType.after
+          )
+
+        else:
+
+          r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT
+          r_height = ((tti.get_vp() + ttconv.stl.tf.line_count(tti_tf) - 1)/ DEFAULT_TELETEXT_ROWS) * safe_area_height
+          
+          region = get_region(
+            doc,
+            round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
+            r_y,
+            safe_area_width,
+            r_height,
+            styles.DisplayAlignType.before
+          )
 
       p_element.set_region(region)
 
@@ -211,10 +257,16 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
     sub_element.set_begin(tti.get_tci().to_temporal_offset())
     sub_element.set_end(tti.get_tco().to_temporal_offset())
 
+
+    if gsi.get_dsc() not in (0x20, 0x30) and not ttconv.stl.tf.is_double_height(tti_tf):
+      font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
+    else:
+      font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
+
     sub_element.set_style(
       styles.StyleProperties.FontSize,
       styles.LengthType(
-        DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT if ttconv.stl.tf.is_double_height(tti_tf) else DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT,
+        font_size,
         styles.LengthType.Units.pct
       )
     )
