@@ -229,8 +229,8 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0090-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
 
  
   def test_irt_requirement_0090_002(self):
@@ -238,80 +238,80 @@ class STLReaderTests(unittest.TestCase):
     with open("src/test/resources/stl/irt/requirement-0090-002.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.blue.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.blue.value)
   
   def test_irt_requirement_0090_003(self):
     '''Testing BlackBackground with AlphaCyan'''
     with open("src/test/resources/stl/irt/requirement-0090-003.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.cyan.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.cyan.value)
   
   def test_irt_requirement_0090_004(self):
     '''Testing BlackBackground with AlphaGreen'''
     with open("src/test/resources/stl/irt/requirement-0090-004.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.lime.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.lime.value)
   
   def test_irt_requirement_0090_005(self):
     '''Testing BlackBackground with AlphaMagenta'''
     with open("src/test/resources/stl/irt/requirement-0090-005.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.magenta.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.magenta.value)
   
   def test_irt_requirement_0090_006(self):
     '''Testing BlackBackground with AlphaRed'''
     with open("src/test/resources/stl/irt/requirement-0090-006.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.red.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.red.value)
   
   def test_irt_requirement_0090_007(self):
     '''Testing BlackBackground with AlphaWhite'''
     with open("src/test/resources/stl/irt/requirement-0090-007.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.white.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.white.value)
   
   def test_irt_requirement_0090_008(self):
     '''Testing BlackBackground with AlphaYellow'''
     with open("src/test/resources/stl/irt/requirement-0090-008.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.yellow.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.yellow.value)
   
   def test_irt_requirement_0090_009(self):
     '''Testing unchanging BlackBackground'''
     with open("src/test/resources/stl/irt/requirement-0090-009.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       spans = list(doc.get_body().first_child().first_child())
-      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
-      color_first_span = spans[0].get_style(styles.StyleProperties.Color)
-      self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
-      self.assertEqual(color_first_span, styles.NamedColors.white.value)
+      background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = spans[1].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.white.value)
 
   def test_irt_requirement_0091_001(self):
     '''Testing NewBackground with AlphaBlack'''
