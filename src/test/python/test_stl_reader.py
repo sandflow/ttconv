@@ -321,7 +321,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)      
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
   
   def test_irt_requirement_0091_002(self):
     '''Testing NewBackground with AlphaBlue'''
@@ -333,7 +333,7 @@ class STLReaderTests(unittest.TestCase):
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_first_span, styles.NamedColors.black.value)
       self.assertEqual(background_color_second_span, styles.NamedColors.blue.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
   
   def test_irt_requirement_0091_003(self):
     '''Testing NewBackground with AlphaCyan'''
@@ -343,7 +343,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.cyan.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
   
   def test_irt_requirement_0091_004(self):
     '''Testing NewBackground with AlphaGreen'''
@@ -353,7 +353,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.lime.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
   
   def test_irt_requirement_0091_005(self):
     '''Testing NewBackground with AlphaMagenta'''
@@ -363,7 +363,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.magenta.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
 
   def test_irt_requirement_0091_006(self):
     '''Testing NewBackground with AlphaRed'''
@@ -383,7 +383,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.white.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
   
   def test_irt_requirement_0091_008(self):
     '''Testing NewBackground with AlphaYellow'''
@@ -393,7 +393,7 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.yellow.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
   
   def test_irt_requirement_0091_009(self):
     '''Testing unchanging NewBackground'''
@@ -403,7 +403,15 @@ class STLReaderTests(unittest.TestCase):
       background_color_second_span = spans[1].get_style(styles.StyleProperties.BackgroundColor)
       color_second_span = spans[1].get_style(styles.StyleProperties.Color)
       self.assertEqual(background_color_second_span, styles.NamedColors.lime.value)
-      self.assertEqual(color_second_span, styles.NamedColors.black.value)   
+      self.assertEqual(color_second_span, styles.NamedColors.black.value)
+
+  def test_setting_background_before_startbox(self):
+    '''Testing NewBackground Control Code before StartBox'''    
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      spans = list(doc.get_body().first_child().first_child())
+      background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
+      self.assertEqual(background_color_first_span, styles.NamedColors.yellow.value)
 
 if __name__ == '__main__':
   unittest.main()
