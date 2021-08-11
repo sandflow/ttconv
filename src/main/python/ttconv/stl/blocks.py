@@ -78,7 +78,7 @@ class GSI:
     self.language = GSI._LC_BCP47_MAP.get(self.fields.LC, "")
 
   def get_dsc(self) -> int:
-    return self.fields.DSC
+    return ord(self.fields.DSC)
 
   def get_language(self) -> str:
     return self.language

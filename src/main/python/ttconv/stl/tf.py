@@ -75,11 +75,11 @@ def line_count(text_field) -> int:
 def is_double_height(text_field) -> bool:
   return any(map(lambda c: c == 0x0D, text_field))
 
-def to_model(element: model.ContentElement, tti_cct, tti_tf):
+def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
   
   fg_color = styles.NamedColors.white.value
 
-  bg_color = styles.NamedColors.transparent.value
+  bg_color = styles.NamedColors.black.value if is_teletext else styles.NamedColors.transparent.value
 
   is_italic = False
 
@@ -173,7 +173,7 @@ def to_model(element: model.ContentElement, tti_cct, tti_tf):
     elif is_control_code(c):
       end_span()
 
-      if c in (0x84, 0x0B, 0x1C):
+      if c == 0x1C:
         bg_color = styles.NamedColors.black.value
       elif c == 0x85:
         bg_color = styles.NamedColors.transparent.value

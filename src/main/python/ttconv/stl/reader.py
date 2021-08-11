@@ -271,7 +271,7 @@ def to_model(stl_document: typing.IO, _config: typing.Optional[STLReaderConfigur
       )
     )
 
-    ttconv.stl.tf.to_model(sub_element, gsi.get_cct(), tti_tf)
+    ttconv.stl.tf.to_model(sub_element, gsi.get_dsc() in (0x31, 0x32), gsi.get_cct(), tti_tf)
 
     progress_callback(i/gsi.get_block_count())
 
