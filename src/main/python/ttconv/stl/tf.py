@@ -98,19 +98,78 @@ class TextFieldIterator:
     self.pos = min(self.pos + 1, len(self.tf))
     return c
 
+class Context:
+
+  def __init__(self, parent_element: model.ContentElement, is_teletext: bool, decode_func):
+    self.fg_color = styles.NamedColors.white.value
+    self.bg_color = styles.NamedColors.black.value if is_teletext else styles.NamedColors.transparent.value
+    self.is_italic = False
+    self.is_underline = False
+    self.span = None
+    self.parent = parent_element
+    self.decode_func = decode_func
+    self.text_buffer = bytearray()
+
+  def set_bg_color(self, color: styles.ColorType):
+    self.bg_color = color 
+
+  def get_bg_color(self) -> styles.ColorType:
+    return self.bg_color
+
+  def set_fg_color(self, color: styles.ColorType):
+    self.fg_color = color 
+
+  def get_fg_color(self) -> styles.ColorType:
+    return self.fg_color
+
+  def set_underline(self, is_underline: bool):
+    self.is_underline = is_underline
+
+  def get_underline(self) -> bool:
+    return self.is_underline
+
+  def set_italic(self, is_italic: bool):
+    self.is_italic = is_italic
+
+  def get_italic(self) -> bool:
+    return self.is_italic
+
+  def start_span(self):
+    if self.span is None:
+      self.span = model.Span(self.parent.get_doc())
+
+      self.span.set_style(styles.StyleProperties.BackgroundColor, self.get_bg_color())
+
+      self.span.set_style(styles.StyleProperties.Color, self.get_fg_color())
+
+      if self.get_underline():
+        self.span.set_style(
+          styles.StyleProperties.TextDecoration,
+          styles.TextDecorationType(underline=True)
+        )
+
+      if self.get_italic():
+        self.span.set_style(
+          styles.StyleProperties.FontStyle,
+          styles.FontStyleType.italic
+        )
+
+  def end_span(self):
+    if len(self.text_buffer) > 0 and self.span is not None:
+      text_element = model.Text(self.parent.get_doc())
+      text_element.set_text(self.decode_func(self.text_buffer, errors="note")[0])
+
+      self.span.push_child(text_element)
+      self.parent.push_child(self.span)
+      self.span = None
+      self.text_buffer.clear()
+
+  def append_character(self, c):
+    self.start_span()
+    self.text_buffer.append(c)
+
+
 def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
-  
-  fg_color = styles.NamedColors.white.value
-
-  bg_color = styles.NamedColors.black.value if is_teletext else styles.NamedColors.transparent.value
-
-  is_italic = False
-
-  is_underline = False
-
-  span_element = None
-
-  text_buffer = bytearray()
 
   tf_iter = TextFieldIterator(tti_tf)
 
@@ -120,50 +179,7 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
     decode_func = iso6937.decode
     LOGGER.error("Unknown Text Field character set: %s", str(tti_cct))
 
-  def start_span():
-    nonlocal span_element
-    nonlocal bg_color
-    nonlocal fg_color
-    nonlocal is_underline
-    nonlocal is_italic
-
-    if span_element is None:
-      span_element = model.Span(element.get_doc())
-      span_element.set_style(styles.StyleProperties.BackgroundColor, bg_color)
-      span_element.set_style(styles.StyleProperties.Color, fg_color)
-      if is_underline:
-        span_element.set_style(
-          styles.StyleProperties.TextDecoration,
-          styles.TextDecorationType(underline=True)
-        )
-      if is_italic:
-        span_element.set_style(
-          styles.StyleProperties.FontStyle,
-          styles.FontStyleType.italic
-        )
-
-  def end_span():
-    nonlocal span_element
-
-    if len(text_buffer) > 0 and span_element is not None:
-      text_element = model.Text(element.get_doc())
-      text_element.set_text(decode_func(text_buffer, errors="note")[0])
-
-      span_element.push_child(text_element)
-      element.push_child(span_element)
-      span_element = None
-      text_buffer.clear()
-
-  def append_character(c):
-    if c != 0x20 or (is_printable_code(tf_iter.peek_next()) and is_printable_code(tf_iter.peek_prev())):
-      start_span()
-      text_buffer.append(c)
-
-  def new_line():
-    if not is_newline_code(tf_iter.peek_next()) and not is_unused_space_code(tf_iter.peek_next()):
-      end_span()
-      element.push_child(model.Br(element.get_doc()))
-      start_span()
+  context = Context(element, is_teletext, decode_func)
 
   while True:
 
@@ -173,47 +189,52 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
       break
 
     if is_character_code(c):
-      append_character(c)
+      if is_printable_code(c) or (is_printable_code(tf_iter.peek_next()) and is_printable_code(tf_iter.peek_prev())):
+        context.append_character(c)
 
     elif is_newline_code(c):
-      new_line()
+      if not is_newline_code(tf_iter.peek_next()) and not is_unused_space_code(tf_iter.peek_next()):
+        context.end_span()
+        element.push_child(model.Br(element.get_doc()))
+        context.start_span()
 
     elif is_control_code(c):
-      end_span()
+      context.end_span()
 
       if c == 0x1C:
-        bg_color = styles.NamedColors.black.value
+        context.set_bg_color(styles.NamedColors.black.value)
       elif c == 0x85:
-        bg_color = styles.NamedColors.transparent.value
+        context.set_bg_color(styles.NamedColors.transparent.value)
       elif c == 0x1D:
-        bg_color = fg_color
+        context.set_bg_color(context.get_fg_color())
       elif c == 0x00:
-        fg_color = styles.NamedColors.black.value
+        context.set_fg_color(styles.NamedColors.black.value)
       elif c == 0x01:
-        fg_color = styles.NamedColors.red.value
+        context.set_fg_color(styles.NamedColors.red.value)
       elif c == 0x02:
-        fg_color = styles.NamedColors.lime.value
+        context.set_fg_color(styles.NamedColors.lime.value)
       elif c == 0x03:
-        fg_color = styles.NamedColors.yellow.value
+        context.set_fg_color(styles.NamedColors.yellow.value)
       elif c == 0x04:
-        fg_color = styles.NamedColors.blue.value
+        context.set_fg_color(styles.NamedColors.blue.value)
       elif c == 0x05:
-        fg_color = styles.NamedColors.magenta.value
+        context.set_fg_color(styles.NamedColors.magenta.value)
       elif c == 0x06:
-        fg_color = styles.NamedColors.cyan.value
+        context.set_fg_color(styles.NamedColors.cyan.value)
       elif c == 0x07:
-        fg_color = styles.NamedColors.white.value
+        context.set_fg_color(styles.NamedColors.white.value)
       elif c == 0x80:
-        is_italic = True
+        context.set_italic(True)
       elif c == 0x81:
-        is_italic = False
+        context.set_italic(False)
       elif c == 0x82:
-        is_underline = True
+        context.set_underline(True)
       elif c == 0x83:
-        is_underline = False
+        context.set_underline(False)
 
-      append_character(0x20)
+      if (is_printable_code(tf_iter.peek_next()) and is_printable_code(tf_iter.peek_prev())):
+        context.append_character(0X20)
 
     next(tf_iter)
 
-  end_span()
+  context.end_span()
