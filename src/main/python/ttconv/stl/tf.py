@@ -75,6 +75,29 @@ def line_count(text_field) -> int:
 def is_double_height(text_field) -> bool:
   return any(map(lambda c: c == 0x0D, text_field))
 
+class TextFieldIterator:
+
+  def __init__(self, text_field):
+    self.pos = 0
+    self.tf = text_field
+
+  def __iter__(self):
+    return self
+
+  def peek_next(self) -> int:
+    return _UNUSED_SPACE_CODE if self.pos >= len(self.tf) else self.tf[self.pos + 1]
+
+  def peek_prev(self) -> int:
+    return _UNUSED_SPACE_CODE if self.pos <= 0 else self.tf[self.pos - 1]
+
+  def cur(self) -> int:
+    return _UNUSED_SPACE_CODE if self.pos >= len(self.tf) else self.tf[self.pos]
+
+  def __next__(self) -> int:
+    c = self.peek_next()
+    self.pos = min(self.pos + 1, len(self.tf))
+    return c
+
 def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
   
   fg_color = styles.NamedColors.white.value
@@ -89,28 +112,13 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
 
   text_buffer = bytearray()
 
-  tf_i = 0
+  tf_iter = TextFieldIterator(tti_tf)
 
   decode_func = _CHAR_DECODER_MAP.get(tti_cct)
 
   if decode_func is None:
     decode_func = iso6937.decode
     LOGGER.error("Unknown Text Field character set: %s", str(tti_cct))
-
-  def peek_next_char() -> int:
-    return _UNUSED_SPACE_CODE if tf_i >= len(tti_tf) else tti_tf[tf_i + 1]
-
-  def peek_prev_char() -> int:
-    return _UNUSED_SPACE_CODE if tf_i <= 0 else tti_tf[tf_i - 1]
-
-  def next_char() -> int:
-    nonlocal tf_i
-    c = peek_next_char()
-    tf_i = min(tf_i + 1, len(tti_tf))
-    return c
-
-  def cur_char() -> int:
-    return _UNUSED_SPACE_CODE if tf_i >= len(tti_tf) else tti_tf[tf_i]
 
   def start_span():
     nonlocal span_element
@@ -147,19 +155,19 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
       text_buffer.clear()
 
   def append_character(c):
-    if c != 0x20 or (is_printable_code(peek_next_char()) and is_printable_code(peek_prev_char())):
+    if c != 0x20 or (is_printable_code(tf_iter.peek_next()) and is_printable_code(tf_iter.peek_prev())):
       start_span()
       text_buffer.append(c)
 
   def new_line():
-    if not is_newline_code(peek_next_char()) and not is_unused_space_code(peek_next_char()):
+    if not is_newline_code(tf_iter.peek_next()) and not is_unused_space_code(tf_iter.peek_next()):
       end_span()
       element.push_child(model.Br(element.get_doc()))
       start_span()
 
   while True:
 
-    c = cur_char()
+    c = tf_iter.cur()
 
     if is_unused_space_code(c):
       break
@@ -206,6 +214,6 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
 
       append_character(0x20)
 
-    next_char()
+    next(tf_iter)
 
   end_span()
