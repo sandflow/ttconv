@@ -110,8 +110,6 @@ class DataFile:
 
     self.body = model.Body(self.doc)
     
-    self.body.set_style(styles.StyleProperties.LineHeight, styles.LengthType(DEFAULT_LINE_HEIGHT_PCT, styles.LengthType.Units.pct))
-
     self.doc.set_body(self.body)
 
     self.sgn_to_div_map = {}
@@ -180,7 +178,12 @@ class DataFile:
       else:
         p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
 
-      
+      p_element.set_style(
+        styles.StyleProperties.LineHeight,
+        styles.LengthType(DEFAULT_LINE_HEIGHT_PCT,
+        styles.LengthType.Units.pct)
+      )
+
       if self.gsi.get_dsc() in (0x20, 0x30):
         # use large region and always align at the bottom for undefined and open subtitles
 
@@ -214,7 +217,7 @@ class DataFile:
             r_y,
             safe_area_width,
             r_height,
-            styles.DisplayAlignType.after
+            styles.DisplayAlignType.before
           )
 
         else:
@@ -228,7 +231,7 @@ class DataFile:
             r_y,
             safe_area_width,
             r_height,
-            styles.DisplayAlignType.before
+            styles.DisplayAlignType.after
           )
 
       p_element.set_region(region)
