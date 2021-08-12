@@ -27,7 +27,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ttconv.config import ModuleConfiguration
 
@@ -35,6 +35,8 @@ from ttconv.config import ModuleConfiguration
 class STLReaderConfiguration(ModuleConfiguration):
   """STL reader configuration"""
 
+  disable_fill_line_gap: bool = field(default=False, metadata={"decoder": bool})
+  
   @classmethod
   def name(cls):
     return "stl_reader"

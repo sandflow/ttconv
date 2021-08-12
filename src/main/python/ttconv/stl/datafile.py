@@ -95,7 +95,7 @@ def get_region(doc: model.ContentDocument, x_origin: Number, y_origin: Number, w
 
 class DataFile:
 
-  def __init__(self, gsi_block: bytes):
+  def __init__(self, gsi_block: bytes, disable_fill_line_gap: bool = False):
     
     self.gsi = blocks.GSI(gsi_block)
 
@@ -110,6 +110,12 @@ class DataFile:
 
     self.body = model.Body(self.doc)
     
+    if not disable_fill_line_gap:
+      self.body.set_style(
+        styles.StyleProperties.FillLineGap,
+        True
+      )
+
     self.doc.set_body(self.body)
 
     self.sgn_to_div_map = {}
