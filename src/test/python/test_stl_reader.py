@@ -413,5 +413,17 @@ class STLReaderTests(unittest.TestCase):
       background_color_first_span = spans[0].get_style(styles.StyleProperties.BackgroundColor)
       self.assertEqual(background_color_first_span, styles.NamedColors.yellow.value)
 
+  def test_multi_tti_subtitle(self):
+    '''Testing subtitle that spans over multiple TTI blocks with different EBN values'''
+    with open("src/test/resources/stl/sandflow/multi_tti_subtitle.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      text = doc.get_body()\
+                .first_child()\
+                .first_child()\
+                .first_child()\
+                .first_child()\
+                .get_text()
+      self.assertEqual(text, "Foo Bar Baz")
+
 if __name__ == '__main__':
   unittest.main()
