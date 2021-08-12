@@ -140,7 +140,7 @@ class DataFile:
     if not self.is_in_extension:
       self.tti_tf = b''
 
-    self.tti_tf += tti.get_tf()
+    self.tti_tf += tti.get_tf().strip(b'\x8f')
 
     # continue accumulating if we have an extension block
 
