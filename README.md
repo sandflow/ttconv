@@ -57,6 +57,7 @@ tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config 
   * `"general"."log_level": "INFO" | "WARN" | "ERROR"`: logging level
   * `"imsc_writer"."time_format": "frames" | "clock_time"`: output TTML expressions in seconds or in frames
   * `"imsc_writer"."fps": "<num>/<denom>"`: specifies the frame rate _num/denom_ when output TTML expressions in frames
+  * `"stl_reader"."disable_fill_line_gap" : "true" | "false" (default: "false")`: "true" means that the STL reader does not fill gaps between lines
 
 Example:
 
