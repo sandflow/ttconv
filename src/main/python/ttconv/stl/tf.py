@@ -85,7 +85,7 @@ class TextFieldIterator:
     return self
 
   def peek_next(self) -> int:
-    return _UNUSED_SPACE_CODE if self.pos >= len(self.tf) else self.tf[self.pos + 1]
+    return _UNUSED_SPACE_CODE if self.pos + 1 >= len(self.tf) else self.tf[self.pos + 1]
 
   def peek_prev(self) -> int:
     return _UNUSED_SPACE_CODE if self.pos <= 0 else self.tf[self.pos - 1]
