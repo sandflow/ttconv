@@ -43,9 +43,9 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(p.get_begin(),
                       SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
    
-  def test_irt_requirement_0061_004(self):
+  def test_irt_requirement_0061_004_modified(self):
     '''Testing Time Code In with value media 25 frames upperbounds'''
-    with open("src/test/resources/stl/irt/requirement-0061-004.stl", "rb") as f:
+    with open("src/test/resources/stl/irt/requirement-0061-004_modified.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
       self.assertEqual(p.get_begin(),
@@ -59,9 +59,9 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(p.get_end(),
                       SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
 
-  def test_irt_requirement_0062_002(self):
+  def test_irt_requirement_0062_002_modified(self):
     '''Testing Time Code Out with value media 25 frames upper bound'''
-    with open("src/test/resources/stl/irt/requirement-0062-002.stl", "rb") as f:
+    with open("src/test/resources/stl/irt/requirement-0062-002_modified.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
       p = doc.get_body().first_child().first_child()
       self.assertEqual(p.get_end(),
