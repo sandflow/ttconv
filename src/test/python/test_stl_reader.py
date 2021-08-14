@@ -35,6 +35,23 @@ from ttconv.time_code import SmpteTimeCode, FPS_25
 
 class STLReaderTests(unittest.TestCase):
 
+  def test_irt_requirement_0056_001_modfied(self):
+    '''Testing subtitles in different subtitle groups (SGN)'''
+    with open("src/test/resources/stl/irt/requirement-0056-001_modified.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      
+      div_list = list(doc.get_body())
+      self.assertEqual(len(div_list), 3)
+      
+      p1_span = div_list[0].first_child().first_child()
+      p2_span = div_list[0].first_child().next_sibling().first_child()
+      p3_span = div_list[1].first_child().first_child()
+      p4_span = div_list[2].first_child().first_child()
+      self.assertEqual(p1_span.first_child().get_text(), "Subtitle 1 Group 1")
+      self.assertEqual(p2_span.first_child().get_text(), "Subtitle 2 Group 1")
+      self.assertEqual(p3_span.first_child().get_text(), "Subtitle 3 Group 2")
+      self.assertEqual(p4_span.first_child().get_text(), "Subtitle 4 Group 3")
+
   def test_irt_requirement_0061_001(self):
     '''Testing Time Code In with value media 25 frames lowerbounds'''  
     with open("src/test/resources/stl/irt/requirement-0061-001.stl", "rb") as f:
