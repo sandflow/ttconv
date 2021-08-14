@@ -133,7 +133,10 @@ class DataFile:
 
     self.tti_tf = None
 
-    self.start_offset = SmpteTimeCode.parse(start_tc, self.gsi.get_fps()).to_temporal_offset() if start_tc is not None else 0
+    if start_tc is None:
+      self.start_offset = self.gsi.get_tcp().to_temporal_offset()
+    else:
+      self.start_offset = SmpteTimeCode.parse(start_tc, self.gsi.get_fps()).to_temporal_offset()
 
   def get_tti_count(self):
     return self.gsi.get_block_count()

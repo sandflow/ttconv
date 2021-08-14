@@ -28,7 +28,6 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-import json
 from ttconv.model import Br, Span
 import ttconv.stl.reader
 import ttconv.style_properties as styles
@@ -426,33 +425,7 @@ class STLReaderTests(unittest.TestCase):
                 .get_text()
       self.assertEqual(text, "Foo Bar Baz")
 
-  def test_tcp_processing_001(self):
-    '''Testing TCP Override with 10:00:00:00'''  
-    with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
-      config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"09:00:00:00"}'))
-      doc = ttconv.stl.reader.to_model(f, config)
-      p_list = list(doc.get_body().first_child())
-      self.assertEqual(p_list[0].get_begin(),
-                      SmpteTimeCode.parse("01:00:00:00",FPS_25).to_temporal_offset())
-      self.assertEqual(p_list[0].get_end(),
-                      SmpteTimeCode.parse("01:00:01:24",FPS_25).to_temporal_offset())
-
-  def test_tcp_processing_002(self):
-    '''Testing TCP Override with 00:00:00:00'''  
-    with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
-      config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"00:00:00:00"}'))
-      doc = ttconv.stl.reader.to_model(f, config)
-      p_list = list(doc.get_body().first_child())
-      self.assertEqual(p_list[0].get_begin(),
-                      SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
-      self.assertEqual(p_list[0].get_end(),
-                      SmpteTimeCode.parse("00:00:02:00",FPS_25).to_temporal_offset())
-      self.assertEqual(p_list[1].get_begin(),
-                      SmpteTimeCode.parse("10:00:00:00",FPS_25).to_temporal_offset())
-      self.assertEqual(p_list[1].get_end(),
-                      SmpteTimeCode.parse("10:00:01:24",FPS_25).to_temporal_offset())
-
-  def test_tcp_processing_003(self):
+  def test_tcp_processing(self):
     '''Testing use of TCP from GSI Block'''  
     with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
