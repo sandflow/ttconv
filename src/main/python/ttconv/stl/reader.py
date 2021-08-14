@@ -50,7 +50,11 @@ LOGGER = logging.getLogger(__name__)
 def to_model(data_file: typing.IO, config: typing.Optional[STLReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts an STL document to the data model"""
 
-  m = DataFile(data_file.read(1024), False if config is None else config.disable_fill_line_gap)
+  m = DataFile(
+    data_file.read(1024),
+    disable_fill_line_gap=False if config is None else config.disable_fill_line_gap,
+    start_tc=None if config is None else config.program_start_tc
+  )
 
   for i in itertools.count():
 

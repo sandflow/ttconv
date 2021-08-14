@@ -57,6 +57,12 @@ class STLReaderConfigurationTest(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f, config)
       self.assertEqual(doc.get_body().get_style(styles.StyleProperties.FillLineGap), True)
 
+  def test_program_start_tc_parsing(self):
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"00:01:00:12"}'))
+    self.assertEqual(config.program_start_tc, "00:01:00:12")
+
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads("{}"))
+    self.assertIsNone(config.program_start_tc)
 
 if __name__ == '__main__':
   unittest.main()
