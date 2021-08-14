@@ -36,6 +36,8 @@ class STLReaderConfiguration(ModuleConfiguration):
   """STL reader configuration"""
 
   disable_fill_line_gap: bool = field(default=False, metadata={"decoder": bool})
+
+  disable_line_padding: bool = field(default=False, metadata={"decoder": bool})
   
   @classmethod
   def name(cls):
