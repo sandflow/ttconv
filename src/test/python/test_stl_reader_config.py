@@ -65,6 +65,29 @@ class STLReaderConfigurationTest(unittest.TestCase):
     config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads("{}"))
     self.assertIsNone(config.program_start_tc)
 
+  def test_disable_line_padding(self):
+    config_json = '{"disable_line_padding":true}'
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads(config_json))
+
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f, config)
+      self.assertIsNone(doc.get_body().get_style(styles.StyleProperties.LinePadding))
+
+  def test_default_line_padding(self):
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      self.assertIsNotNone(doc.get_body().get_style(styles.StyleProperties.LinePadding))
+      self.assertNotEqual(doc.get_body().get_style(styles.StyleProperties.LinePadding).value, 0)
+
+  def test_enable_line_padding(self):
+    config_json = '{"disable_line_padding":false}'
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads(config_json))
+
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f, config)
+      self.assertIsNotNone(doc.get_body().get_style(styles.StyleProperties.LinePadding))
+      self.assertNotEqual(doc.get_body().get_style(styles.StyleProperties.LinePadding).value, 0)
+      
   def test_tcp_override_001(self):
     '''Testing TCP Override with 09:00:00:00'''  
     with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:

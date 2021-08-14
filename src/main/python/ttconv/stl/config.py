@@ -38,6 +38,7 @@ class STLReaderConfiguration(ModuleConfiguration):
 
   disable_fill_line_gap: bool = field(default=False, metadata={"decoder": bool})
   program_start_tc: typing.Optional[str] = field(default=None)
+  disable_line_padding: bool = field(default=False, metadata={"decoder": bool})
   
   @classmethod
   def name(cls):

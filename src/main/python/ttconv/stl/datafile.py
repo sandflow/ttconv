@@ -42,6 +42,7 @@ DEFAULT_TELETEXT_COLS = 40
 DEFAULT_LINE_HEIGHT_PCT = 125
 DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT = 80
 DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT = 160
+LINE_PADDING_LENGTH_C = 0.5
 
 def get_region(doc: model.ContentDocument, x_origin: Number, y_origin: Number, width: Number, height: Number, display_align: styles.DisplayAlignType):
 
@@ -102,7 +103,9 @@ class DataFile:
     self,
     gsi_block: bytes,
     disable_fill_line_gap: bool = False,
-    start_tc: typing.Optional[str] = None):
+    disable_line_padding: bool = False,
+    start_tc: typing.Optional[str] = None
+    ):
     
     self.gsi = blocks.GSI(gsi_block)
 
@@ -122,6 +125,15 @@ class DataFile:
         styles.StyleProperties.FillLineGap,
         True
       )
+
+    if not disable_line_padding:
+      self.body.set_style(
+        styles.StyleProperties.LinePadding,
+        styles.LengthType(
+          LINE_PADDING_LENGTH_C,
+          styles.LengthType.Units.c
+        )
+    )
 
     self.doc.set_body(self.body)
 
