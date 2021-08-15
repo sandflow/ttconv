@@ -312,10 +312,10 @@ def decode(byte_buffer, errors="strict"):
 
   i = 0
   while i < len(byte_buffer):
-    if 0x20 <= byte_buffer[i] <= 0x7E:
+    if 0x20 <= int(byte_buffer[i]) <= 0x7E:
       s.write(chr(byte_buffer[i]))
       i += 1
-    elif 0xC1 <= byte_buffer[i] <= 0xCF:
+    elif 0xC1 <= int(byte_buffer[i]) <= 0xCF:
       b = bytes(byte_buffer[i:i+2])
       c = CCT0_DECODE_MAP.get(b)
       if c is not None:
