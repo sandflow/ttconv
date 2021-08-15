@@ -33,6 +33,7 @@ import json
 import ttconv.stl.reader
 import ttconv.stl.config
 import ttconv.style_properties as styles
+from ttconv.time_code import SmpteTimeCode, FPS_25
 
 class STLReaderConfigurationTest(unittest.TestCase):
 
@@ -57,6 +58,13 @@ class STLReaderConfigurationTest(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f, config)
       self.assertEqual(doc.get_body().get_style(styles.StyleProperties.FillLineGap), True)
 
+  def test_program_start_tc_parsing(self):
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"00:01:00:12"}'))
+    self.assertEqual(config.program_start_tc, "00:01:00:12")
+
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads("{}"))
+    self.assertIsNone(config.program_start_tc)
+
   def test_disable_line_padding(self):
     config_json = '{"disable_line_padding":true}'
     config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads(config_json))
@@ -79,6 +87,32 @@ class STLReaderConfigurationTest(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f, config)
       self.assertIsNotNone(doc.get_body().get_style(styles.StyleProperties.LinePadding))
       self.assertNotEqual(doc.get_body().get_style(styles.StyleProperties.LinePadding).value, 0)
+      
+  def test_tcp_override_001(self):
+    '''Testing TCP Override with 09:00:00:00'''  
+    with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
+      config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"09:00:00:00"}'))
+      doc = ttconv.stl.reader.to_model(f, config)
+      p_list = list(doc.get_body().first_child())
+      self.assertEqual(p_list[0].get_begin(),
+                      SmpteTimeCode.parse("01:00:00:00",FPS_25).to_temporal_offset())
+      self.assertEqual(p_list[0].get_end(),
+                      SmpteTimeCode.parse("01:00:01:24",FPS_25).to_temporal_offset())
+
+  def test_tcp_override_002(self):
+    '''Testing TCP Override with 00:00:00:00'''  
+    with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
+      config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"00:00:00:00"}'))
+      doc = ttconv.stl.reader.to_model(f, config)
+      p_list = list(doc.get_body().first_child())
+      self.assertEqual(p_list[0].get_begin(),
+                      SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
+      self.assertEqual(p_list[0].get_end(),
+                      SmpteTimeCode.parse("00:00:02:00",FPS_25).to_temporal_offset())
+      self.assertEqual(p_list[1].get_begin(),
+                      SmpteTimeCode.parse("10:00:00:00",FPS_25).to_temporal_offset())
+      self.assertEqual(p_list[1].get_end(),
+                      SmpteTimeCode.parse("10:00:01:24",FPS_25).to_temporal_offset())
 
 if __name__ == '__main__':
   unittest.main()

@@ -24,13 +24,16 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from numbers import Number
-
+import logging
+import typing
 
 from ttconv.stl import blocks
 from ttconv import model
 import ttconv.style_properties as styles
 import ttconv.stl.tf
+from ttconv.time_code import SmpteTimeCode
 
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT = 5
 DEFAULT_VERTICAL_SAFE_MARGIN_PCT = 10
@@ -100,7 +103,8 @@ class DataFile:
     self,
     gsi_block: bytes,
     disable_fill_line_gap: bool = False,
-    disable_line_padding: bool = False
+    disable_line_padding: bool = False,
+    start_tc: typing.Optional[str] = None
     ):
     
     self.gsi = blocks.GSI(gsi_block)
@@ -141,6 +145,11 @@ class DataFile:
 
     self.tti_tf = None
 
+    if start_tc is None:
+      self.start_offset = self.gsi.get_tcp().to_temporal_offset()
+    else:
+      self.start_offset = SmpteTimeCode.parse(start_tc, self.gsi.get_fps()).to_temporal_offset()
+
   def get_tti_count(self):
     return self.gsi.get_block_count()
 
@@ -170,6 +179,19 @@ class DataFile:
       return
 
     self.is_in_extension = False
+
+    # apply program offset
+
+    begin_time = tti.get_tci().to_temporal_offset() - self.start_offset
+
+    if begin_time < 0:
+      return
+
+    end_time = tti.get_tco().to_temporal_offset() - self.start_offset
+
+    if end_time < begin_time:
+      LOGGER.error("Subtitle TCO is less than TCI")
+      return
 
     # create a new subtitle if SN changes and we are not in cumulative mode
 
@@ -271,9 +293,8 @@ class DataFile:
 
       sub_element = p_element
 
-    sub_element.set_begin(tti.get_tci().to_temporal_offset())
-    sub_element.set_end(tti.get_tco().to_temporal_offset())
-
+    sub_element.set_begin(begin_time)
+    sub_element.set_end(end_time)
 
     if self.gsi.get_dsc() not in (0x20, 0x30) and not ttconv.stl.tf.is_double_height(self.tti_tf):
       font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT

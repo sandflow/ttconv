@@ -26,6 +26,7 @@
 """STL configuration"""
 
 from __future__ import annotations
+import typing
 
 from dataclasses import dataclass, field
 
@@ -36,7 +37,7 @@ class STLReaderConfiguration(ModuleConfiguration):
   """STL reader configuration"""
 
   disable_fill_line_gap: bool = field(default=False, metadata={"decoder": bool})
-
+  program_start_tc: typing.Optional[str] = field(default=None)
   disable_line_padding: bool = field(default=False, metadata={"decoder": bool})
   
   @classmethod

@@ -77,6 +77,14 @@ class GSI:
 
     self.language = GSI._LC_BCP47_MAP.get(self.fields.LC, "")
 
+    self.tcp = SmpteTimeCode(
+      int(self.fields.TCP[0:2]),
+      int(self.fields.TCP[2:4]),
+      int(self.fields.TCP[4:6]),
+      int(self.fields.TCP[6:8]),
+      self.fps
+      )
+
   def get_dsc(self) -> int:
     return ord(self.fields.DSC)
 
@@ -94,6 +102,9 @@ class GSI:
 
   def get_cct(self) -> int:
     return self.cct
+
+  def get_tcp(self) -> SmpteTimeCode:
+    return self.tcp
 
 class TTI:
   _BLOCK_DEF = collections.namedtuple(
