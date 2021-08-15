@@ -452,5 +452,14 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(p_list[0].get_end(),
                       SmpteTimeCode.parse("00:00:01:24",FPS_25).to_temporal_offset())
 
+  def test_default_font_stack(self):
+    '''Testing default font stack'''  
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      self.assertEqual(doc.get_body().get_style(
+        styles.StyleProperties.FontFamily),
+        ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
+      )
+
 if __name__ == '__main__':
   unittest.main()

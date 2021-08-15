@@ -31,6 +31,11 @@ import typing
 from dataclasses import dataclass, field
 
 from ttconv.config import ModuleConfiguration
+import ttconv.style_properties as styles
+from ttconv.imsc import utils
+
+def _decode_font_stack(value: typing.Optional[str]) -> typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]]:
+  return value if value is None else tuple(utils.parse_font_families(value))
 
 @dataclass
 class STLReaderConfiguration(ModuleConfiguration):
@@ -39,6 +44,8 @@ class STLReaderConfiguration(ModuleConfiguration):
   disable_fill_line_gap: bool = field(default=False, metadata={"decoder": bool})
   program_start_tc: typing.Optional[str] = field(default=None)
   disable_line_padding: bool = field(default=False, metadata={"decoder": bool})
+  font_stack: typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]] = \
+                  field(default=None, metadata={"decoder": _decode_font_stack})
   
   @classmethod
   def name(cls):
