@@ -168,6 +168,9 @@ class DataFile:
   def get_document(self):
     return self.doc
 
+  def is_teletext(self):
+    return self.gsi.get_dsc() in (0x31, 0x32)
+
   def process_tti_block(self, tti_block: bytes):
 
     if tti_block is None:
@@ -239,7 +242,7 @@ class DataFile:
         styles.LengthType.Units.pct)
       )
 
-      if self.gsi.get_dsc() in (0x20, 0x30):
+      if not self.is_teletext():
         # use large region and always align at the bottom for undefined and open subtitles
 
         region = get_region(
@@ -308,7 +311,7 @@ class DataFile:
     sub_element.set_begin(begin_time)
     sub_element.set_end(end_time)
 
-    if self.gsi.get_dsc() not in (0x20, 0x30) and not ttconv.stl.tf.is_double_height(self.tti_tf):
+    if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
       font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
     else:
       font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
@@ -321,4 +324,4 @@ class DataFile:
       )
     )
 
-    ttconv.stl.tf.to_model(sub_element, self.gsi.get_dsc() in (0x31, 0x32), self.gsi.get_cct(), self.tti_tf)
+    ttconv.stl.tf.to_model(sub_element, self.is_teletext(), self.gsi.get_cct(), self.tti_tf)
