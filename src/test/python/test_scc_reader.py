@@ -31,11 +31,11 @@ from numbers import Number
 from typing import Union, Type, Optional
 
 from ttconv.model import Br, P, ContentElement, CellResolutionType, Span
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.reader import to_model, to_disassembly
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
 from ttconv.time_code import SmpteTimeCode, FPS_30
-from ttconv.scc.codes.attribute_codes import SccAttributeCode
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -178,20 +178,20 @@ class SccReaderTest(unittest.TestCase):
     p_list = list(div)
     self.assertEqual(5, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "01:02:54:00", "01:02:55:15", "( horn honking )")
+    self.check_caption(p_list[0], "caption1", "01:02:54:00", "01:02:55:16", "( horn honking )")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "01:03:28:12", "01:11:31:28", "HEY, THE®E.")
+    self.check_caption(p_list[1], "caption2", "01:03:28:12", "01:11:31:29", "HEY, THE®E.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:15", "Test ½ Caption ", Br, "Test ", " test", "  Captions")
+    self.check_caption(p_list[2], "caption3", "01:11:31:29", "01:11:33:16", "Test ½ Caption ", Br, "Test ", " test", "  Captions")
     self.assertEqual(region_3, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:24", " Lorem ipsum ", Br, "dolor sit amet,", Br,
+    self.check_caption(p_list[3], "caption4", "01:16:18:21", "01:16:19:25", " Lorem ipsum ", Br, "dolor sit amet,", Br,
                        " consectetur adipiscing elit.")
     self.assertEqual(region_4, p_list[3].get_region())
 
-    self.check_caption(p_list[4], "caption5", "01:20:56:24", "01:22:19:24", "entesque interdum lacinia sollicitudin.")
+    self.check_caption(p_list[4], "caption5", "01:20:56:24", "01:22:19:25", "entesque interdum lacinia sollicitudin.")
     self.assertEqual(region_5, p_list[4].get_region())
 
     self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
@@ -776,19 +776,19 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(6, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:00:20", "00:00:01:16", "Lorem ipsum dolor sit amet,")
+    self.check_caption(p_list[0], "caption1", "00:00:00:20", "00:00:01:17", "Lorem ipsum dolor sit amet,")
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "00:00:01:18", "00:00:02:02", "consectetur adipiscing elit.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:03", "consectetur adipiscing elit.", Br)
+    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:04", "consectetur adipiscing elit.", Br)
     self.assertEqual(region_2, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:02:04", "00:00:03:02", "Pellentesque interdum lacinia sollicitudin.")
+    self.check_caption(p_list[3], "caption4", "00:00:02:04", "00:00:03:03", "Pellentesque interdum lacinia sollicitudin.")
     self.assertEqual(region_2, p_list[3].get_region())
 
-    self.check_caption(p_list[4], "caption5", "00:00:03:03", "00:00:03:18", "Integer ", "luctus", " et ", "ligula", " ac ")
+    self.check_caption(p_list[4], "caption5", "00:00:03:03", "00:00:03:19", "Integer ", "luctus", " et ", "ligula", " ac ")
     self.assertEqual(region_3, p_list[4].get_region())
 
     self.check_caption(p_list[5], "caption6", "00:00:03:19", None, "sagittis.")
