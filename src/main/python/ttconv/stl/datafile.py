@@ -104,7 +104,8 @@ class DataFile:
     gsi_block: bytes,
     disable_fill_line_gap: bool = False,
     disable_line_padding: bool = False,
-    start_tc: typing.Optional[str] = None
+    start_tc: typing.Optional[str] = None,
+    font_stack: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]] = None
     ):
     
     self.gsi = blocks.GSI(gsi_block)
@@ -133,7 +134,18 @@ class DataFile:
           LINE_PADDING_LENGTH_C,
           styles.LengthType.Units.c
         )
-    )
+      )
+
+    if font_stack is not None:
+      self.body.set_style(
+        styles.StyleProperties.FontFamily,
+        font_stack
+      )
+    else:
+      self.body.set_style(
+        styles.StyleProperties.FontFamily,
+        ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
+      )
 
     self.doc.set_body(self.body)
 

@@ -114,5 +114,22 @@ class STLReaderConfigurationTest(unittest.TestCase):
       self.assertEqual(p_list[1].get_end(),
                       SmpteTimeCode.parse("10:00:01:24",FPS_25).to_temporal_offset())
 
+  def test_program_font_stack_parsing(self):
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"font_stack":"Times New Roman,serif"}'))
+    self.assertEqual(config.font_stack, ("Times New Roman", styles.GenericFontFamilyType.serif))
+
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads("{}"))
+    self.assertIsNone(config.font_stack)
+
+  def test_font_stack_override(self):
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"font_stack":"Times New Roman,serif"}'))
+
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f, config)
+      self.assertEqual(
+        doc.get_body().get_style(styles.StyleProperties.FontFamily),
+        ("Times New Roman", styles.GenericFontFamilyType.serif)
+      )
+
 if __name__ == '__main__':
   unittest.main()
