@@ -467,16 +467,16 @@ class STLReaderTests(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f)
       p_list = list(doc.get_body().first_child())
       p1_span = p_list[0].first_child()
-      p2_children = list(p_list[1])
-      self.assertEqual(p1_span.first_child().first_child().get_text(),
+      self.assertEqual(p1_span.first_child().get_text(),
                        "Not part of cumulative set.")
       
+      p2_children = list(p_list[1])
       self.assertEqual(len(p2_children), 7)
 
-      span1_text = p2_children[0].first_child().get_text()
-      span2_text = p2_children[2].first_child().get_text()
-      span3_text = p2_children[4].first_child().get_text()
-      span4_text = p2_children[6].first_child().get_text()
+      span1_text = p2_children[0].first_child().first_child().get_text()
+      span2_text = p2_children[2].first_child().first_child().get_text()
+      span3_text = p2_children[4].first_child().first_child().get_text()
+      span4_text = p2_children[6].first_child().first_child().get_text()
 
       self.assertEqual(span1_text, "1")
       self.assertEqual(span2_text, "2")
