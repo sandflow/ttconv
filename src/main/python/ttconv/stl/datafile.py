@@ -190,6 +190,8 @@ class DataFile:
 
     self.tti_tf += tti.get_tf().strip(b'\x8f')
 
+    is_double_height_characters = ttconv.stl.tf.is_double_height(self.tti_tf)
+
     # continue accumulating if we have an extension block
 
     if tti.get_ebn() != 0xFF:
@@ -245,7 +247,7 @@ class DataFile:
         styles.LengthType.Units.pct)
       )
 
-      if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
+      if self.is_teletext() and not is_double_height_characters:
         font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
       else:
         font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
@@ -295,8 +297,12 @@ class DataFile:
 
         else:
 
+          line_count = ttconv.stl.tf.line_count(self.tti_tf)
+          vp = tti.get_vp()
+          line_height = 2 if is_double_height_characters else 1
+
           r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT
-          r_height = ((tti.get_vp() + ttconv.stl.tf.line_count(self.tti_tf) - 1)/ DEFAULT_TELETEXT_ROWS) * safe_area_height
+          r_height = ((vp + line_count * line_height - 1)/ DEFAULT_TELETEXT_ROWS) * safe_area_height
           
           region = get_region(
             self.doc,
