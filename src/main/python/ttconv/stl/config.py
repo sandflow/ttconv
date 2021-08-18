@@ -29,13 +29,30 @@ from __future__ import annotations
 import typing
 
 from dataclasses import dataclass, field
+import re
 
 from ttconv.config import ModuleConfiguration
 import ttconv.style_properties as styles
 from ttconv.imsc import utils
+from ttconv.time_code import SmpteTimeCode
+
+_SMPTE_TIME_CODE_DF_PATTERN = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN)
+_SMPTE_TIME_CODE_NDF_PATTERN = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN)
 
 def _decode_font_stack(value: typing.Optional[str]) -> typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]]:
   return value if value is None else tuple(utils.parse_font_families(value))
+
+def _decode_start_tc(value: typing.Optional[str]) -> typing.Optional[str]:
+  if value is None:
+    return None
+  
+  if value.upper() == "TCP":
+    return "TCP"
+
+  if _SMPTE_TIME_CODE_DF_PATTERN.match(value) or _SMPTE_TIME_CODE_NDF_PATTERN.match(value):
+    return value
+
+  raise ValueError(f"Invalid start_tc '{value}' value. Expect: 'TCP' or 'HH:MM:SS:FF'.")
 
 @dataclass
 class STLReaderConfiguration(ModuleConfiguration):

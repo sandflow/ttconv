@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.model import Br, Region, Span
+from ttconv.model import Br, Span
 import ttconv.stl.reader
 import ttconv.style_properties as styles
 from ttconv.time_code import SmpteTimeCode, FPS_25
@@ -441,16 +441,6 @@ class STLReaderTests(unittest.TestCase):
                 .first_child()\
                 .get_text()
       self.assertEqual(text, "Foo Bar Baz")
-
-  def test_tcp_processing(self):
-    '''Testing use of TCP from GSI Block'''  
-    with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
-      doc = ttconv.stl.reader.to_model(f)
-      p_list = list(doc.get_body().first_child())
-      self.assertEqual(p_list[0].get_begin(),
-                      SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
-      self.assertEqual(p_list[0].get_end(),
-                      SmpteTimeCode.parse("00:00:01:24",FPS_25).to_temporal_offset())
 
   def test_default_font_stack(self):
     '''Testing default font stack'''  

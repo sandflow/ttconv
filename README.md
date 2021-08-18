@@ -59,7 +59,7 @@ tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config 
   * `"imsc_writer"."fps": "<num>/<denom>"`: specifies the frame rate _num/denom_ when output TTML expressions in frames
   * `"stl_reader"."disable_fill_line_gap" : "true" | "false" (default: "false")`: "true" means that the STL reader does not fill gaps between lines
   * `"stl_reader"."disable_line_padding" : "true" | "false" (default: "false")`: "true" means that the STL reader does not add padding at the begining/end of lines
-  * `"stl_reader"."program_start_tc" : "HH:MM:SS:FF" (default: null)`: overrides the TCP field of the GSI block
+  * `"stl_reader"."program_start_tc" : "TCP" | "HH:MM:SS:FF" (default: "00:00:00:00")`: specifies a starting offset, either the TCP field of the GSI block or a user-specified timecode
   * `"stl_reader"."font_stack" : [<font-families>](https://www.w3.org/TR/ttml2/#style-value-font-families) (default: Verdana, Arial, Tiresias, sansSerif)`: overrides the font stack
   
 Example:

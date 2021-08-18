@@ -314,6 +314,8 @@ class DataFile:
       LOGGER.debug("GSI LC: %s", self.gsi.LC)
 
     if start_tc is None:
+      self.start_offset = 0
+    elif start_tc == "TCP":
       try:
         self.start_offset = SmpteTimeCode(
             int(self.gsi.TCP[0:2]),
