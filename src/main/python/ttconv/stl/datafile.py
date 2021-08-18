@@ -312,19 +312,16 @@ class DataFile:
       div_element.push_child(self.cur_p_element)
 
     if tti.get_cs() in (0x01, 0x02, 0x03):
-
       # create a nested span if we are in cumulative mode
-
       sub_element = model.Span(self.doc)
       self.cur_p_element.push_child(sub_element)
-      if tti.get_cs() != 0x03:
-        self.cur_p_element.push_child(model.Br(self.doc))
-
     else :
-
       sub_element = self.cur_p_element
 
     sub_element.set_begin(begin_time)
     sub_element.set_end(end_time)
 
     ttconv.stl.tf.to_model(sub_element, self.is_teletext(), self.gsi.get_cct(), self.tti_tf)
+
+    if tti.get_cs() in (0x01, 0x02):
+      sub_element.push_child(model.Br(self.doc))
