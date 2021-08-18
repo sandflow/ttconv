@@ -471,12 +471,12 @@ class STLReaderTests(unittest.TestCase):
                        "Not part of cumulative set.")
       
       p2_children = list(p_list[1])
-      self.assertEqual(len(p2_children), 7)
+      self.assertEqual(len(p2_children), 4)
 
       span1_text = p2_children[0].first_child().first_child().get_text()
-      span2_text = p2_children[2].first_child().first_child().get_text()
-      span3_text = p2_children[4].first_child().first_child().get_text()
-      span4_text = p2_children[6].first_child().first_child().get_text()
+      span2_text = p2_children[1].first_child().first_child().get_text()
+      span3_text = p2_children[2].first_child().first_child().get_text()
+      span4_text = p2_children[3].first_child().first_child().get_text()
 
       self.assertEqual(span1_text, "1")
       self.assertEqual(span2_text, "2")
