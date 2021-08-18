@@ -247,6 +247,18 @@ class DataFile:
         styles.LengthType.Units.pct)
       )
 
+      if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
+        font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
+      else:
+        font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
+
+      self.cur_p_element.set_style(
+        styles.StyleProperties.FontSize,
+        styles.LengthType(
+          font_size,
+          styles.LengthType.Units.pct
+        )
+      )
       if not self.is_teletext():
         # use large region and always align at the bottom for undefined and open subtitles
 
@@ -306,32 +318,16 @@ class DataFile:
       div_element.push_child(self.cur_p_element)
 
     if tti.get_cs() in (0x01, 0x02, 0x03):
-
       # create a nested span if we are in cumulative mode
-
       sub_element = model.Span(self.doc)
       self.cur_p_element.push_child(sub_element)
-      if tti.get_cs() != 0x03:
-        self.cur_p_element.push_child(model.Br(self.doc))
-
     else :
-
       sub_element = self.cur_p_element
 
     sub_element.set_begin(begin_time)
     sub_element.set_end(end_time)
 
-    if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
-      font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
-    else:
-      font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
-
-    sub_element.set_style(
-      styles.StyleProperties.FontSize,
-      styles.LengthType(
-        font_size,
-        styles.LengthType.Units.pct
-      )
-    )
-
     ttconv.stl.tf.to_model(sub_element, self.is_teletext(), self.gsi.get_cct(), self.tti_tf)
+
+    if tti.get_cs() in (0x01, 0x02):
+      sub_element.push_child(model.Br(self.doc))
