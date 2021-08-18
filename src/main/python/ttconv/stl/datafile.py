@@ -162,6 +162,9 @@ class DataFile:
     else:
       self.start_offset = SmpteTimeCode.parse(start_tc, self.gsi.get_fps()).to_temporal_offset()
 
+    # p_element for use across cumulative subtitles 
+    self.cur_p_element = None
+
   def get_tti_count(self):
     return self.gsi.get_block_count()
 
@@ -227,16 +230,16 @@ class DataFile:
 
       # create the p that will hold the subtitle
 
-      p_element = model.P(self.doc)
+      self.cur_p_element = model.P(self.doc)
 
       if tti.get_jc() == 0x01:
-        p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.start)
+        self.cur_p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.start)
       elif tti.get_jc() == 0x03:
-        p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
+        self.cur_p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
       else:
-        p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
+        self.cur_p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
 
-      p_element.set_style(
+      self.cur_p_element.set_style(
         styles.StyleProperties.LineHeight,
         styles.LengthType(DEFAULT_LINE_HEIGHT_PCT,
         styles.LengthType.Units.pct)
@@ -292,21 +295,22 @@ class DataFile:
             styles.DisplayAlignType.after
           )
 
-      p_element.set_region(region)
+      self.cur_p_element.set_region(region)
 
-      div_element.push_child(p_element)
+      div_element.push_child(self.cur_p_element)
 
     if tti.get_cs() in (0x01, 0x02, 0x03):
 
       # create a nested span if we are in cumulative mode
 
       sub_element = model.Span(self.doc)
-      p_element.push_child(sub_element)
-      p_element.push_child(model.Br(self.doc))
+      self.cur_p_element.push_child(sub_element)
+      if tti.get_cs() != 0x03:
+        self.cur_p_element.push_child(model.Br(self.doc))
 
     else :
 
-      sub_element = p_element
+      sub_element = self.cur_p_element
 
     sub_element.set_begin(begin_time)
     sub_element.set_end(end_time)
