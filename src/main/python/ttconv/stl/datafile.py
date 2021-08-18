@@ -247,7 +247,7 @@ class DataFile:
         styles.LengthType.Units.pct)
       )
 
-      if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
+      if self.is_teletext() and not is_double_height_characters:
         font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
       else:
         font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
