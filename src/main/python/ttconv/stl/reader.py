@@ -30,16 +30,9 @@ from __future__ import annotations
 import typing
 import itertools
 import logging
-from numbers import Number
 
-
-from ttconv import model
-import ttconv.style_properties as styles
-import ttconv.stl.tf
 from ttconv.stl.config import STLReaderConfiguration
 from ttconv.stl.datafile import DataFile
-
-from ttconv.stl import blocks
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +58,11 @@ def to_model(data_file: typing.IO, config: typing.Optional[STLReaderConfiguratio
     if not buf:
       break
 
-    m.process_tti_block(buf)
+    try:
+      m.process_tti_block(buf)
+    except:
+      LOGGER.error("Bad TTI block")
+      raise
     
     progress_callback(i/m.get_tti_count())
 
