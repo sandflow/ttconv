@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.model import Br, Span
+from ttconv.model import Br, Region, Span
 import ttconv.stl.reader
 import ttconv.style_properties as styles
 from ttconv.time_code import SmpteTimeCode, FPS_25
@@ -481,7 +481,16 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(span1_text, "1")
       self.assertEqual(span2_text, "2")
       self.assertEqual(span3_text, "3")
-      self.assertEqual(span4_text, "4")      
+      self.assertEqual(span4_text, "4")
+  
+  def test_vp18_3_lines(self):
+    '''Testing vertical positioning of multi-row subtitle'''
+    with open("src/test/resources/stl/sandflow/vp18_3_lines.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      p = doc.get_body().first_child().first_child()
+      region = p.get_region()
+      region_extent = region.get_style(styles.StyleProperties.Extent).height.value
+      self.assertEqual(region_extent, 80)
 
 
 if __name__ == '__main__':
