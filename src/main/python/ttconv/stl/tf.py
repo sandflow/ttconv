@@ -23,6 +23,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""STL text field (TF) processing"""
+
 import logging
 import codecs
 
@@ -42,40 +44,42 @@ _CHAR_DECODER_MAP = {
 
 _UNUSED_SPACE_CODE = 0x8F
 
-def is_character_code(c) -> bool:
+def _is_character_code(c) -> bool:
   return 0x20 <= c <= 0x7F or 0xA0 <= c <= 0xFF
 
-def is_printable_code(c) -> bool:
-  return is_character_code(c) and c != 0x20
+def _is_printable_code(c) -> bool:
+  return _is_character_code(c) and c != 0x20
  
-def is_control_code(c) -> bool:
+def _is_control_code(c) -> bool:
   return 0x00 <= c <= 0x07 or 0x0A <= c <= 0x0D or 0x1C <= c <= 0x1D or 0x80 <= c <= 0x85
 
-def is_newline_code(c) -> bool:
+def _is_newline_code(c) -> bool:
   return c == 0x8A
 
-def is_unused_space_code(c) -> bool:
+def _is_unused_space_code(c) -> bool:
   return c == _UNUSED_SPACE_CODE
 
-def is_space_code(c) -> bool:
+def _is_space_code(c) -> bool:
   return c == 0x20
 
-def is_lwsp_code(c) -> bool:
-  return is_control_code(c) or is_newline_code(c) or is_space_code(c)
+def _is_lwsp_code(c) -> bool:
+  return _is_control_code(c) or _is_newline_code(c) or _is_space_code(c)
 
-def note_decode_error(error):
+def _note_decode_error(error):
   LOGGER.warning("Unknown character: %s", hex(error.object[error.start]))
   return ("�", error.end)
 
-codecs.register_error("note", note_decode_error)
+codecs.register_error("note", _note_decode_error)
 
 def line_count(text_field) -> int:
-  return sum(map(is_newline_code, text_field)) + 1
+  """Returns the number of lines in the EBU STL TF field `text_field`"""
+  return sum(map(_is_newline_code, text_field)) + 1
 
 def is_double_height(text_field) -> bool:
+  """Returns true if TF field `text_field` contains any double-height characters"""
   return any(map(lambda c: c == 0x0D, text_field))
 
-class TextFieldIterator:
+class _TextFieldIterator:
 
   def __init__(self, text_field):
     self.pos = 0
@@ -98,7 +102,7 @@ class TextFieldIterator:
     self.pos = min(self.pos + 1, len(self.tf))
     return c
 
-class Context:
+class _Context:
 
   def __init__(self, parent_element: model.ContentElement, is_teletext: bool, decode_func):
     self.fg_color = styles.NamedColors.white.value
@@ -169,9 +173,14 @@ class Context:
     self.text_buffer.append(c)
 
 
-def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
+def to_model(element: model.ContentElement, is_teletext: bool, tti_cct: bytes, tti_tf: bytes):
+  """Converts the EBU STL text field `tti_tf` to a sequence of span elements and 
+  appends them to the content element `element`. `is_teletext` indicates whether the text
+  field is interpreted as teletext or open/undefined. `tti_cct` specifies the text field code page as
+  signaled in the TTI CCT field.
+  """
 
-  tf_iter = TextFieldIterator(tti_tf)
+  tf_iter = _TextFieldIterator(tti_tf)
 
   decode_func = _CHAR_DECODER_MAP.get(tti_cct)
 
@@ -179,26 +188,26 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
     decode_func = iso6937.decode
     LOGGER.error("Unknown Text Field character set: %s", str(tti_cct))
 
-  context = Context(element, is_teletext, decode_func)
+  context = _Context(element, is_teletext, decode_func)
 
   while True:
 
     c = tf_iter.cur()
 
-    if is_unused_space_code(c):
+    if _is_unused_space_code(c):
       break
 
-    if is_character_code(c):
-      if is_printable_code(c) or (is_printable_code(tf_iter.peek_next()) and is_printable_code(tf_iter.peek_prev())):
+    if _is_character_code(c):
+      if _is_printable_code(c) or (_is_printable_code(tf_iter.peek_next()) and _is_printable_code(tf_iter.peek_prev())):
         context.append_character(c)
 
-    elif is_newline_code(c):
-      if not is_newline_code(tf_iter.peek_next()) and not is_unused_space_code(tf_iter.peek_next()):
+    elif _is_newline_code(c):
+      if not _is_newline_code(tf_iter.peek_next()) and not _is_unused_space_code(tf_iter.peek_next()):
         context.end_span()
         element.push_child(model.Br(element.get_doc()))
         context.start_span()
 
-    elif is_control_code(c):
+    elif _is_control_code(c):
       context.end_span()
 
       if c == 0x1C:
@@ -232,7 +241,7 @@ def to_model(element: model.ContentElement, is_teletext, tti_cct, tti_tf):
       elif c == 0x83:
         context.set_underline(False)
 
-      if (is_printable_code(tf_iter.peek_next()) and is_printable_code(tf_iter.peek_prev())):
+      if (_is_printable_code(tf_iter.peek_next()) and _is_printable_code(tf_iter.peek_prev())):
         context.append_character(0X20)
 
     next(tf_iter)
