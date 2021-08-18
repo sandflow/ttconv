@@ -245,6 +245,18 @@ class DataFile:
         styles.LengthType.Units.pct)
       )
 
+      if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
+        font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
+      else:
+        font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
+
+      self.cur_p_element.set_style(
+        styles.StyleProperties.FontSize,
+        styles.LengthType(
+          font_size,
+          styles.LengthType.Units.pct
+        )
+      )
       if not self.is_teletext():
         # use large region and always align at the bottom for undefined and open subtitles
 
@@ -314,18 +326,5 @@ class DataFile:
 
     sub_element.set_begin(begin_time)
     sub_element.set_end(end_time)
-
-    if self.is_teletext() and not ttconv.stl.tf.is_double_height(self.tti_tf):
-      font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
-    else:
-      font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
-
-    sub_element.set_style(
-      styles.StyleProperties.FontSize,
-      styles.LengthType(
-        font_size,
-        styles.LengthType.Units.pct
-      )
-    )
 
     ttconv.stl.tf.to_model(sub_element, self.is_teletext(), self.gsi.get_cct(), self.tti_tf)
