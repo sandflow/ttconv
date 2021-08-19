@@ -482,6 +482,14 @@ class STLReaderTests(unittest.TestCase):
       region_extent = region.get_style(styles.StyleProperties.Extent).height.value
       self.assertEqual(region_extent, 80)
 
+  def test_vp20_2_newlines(self):
+    '''Testing vertical positioning with two newlines between double height rows'''
+    with open("src/test/resources/stl/sandflow/vp20_2_newlines.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      p = doc.get_body().first_child().first_child()
+      region = p.get_region()
+      region_extent = region.get_style(styles.StyleProperties.Extent).height.value
+      self.assertEqual(region_extent, 80)
 
 if __name__ == '__main__':
   unittest.main()
