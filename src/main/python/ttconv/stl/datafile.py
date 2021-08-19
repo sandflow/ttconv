@@ -413,7 +413,7 @@ class DataFile:
 
     self.tti_tf += tti.TF.strip(b'\x8f')
 
-    is_double_height_characters = tf.is_double_height(self.tti_tf)
+    is_double_height_characters = tf.has_double_height_char(self.tti_tf)
 
     # continue accumulating if we have an extension block
 
@@ -527,7 +527,7 @@ class DataFile:
 
         else:
 
-          line_count = tf.line_count(self.tti_tf)
+          line_count = tf.line_count(self.tti_tf, is_double_height_characters)
           vp = tti.VP
           line_height = 2 if is_double_height_characters else 1
 

@@ -71,11 +71,30 @@ def _note_decode_error(error):
 
 codecs.register_error("note", _note_decode_error)
 
-def line_count(text_field) -> int:
-  """Returns the number of lines in the EBU STL TF field `text_field`"""
-  return sum(map(_is_newline_code, text_field)) + 1
+def line_count(text_field: bytes, is_double_height: bool) -> int:
+  """Returns the number of lines separated by one or more newline characters
+  in the TF field `text_field`
+  """
+  count = 0
+  was_eol = False
 
-def is_double_height(text_field) -> bool:
+  for c in text_field:
+    if _is_newline_code(c):
+      if is_double_height:
+        if was_eol:
+          was_eol = False
+        else:
+          count += 1
+          was_eol = True
+      else:
+        count += 1
+        was_eol = True
+    else:
+      was_eol= False
+
+  return count + 1
+
+def has_double_height_char(text_field) -> bool:
   """Returns true if TF field `text_field` contains any double-height characters"""
   return any(map(lambda c: c == 0x0D, text_field))
 
