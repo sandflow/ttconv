@@ -146,6 +146,29 @@ class ContentElementTest(unittest.TestCase):
 
     self.assertListEqual([p, c1, c3, c2], dfs)
 
+  def test_first_last_child(self):
+    p = model.ContentElement()
+
+    self.assertIsNone(p.first_child())
+
+    self.assertIsNone(p.last_child())
+
+    c1 = model.ContentElement()
+
+    c2 = model.ContentElement()
+
+    c3 = model.ContentElement()
+
+    p.push_child(c1)
+
+    p.push_child(c2)
+
+    p.push_child(c3)
+
+    self.assertEqual(p.first_child(), c1)
+
+    self.assertEqual(p.last_child(), c3)
+
   def test_remove(self):
     p = model.ContentElement()
 

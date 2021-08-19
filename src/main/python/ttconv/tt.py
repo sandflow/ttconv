@@ -39,11 +39,13 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
+import ttconv.stl.reader as stl_reader
 from ttconv.config import GeneralConfiguration
 from ttconv.config import ModuleConfiguration
 from ttconv.imsc.config import IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
 from ttconv.scc.config import SccReaderConfiguration
+from ttconv.stl.config import STLReaderConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
@@ -168,6 +170,7 @@ class FileTypes(Enum):
   TTML = "ttml"
   SCC = "scc"
   SRT = "srt"
+  STL = "stl"
 
   @staticmethod
   def get_file_type(file_type: str, file_extension: str):
@@ -309,6 +312,17 @@ def convert(args):
     # Pass the parsed xml to the reader
     #
     model = scc_reader.to_model(file_as_str, reader_config, progress_callback_read)
+  elif reader_type is FileTypes.STL:
+    #
+    # Read the config
+    #
+    reader_config = read_config_from_json(STLReaderConfiguration, json_config_data)
+
+    #
+    # Open the file and pass it to the reader
+    #
+    with open(inputfile, "rb") as f:
+      model = stl_reader.to_model(f, reader_config, progress_callback_read)
   else:
     if args.itype is not None:
       exit_str = f'Input type {args.itype} is not supported'

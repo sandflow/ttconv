@@ -27,6 +27,7 @@ suggestions/contributions are welcome.
 
 * [CEA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
+* [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
 
 ### Output Formats
 
@@ -49,7 +50,7 @@ tt.py convert -i <input .scc file> -o <output .ttml file>
 tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CONFIG] [--config_file CONFIG_FILE]
 ```
 
-* `--itype`: `TTML` or `SCC` (extrapolated from the filename, if omitted)
+* `--itype`: `TTML` or `SCC` or `STL` (extrapolated from the filename, if omitted)
 * `--otype`: `TTML` or `SRT` (extrapolated from the filename, if omitted)
 * `--config` and `--config_file`: JSON dictionaries with the following members:
 
@@ -57,7 +58,11 @@ tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config 
   * `"general"."log_level": "INFO" | "WARN" | "ERROR"`: logging level
   * `"imsc_writer"."time_format": "frames" | "clock_time"`: output TTML expressions in seconds or in frames
   * `"imsc_writer"."fps": "<num>/<denom>"`: specifies the frame rate _num/denom_ when output TTML expressions in frames
-
+  * `"stl_reader"."disable_fill_line_gap" : "true" | "false" (default: "false")`: "true" means that the STL reader does not fill gaps between lines
+  * `"stl_reader"."disable_line_padding" : "true" | "false" (default: "false")`: "true" means that the STL reader does not add padding at the begining/end of lines
+  * `"stl_reader"."program_start_tc" : "TCP" | "HH:MM:SS:FF" (default: "00:00:00:00")`: specifies a starting offset, either the TCP field of the GSI block or a user-specified timecode
+  * `"stl_reader"."font_stack" : [<font-families>](https://www.w3.org/TR/ttml2/#style-value-font-families) (default: Verdana, Arial, Tiresias, sansSerif)`: overrides the font stack
+  
 Example:
 
 `tt.py convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --config '{"general": {"progress_bar":false, "log_level":"WARN"}}'`
