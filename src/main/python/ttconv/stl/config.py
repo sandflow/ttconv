@@ -34,7 +34,8 @@ from ttconv.config import ModuleConfiguration
 import ttconv.style_properties as styles
 from ttconv.imsc import utils
 
-def _decode_font_stack(value: typing.Optional[str]) -> typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]]:
+def _decode_font_stack(value: typing.Optional[str]) -> \
+  typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]]:
   return value if value is None else tuple(utils.parse_font_families(value))
 
 @dataclass

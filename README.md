@@ -27,6 +27,7 @@ suggestions/contributions are welcome.
 
 * [CEA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
+* [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
 
 ### Output Formats
 
@@ -49,7 +50,7 @@ tt.py convert -i <input .scc file> -o <output .ttml file>
 tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CONFIG] [--config_file CONFIG_FILE]
 ```
 
-* `--itype`: `TTML` or `SCC` (extrapolated from the filename, if omitted)
+* `--itype`: `TTML` or `SCC` or `STL` (extrapolated from the filename, if omitted)
 * `--otype`: `TTML` or `SRT` (extrapolated from the filename, if omitted)
 * `--config` and `--config_file`: JSON dictionaries with the following members:
 

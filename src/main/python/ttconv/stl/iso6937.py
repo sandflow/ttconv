@@ -23,11 +23,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""Decoder for the ISO 6937 character set"""
+
 import codecs
 import io
 
 # from https://bugs.python.org/file45750/iso6937.py
-CCT0_DECODE_MAP = {
+_CCT0_DECODE_MAP = {
     b'\xa0': '\u00A0',  # NO-BREAK SPACE
     b'\xa1': '\u00A1',  # ¡
     b'\xa2': '\u00A2',  # ¢
@@ -305,7 +307,10 @@ CCT0_DECODE_MAP = {
     b'\xcfz': '\u017E',  # ž
 }
 
-def decode(byte_buffer, errors="strict"):
+def decode(byte_buffer: bytes, errors="strict"):
+  """Decodes `byte_buffer` to a string according to ISO 6937 character set and returns it.
+  """
+
   # pylint: disable=unused-argument
   handler = codecs.lookup_error(errors)
   s = io.StringIO()
@@ -317,7 +322,7 @@ def decode(byte_buffer, errors="strict"):
       i += 1
     elif 0xC1 <= int(byte_buffer[i]) <= 0xCF:
       b = bytes(byte_buffer[i:i+2])
-      c = CCT0_DECODE_MAP.get(b)
+      c = _CCT0_DECODE_MAP.get(b)
       if c is not None:
         s.write(c)
       else:
@@ -326,7 +331,7 @@ def decode(byte_buffer, errors="strict"):
       i += 2
     else:
       b = bytes(byte_buffer[i:i+1])
-      c = CCT0_DECODE_MAP.get(b)
+      c = _CCT0_DECODE_MAP.get(b)
       if c is not None:
         s.write(c)
       else:

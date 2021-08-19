@@ -23,6 +23,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""Processes an EBU STL data file into the canonical model"""
+
 from numbers import Number
 import logging
 import typing
@@ -172,7 +174,16 @@ _TTIBlock = collections.namedtuple(
     "TTI", ["SGN", "SN", "EBN", "CS", "TCIh", "TCIm", "TCIs", "TCIf", "TCOh", "TCOm", "TCOs", "TCOf", "VP", "JC", "CF", "TF"]
   )
 
-def _get_region_from_model(doc: model.ContentDocument, x_origin: Number, y_origin: Number, width: Number, height: Number, display_align: styles.DisplayAlignType):
+def _get_region_from_model(
+  doc: model.ContentDocument,
+  x_origin: Number,
+  y_origin: Number,
+  width: Number,
+  height: Number,
+  display_align: styles.DisplayAlignType
+  ):
+  """Returns a matching region from `doc` or creates one
+  """
 
   found_region = None
 
@@ -226,6 +237,8 @@ def _get_region_from_model(doc: model.ContentDocument, x_origin: Number, y_origi
   return found_region
 
 class DataFile:
+  """Represents an EBU STL datafile
+  """
 
   def __init__(
     self,
@@ -337,24 +350,38 @@ class DataFile:
     self.cur_p_element = None
 
   def get_language(self) -> str:
+    """Returns the language of the datafile as an RFC 5646 Language Tag
+    """
     return self.language
 
   def get_tti_count(self) -> int:
+    """Returns the number of text blocks in the datafile
+    """
     return self.tti_count
 
   def get_fps(self) -> Fraction:
+    """Returns the frame rate of the datafile
+    """
     return self.fps
 
   def get_cct(self) -> int:
+    """Returns the codepage of the text fields contained in the datafile
+    """
     return self.cct
 
   def get_document(self):
+    """Returns the document instance generated from the datafile
+    """
     return self.doc
 
   def is_teletext(self):
+    """Returns whether the datafile contains teletext subtitles or open/undefined subtitles
+    """
     return ord(self.gsi.DSC) in (0x31, 0x32)
 
   def process_tti_block(self, tti_block: bytes):
+    """Processes a single TTI block
+    """
     if tti_block is None:
       raise ValueError("tti_block should not be None")
 
