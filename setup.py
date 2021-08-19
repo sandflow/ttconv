@@ -28,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Multimedia'
     ],
-    keywords='ttml, timed text, captions, subtitles, imsc, scc, srt, webvtt, smpte-tt, conversion',
+    keywords='ttml, timed text, captions, subtitles, imsc, scc, srt, stl, smpte-tt, conversion',
 
     package_dir={'ttconv': 'src/main/python/ttconv'}, 
 
