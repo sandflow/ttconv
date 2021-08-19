@@ -14,7 +14,7 @@ setup(
     description='Library for conversion of common timed text formats',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/sandlow/ttconv',
+    url='https://github.com/sandflow/ttconv',
     author='Sandflow Consulting LLC',
     author_email='info@sandflow.com',
     classifiers=[

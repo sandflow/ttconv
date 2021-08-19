@@ -104,7 +104,7 @@ class ProgressConsoleHandler(logging.StreamHandler):
         percent_progress = getattr(record, 'percent_progress')
         msg = progress_str(
           getattr(record, 'progress_bar'),
-          float(percent_progress)
+          min(1.0, abs(float(percent_progress)))
         )
         self.last_progress_msg = msg
 
