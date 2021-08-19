@@ -224,7 +224,6 @@ def to_model(element: model.ContentElement, is_teletext: bool, tti_cct: bytes, t
       if not _is_newline_code(tf_iter.peek_next()) and not _is_unused_space_code(tf_iter.peek_next()):
         context.end_span()
         element.push_child(model.Br(element.get_doc()))
-        context.start_span()
 
     elif _is_control_code(c):
       context.end_span()
