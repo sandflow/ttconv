@@ -114,6 +114,17 @@ class STLReaderConfigurationTest(unittest.TestCase):
       self.assertEqual(p_list[1].get_end(),
                       SmpteTimeCode.parse("10:00:01:24",FPS_25).to_temporal_offset())
 
+  def test_tcp_override_003(self):
+    '''Testing use of TCP from GSI Block'''  
+    with open("src/test/resources/stl/sandflow/test_tcp_processing.stl", "rb") as f:
+      config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"program_start_tc":"TCP"}'))
+      doc = ttconv.stl.reader.to_model(f, config)
+      p_list = list(doc.get_body().first_child())
+      self.assertEqual(p_list[0].get_begin(),
+                      SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
+      self.assertEqual(p_list[0].get_end(),
+                      SmpteTimeCode.parse("00:00:01:24",FPS_25).to_temporal_offset())
+
   def test_program_font_stack_parsing(self):
     config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"font_stack":"Times New Roman,serif"}'))
     self.assertEqual(config.font_stack, ("Times New Roman", styles.GenericFontFamilyType.serif))
