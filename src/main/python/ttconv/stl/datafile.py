@@ -159,6 +159,8 @@ _LC_BCP47_MAP = {
 }
 
 _DFC_FRACTION_MAP = {
+  b'STL23.01': Fraction(24000, 1001),
+  b'STL24.01': Fraction(24),
   b'STL25.01': Fraction(25),
   b'STL30.01': Fraction(30000, 1001),
   b'STL50.01': Fraction(50)
