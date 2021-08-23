@@ -491,5 +491,15 @@ class STLReaderTests(unittest.TestCase):
       region_extent = region.get_style(styles.StyleProperties.Extent).height.value
       self.assertEqual(region_extent, 80)
 
+  def test_br_style_reset(self):
+    '''Testing style reset after newline'''
+    with open("src/test/resources/stl/sandflow/br_style_reset.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      p_children = list(doc.get_body().first_child().first_child())
+      background_color_second_span = p_children[2].get_style(styles.StyleProperties.BackgroundColor)
+      color_second_span = p_children[2].get_style(styles.StyleProperties.Color)
+      self.assertEqual(background_color_second_span, styles.NamedColors.black.value)
+      self.assertEqual(color_second_span, styles.NamedColors.white.value)
+
 if __name__ == '__main__':
   unittest.main()
