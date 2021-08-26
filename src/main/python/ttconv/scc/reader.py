@@ -314,6 +314,8 @@ class _SccContext:
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
 
+    processed_caption = self.buffered_caption
+
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
       self.current_style = SccCaptionStyle.PopOn
@@ -335,7 +337,12 @@ class _SccContext:
       elif control_code is SccControlCode.RU4:
         self.roll_up_depth = 4
 
-    elif control_code is SccControlCode.EOC:
+    else:
+      # If the Paint-On or Roll-Up style is activated, write directly on active caption
+      if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
+        processed_caption = self.active_caption
+
+    if control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
       self.set_buffered_caption_begin_time(time_code)
       self.flip_buffered_to_active_captions(time_code)
@@ -367,22 +374,13 @@ class _SccContext:
       self.buffered_caption = None
 
     elif control_code is SccControlCode.TO1:
-      if self.buffered_caption is not None:
-        self.buffered_caption.indent_cursor(1)
-      else:
-        LOGGER.error("T01 control code without caption material")
+      processed_caption.indent_cursor(1)
 
     elif control_code is SccControlCode.TO2:
-      if self.buffered_caption is not None:
-        self.buffered_caption.indent_cursor(2)
-      else:
-        LOGGER.error("T02 control code without caption material")
+      processed_caption.indent_cursor(2)
 
     elif control_code is SccControlCode.TO3:
-      if self.buffered_caption is not None:
-        self.buffered_caption.indent_cursor(3)
-      else:
-        LOGGER.error("T03 control code without caption material")
+      processed_caption.indent_cursor(3)
 
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
@@ -414,7 +412,7 @@ class _SccContext:
       # Backspace
       # When a Backspace is received, the cursor moves to the left one column position erasing
       # the character or Mid-Row Code occupying that location, unless the cursor is in Column 1
-      self.buffered_caption.get_current_text().backspace()
+      processed_caption.get_current_text().backspace()
 
   def process_text(self, word: str, time_code: SmpteTimeCode):
     """Processes SCC text words"""
