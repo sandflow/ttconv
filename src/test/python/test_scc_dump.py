@@ -23,21 +23,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Disassemble SCC file"""
+"""Unit tests for the SCC dump app"""
 
-import sys
+# pylint: disable=R0201,C0115,C0116
 
-import ttconv.scc.reader as scc_reader
+import unittest
 
-
-def main(argv):
-  """Dump application processing"""
-  with open(argv[0], "r") as f_in:
-    scc_file = f_in.read()
-
-    with open(argv[1], "w", encoding="utf-8") as f_out:
-      f_out.write(scc_reader.to_disassembly(scc_file))
+import ttconv.scc.dump as dump
 
 
-if __name__ == '__main__':
-  main(sys.argv[1:])
+class IMSCAppTest(unittest.TestCase):
+
+  def test_convert_input_file_type_scc(self):
+    dump.main(["src/test/resources/scc/pop-on.scc", "build/pop-on.scc.txt"])
