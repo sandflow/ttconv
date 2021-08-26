@@ -124,14 +124,22 @@ class _TextFieldIterator:
 class _Context:
 
   def __init__(self, parent_element: model.ContentElement, is_teletext: bool, decode_func):
-    self.fg_color = styles.NamedColors.white.value
-    self.bg_color = styles.NamedColors.black.value if is_teletext else styles.NamedColors.transparent.value
-    self.is_italic = False
-    self.is_underline = False
+    self.fg_color = None
+    self.bg_color = None
+    self.is_italic = None
+    self.is_underline = None
+    self.reset_styles(is_teletext)
+
     self.span = None
     self.parent = parent_element
     self.decode_func = decode_func
     self.text_buffer = bytearray()
+
+  def reset_styles(self, is_teletext: bool):
+    self.fg_color = styles.NamedColors.white.value
+    self.bg_color = styles.NamedColors.black.value if is_teletext else styles.NamedColors.transparent.value
+    self.is_italic = False
+    self.is_underline = False
 
   def set_bg_color(self, color: styles.ColorType):
     self.bg_color = color 
@@ -224,7 +232,8 @@ def to_model(element: model.ContentElement, is_teletext: bool, tti_cct: bytes, t
       if not _is_newline_code(tf_iter.peek_next()) and not _is_unused_space_code(tf_iter.peek_next()):
         context.end_span()
         element.push_child(model.Br(element.get_doc()))
-        context.start_span()
+        if is_teletext:
+          context.reset_styles(is_teletext)
 
     elif _is_control_code(c):
       context.end_span()
