@@ -367,13 +367,22 @@ class _SccContext:
       self.buffered_caption = None
 
     elif control_code is SccControlCode.TO1:
-      self.buffered_caption.indent_cursor(1)
+      if self.buffered_caption is not None:
+        self.buffered_caption.indent_cursor(1)
+      else:
+        LOGGER.error("T01 control code without caption material")
 
     elif control_code is SccControlCode.TO2:
-      self.buffered_caption.indent_cursor(2)
+      if self.buffered_caption is not None:
+        self.buffered_caption.indent_cursor(2)
+      else:
+        LOGGER.error("T02 control code without caption material")
 
     elif control_code is SccControlCode.TO3:
-      self.buffered_caption.indent_cursor(3)
+      if self.buffered_caption is not None:
+        self.buffered_caption.indent_cursor(3)
+      else:
+        LOGGER.error("T03 control code without caption material")
 
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
