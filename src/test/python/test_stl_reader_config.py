@@ -65,6 +65,16 @@ class STLReaderConfigurationTest(unittest.TestCase):
     config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads("{}"))
     self.assertIsNone(config.program_start_tc)
 
+  def test_program_max_row_count_parsing(self):
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"max_row_count":2}'))
+    self.assertEqual(config.max_row_count, 2)
+
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads('{"max_row_count":"MNR"}'))
+    self.assertEqual(config.max_row_count, "MNR")
+
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads("{}"))
+    self.assertIsNone(config.max_row_count)
+
   def test_disable_line_padding(self):
     config_json = '{"disable_line_padding":true}'
     config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads(config_json))

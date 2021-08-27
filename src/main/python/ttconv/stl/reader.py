@@ -48,7 +48,8 @@ def to_model(data_file: typing.IO, config: typing.Optional[STLReaderConfiguratio
     disable_fill_line_gap=False if config is None else config.disable_fill_line_gap,
     disable_line_padding=False if config is None else config.disable_line_padding,
     start_tc=None if config is None else config.program_start_tc,
-    font_stack=None if config is None else config.font_stack
+    font_stack=None if config is None else config.font_stack,
+    max_row_count=None if config is None else config.max_row_count
     )
 
   for i in itertools.count():

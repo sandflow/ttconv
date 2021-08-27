@@ -248,7 +248,8 @@ class DataFile:
     disable_fill_line_gap: bool = False,
     disable_line_padding: bool = False,
     start_tc: typing.Optional[str] = None,
-    font_stack: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]] = None
+    font_stack: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]] = None,
+    max_row_count: typing.Optional[typing.Union[int, str]] = None
     ):
     
     self.gsi = _GSIBlock._make(
@@ -352,6 +353,18 @@ class DataFile:
         LOGGER.error("Invalid start_tc value")
         raise
 
+    if max_row_count is None or self.is_teletext():
+      self.max_row_count = DEFAULT_TELETEXT_ROWS
+    elif isinstance(max_row_count, str) and max_row_count == "MNR":
+      try:
+        self.max_row_count = int(self.gsi.MNR)
+        LOGGER.debug("GSI MNR: %s", self.gsi.MNR)
+      except ValueError:
+        LOGGER.error("Invalid MNR value: %s", self.gsi.MNR)
+        self.start_offset = DEFAULT_TELETEXT_ROWS
+    else:
+      self.max_row_count = max_row_count
+
     # p_element for use across cumulative subtitles 
     self.cur_p_element = None
 
@@ -384,6 +397,11 @@ class DataFile:
     """Returns whether the datafile contains teletext subtitles or open/undefined subtitles
     """
     return ord(self.gsi.DSC) in (0x31, 0x32)
+
+  def get_max_row_count(self):
+    """Returns the maximum number of rows
+    """
+    return self.max_row_count
 
   def process_tti_block(self, tti_block: bytes):
     """Processes a single TTI block
@@ -490,58 +508,45 @@ class DataFile:
           styles.LengthType.Units.pct
         )
       )
-      if not self.is_teletext():
-        # use large region and always align at the bottom for undefined and open subtitles
 
+      safe_area_height =  round(100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT * 2)
+      safe_area_width =  round(100 - DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT * 2)
+
+      # assume that VP < max number of rows/2 means bottom-aligned and otherwise top-aligned
+      # probably should offer an option to override this
+
+      if tti.VP < self.get_max_row_count() // 2:
+        # top-aligned large region
+        
+        r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT + ((tti.VP - 1) / self.get_max_row_count()) * safe_area_height
+        r_height = 100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT - r_y
+        
         region = _get_region_from_model(
           self.doc,
           round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
-          round(DEFAULT_VERTICAL_SAFE_MARGIN_PCT),
-          round(100 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
-          round(100 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT),
-          styles.DisplayAlignType.after
-          )
+          r_y,
+          safe_area_width,
+          r_height,
+          styles.DisplayAlignType.before
+        )
 
       else:
 
-        safe_area_height =  round(100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT * 2)
-        safe_area_width =  round(100 - DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT * 2)
+        line_count = tf.line_count(self.tti_tf, is_double_height_characters)
+        vp = tti.VP
+        line_height = 2 if is_double_height_characters else 1
 
-        # assume that VP < DEFAULT_TELETEXT_ROWS/2 means bottom-aligned and otherwise top-aligned
-        # probably should offer an option to override this
-
-        if tti.VP < DEFAULT_TELETEXT_ROWS // 2:
-          # top-aligned large region
-          
-          r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT + ((tti.VP - 1) / DEFAULT_TELETEXT_ROWS) * safe_area_height
-          r_height = 100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT - r_y
-          
-          region = _get_region_from_model(
-            self.doc,
-            round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
-            r_y,
-            safe_area_width,
-            r_height,
-            styles.DisplayAlignType.before
-          )
-
-        else:
-
-          line_count = tf.line_count(self.tti_tf, is_double_height_characters)
-          vp = tti.VP
-          line_height = 2 if is_double_height_characters else 1
-
-          r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT
-          r_height = ((vp + line_count * line_height - 1)/ DEFAULT_TELETEXT_ROWS) * safe_area_height
-          
-          region = _get_region_from_model(
-            self.doc,
-            round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
-            r_y,
-            safe_area_width,
-            r_height,
-            styles.DisplayAlignType.after
-          )
+        r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT
+        r_height = ((vp + line_count * line_height - 1)/ self.get_max_row_count()) * safe_area_height
+        
+        region = _get_region_from_model(
+          self.doc,
+          round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
+          r_y,
+          safe_area_width,
+          r_height,
+          styles.DisplayAlignType.after
+        )
 
       self.cur_p_element.set_region(region)
 
