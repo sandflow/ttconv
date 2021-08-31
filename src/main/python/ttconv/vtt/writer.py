@@ -27,7 +27,7 @@
 
 import logging
 from fractions import Fraction
-from typing import List
+from typing import Dict, List
 
 import ttconv.model as model
 import ttconv.vtt.style as style
@@ -38,6 +38,7 @@ from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
 from ttconv.vtt.paragraph import VttParagraph
+from ttconv.vtt.css_class import CssClass
 from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
 
 LOGGER = logging.getLogger(__name__)
@@ -63,9 +64,13 @@ class VttContext:
       StyleProperties.Color: [
         # Every values
       ],
+      StyleProperties.BackgroundColor: [
+        # Every values
+      ],
     }),
     DefaultStylePropertyValuesFilter({
       StyleProperties.Color: NamedColors.white.value,
+      StyleProperties.BackgroundColor: NamedColors.transparent.value,
       StyleProperties.FontWeight: FontWeightType.normal,
       StyleProperties.FontStyle: FontStyleType.normal,
     })
@@ -76,6 +81,9 @@ class VttContext:
     self._begin: Fraction = Fraction(0)
     self._end: Fraction = Fraction(0)
     self._paragraphs: List[VttParagraph] = []
+    self._css_classes: List[CssClass] = []
+    self._colors_used: Dict[str, str] = {}
+    self._background_colors_used: Dict[str, str] = {}
 
   def append_element(self, element: model.ContentElement, offset: Fraction):
     """Converts model element to VTT content"""
@@ -101,10 +109,26 @@ class VttContext:
       is_bold = style.is_element_bold(element)
       is_italic = style.is_element_italic(element)
       is_underlined = style.is_element_underlined(element)
-      font_color = style.get_font_color(element)
+      color = style.get_color(element)
+      bg_color = style.get_background_color(element)
 
-      if font_color is not None:
-        self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
+      if color is not None:
+        if self._colors_used.get(color) is None:
+          color_classname = style.get_color_classname(color)
+          self._colors_used[color] = color_classname
+          self._css_classes.append(CssClass("color", color, color_classname))
+        else:
+          color_classname = self._colors_used[color]
+        self._paragraphs[-1].append_text(style.COLOR_TAG_IN.format(color_classname))
+
+      if bg_color is not None:
+        if self._background_colors_used.get(bg_color) is None:
+          bg_color_classname = style.get_background_color_classname(bg_color)
+          self._background_colors_used[bg_color] = bg_color_classname
+          self._css_classes.append(CssClass("background-color", bg_color, bg_color_classname))
+        else:
+          bg_color_classname = self._background_colors_used[bg_color]
+        self._paragraphs[-1].append_text(style.BG_COLOR_TAG_IN.format(bg_color_classname))
 
       if is_bold:
         self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
@@ -122,8 +146,11 @@ class VttContext:
         self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
       if is_bold:
         self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
-      if font_color is not None:
-        self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_OUT)
+      if color is not None:
+        self._paragraphs[-1].append_text(style.COLOR_TAG_OUT)
+      if bg_color is not None:
+        self._paragraphs[-1].append_text(style.BG_COLOR_TAG_OUT)
+
 
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
@@ -165,8 +192,16 @@ class VttContext:
         LOGGER.warning("Set a default end value to paragraph (begin + 10s).")
         self._paragraphs[-1].set_end(self._paragraphs[-1].get_begin().to_seconds() + 10.0)
 
+  def style_block(self):
+    """Generated CSS INLINE STYLE Block"""
+    style_block = ""
+    cue_default = "\n".join(("::cue {","  background-color: transparent;", "}\n"))
+    if len(self._css_classes) > 0:
+      style_block = "STYLE\n" + cue_default +"\n".join(css.to_string() for css in self._css_classes) + "\n\n"
+    return style_block
+
   def __str__(self) -> str:
-    return "WEBVTT\n\n" + "\n".join(p.to_string() for p in self._paragraphs)
+    return "WEBVTT\n\n" + self.style_block() + "\n".join(p.to_string() for p in self._paragraphs)
 
 
 #
