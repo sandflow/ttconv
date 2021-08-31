@@ -70,6 +70,7 @@ class VttContext:
     }),
     DefaultStylePropertyValuesFilter({
       StyleProperties.Color: NamedColors.white.value,
+      StyleProperties.BackgroundColor: NamedColors.transparent.value,
       StyleProperties.FontWeight: FontWeightType.normal,
       StyleProperties.FontStyle: FontStyleType.normal,
     })
@@ -194,8 +195,9 @@ class VttContext:
   def style_block(self):
     """Generated CSS INLINE STYLE Block"""
     style_block = ""
+    cue_default = "\n".join(("::cue {","  background-color: transparent;", "}\n"))
     if len(self._css_classes) > 0:
-      style_block = "STYLE\n" + "\n".join(css.to_string() for css in self._css_classes) + "\n\n"
+      style_block = "STYLE\n" + cue_default +"\n".join(css.to_string() for css in self._css_classes) + "\n\n"
     return style_block
 
   def __str__(self) -> str:

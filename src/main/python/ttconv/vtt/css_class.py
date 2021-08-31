@@ -13,5 +13,5 @@ class CssClass:
     return str(self)
 
   def __str__(self) -> str:
-    return "\n".join(("video::cue(.{}):".format(self._classname),
-                     "{", "  {}: {}".format(self._propertyname, self._value), "}"))
+    return "\n".join(("::cue(.{}) {{".format(self._classname),
+                      "  {}: {};".format(self._propertyname, self._value), "}"))

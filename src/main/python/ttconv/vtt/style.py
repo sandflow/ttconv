@@ -100,17 +100,14 @@ def get_background_color(element: ContentElement) -> Optional[str]:
   background_color = element.get_style(StyleProperties.BackgroundColor)
   
   if background_color is None:
-    return "#00000000" # default to transparent background
+    return None
 
   (r, g, b, a) = background_color.components
   return "#{:02x}{:02x}{:02x}{:02x}".format(r, g, b, a)
-
+  
 
 def get_color_classname(color_value: str):
   """Returns CSS color classname"""
-
-  if color_value is None:
-    return None
 
   if DEFAULT_TEXT_COLORS.get(color_value) is not None:
     return DEFAULT_TEXT_COLORS.get(color_value)
@@ -119,9 +116,6 @@ def get_color_classname(color_value: str):
 
 def get_background_color_classname(color_value: str):
   """Returns CSS background color classname"""
-
-  if color_value is None:
-    return None
 
   if DEFAULT_BACKGROUND_COLORS.get(color_value) is not None:
     return DEFAULT_BACKGROUND_COLORS.get(color_value)
