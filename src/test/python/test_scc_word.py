@@ -97,8 +97,6 @@ class SccWordTest(unittest.TestCase):
   def test_scc_word_to_text(self):
     scc_word = SccWord.from_value(0x1234)
     self.assertEqual('\x12\x34', scc_word.to_text())
-    scc_word = SccWord.from_value(0xFF00)
-    self.assertEqual('\x7f', scc_word.to_text())
     scc_word = SccWord.from_value(0x01)
     self.assertEqual('\x01', scc_word.to_text())
 
