@@ -207,7 +207,7 @@ Pellentesque interdum lacinia sollicitudin.
     if self._has_document_paragraphs(model):
       self.assertTrue(len(vtt) > 0, msg=f"Could not convert {path}")
     else:
-      self.assertEqual(0, len(vtt), msg=f"Could not convert {path}")
+      self.assertEqual(8, len(vtt), msg=f"Could not convert {path}")
 
 if __name__ == '__main__':
   unittest.main()
