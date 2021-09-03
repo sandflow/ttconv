@@ -130,11 +130,38 @@ class VttStyleTest(unittest.TestCase):
 
     self.assertEqual("white", style.get_color_classname("#ffffffff"))
 
+    self.assertEqual("lime", style.get_color_classname("#00ff00ff"))
+
+    self.assertEqual("cyan", style.get_color_classname("#00ffffff"))
+
+    self.assertEqual("red", style.get_color_classname("#ff0000ff"))
+
+    self.assertEqual("yellow", style.get_color_classname("#ffff00ff"))
+
+    self.assertEqual("magenta", style.get_color_classname("#ff00ffff"))
+
+    self.assertEqual("blue", style.get_color_classname("#0000ffff"))
+
+    self.assertEqual("black", style.get_color_classname("#000000ff"))
+
   def test_style_background_color_classname(self):
     self.assertEqual("bg_color_00000000", style.get_background_color_classname("#00000000"))
 
     self.assertEqual("bg_white", style.get_background_color_classname("#ffffffff"))
 
+    self.assertEqual("bg_lime", style.get_background_color_classname("#00ff00ff"))
+
+    self.assertEqual("bg_cyan", style.get_background_color_classname("#00ffffff"))
+
+    self.assertEqual("bg_red", style.get_background_color_classname("#ff0000ff"))
+
+    self.assertEqual("bg_yellow", style.get_background_color_classname("#ffff00ff"))
+
+    self.assertEqual("bg_magenta", style.get_background_color_classname("#ff00ffff"))
+
+    self.assertEqual("bg_blue", style.get_background_color_classname("#0000ffff"))
+
+    self.assertEqual("bg_black", style.get_background_color_classname("#000000ff"))
 
 if __name__ == '__main__':
   unittest.main()
