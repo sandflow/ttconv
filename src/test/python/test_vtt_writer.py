@@ -119,8 +119,21 @@ Pellentesque interdum lacinia sollicitudin.
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
-  def test_stl_test_suite(self):
+  def test_irt_stl_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/stl/irt"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".stl":
+          with self.subTest(name):
+            path = os.path.join(root, filename)
+            with open(path, "rb") as stl_content:
+              test_model = stl_reader.to_model(stl_content)
+            vtt_from_model = vtt_writer.from_model(test_model, None)
+            self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
+            self._check_output_vtt(test_model, vtt_from_model, path)
+
+  def test_sandflow_stl_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/stl/sandflow"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".stl":
