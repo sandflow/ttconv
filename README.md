@@ -14,7 +14,7 @@
 _ttconv_ is a library and command line application written in pure Python for converting between timed text
 formats used in the presentations of captions, subtitles, karaoke, etc.
 
-    TTML / IMSC ----                        --- IMSC / TTML
+    TTML / IMSC ---                         --- IMSC / TTML
                     \                     /
     SCC / CEA 608 ----- Canonical Model -------- WebVTT
                     /                     \
