@@ -23,20 +23,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""CSS class"""
+"""Unit tests for the CSS Class"""
 
-class CssClass:
-  """CSS class definition class"""
+# pylint: disable=R0201,C0115,C0116,W0212
 
-  def __init__(self, property_name: str, value: str, classname: str):
-    self._propertyname = property_name
-    self._classname = classname
-    self._value = value
+import unittest
 
-  def to_string(self) -> str:
-    """Return CSS class as formated string"""
-    return str(self)
+from ttconv.vtt.css_class import CssClass
 
-  def __str__(self) -> str:
-    return "\n".join(("::cue(.{}) {{".format(self._classname),
-                      "  {}: {};".format(self._propertyname, self._value), "}"))
+
+class CssClassTest(unittest.TestCase):
+
+  def test_css_class(self):
+    css_class = CssClass("font-size", "100%", "font_size_p1")
+
+    self.assertEqual("::cue(.font_size_p1) {\n  font-size: 100%;\n}",
+                     str(css_class))
+
+if __name__ == '__main__':
+  unittest.main()
