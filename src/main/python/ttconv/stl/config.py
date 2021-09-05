@@ -38,6 +38,7 @@ from ttconv.time_code import SmpteTimeCode
 
 _SMPTE_TIME_CODE_DF_PATTERN = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN)
 _SMPTE_TIME_CODE_NDF_PATTERN = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN)
+_MNR_PATTERN = re.compile("^\\d+$")
 
 def _decode_font_stack(value: typing.Optional[str]) -> \
   typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]]:
@@ -55,6 +56,18 @@ def _decode_start_tc(value: typing.Optional[str]) -> typing.Optional[str]:
 
   raise ValueError(f"Invalid start_tc '{value}' value. Expect: 'TCP' or 'HH:MM:SS:FF'.")
 
+def _decode_max_row_count(value: typing.Optional[str]) -> typing.Optional[typing.Union[int, str]]:
+  if value is None:
+    return None
+  
+  if isinstance(value, str) and value.upper() == "MNR":
+    return "MNR"
+
+  if isinstance(value, int):
+    return value
+
+  raise ValueError(f"Invalid max_row_count '{value}' value. Expect: 'MNR' or integer.")
+
 @dataclass
 class STLReaderConfiguration(ModuleConfiguration):
   """STL reader configuration"""
@@ -64,7 +77,8 @@ class STLReaderConfiguration(ModuleConfiguration):
   disable_line_padding: bool = field(default=False, metadata={"decoder": bool})
   font_stack: typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]] = \
                   field(default=None, metadata={"decoder": _decode_font_stack})
-  
+  max_row_count: typing.Optional[typing.Union[int, str]] = field(default=None, metadata={"decoder": _decode_max_row_count})
+
   @classmethod
   def name(cls):
     return "stl_reader"

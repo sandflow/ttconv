@@ -62,6 +62,7 @@ tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config 
   * `"stl_reader"."disable_line_padding" : "true" | "false" (default: "false")`: "true" means that the STL reader does not add padding at the begining/end of lines
   * `"stl_reader"."program_start_tc" : "TCP" | "HH:MM:SS:FF" (default: "00:00:00:00")`: specifies a starting offset, either the TCP field of the GSI block or a user-specified timecode
   * `"stl_reader"."font_stack" : [<font-families>](https://www.w3.org/TR/ttml2/#style-value-font-families) (default: Verdana, Arial, Tiresias, sansSerif)`: overrides the font stack
+  * `"stl_reader"."max_row_count" : "MNR" | integer (default: 23)`: specifies a maximum number of rows for open subtitles, either the MNR field of the GSI block or a user-specified value
   
 Example:
 

@@ -10,7 +10,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='ttconv', 
-    version='1.0.3.dev1',
+    version='1.0.3b2',
     description='Library for conversion of common timed text formats',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -28,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Multimedia'
     ],
-    keywords='ttml, timed text, captions, subtitles, imsc, scc, srt, webvtt, smpte-tt, conversion',
+    keywords='ttml, timed text, captions, subtitles, imsc, scc, srt, stl, smpte-tt, conversion',
 
     package_dir={'ttconv': 'src/main/python/ttconv'}, 
 

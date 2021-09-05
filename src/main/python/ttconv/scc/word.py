@@ -27,6 +27,8 @@
 
 from __future__ import annotations
 
+from ttconv.scc.codes.standard_characters import SCC_STANDARD_CHARACTERS_MAPPING
+
 PARITY_BIT_MASK = 0b01111111
 
 
@@ -85,4 +87,4 @@ class SccWord:
 
   def to_text(self) -> str:
     """Converts SCC word to text"""
-    return ''.join(chr(byte) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
+    return ''.join(SCC_STANDARD_CHARACTERS_MAPPING.get(byte, chr(byte)) for byte in [self.byte_1, self.byte_2] if byte != 0x00)

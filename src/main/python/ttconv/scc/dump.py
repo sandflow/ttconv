@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-# Copyright (c) 2021, Sandflow Consulting LLC
+# Copyright (c) 2020, Sandflow Consulting LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,48 +23,21 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""STL reader"""
+"""Disassemble SCC file"""
 
-from __future__ import annotations
+import sys
 
-import typing
-import itertools
-import logging
+import ttconv.scc.reader as scc_reader
 
-from ttconv.stl.config import STLReaderConfiguration
-from ttconv.stl.datafile import DataFile
 
-LOGGER = logging.getLogger(__name__)
+def main(argv):
+  """Dump application processing"""
+  with open(argv[0], "r") as f_in:
+    scc_file = f_in.read()
 
-#
-# STL reader
-#
+    with open(argv[1], "w", encoding="utf-8") as f_out:
+      f_out.write(scc_reader.to_disassembly(scc_file))
 
-def to_model(data_file: typing.IO, config: typing.Optional[STLReaderConfiguration] = None, progress_callback=lambda _: None):
-  """Converts an STL document to the data model"""
 
-  m = DataFile(
-    data_file.read(1024),
-    disable_fill_line_gap=False if config is None else config.disable_fill_line_gap,
-    disable_line_padding=False if config is None else config.disable_line_padding,
-    start_tc=None if config is None else config.program_start_tc,
-    font_stack=None if config is None else config.font_stack,
-    max_row_count=None if config is None else config.max_row_count
-    )
-
-  for i in itertools.count():
-
-    buf = data_file.read(128)
-
-    if not buf:
-      break
-
-    try:
-      m.process_tti_block(buf)
-    except:
-      LOGGER.error("Bad TTI block")
-      raise
-    
-    progress_callback(i/m.get_tti_count())
-
-  return m.get_document()
+if __name__ == '__main__':
+  main(sys.argv[1:])
