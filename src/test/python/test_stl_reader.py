@@ -521,5 +521,17 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(background_color_second_span, styles.NamedColors.magenta.value)
       self.assertEqual(color_second_span, styles.NamedColors.yellow.value)
 
+  def test_active_area_presence(self):
+    with open("src/test/resources/stl/irt/requirement-0056-001_modified.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      
+      self.assertIsNotNone(doc.get_active_area())
+
+  def test_cell_resolution_presence(self):
+    with open("src/test/resources/stl/irt/requirement-0056-001_modified.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      
+      self.assertIsNotNone(doc.get_cell_resolution())
+
 if __name__ == '__main__':
   unittest.main()

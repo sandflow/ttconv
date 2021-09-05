@@ -267,6 +267,15 @@ class DataFile:
       )
     )
 
+    self.doc.set_active_area(
+      model.ActiveAreaType(
+        left_offset=DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 100,
+        top_offset=DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 100,
+        width=1 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 100,
+        height=1 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 100
+      )
+    )
+
     self.body = model.Body(self.doc)
     
     if not disable_fill_line_gap:
