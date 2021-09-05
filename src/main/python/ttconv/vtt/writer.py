@@ -209,7 +209,7 @@ class VttContext:
 #
 
 
-def from_model(doc: model.ContentDocument, _isd_config, progress_callback=lambda _: None) -> str:
+def from_model(doc: model.ContentDocument, _isd_config = None, progress_callback=lambda _: None) -> str:
   """Converts the data model to a VTT document"""
 
   vtt = VttContext()
