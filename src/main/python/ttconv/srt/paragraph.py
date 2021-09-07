@@ -49,10 +49,13 @@ class SrtParagraph:
     """Returns the paragraph begin time code"""
     return self._begin
 
-  def set_end(self, offset: Union[Fraction, float]):
+  def set_end(self, offset: Optional[Union[Fraction, float]]):
     """Sets the paragraph end time code"""
-    self._end = ClockTime.from_seconds(offset)
-    self._end.set_separator(",")
+    if offset is not None:
+      self._end = ClockTime.from_seconds(offset)
+      self._end.set_separator(",")
+    else:
+      self._end = None
 
   def get_end(self) -> Optional[ClockTime]:
     """Returns the paragraph end time code"""
