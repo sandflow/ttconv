@@ -27,7 +27,7 @@
 
 import logging
 from fractions import Fraction
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import ttconv.model as model
 import ttconv.vtt.style as style
@@ -85,25 +85,23 @@ class VttContext:
     self._colors_used: Dict[str, str] = {}
     self._background_colors_used: Dict[str, str] = {}
 
-  def append_element(self, element: model.ContentElement, offset: Fraction):
+  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
     """Converts model element to VTT content"""
 
     if isinstance(element, model.Div):
       for elem in list(element):
-        self.append_element(elem, offset)
+        self.append_element(elem, begin, end)
 
     if isinstance(element, model.P):
-
-      if self._paragraphs:
-        self._paragraphs[-1].set_end(offset)
 
       self._captions_counter += 1
 
       self._paragraphs.append(VttParagraph(self._captions_counter))
-      self._paragraphs[-1].set_begin(offset)
+      self._paragraphs[-1].set_begin(begin)
+      self._paragraphs[-1].set_end(end)
 
       for elem in list(element):
-        self.append_element(elem, offset)
+        self.append_element(elem, begin, end)
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -138,7 +136,7 @@ class VttContext:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
 
       for elem in list(element):
-        self.append_element(elem, offset)
+        self.append_element(elem, begin, end)
 
       if is_underlined:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
@@ -158,10 +156,14 @@ class VttContext:
     if isinstance(element, model.Text):
       self._paragraphs[-1].append_text(element.get_text())
 
-  def add_isd(self, isd, offset: Fraction):
+  def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to VTT content"""
 
-    LOGGER.debug("Append ISD from %ss offset to VTT content.", float(offset))
+    LOGGER.debug(
+      "Append ISD from %ss to %ss to VTT content.",
+      float(begin),
+      float(end) if end is not None else "unbounded"
+    )
 
     is_isd_empty = True
 
@@ -172,10 +174,10 @@ class VttContext:
 
       for body in region:
         for div in list(body):
-          self.append_element(div, offset)
+          self.append_element(div, begin, end)
 
-    if is_isd_empty and self._paragraphs and self._paragraphs[-1].get_end() is None:
-      self._paragraphs[-1].set_end(offset)
+    if is_isd_empty:
+      LOGGER.debug("Skipping empty paragraph.")
 
   def finish(self):
     """Checks and processes the last paragraph"""
@@ -185,6 +187,7 @@ class VttContext:
     if self._paragraphs and self._paragraphs[-1].get_end() is None:
       if self._paragraphs[-1].is_only_whitespace():
         # if the last paragraph contains only whitespace, remove it
+        LOGGER.debug("Removing empty unbounded last paragraph.")
         self._paragraphs.pop()
 
       else:
@@ -225,12 +228,14 @@ def from_model(doc: model.ContentDocument, _isd_config = None, progress_callback
 
   # process ISDs
 
-  for i, (offset, isd) in enumerate(isds):
+  for i, (begin, isd) in enumerate(isds):
+
+    end = isds[i + 1][0] if i + 1 < len(isds) else None
 
     for vtt_filter in vtt.filters:
       vtt_filter.process(isd)
 
-    vtt.add_isd(isd, offset)
+    vtt.add_isd(isd, begin, end)
 
     progress_callback(0.5 + (i + 1) / len(isds) / 2)
 
