@@ -40,6 +40,7 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 import ttconv.stl.reader as stl_reader
+import ttconv.vtt.writer as vtt_writer
 from ttconv.config import GeneralConfiguration
 from ttconv.config import ModuleConfiguration
 from ttconv.imsc.config import IMSCWriterConfiguration
@@ -171,6 +172,7 @@ class FileTypes(Enum):
   SCC = "scc"
   SRT = "srt"
   STL = "stl"
+  VTT = "vtt"
 
   @staticmethod
   def get_file_type(file_type: str, file_extension: str):
@@ -364,6 +366,18 @@ def convert(args):
     #
     with open(outputfile, "w", encoding="utf-8") as srt_file:
       srt_file.write(srt_document)
+
+  elif writer_type is FileTypes.VTT:
+    #
+    # Construct and configure the writer
+    #
+    vtt_document = vtt_writer.from_model(model, None, progress_callback_write)
+
+    #
+    # Write out the converted file
+    #
+    with open(outputfile, "w", encoding="utf-8") as vtt_file:
+      vtt_file.write(vtt_document)
 
   else:
     if args.otype is not None:

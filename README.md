@@ -14,6 +14,12 @@
 _ttconv_ is a library and command line application written in pure Python for converting between timed text
 formats used in the presentations of captions, subtitles, karaoke, etc.
 
+    TTML / IMSC ---                         --- IMSC / TTML
+                    \                     /
+    SCC / CEA 608 ----- Canonical Model -------- WebVTT
+                    /                     \
+    EBU STL -------                         --- SRT
+
 _ttconv_ works by mapping the input document, whatever its format, into an internal canonical model, which is then mapped to the
 format of the output document is derived. The canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data model,
 as constrained by the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification.
@@ -37,6 +43,7 @@ suggestions/contributions are welcome.
 
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
+* [WebVTT](https://www.w3.org/TR/webvtt1/)
 
 ## Quick start
 
@@ -55,7 +62,7 @@ tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config 
 ```
 
 * `--itype`: `TTML` or `SCC` or `STL` (extrapolated from the filename, if omitted)
-* `--otype`: `TTML` or `SRT` (extrapolated from the filename, if omitted)
+* `--otype`: `TTML` or `SRT` or `VTT` (extrapolated from the filename, if omitted)
 * `--config` and `--config_file`: JSON dictionaries with the following members:
 
   * `"general"."progress_bar": "true" | "false"`: whether a progress bar is displayed
