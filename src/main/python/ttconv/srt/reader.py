@@ -57,9 +57,9 @@ class _TextParser(HTMLParser):
     if tag.lower() == "bold":
       span.set_style(styles.StyleProperties.FontWeight, styles.FontWeightType.bold)
     elif tag.lower() == "italic":
-      span.set_style(styles.StyleProperties.FontWeight, styles.FontStyleType.italic)
+      span.set_style(styles.StyleProperties.FontStyle, styles.FontStyleType.italic)
     elif tag.lower() == "underline":
-      span.set_style(styles.StyleProperties.FontWeight, styles.TextDecorationType(underline=True))
+      span.set_style(styles.StyleProperties.TextDecoration, styles.TextDecorationType(underline=True))
     elif tag.lower() == "font":
       for attr in attrs:
         if attr[0] == "color":

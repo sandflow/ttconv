@@ -64,31 +64,60 @@ There was no danger at all."""
     self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
-    SAMPLE = """1
+    f = io.StringIO( """1
 00:02:16,612 --> 00:02:19,376
-Hello <bold>my<bold> name is Bob
-"""
-
-    f = io.StringIO(SAMPLE)
-
+Hello <bold>my</bold> name is Bob
+""")
     doc = to_model(f)
-
     for e in doc.get_body().dfs_iterator():
       if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
         break
     else:
       self.fail()
 
+  def test_bold_alt(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello {bold}my{/bold} name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        break
+    else:
+      self.fail()
+
+  def test_italic(self):
+    f = io.StringIO( """1
+00:02:16,612 --> 00:02:19,376
+Hello <italic>my</italic> name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        break
+    else:
+      self.fail()
+
+  def test_italic_alt(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello {italic}my{/italic} name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        break
+    else:
+      self.fail()     
+
   def test_blue(self):
-    SAMPLE = """1
+    f = io.StringIO("""1
 00:02:16,612 --> 00:02:19,376
 Hello <font color='blue'>my</font> name is Bob
-"""
-
-    f = io.StringIO(SAMPLE)
+""")
 
     doc = to_model(f)
-
     for e in doc.get_body().dfs_iterator():
       if e.get_style(styles.StyleProperties.Color) == styles.NamedColors.blue.value:
         break
