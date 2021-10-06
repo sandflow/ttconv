@@ -111,6 +111,32 @@ Hello {italic}my{/italic} name is Bob
     else:
       self.fail()     
 
+  def test_underline(self):
+    f = io.StringIO( """1
+00:02:16,612 --> 00:02:19,376
+Hello <underline>my</underline> name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        break
+    else:
+      self.fail()
+
+  def test_underline_alt(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello {underline}my{/underline} name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        break
+    else:
+      self.fail()     
+
   def test_blue(self):
     f = io.StringIO("""1
 00:02:16,612 --> 00:02:19,376
