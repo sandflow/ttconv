@@ -39,6 +39,7 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
+import ttconv.srt.reader as srt_reader
 import ttconv.stl.reader as stl_reader
 import ttconv.vtt.writer as vtt_writer
 from ttconv.config import GeneralConfiguration
@@ -314,6 +315,7 @@ def convert(args):
     # Pass the parsed xml to the reader
     #
     model = scc_reader.to_model(file_as_str, reader_config, progress_callback_read)
+
   elif reader_type is FileTypes.STL:
     #
     # Read the config
@@ -325,6 +327,15 @@ def convert(args):
     #
     with open(inputfile, "rb") as f:
       model = stl_reader.to_model(f, reader_config, progress_callback_read)
+
+  elif reader_type is FileTypes.SRT:
+
+    #
+    # Open the file and pass it to the reader
+    #
+    with open(inputfile, "r", encoding="utf-8") as f:
+      model = srt_reader.to_model(f, None, progress_callback_read)
+
   else:
     if args.itype is not None:
       exit_str = f'Input type {args.itype} is not supported'
