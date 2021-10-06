@@ -231,7 +231,8 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
 
       parser = _TextParser(current_p, line_index)
 
-      html_line = line.replace(r"{bold}", r"<bold>")\
+      html_line = line.strip('\r\n')\
+        .replace(r"{bold}", r"<bold>")\
         .replace(r"{/bold}", r"<bold>")\
         .replace(r"{italic}", r"<italic>")\
         .replace(r"{/italic}", r"</italic>")\
