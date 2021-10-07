@@ -64,8 +64,8 @@ tt.py convert -i <input .scc file> -o <output .ttml file>
 tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CONFIG] [--config_file CONFIG_FILE]
 ```
 
-* `--itype`: `TTML` or `SCC` or `STL` (extrapolated from the filename, if omitted)
-* `--otype`: `TTML` or `SRT` or `VTT` (extrapolated from the filename, if omitted)
+* `--itype`: `TTML` | `SCC` | `STL` | `SRT` (extrapolated from the filename, if omitted)
+* `--otype`: `TTML` | `SRT` | `VTT` (extrapolated from the filename, if omitted)
 * `--config` and `--config_file`: JSON dictionaries with the following members:
 
   * `"general"."progress_bar": "true" | "false"`: whether a progress bar is displayed
