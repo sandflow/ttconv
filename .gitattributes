@@ -1,15 +1,24 @@
 # Basic .gitattributes for a python repo.
 # Adapted from https://github.com/alexkaratarakis/gitattributes/blob/master/Python.gitattributes
 
+
+*	text=auto
+
+# Markdown
+*.md         text diff=markdown
+
+# shell files
+*.sh         text eol=lf
+
 # Source files
 # ============
-*.pxd    text diff=python
+*.pxd    text eol=lf diff=python
 *.py     text eol=lf diff=python
-*.py3    text diff=python
-*.pyw    text diff=python
-*.pyx    text diff=python
-*.pyz    text diff=python
-*.pyi    text diff=python
+*.py3    text eol=lf diff=python
+*.pyw    text eol=lf diff=python
+*.pyx    text eol=lf diff=python
+*.pyz    text eol=lf diff=python
+*.pyi    text eol=lf diff=python
 
 # Binary files
 # ============
@@ -23,8 +32,3 @@
 
 # Jupyter notebook
 *.ipynb  text
-
-# Note: .db, .p, and .pkl files are associated
-# with the python modules ``pickle``, ``dbm.*``,
-# ``shelve``, ``marshal``, ``anydbm``, & ``bsddb``
-# (among others).
