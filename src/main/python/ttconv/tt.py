@@ -407,10 +407,10 @@ LOGGER.addHandler(progress)
 LOGGER.setLevel(logging.INFO)
 
 
-def main():
+def main(argv=None):
   '''Main application processing'''
 
-  args = cli.parse_args(sys.argv[1:])
+  args = cli.parse_args(argv if argv is not None else sys.argv[1:])
   if args.subcommand is None:
     cli.print_help()
   else:
