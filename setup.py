@@ -10,7 +10,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='ttconv', 
-    version='1.0.4.dev2',
+    version='1.0.4.dev3',
     description='Library for conversion of common timed text formats',
     long_description=long_description,
     long_description_content_type='text/markdown',
