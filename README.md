@@ -53,7 +53,7 @@ suggestions/contributions are welcome.
 ```sh
 pip install ttconv
 
-tt.py convert -i <input .scc file> -o <output .ttml file>
+tt convert -i <input .scc file> -o <output .ttml file>
 ```
 
 ## Documentation
@@ -61,7 +61,7 @@ tt.py convert -i <input .scc file> -o <output .ttml file>
 ### Command line
 
 ```
-tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CONFIG] [--config_file CONFIG_FILE]
+tt convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CONFIG] [--config_file CONFIG_FILE]
 ```
 
 * `--itype`: `TTML` | `SCC` | `STL` | `SRT` (extrapolated from the filename, if omitted)
@@ -80,7 +80,7 @@ tt.py convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config 
   
 Example:
 
-`tt.py convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --config '{"general": {"progress_bar":false, "log_level":"WARN"}}'`
+`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --config '{"general": {"progress_bar":false, "log_level":"WARN"}}'`
 
 ### Library
 
@@ -139,6 +139,7 @@ From the root directory of the project:
 
 ```sh
 mkdir build
+pipenv install --dev
 export PYTHONPATH=src/main/python
 python src/main/python/ttconv/tt.py convert -i src/test/resources/scc/mix-rows-roll-up.scc -o build/mix-rows-roll-up.ttml
 ```
