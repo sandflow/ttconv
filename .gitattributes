@@ -1,0 +1,34 @@
+# Basic .gitattributes for a python repo.
+# Adapted from https://github.com/alexkaratarakis/gitattributes/blob/master/Python.gitattributes
+
+
+*	text=auto
+
+# Markdown
+*.md         text diff=markdown
+
+# shell files
+*.sh         text eol=lf
+
+# Source files
+# ============
+*.pxd    text eol=lf diff=python
+*.py     text eol=lf diff=python
+*.py3    text eol=lf diff=python
+*.pyw    text eol=lf diff=python
+*.pyx    text eol=lf diff=python
+*.pyz    text eol=lf diff=python
+*.pyi    text eol=lf diff=python
+
+# Binary files
+# ============
+*.db     binary
+*.p      binary
+*.pkl    binary
+*.pickle binary
+*.pyc    binary export-ignore
+*.pyo    binary export-ignore
+*.pyd    binary
+
+# Jupyter notebook
+*.ipynb  text

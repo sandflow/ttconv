@@ -10,7 +10,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='ttconv', 
-    version='1.0.3',
+    version='1.0.4.dev4',
     description='Library for conversion of common timed text formats',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -41,6 +41,9 @@ setup(
         'Source': 'https://github.com/sandflow/ttconv',
     },
 
-    scripts=['src/main/python/ttconv/tt.py'],
-
+    entry_points={
+        "console_scripts": [
+            "tt = ttconv.tt:main"
+        ]
+    },
 )
