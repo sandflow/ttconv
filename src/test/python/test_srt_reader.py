@@ -75,6 +75,44 @@ Hello <bold>my</bold> name is Bob
     else:
       self.fail()
 
+  def test_blank_lines(self):
+    # from https://en.wikipedia.org/wiki/SubRip
+    SAMPLE = """
+    
+1
+00:02:16,612 --> 00:02:19,376
+Senator, we're making
+our final approach into Coruscant.
+
+
+2
+00:02:19,482 --> 00:02:21,609
+Very good, Lieutenant.
+
+5
+00:03:20,476 --> 00:03:22,671
+There was no danger at all.
+
+
+
+"""
+
+    f = io.StringIO(SAMPLE)
+
+    self.assertIsNotNone(to_model(f))
+
+  def test_bold(self):
+    f = io.StringIO( """1
+00:02:16,612 --> 00:02:19,376
+Hello <bold>my</bold> name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        break
+    else:
+      self.fail()
+
   def test_bold_alt(self):
     f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376

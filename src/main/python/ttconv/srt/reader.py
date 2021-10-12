@@ -180,6 +180,9 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
   for line_index, line in enumerate(lines):
 
     if state is _State.COUNTER:
+      if _EMPTY_RE.fullmatch(line):
+        continue
+
       if _COUNTER_RE.search(line) is None:
         LOGGER.fatal("Missing subtitle counter at line %s", line_index)
         return None
