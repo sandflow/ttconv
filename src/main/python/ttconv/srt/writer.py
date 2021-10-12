@@ -175,7 +175,7 @@ class SrtContext:
         self._paragraphs[-1].set_end(self._paragraphs[-1].get_begin().to_seconds() + 10.0)
 
   def __str__(self) -> str:
-    return "\n".join(p.to_string() for p in self._paragraphs)
+    return "\n".join(p.to_string(id + 1) for id, p in enumerate(self._paragraphs))
 
 
 #

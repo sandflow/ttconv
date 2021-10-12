@@ -202,7 +202,7 @@ Pellentesque interdum lacinia sollicitudin.
 00:00:10,000 --> 00:00:24,400
 This text must appear at 10 seconds and disappear at 24.4 seconds
 
-3
+2
 00:00:25,000 --> 00:00:35,000
 This text must appear at 25 seconds and disappear at 35 seconds
 """)

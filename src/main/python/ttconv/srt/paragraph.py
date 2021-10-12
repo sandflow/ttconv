@@ -77,7 +77,7 @@ class SrtParagraph:
     """Appends text to the paragraph"""
     self._text += text
 
-  def to_string(self) -> str:
+  def to_string(self, sub_number: int=None) -> str:
     """Returns the SRT paragraph as a formatted string"""
     if self._begin is None:
       raise ValueError("SRT paragraph begin time code must be set.")
@@ -88,8 +88,8 @@ class SrtParagraph:
     if self._end.to_seconds() <= self._begin.to_seconds():
       raise ValueError("SRT paragraph end time code must be greater than the begin time code.")
 
-    return str(self)
+    return "\n".join((str(self._id if sub_number is None else sub_number), str(self._begin) + " --> " + str(self._end), str(self._text))) \
+           + ("\n" if self._text else "")
 
   def __str__(self) -> str:
-    return "\n".join((str(self._id), str(self._begin) + " --> " + str(self._end), str(self._text))) \
-           + ("\n" if self._text else "")
+    return self.to_string()
