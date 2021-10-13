@@ -188,5 +188,18 @@ Hello <font color='blue'>my</font> name is Bob
     else:
       self.fail()
 
+  def test_multiline_tags(self):
+    f = io.StringIO( """1
+00:02:16,612 --> 00:02:19,376
+Hello <bold>my
+</bold> name is Bob
+""")
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        break
+    else:
+      self.fail()
+
 if __name__ == '__main__':
   unittest.main()
