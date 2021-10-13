@@ -107,7 +107,7 @@ class _State(Enum):
 
 _EMPTY_RE = re.compile(r"\s+")
 _COUNTER_RE = re.compile(r"\d+")
-_TIMECODE_RE = re.compile(r"(?P<begin_h>[0-9]{2}):(?P<begin_m>[0-9]{2}):(?P<begin_s>[0-9]{2}),(?P<begin_ms>[0-9]{3})\s+-->\s+(?P<end_h>[0-9]{2}):(?P<end_m>[0-9]{2}):(?P<end_s>[0-9]{2}),(?P<end_ms>[0-9]{3})")
+_TIMECODE_RE = re.compile(r"(?P<begin_h>[0-9]{2,3}):(?P<begin_m>[0-9]{2}):(?P<begin_s>[0-9]{2}),(?P<begin_ms>[0-9]{3})\s+-->\s+(?P<end_h>[0-9]{2,3}):(?P<end_m>[0-9]{2}):(?P<end_s>[0-9]{2}),(?P<end_ms>[0-9]{3})")
 _DEFAULT_REGION_ID = "r1"
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
 _DEFAULT_FONT_SIZE = styles.LengthType(80, styles.LengthType.Units.pct)
