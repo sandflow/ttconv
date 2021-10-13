@@ -28,7 +28,6 @@
 import logging
 from fractions import Fraction
 from typing import List, Optional
-import itertools
 
 import ttconv.model as model
 import ttconv.srt.style as style
@@ -95,6 +94,12 @@ class SrtContext:
 
       for elem in list(element):
         self.append_element(elem, begin, end)
+
+      self._paragraphs[-1].normalize_eol()
+
+      if self._paragraphs[-1].is_only_whitespace():
+        LOGGER.debug("Removing empty paragraph.")
+        self._paragraphs.pop()
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -170,7 +175,7 @@ class SrtContext:
         self._paragraphs[-1].set_end(self._paragraphs[-1].get_begin().to_seconds() + 10.0)
 
   def __str__(self) -> str:
-    return "\n".join(p.to_string() for p in self._paragraphs)
+    return "\n".join(p.to_string(id + 1) for id, p in enumerate(self._paragraphs))
 
 
 #
