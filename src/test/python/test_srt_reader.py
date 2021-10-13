@@ -64,7 +64,7 @@ There was no danger at all."""
     self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
-    f = io.StringIO( """1
+    f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
 Hello <bold>my</bold> name is Bob
 """)
@@ -101,18 +101,6 @@ There was no danger at all.
 
     self.assertIsNotNone(to_model(f))
 
-  def test_bold(self):
-    f = io.StringIO( """1
-00:02:16,612 --> 00:02:19,376
-Hello <bold>my</bold> name is Bob
-""")
-    doc = to_model(f)
-    for e in doc.get_body().dfs_iterator():
-      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
-        break
-    else:
-      self.fail()
-
   def test_bold_alt(self):
     f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
@@ -126,7 +114,7 @@ Hello {bold}my{/bold} name is Bob
       self.fail()
 
   def test_italic(self):
-    f = io.StringIO( """1
+    f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
 Hello <italic>my</italic> name is Bob
 """)
@@ -150,7 +138,7 @@ Hello {italic}my{/italic} name is Bob
       self.fail()     
 
   def test_underline(self):
-    f = io.StringIO( """1
+    f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
 Hello <underline>my</underline> name is Bob
 """)
@@ -176,7 +164,7 @@ Hello {underline}my{/underline} name is Bob
       self.fail()     
 
   def test_blue(self):
-    f = io.StringIO("""1
+    f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
 Hello <font color='blue'>my</font> name is Bob
 """)
@@ -189,7 +177,7 @@ Hello <font color='blue'>my</font> name is Bob
       self.fail()
 
   def test_multiline_tags(self):
-    f = io.StringIO( """1
+    f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
 Hello <bold>my
 </bold> name is Bob
@@ -200,6 +188,24 @@ Hello <bold>my
         break
     else:
       self.fail()
+
+  def test_long_hours(self):
+    f = io.StringIO(r"""1
+101:00:00,000 --> 101:00:01,000
+Hello <bold>my</bold> name is Bob
+""")
+    doc = to_model(f)
+
+    self.assertEqual(
+      363600,
+      doc.get_body().first_child().first_child().get_begin()
+    )
+
+    self.assertEqual(
+      363601,
+      doc.get_body().first_child().first_child().get_end()
+    )
+    
 
 if __name__ == '__main__':
   unittest.main()
