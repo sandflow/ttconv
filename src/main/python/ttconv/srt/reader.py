@@ -43,6 +43,11 @@ LOGGER = logging.getLogger(__name__)
 # SRT reader
 #
 
+def _none_terminated(iterator):
+  for item in iterator:
+    yield item
+  yield None
+
 class _TextParser(HTMLParser):
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
@@ -53,12 +58,14 @@ class _TextParser(HTMLParser):
   def handle_starttag(self, tag, attrs):
 
     span = model.Span(self.parent.get_doc())
+    self.parent.push_child(span)
+    self.parent = span
 
-    if tag.lower() == "bold":
+    if tag.lower() in ("b", "bold"):
       span.set_style(styles.StyleProperties.FontWeight, styles.FontWeightType.bold)
-    elif tag.lower() == "italic":
+    elif tag.lower() in ("i", "italic"):
       span.set_style(styles.StyleProperties.FontStyle, styles.FontStyleType.italic)
-    elif tag.lower() == "underline":
+    elif tag.lower() in ("u", "underline"):
       span.set_style(styles.StyleProperties.TextDecoration, styles.TextDecorationType(underline=True))
     elif tag.lower() == "font":
       for attr in attrs:
@@ -72,25 +79,25 @@ class _TextParser(HTMLParser):
       if color is None:
         LOGGER.warning("Unknown color %s at line %s", attrs["color"], self.line_num)
         return
+
       span.set_style(styles.StyleProperties.Color, color)
 
     else:
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
 
-    self.parent.push_child(span)
-    self.parent = span
-
   def handle_endtag(self, tag):
     self.parent = self.parent.parent()
 
   def handle_data(self, data):
-    if isinstance(self.parent, model.P):
-      span = model.Span(self.parent.get_doc())
-      self.parent.push_child(span)
-      self.parent = span
+    lines = data.split("\n")
 
-    self.parent.push_child(model.Text(self.parent.get_doc(), data))
+    for i, line in enumerate(lines):
+      if i > 0:
+        self.parent.push_child(model.Br(self.parent.get_doc()))
+      span = model.Span(self.parent.get_doc())
+      span.push_child(model.Text(self.parent.get_doc(), line))
+      self.parent.push_child(span)
 
 class _State(Enum):
   COUNTER = 1
@@ -177,9 +184,12 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
   state = _State.COUNTER
   current_p = None
  
-  for line_index, line in enumerate(lines):
+  for line_index, line in enumerate(_none_terminated(lines)):
 
     if state is _State.COUNTER:
+      if line is None:
+        break
+
       if _EMPTY_RE.fullmatch(line):
         continue
 
@@ -194,6 +204,9 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       continue
 
     if state is _State.TC:
+      if line is None:
+        break
+
       m = _TIMECODE_RE.search(line)
 
       if m is None:
@@ -222,29 +235,31 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
 
     if state in (_State.TEXT, _State.TEXT_MORE):
 
-      if _EMPTY_RE.fullmatch(line):
+      if line is None or _EMPTY_RE.fullmatch(line):
+        subtitle_text = subtitle_text.strip('\r\n')\
+          .replace(r"\n\r", "\n")\
+          .replace(r"{bold}", r"<bold>")\
+          .replace(r"{/bold}", r"</bold>")\
+          .replace(r"{italic}", r"<italic>")\
+          .replace(r"{/italic}", r"</italic>")\
+          .replace(r"{underline}", r"<underline>")\
+          .replace(r"{/underline}", r"</underline>")
+
+        parser = _TextParser(current_p, line_index)
+        parser.feed(subtitle_text)
+        parser.close()
+
         state = _State.COUNTER
         continue
 
       if state is _State.TEXT:
         div.push_child(current_p)
+        subtitle_text = ""
 
       if state is _State.TEXT_MORE:
         current_p.push_child(model.Br(current_p.get_doc()))
 
-      parser = _TextParser(current_p, line_index)
-
-      html_line = line.strip('\r\n')\
-        .replace(r"{bold}", r"<bold>")\
-        .replace(r"{/bold}", r"<bold>")\
-        .replace(r"{italic}", r"<italic>")\
-        .replace(r"{/italic}", r"</italic>")\
-        .replace(r"{underline}", r"<underline>")\
-        .replace(r"{/underline}", r"</underline>")
-
-      parser.feed(html_line)
-
-      parser.close()
+      subtitle_text += line
 
       state = _State.TEXT_MORE
 
