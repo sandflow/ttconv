@@ -25,6 +25,7 @@
 
 """SRT paragraph"""
 
+import re
 from fractions import Fraction
 from typing import Optional, Union
 
@@ -33,6 +34,8 @@ from ttconv.time_code import ClockTime
 
 class SrtParagraph:
   """SRT paragraph definition class"""
+
+  _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
   def __init__(self, identifier: int):
     self._id: int = identifier
@@ -62,14 +65,19 @@ class SrtParagraph:
     return self._end
 
   def is_only_whitespace(self):
-    """Returns whether the paragraph tex contains only whitespace"""
-    return self._text.isspace()
+    """Returns whether the paragraph tex contains only whitespace or is empty"""
+    return len(self._text) == 0 or self._text.isspace()
+
+  def normalize_eol(self):
+    """Remove line breaks at the beginning and end of the paragraph, and replace
+    line break sequences with a single line break"""
+    self._text = SrtParagraph._EOL_SEQ_RE.sub("\n", self._text).strip("\n\r")
 
   def append_text(self, text: str):
     """Appends text to the paragraph"""
     self._text += text
 
-  def to_string(self) -> str:
+  def to_string(self, sub_number: int=None) -> str:
     """Returns the SRT paragraph as a formatted string"""
     if self._begin is None:
       raise ValueError("SRT paragraph begin time code must be set.")
@@ -80,8 +88,8 @@ class SrtParagraph:
     if self._end.to_seconds() <= self._begin.to_seconds():
       raise ValueError("SRT paragraph end time code must be greater than the begin time code.")
 
-    return str(self)
+    return "\n".join((str(self._id if sub_number is None else sub_number), str(self._begin) + " --> " + str(self._end), str(self._text))) \
+           + ("\n" if self._text else "")
 
   def __str__(self) -> str:
-    return "\n".join((str(self._id), str(self._begin) + " --> " + str(self._end), str(self._text))) \
-           + ("\n" if self._text else "")
+    return self.to_string()

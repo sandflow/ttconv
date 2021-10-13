@@ -193,5 +193,19 @@ Pellentesque interdum lacinia sollicitudin.
     else:
       self.assertEqual(0, len(srt), msg=f"Could not convert {path}")
 
+  def test_empty_isds(self):
+    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml')
+    doc = imsc_reader.to_model(tree)
+    srt_from_model = srt_writer.from_model(doc)
+
+    self.assertEqual(srt_from_model, """1
+00:00:10,000 --> 00:00:24,400
+This text must appear at 10 seconds and disappear at 24.4 seconds
+
+2
+00:00:25,000 --> 00:00:35,000
+This text must appear at 25 seconds and disappear at 35 seconds
+""")
+
 if __name__ == '__main__':
   unittest.main()
