@@ -50,8 +50,10 @@ suggestions/contributions are welcome.
 
 ## Quick start
 
+To install the latest version of `ttconv`, including pre-releases:
+
 ```sh
-pip install ttconv
+pip install --pre ttconv
 
 tt convert -i <input .scc file> -o <output .ttml file>
 ```
