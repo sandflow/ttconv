@@ -102,6 +102,13 @@ class VttContext:
 
       for elem in list(element):
         self.append_element(elem, begin, end)
+      
+      self._paragraphs[-1].normalize_eol()
+
+      if self._paragraphs[-1].is_only_whitespace_or_empty():
+        LOGGER.debug("Removing empty paragraph.")
+        self._paragraphs.pop()
+        self._captions_counter -= 1
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -185,7 +192,7 @@ class VttContext:
     LOGGER.debug("Check and process the last VTT paragraph.")
 
     if self._paragraphs and self._paragraphs[-1].get_end() is None:
-      if self._paragraphs[-1].is_only_whitespace():
+      if self._paragraphs[-1].is_only_whitespace_or_empty():
         # if the last paragraph contains only whitespace, remove it
         LOGGER.debug("Removing empty unbounded last paragraph.")
         self._paragraphs.pop()
