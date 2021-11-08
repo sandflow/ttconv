@@ -25,6 +25,7 @@
 
 """WebVTT paragraph"""
 
+import re
 from fractions import Fraction
 from typing import Optional, Union
 
@@ -33,6 +34,8 @@ from ttconv.time_code import ClockTime
 
 class VttParagraph:
   """VTT paragraph definition class"""
+
+  _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
   def __init__(self, identifier: int):
     self._id: int = identifier
@@ -61,9 +64,14 @@ class VttParagraph:
     """Returns the paragraph end time code"""
     return self._end
 
-  def is_only_whitespace(self):
-    """Returns whether the paragraph tex contains only whitespace"""
-    return self._text.isspace()
+  def is_only_whitespace_or_empty(self):
+    """Returns whether the paragraph text contains only whitespace or is empty"""
+    return len(self._text) == 0 or self._text.isspace()
+
+  def normalize_eol(self):
+    """Remove line breaks at the beginning and end of the paragraph, and replace
+    line break sequences with a single line break"""
+    self._text = VttParagraph._EOL_SEQ_RE.sub("\n", self._text).strip("\n\r")
 
   def append_text(self, text: str):
     """Appends text to the paragraph"""

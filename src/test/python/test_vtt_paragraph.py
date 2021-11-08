@@ -38,19 +38,16 @@ class VttParagraphTest(unittest.TestCase):
   def test_paragraph(self):
     paragraph = VttParagraph(123)
 
-    self.assertEqual("123\nNone --> None\n", str(paragraph))
     self.assertRaisesRegex(ValueError, "VTT paragraph begin time code must be set.", paragraph.to_string)
 
     paragraph.set_begin(Fraction(1234, 1))
     self.assertEqual("00:20:34.000", str(paragraph.get_begin()))
 
-    self.assertEqual("123\n00:20:34.000 --> None\n", str(paragraph))
     self.assertRaisesRegex(ValueError, "VTT paragraph end time code must be set.", paragraph.to_string)
 
     paragraph.set_end(Fraction(1234, 1))
     self.assertEqual("00:20:34.000", str(paragraph.get_end()))
 
-    self.assertEqual("123\n00:20:34.000 --> 00:20:34.000\n", str(paragraph))
     self.assertRaisesRegex(ValueError, "VTT paragraph end time code must be greater than the begin time code.", paragraph.to_string)
 
     paragraph.set_end(Fraction(2345, 1))
