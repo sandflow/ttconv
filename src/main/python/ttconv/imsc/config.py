@@ -28,30 +28,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
 from fractions import Fraction
 from typing import Optional
 
 from ttconv.config import ModuleConfiguration
+from ttconv.imsc.attributes import TimeExpressionSyntaxEnum
 
+def parse_time_expression_syntax(config_value: str) -> Optional[TimeExpressionSyntaxEnum]:
+  """Parse time expression from string value"""
+  if config_value is None:
+    return config_value
 
-class TimeExpressionEnum(Enum):
-  """IMSC time expression configuration values"""
-  frames = "frames"
-  clock_time = "clock_time"
+  str_values = map(lambda e: e.value, list(TimeExpressionSyntaxEnum))
+  if config_value not in str_values:
+    raise ValueError("Invalid time expression format", config_value)
 
-  @staticmethod
-  def parse(config_value: str) -> Optional[TimeExpressionEnum]:
-    """Parse time expression from string value"""
-    if config_value is None:
-      return config_value
-
-    str_values = map(lambda e: e.value, list(TimeExpressionEnum))
-    if config_value not in str_values:
-      raise ValueError("Invalid time expression format", config_value)
-
-    return TimeExpressionEnum[config_value]
-
+  return TimeExpressionSyntaxEnum[config_value]
 
 @dataclass
 class IMSCWriterConfiguration(ModuleConfiguration):
@@ -69,11 +61,11 @@ class IMSCWriterConfiguration(ModuleConfiguration):
   def name(cls):
     return "imsc_writer"
 
-  time_format: TimeExpressionEnum = field(
-    default=TimeExpressionEnum.clock_time,
-    metadata={"decoder": TimeExpressionEnum.parse}
+  time_format: TimeExpressionSyntaxEnum = field(
+    default=None,
+    metadata={"decoder": parse_time_expression_syntax}
     )
-  fps: Fraction = field(
-    default="24/1",
+  fps: Optional[Fraction] = field(
+    default=None,
     metadata={"decoder": FractionDecoder()}
     )

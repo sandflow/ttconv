@@ -72,8 +72,8 @@ tt convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CON
 
   * `"general"."progress_bar": "true" | "false"`: whether a progress bar is displayed
   * `"general"."log_level": "INFO" | "WARN" | "ERROR"`: logging level
-  * `"imsc_writer"."time_format": "frames" | "clock_time"`: output TTML expressions in seconds or in frames
-  * `"imsc_writer"."fps": "<num>/<denom>"`: specifies the frame rate _num/denom_ when output TTML expressions in frames
+  * `"imsc_writer"."time_format": "frames" | "clock_time" | "clock_time_with_frames" (default: "clock_time")`: output TTML expressions in frames (`f`), as `HH:MM:SS.mmm` or as `HH:MM:SS:FF`
+  * `"imsc_writer"."fps": "<num>/<denom>"`: specifies the frame rate _num/denom_ when `time_format` is `frames` or `clock_time_with_frames`
   * `"stl_reader"."disable_fill_line_gap" : "true" | "false" (default: "false")`: "true" means that the STL reader does not fill gaps between lines
   * `"stl_reader"."disable_line_padding" : "true" | "false" (default: "false")`: "true" means that the STL reader does not add padding at the begining/end of lines
   * `"stl_reader"."program_start_tc" : "TCP" | "HH:MM:SS:FF" (default: "00:00:00:00")`: specifies a starting offset, either the TCP field of the GSI block or a user-specified timecode
