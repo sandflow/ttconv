@@ -728,7 +728,10 @@ class ConfigTest(unittest.TestCase):
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "150f")
 
-
+    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.frames)
+    with self.assertRaises(ValueError):
+      imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
+    
   def test_clock_time_with_frames(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" >
@@ -745,6 +748,12 @@ class ConfigTest(unittest.TestCase):
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "00:00:02:03")
+
+    config = imsc_config.IMSCWriterConfiguration(
+      time_format=attributes.TimeExpressionSyntaxEnum.clock_time_with_frames
+      )
+    with self.assertRaises(ValueError):
+      imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
 
 if __name__ == '__main__':
   unittest.main()

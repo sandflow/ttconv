@@ -33,7 +33,7 @@ import ttconv.imsc.elements as imsc_elements
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.model as model
 import ttconv.imsc.config as imsc_config
-import ttconv.imsc.attributes as imsc_attr
+from ttconv.imsc.attributes import TimeExpressionSyntaxEnum
 
 LOGGER = logging.getLogger(__name__)
 
@@ -58,22 +58,33 @@ def from_model(
   et.register_namespace("ebutts", xml_ns.EBUTTS)
 
   if config is not None:
-    if config.time_format is imsc_attr.TimeExpressionSyntaxEnum.clock_time_with_frames and config.fps.denominator != 1:
-      raise ValueError("Time expressions cannot be HH:MM:SS:FF if the frame rate is not an integer")
     
     fps = config.fps
 
-    if config.time_format is None:
-      if config.fps is not None:
-        time_format = imsc_attr.TimeExpressionSyntaxEnum.frames
-      else:
-        time_format = imsc_attr.TimeExpressionSyntaxEnum.clock_time
-    else:
+    if config.time_format is not None:
+
+      if config.time_format in (TimeExpressionSyntaxEnum.clock_time_with_frames, TimeExpressionSyntaxEnum.frames):
+        
+        if fps is None:
+          raise ValueError("HH:MM:SS:FF and frames time expressions require the `frame_rate` parameter to be set.")
+        
+        if config.time_format is TimeExpressionSyntaxEnum.clock_time_with_frames and config.fps.denominator != 1:
+          raise ValueError("Time expressions cannot be HH:MM:SS:FF if the `frame_rate` parameter is not an integer")
+
       time_format = config.time_format
 
+    elif config.fps is not None:
+
+      time_format = TimeExpressionSyntaxEnum.frames
+    
+    else:
+
+      time_format = TimeExpressionSyntaxEnum.clock_time
+
   else:
+    
     fps = None
-    time_format = imsc_attr.TimeExpressionSyntaxEnum.clock_time
+    time_format = TimeExpressionSyntaxEnum.clock_time
   
  
   return et.ElementTree(
