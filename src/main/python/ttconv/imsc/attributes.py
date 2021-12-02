@@ -32,6 +32,7 @@ from fractions import Fraction
 import typing
 from dataclasses import dataclass
 from enum import Enum
+from ttconv.time_code import SmpteTimeCode
 import ttconv.model as model
 import ttconv.imsc.utils as utils
 import ttconv.imsc.namespaces as ns
@@ -397,22 +398,25 @@ class TemporalAttributeParsingContext:
   frame_rate: Fraction = Fraction(30, 1)
   tick_rate: int = 1
 
+class TimeExpressionSyntaxEnum(Enum):
+  """IMSC time expression configuration values"""
+  frames = "frames"
+  clock_time = "clock_time"
+  clock_time_with_frames = "clock_time_with_frames"
+
 @dataclass
 class TemporalAttributeWritingContext:
   frame_rate: typing.Optional[Fraction] = None
+  time_expression_syntax: TimeExpressionSyntaxEnum = TimeExpressionSyntaxEnum.clock_time
 
 def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> str:
-  if context.frame_rate is None:
-    return to_hh_mm_ss_ms(time)
-  return to_frames(context, time)
+  if context.time_expression_syntax is TimeExpressionSyntaxEnum.clock_time or context.frame_rate is None:
+    return str(ClockTime.from_seconds(time))
 
-def to_hh_mm_ss_ms(time: Fraction) -> str:
-  return str(ClockTime.from_seconds(time))
+  if context.time_expression_syntax is TimeExpressionSyntaxEnum.frames:
+    return f"{math.ceil(time * context.frame_rate)}f"
 
-def to_frames(context: TemporalAttributeWritingContext, time: Fraction) -> str:
-  value = time * context.frame_rate
-  value = math.ceil(value)
-  return f"{value}f"
+  return f"{SmpteTimeCode.from_seconds(time, context.frame_rate)}"
 
 class BeginAttribute:
   '''begin attribute

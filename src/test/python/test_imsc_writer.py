@@ -658,26 +658,31 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     self.assertEqual(val, '00:00:00.333')
 
     context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1000))
+    time = Fraction(1, 3)
+    val = attributes.to_time_format(context, time)
+    self.assertEqual(val, '00:00:00.333')
+
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1000), attributes.TimeExpressionSyntaxEnum.frames)
     time = Fraction(2, 1)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '60f')
 
-    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001), attributes.TimeExpressionSyntaxEnum.frames)
     time = Fraction(3, 1)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '90f')
 
-    context = attributes.TemporalAttributeWritingContext(Fraction(25000, 1000))
+    context = attributes.TemporalAttributeWritingContext(Fraction(25000, 1000), attributes.TimeExpressionSyntaxEnum.frames)
     time = Fraction(3600, 1)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '90000f')
 
-    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001), attributes.TimeExpressionSyntaxEnum.frames)
     time = Fraction(0.7674333333333333)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '23f')
 
-    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001))
+    context = attributes.TemporalAttributeWritingContext(Fraction(30000, 1001), attributes.TimeExpressionSyntaxEnum.frames)
     time = 2301 / Fraction(30000, 1001)
     val = attributes.to_time_format(context, time)
     self.assertEqual(val, '2301f')
@@ -685,7 +690,26 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
 
 class ConfigTest(unittest.TestCase):
 
-  def test_fps(self):
+  def test_clock_time(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" >
+    <body begin="2.3s"/>
+    </tt>
+    """
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    
+    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.clock_time)
+    xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
+    body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
+    self.assertEqual(body_element.get("begin"), "00:00:02.300")
+
+    xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc))
+    body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
+    self.assertEqual(body_element.get("begin"), "00:00:02.300")
+
+
+  def test_frames(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" >
     <body begin="5s"/>
@@ -694,12 +718,42 @@ class ConfigTest(unittest.TestCase):
 
     ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
     
-    config = imsc_config.IMSCWriterConfiguration(time_format=imsc_config.TimeExpressionEnum.frames, fps=Fraction(30, 1))
+    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.frames, fps=Fraction(30, 1))
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
-
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
-
     self.assertEqual(body_element.get("begin"), "150f")
+
+    config = imsc_config.IMSCWriterConfiguration(fps=Fraction(30, 1))
+    xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
+    body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
+    self.assertEqual(body_element.get("begin"), "150f")
+
+    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.frames)
+    with self.assertRaises(ValueError):
+      imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
+    
+  def test_clock_time_with_frames(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" >
+    <body begin="2.1s"/>
+    </tt>
+    """
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    
+    config = imsc_config.IMSCWriterConfiguration(
+      time_format=attributes.TimeExpressionSyntaxEnum.clock_time_with_frames,
+      fps=Fraction(30, 1)
+      )
+    xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
+    body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
+    self.assertEqual(body_element.get("begin"), "00:00:02:03")
+
+    config = imsc_config.IMSCWriterConfiguration(
+      time_format=attributes.TimeExpressionSyntaxEnum.clock_time_with_frames
+      )
+    with self.assertRaises(ValueError):
+      imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
 
 if __name__ == '__main__':
   unittest.main()

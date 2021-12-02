@@ -93,8 +93,11 @@ class TTMLElement:
   class WritingContext:
     '''State information when writing a TTML element'''
 
-    def __init__(self, frame_rate: Fraction):
-      self.temporal_context = imsc_attr.TemporalAttributeWritingContext(frame_rate=frame_rate)
+    def __init__(self, frame_rate: Fraction, time_expression_syntax: imsc_attr.TimeExpressionSyntaxEnum):
+      self.temporal_context = imsc_attr.TemporalAttributeWritingContext(
+        frame_rate=frame_rate,
+        time_expression_syntax=time_expression_syntax
+        )
 
   @staticmethod
   def is_instance(xml_elem) -> bool:
@@ -218,11 +221,12 @@ class TTElement(TTMLElement):
   def from_model(
     model_doc: model.ContentDocument,
     frame_rate: typing.Optional[Fraction],
+    time_expression_syntax: imsc_attr.TimeExpressionSyntaxEnum,
     progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
   ) -> et.Element:
     '''Converts the data model to an IMSC document contained in an ElementTree Element'''
 
-    ctx = TTMLElement.WritingContext(frame_rate)
+    ctx = TTMLElement.WritingContext(frame_rate, time_expression_syntax)
 
     tt_element = et.Element(TTElement.qn)
 
