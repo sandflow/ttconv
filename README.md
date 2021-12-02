@@ -67,24 +67,45 @@ tt convert -i <input .scc file> -o <output .ttml file>
 * `--itype`: `TTML` | `SCC` | `STL` | `SRT` (extrapolated from the filename, if omitted)
 * `--otype`: `TTML` | `SRT` | `VTT` (extrapolated from the filename, if omitted)
 * `--config` and `--config_file`: JSON dictionaries with the following members:
-  * `"general"."progress_bar": "true" | "false"`: whether a progress bar is displayed
-  * `"general"."log_level": "INFO" | "WARN" | "ERROR"`: logging level
-  * `"imsc_writer": JSON object`: IMSC Writer configuration (see below)
-  * `"stl_reader": JSON object`: STL Reader configuration (see below)
+  * `"general": JSON object`: General configuration options (see below)
+  * `"imsc_writer": JSON object`: IMSC Writer configuration options (see below)
+  * `"stl_reader": JSON object`: STL Reader configuration options (see below)
 
 Example:
 
 `tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --config '{"general": {"progress_bar":false, "log_level":"WARN"}}'`
 
+### General configuration
+
+#### progress_bar
+
+`"progress_bar": true | false`
+
+Specifies whether a progress bar is displayed
+
+Default: `true`
+
+### log_level
+
+`"log_level": "INFO" | "WARN" | "ERROR"`
+
+Logging verbosity
+
+Default: `"INFO"`
+
 ### IMSC Writer configuration
 
-* `"time_format": "frames" | "clock_time" | "clock_time_with_frames"` \[optional\]
+### time_format
+
+`"time_format": "frames" | "clock_time" | "clock_time_with_frames"`
 
 Specifies whether the TTML time expressions are in frames (`f`), `HH:MM:SS.mmm` or `HH:MM:SS:FF`
 
-Default: `"frames"` if `"fps"` is specified, `"clock_time"` otherwise`
+Default: `"frames"` if `"fps"` is specified, `"clock_time"` otherwise
 
-* `"fps": "<num>/<denom>"` \[optional\]
+### fps
+
+`"fps": "<num>/<denom>"`
 
 Specifies the `ttp:frameRate` and `ttp:frameRateMultiplier` of the output document.
 
@@ -96,31 +117,41 @@ Example:
 
 ### STL Reader configuration
 
-* `"disable_fill_line_gap" : "true" | "false"`
+#### disable_fill_line_gap
 
-`"true"` means that the STL reader does not fill gaps between lines
+`"disable_fill_line_gap" : true | false`
 
-Default: `"false"`
+`true` means that the STL reader does not fill gaps between lines
 
-* `"disable_line_padding" : "true" | "false"`
+Default: `false`
 
-`"true"` means that the STL reader does not add padding at the begining/end of lines
+#### disable_line_padding
 
-Default: `"false"`
+`"disable_line_padding" : true | false`
 
-* `"program_start_tc" : "TCP" | "HH:MM:SS:FF"`
+`true` means that the STL reader does not add padding at the begining/end of lines
+
+Default: `false`
+
+#### program_start_tc
+
+`"program_start_tc" : "TCP" | "HH:MM:SS:FF"`
 
 Specifies a starting offset, either the TCP field of the GSI block or a user-specified timecode
 
 Default: `"00:00:00:00"`
 
-* `"font_stack" : [<font-families>](https://www.w3.org/TR/ttml2/#style-value-font-families)`
+#### font_stack
+
+`"font_stack" : [<font-families>](https://www.w3.org/TR/ttml2/#style-value-font-families)`
 
 Overrides the font stack
 
 Default: `"Verdana, Arial, Tiresias, sansSerif"`
 
-* `"max_row_count" : "MNR" | integer`
+#### ax_row_count
+
+`"max_row_count" : "MNR" | integer`
 
 Specifies a maximum number of rows for open subtitles, either the MNR field of the GSI block or a user-specified value
 
