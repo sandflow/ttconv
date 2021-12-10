@@ -699,7 +699,7 @@ class ConfigTest(unittest.TestCase):
 
     ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
     
-    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.clock_time)
+    config = imsc_config.IMSCWriterConfiguration.parse({"time_format" : "clock_time"})
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "00:00:02.300")
@@ -718,17 +718,17 @@ class ConfigTest(unittest.TestCase):
 
     ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
     
-    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.frames, fps=Fraction(30, 1))
+    config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "frames", "fps": "30/1"})
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "150f")
 
-    config = imsc_config.IMSCWriterConfiguration(fps=Fraction(30, 1))
+    config = imsc_config.IMSCWriterConfiguration.parse({"fps": "30/1"})
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "150f")
 
-    config = imsc_config.IMSCWriterConfiguration(time_format=attributes.TimeExpressionSyntaxEnum.frames)
+    config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "frames"})
     with self.assertRaises(ValueError):
       imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
     
@@ -741,17 +741,12 @@ class ConfigTest(unittest.TestCase):
 
     ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
     
-    config = imsc_config.IMSCWriterConfiguration(
-      time_format=attributes.TimeExpressionSyntaxEnum.clock_time_with_frames,
-      fps=Fraction(30, 1)
-      )
+    config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "clock_time_with_frames", "fps": "30/1"})
     xml_from_model = imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "00:00:02:03")
 
-    config = imsc_config.IMSCWriterConfiguration(
-      time_format=attributes.TimeExpressionSyntaxEnum.clock_time_with_frames
-      )
+    config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "clock_time_with_frames"})
     with self.assertRaises(ValueError):
       imsc_writer.from_model(imsc_reader.to_model(ttml_doc), config)
 
