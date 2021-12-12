@@ -52,7 +52,10 @@ class IMSCWriterConfiguration(ModuleConfiguration):
   class FractionDecoder:
     """Utility callable for converting string to Fraction"""
 
-    def __call__(self, value: str) -> Fraction:
+    def __call__(self, value: str) -> Optional[Fraction]:
+      if value is None:
+        return None
+
       [num, den] = value.split('/')
 
       return Fraction(int(num), int(den))
@@ -61,7 +64,7 @@ class IMSCWriterConfiguration(ModuleConfiguration):
   def name(cls):
     return "imsc_writer"
 
-  time_format: TimeExpressionSyntaxEnum = field(
+  time_format: Optional[TimeExpressionSyntaxEnum] = field(
     default=None,
     metadata={"decoder": parse_time_expression_syntax}
     )
