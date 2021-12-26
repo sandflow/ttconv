@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+import json
 import os
 import unittest
 import xml.etree.ElementTree as et
@@ -142,6 +143,10 @@ Cool, got it, will do it by end of next week.
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = VTTWriterConfiguration()
     config.line_position = True
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
+    config = VTTWriterConfiguration.parse(json.loads('{"line_position":true}'))
     vtt_from_model = vtt_writer.from_model(model, config)
     self.assertEqual(expected_vtt, vtt_from_model)
 
