@@ -106,6 +106,42 @@ Pellentesque interdum lacinia sollicitudin.
 
     self.assertEqual(expected_vtt, vtt_from_model)
 
+  def test_position(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
+  <head>
+    <styling>
+      <style xml:id="style.center" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="center"/>
+    </styling>
+    <layout>
+      <region xml:id="region.after" tts:displayAlign="after" tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
+      <region xml:id="region.before" tts:displayAlign="before" tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
+    </layout>
+  </head>
+  <body>
+    <div>
+      <p style="style.center" region="region.after" begin="00:00:03:12" end="00:00:12:00">Only one or two short samples are needed<br/>to make sure the conversion basically works</p>
+      <p style="style.center" region="region.before" begin="00:00:14:09" end="00:00:25:17">Cool, got it, will do it by end of next week.</p>
+    </div>
+  </body>
+</tt>"""
+
+    expected_vtt="""WEBVTT
+
+1
+00:00:03.501 --> 00:00:12.000 line:90%,after
+Only one or two short samples are needed
+to make sure the conversion basically works
+
+2
+00:00:14.375 --> 00:00:25.709 line:10%,before
+Cool, got it, will do it by end of next week.
+"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    vtt_from_model = vtt_writer.from_model(model, None)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
   def test_scc_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/scc"):
       for filename in files:

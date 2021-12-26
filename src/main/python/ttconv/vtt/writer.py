@@ -37,9 +37,9 @@ from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
 from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
-from ttconv.vtt.paragraph import VttParagraph
+from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
-from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
+from ttconv.style_properties import ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType, CoordinateType, DisplayAlignType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class VttContext:
   """VTT writer context"""
 
   filters: List[Filter] = (
-    RegionsMergingFilter(),
+  #  RegionsMergingFilter(),
     ParagraphsMergingFilter(),
     SupportedStylePropertiesFilter({
       StyleProperties.FontWeight: [
@@ -67,6 +67,18 @@ class VttContext:
       StyleProperties.BackgroundColor: [
         # Every values
       ],
+      StyleProperties.Position: [
+        # Every values
+      ],
+      StyleProperties.Origin: [
+        # Every values
+      ],
+      StyleProperties.DisplayAlign: [
+        # Every values
+      ],
+      StyleProperties.Extent: [
+        # Every values
+      ],
     }),
     DefaultStylePropertyValuesFilter({
       StyleProperties.Color: NamedColors.white.value,
@@ -80,35 +92,13 @@ class VttContext:
     self._captions_counter: int = 0
     self._begin: Fraction = Fraction(0)
     self._end: Fraction = Fraction(0)
-    self._paragraphs: List[VttParagraph] = []
+    self._paragraphs: List[VttCue] = []
     self._css_classes: List[CssClass] = []
     self._colors_used: Dict[str, str] = {}
     self._background_colors_used: Dict[str, str] = {}
 
-  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
+  def process_content_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
     """Converts model element to VTT content"""
-
-    if isinstance(element, model.Div):
-      for elem in list(element):
-        self.append_element(elem, begin, end)
-
-    if isinstance(element, model.P):
-
-      self._captions_counter += 1
-
-      self._paragraphs.append(VttParagraph(self._captions_counter))
-      self._paragraphs[-1].set_begin(begin)
-      self._paragraphs[-1].set_end(end)
-
-      for elem in list(element):
-        self.append_element(elem, begin, end)
-      
-      self._paragraphs[-1].normalize_eol()
-
-      if self._paragraphs[-1].is_only_whitespace_or_empty():
-        LOGGER.debug("Removing empty paragraph.")
-        self._paragraphs.pop()
-        self._captions_counter -= 1
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -143,7 +133,7 @@ class VttContext:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
 
       for elem in list(element):
-        self.append_element(elem, begin, end)
+        self.process_content_element(elem, begin, end)
 
       if is_underlined:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
@@ -163,7 +153,7 @@ class VttContext:
     if isinstance(element, model.Text):
       self._paragraphs[-1].append_text(element.get_text())
 
-  def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
+  def add_isd(self, isd: ISD, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to VTT content"""
 
     LOGGER.debug(
@@ -181,7 +171,38 @@ class VttContext:
 
       for body in region:
         for div in list(body):
-          self.append_element(div, begin, end)
+          for p in list(div):
+
+            self._captions_counter += 1
+
+            cue = VttCue(self._captions_counter)
+            cue.set_begin(begin)
+            cue.set_end(end)
+
+            display_align = region.get_style(StyleProperties.DisplayAlign)
+            position: PositionType = region.get_style(StyleProperties.Position)
+            extent: ExtentType = region.get_style(StyleProperties.Extent)
+            
+            if display_align == DisplayAlignType.after:
+              cue.set_line(round(position.v_offset.value + extent.height.value))
+            elif display_align == DisplayAlignType.before:
+              cue.set_line(round(position.v_offset.value))
+            else:
+              cue.set_line(round(position.v_offset.value + extent.height.value / 2))
+
+            cue.set_align(display_align)
+
+            self._paragraphs.append(cue)
+
+            for elem in list(p):
+              self.process_content_element(elem, begin, end)
+            
+            self._paragraphs[-1].normalize_eol()
+
+            if self._paragraphs[-1].is_only_whitespace_or_empty():
+              LOGGER.debug("Removing empty paragraph.")
+              self._paragraphs.pop()
+              self._captions_counter -= 1
 
     if is_isd_empty:
       LOGGER.debug("Skipping empty paragraph.")

@@ -30,13 +30,13 @@
 from fractions import Fraction
 import unittest
 
-from ttconv.vtt.paragraph import VttParagraph
+from ttconv.vtt.cue import VttCue
 
 
 class VttParagraphTest(unittest.TestCase):
 
   def test_paragraph(self):
-    paragraph = VttParagraph(123)
+    paragraph = VttCue(123)
 
     self.assertRaisesRegex(ValueError, "VTT paragraph begin time code must be set.", paragraph.to_string)
 
