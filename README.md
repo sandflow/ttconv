@@ -70,6 +70,7 @@ tt convert -i <input .scc file> -o <output .ttml file>
   * `"general": JSON object`: General configuration options (see below)
   * `"imsc_writer": JSON object`: IMSC Writer configuration options (see below)
   * `"stl_reader": JSON object`: STL Reader configuration options (see below)
+  * `"vtt_writer": JSON object`: WebVTT Writer configuration options (see below)
 
 Example:
 
