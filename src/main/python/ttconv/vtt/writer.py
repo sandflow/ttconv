@@ -152,6 +152,41 @@ class VttContext:
     if isinstance(element, model.Text):
       self._paragraphs[-1].append_text(element.get_text())
 
+  def process_p(self, region: ISD.Region, element: model.P, begin: Fraction, end: Optional[Fraction]):
+
+    self._captions_counter += 1
+
+    cue = VttCue(self._captions_counter)
+    cue.set_begin(begin)
+    cue.set_end(end)
+
+    if self._config.line_position:
+      display_align = region.get_style(StyleProperties.DisplayAlign)
+      position: PositionType = region.get_style(StyleProperties.Position)
+      extent: ExtentType = region.get_style(StyleProperties.Extent)
+      
+      if display_align == DisplayAlignType.after:
+        cue.set_line(round(position.v_offset.value + extent.height.value))
+        cue.set_align(VttCue.LineAlignment.end)
+      elif display_align == DisplayAlignType.before:
+        cue.set_line(round(position.v_offset.value))
+        cue.set_align(VttCue.LineAlignment.start)
+      else:
+        cue.set_line(round(position.v_offset.value + extent.height.value / 2))
+        cue.set_align(VttCue.LineAlignment.center)
+
+    self._paragraphs.append(cue)
+
+    for elem in list(element):
+      self.process_content_element(elem, begin, end)
+    
+    self._paragraphs[-1].normalize_eol()
+
+    if self._paragraphs[-1].is_only_whitespace_or_empty():
+      LOGGER.debug("Removing empty paragraph.")
+      self._paragraphs.pop()
+      self._captions_counter -= 1
+
   def add_isd(self, isd: ISD, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to VTT content"""
 
@@ -180,37 +215,7 @@ class VttContext:
         for div in list(body):
           for p in list(div):
 
-            self._captions_counter += 1
-
-            cue = VttCue(self._captions_counter)
-            cue.set_begin(begin)
-            cue.set_end(end)
-
-            if self._config.line_position:
-              display_align = region.get_style(StyleProperties.DisplayAlign)
-              position: PositionType = region.get_style(StyleProperties.Position)
-              extent: ExtentType = region.get_style(StyleProperties.Extent)
-              
-              if display_align == DisplayAlignType.after:
-                cue.set_line(round(position.v_offset.value + extent.height.value))
-              elif display_align == DisplayAlignType.before:
-                cue.set_line(round(position.v_offset.value))
-              else:
-                cue.set_line(round(position.v_offset.value + extent.height.value / 2))
-
-              cue.set_align(display_align)
-
-            self._paragraphs.append(cue)
-
-            for elem in list(p):
-              self.process_content_element(elem, begin, end)
-            
-            self._paragraphs[-1].normalize_eol()
-
-            if self._paragraphs[-1].is_only_whitespace_or_empty():
-              LOGGER.debug("Removing empty paragraph.")
-              self._paragraphs.pop()
-              self._captions_counter -= 1
+            self.process_p(region, p, begin, end)
 
     if is_isd_empty:
       LOGGER.debug("Skipping empty paragraph.")

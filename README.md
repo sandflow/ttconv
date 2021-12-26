@@ -157,6 +157,16 @@ Specifies a maximum number of rows for open subtitles, either the MNR field of t
 
 Default: `23`
 
+### VTT Writer configuration
+
+#### line_position
+
+`"line_position" : true | false`
+
+`true` means that the VTT writer outputs line and line alignment cue settings
+
+Default: `false`
+
 ### Library
 
 The overall architecture of the library is as follows:

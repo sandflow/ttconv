@@ -25,16 +25,22 @@
 
 """WebVTT paragraph"""
 
+from enum import Enum
 import re
 from fractions import Fraction
 from typing import Optional, Union
-from ttconv.style_properties import DisplayAlignType
 
 from ttconv.time_code import ClockTime
 
 
 class VttCue:
   """VTT cue class"""
+
+  class LineAlignment(Enum):
+    """WebVTT line alignment cue setting"""
+    start = "start"
+    center = "center"
+    end = "end"
 
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
@@ -44,7 +50,7 @@ class VttCue:
     self._end: Optional[ClockTime] = None
     self._text: str = ""
     self._line: int = None
-    self._align: DisplayAlignType = None
+    self._align: VttCue.LineAlignment = None
 
   def set_begin(self, offset: Fraction):
     """Sets the paragraph begin time code"""
@@ -68,18 +74,18 @@ class VttCue:
     return self._end
 
   def set_line(self, line: int):
-    """Sets the WebVTT line cue setting"""
+    """Sets the WebVTT line cue setting (in whole percent)"""
     self._line = line
 
   def get_line(self) -> Optional[int]:
-    """Return the WebVTT line cue setting"""
+    """Return the WebVTT line cue setting (in whole percent)"""
     return self._line
 
-  def set_align(self, align: DisplayAlignType):
+  def set_align(self, align: LineAlignment):
     """Sets the WebVTT line alignment cue setting"""
     self._align = align
 
-  def get_align(self) -> Optional[DisplayAlignType]:
+  def get_align(self) -> Optional[LineAlignment]:
     """Return the WebVTT line alignment cue setting"""
     return self._align
 

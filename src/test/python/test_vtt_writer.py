@@ -130,12 +130,12 @@ Pellentesque interdum lacinia sollicitudin.
     expected_vtt="""WEBVTT
 
 1
-00:00:03.501 --> 00:00:12.000 line:90%,after
+00:00:03.501 --> 00:00:12.000 line:90%,end
 Only one or two short samples are needed
 to make sure the conversion basically works
 
 2
-00:00:14.375 --> 00:00:25.709 line:10%,before
+00:00:14.375 --> 00:00:25.709 line:10%,start
 Cool, got it, will do it by end of next week.
 """
 

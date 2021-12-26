@@ -33,7 +33,7 @@ import unittest
 from ttconv.vtt.cue import VttCue
 
 
-class VttParagraphTest(unittest.TestCase):
+class VttCueTest(unittest.TestCase):
 
   def test_paragraph(self):
     paragraph = VttCue(123)
