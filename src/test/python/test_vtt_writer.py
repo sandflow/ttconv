@@ -36,6 +36,7 @@ from pathlib import Path
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.stl.reader as stl_reader
+from ttconv.vtt.config import VTTWriterConfiguration
 import ttconv.vtt.writer as vtt_writer
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
@@ -139,7 +140,9 @@ Cool, got it, will do it by end of next week.
 """
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
-    vtt_from_model = vtt_writer.from_model(model, None)
+    config = VTTWriterConfiguration()
+    config.line_position = True
+    vtt_from_model = vtt_writer.from_model(model, config)
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_scc_test_suite(self):

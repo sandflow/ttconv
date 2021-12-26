@@ -41,6 +41,7 @@ import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 import ttconv.srt.reader as srt_reader
 import ttconv.stl.reader as stl_reader
+from ttconv.vtt.config import VTTWriterConfiguration
 import ttconv.vtt.writer as vtt_writer
 from ttconv.config import GeneralConfiguration
 from ttconv.config import ModuleConfiguration
@@ -380,9 +381,14 @@ def convert(args):
 
   elif writer_type is FileTypes.VTT:
     #
+    # Read the config
+    #
+    writer_config = read_config_from_json(VTTWriterConfiguration, json_config_data)
+
+    #
     # Construct and configure the writer
     #
-    vtt_document = vtt_writer.from_model(model, None, progress_callback_write)
+    vtt_document = vtt_writer.from_model(model, writer_config, progress_callback_write)
 
     #
     # Write out the converted file
