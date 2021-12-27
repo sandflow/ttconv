@@ -96,8 +96,8 @@ class VttContext:
       })
     )
 
-  def process_content_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
-    """Converts model element to VTT content"""
+  def process_inline_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
+    """Converts inline element (span and br) to VTT content"""
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -132,7 +132,7 @@ class VttContext:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
 
       for elem in list(element):
-        self.process_content_element(elem, begin, end)
+        self.process_inline_element(elem, begin, end)
 
       if is_underlined:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
@@ -145,7 +145,6 @@ class VttContext:
       if bg_color is not None:
         self._paragraphs[-1].append_text(style.BG_COLOR_TAG_OUT)
 
-
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
 
@@ -153,6 +152,7 @@ class VttContext:
       self._paragraphs[-1].append_text(element.get_text())
 
   def process_p(self, region: ISD.Region, element: model.P, begin: Fraction, end: Optional[Fraction]):
+    """Process p element"""
 
     self._captions_counter += 1
 
@@ -178,7 +178,7 @@ class VttContext:
     self._paragraphs.append(cue)
 
     for elem in list(element):
-      self.process_content_element(elem, begin, end)
+      self.process_inline_element(elem, begin, end)
     
     self._paragraphs[-1].normalize_eol()
 
@@ -214,7 +214,6 @@ class VttContext:
       for body in region:
         for div in list(body):
           for p in list(div):
-
             self.process_p(region, p, begin, end)
 
     if is_isd_empty:
@@ -257,20 +256,16 @@ def from_model(doc: model.ContentDocument, config = None, progress_callback=lamb
   """Converts the data model to a VTT document"""
 
   # split progress between ISD construction and VTT writing
-
   def _isd_progress(progress: float):
     progress_callback(progress / 2)
 
   # create context
-
   vtt = VttContext(config if config is not None else VTTWriterConfiguration())
 
   # Compute ISDs
-
   isds = ISD.generate_isd_sequence(doc, _isd_progress)
 
   # process ISDs
-
   for i, (begin, isd) in enumerate(isds):
 
     end = isds[i + 1][0] if i + 1 < len(isds) else None
