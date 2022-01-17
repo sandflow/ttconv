@@ -30,16 +30,16 @@ from fractions import Fraction
 from typing import Dict, List, Optional
 
 import ttconv.model as model
+from ttconv.vtt.config import VTTWriterConfiguration
 import ttconv.vtt.style as style
-from ttconv.filters import Filter
 from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
 from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
 from ttconv.filters.merge_regions import RegionsMergingFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
-from ttconv.vtt.paragraph import VttParagraph
+from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
-from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
+from ttconv.style_properties import ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType, DisplayAlignType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,13 +47,25 @@ LOGGER = logging.getLogger(__name__)
 class VttContext:
   """VTT writer context"""
 
-  filters: List[Filter] = (
-    RegionsMergingFilter(),
-    ParagraphsMergingFilter(),
-    SupportedStylePropertiesFilter({
-      StyleProperties.FontWeight: [
-        # Every values
-      ],
+  def __init__(self, config: VTTWriterConfiguration):
+    self._captions_counter: int = 0
+    self._begin: Fraction = Fraction(0)
+    self._end: Fraction = Fraction(0)
+    self._paragraphs: List[VttCue] = []
+    self._css_classes: List[CssClass] = []
+    self._colors_used: Dict[str, str] = {}
+    self._background_colors_used: Dict[str, str] = {}
+    self._config = config
+
+    self._filters = []
+
+    if not self._config.line_position:
+      self._filters.append(RegionsMergingFilter())
+
+    self._filters.append(ParagraphsMergingFilter())
+
+    supported_styles = {
+      StyleProperties.FontWeight: [],
       StyleProperties.FontStyle: [
         FontStyleType.normal,
         FontStyleType.italic
@@ -61,54 +73,31 @@ class VttContext:
       StyleProperties.TextDecoration: [
         TextDecorationType.underline
       ],
-      StyleProperties.Color: [
-        # Every values
-      ],
-      StyleProperties.BackgroundColor: [
-        # Every values
-      ],
-    }),
-    DefaultStylePropertyValuesFilter({
-      StyleProperties.Color: NamedColors.white.value,
-      StyleProperties.BackgroundColor: NamedColors.transparent.value,
-      StyleProperties.FontWeight: FontWeightType.normal,
-      StyleProperties.FontStyle: FontStyleType.normal,
-    })
-  )
+      StyleProperties.Color: [],
+      StyleProperties.BackgroundColor: []
+    }
 
-  def __init__(self):
-    self._captions_counter: int = 0
-    self._begin: Fraction = Fraction(0)
-    self._end: Fraction = Fraction(0)
-    self._paragraphs: List[VttParagraph] = []
-    self._css_classes: List[CssClass] = []
-    self._colors_used: Dict[str, str] = {}
-    self._background_colors_used: Dict[str, str] = {}
+    if self._config.line_position:
+      supported_styles.update({
+        StyleProperties.Position: [],
+        StyleProperties.Origin: [],
+        StyleProperties.DisplayAlign: [],
+        StyleProperties.Extent: [],
+      })
+    
+    self._filters.append(SupportedStylePropertiesFilter(supported_styles))
 
-  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
-    """Converts model element to VTT content"""
+    self._filters.append(
+      DefaultStylePropertyValuesFilter({
+        StyleProperties.Color: NamedColors.white.value,
+        StyleProperties.BackgroundColor: NamedColors.transparent.value,
+        StyleProperties.FontWeight: FontWeightType.normal,
+        StyleProperties.FontStyle: FontStyleType.normal,
+      })
+    )
 
-    if isinstance(element, model.Div):
-      for elem in list(element):
-        self.append_element(elem, begin, end)
-
-    if isinstance(element, model.P):
-
-      self._captions_counter += 1
-
-      self._paragraphs.append(VttParagraph(self._captions_counter))
-      self._paragraphs[-1].set_begin(begin)
-      self._paragraphs[-1].set_end(end)
-
-      for elem in list(element):
-        self.append_element(elem, begin, end)
-      
-      self._paragraphs[-1].normalize_eol()
-
-      if self._paragraphs[-1].is_only_whitespace_or_empty():
-        LOGGER.debug("Removing empty paragraph.")
-        self._paragraphs.pop()
-        self._captions_counter -= 1
+  def process_inline_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
+    """Converts inline element (span and br) to VTT content"""
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
@@ -143,7 +132,7 @@ class VttContext:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
 
       for elem in list(element):
-        self.append_element(elem, begin, end)
+        self.process_inline_element(elem, begin, end)
 
       if is_underlined:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
@@ -156,14 +145,49 @@ class VttContext:
       if bg_color is not None:
         self._paragraphs[-1].append_text(style.BG_COLOR_TAG_OUT)
 
-
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
 
     if isinstance(element, model.Text):
       self._paragraphs[-1].append_text(element.get_text())
 
-  def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
+  def process_p(self, region: ISD.Region, element: model.P, begin: Fraction, end: Optional[Fraction]):
+    """Process p element"""
+
+    self._captions_counter += 1
+
+    cue = VttCue(self._captions_counter)
+    cue.set_begin(begin)
+    cue.set_end(end)
+
+    if self._config.line_position:
+      display_align = region.get_style(StyleProperties.DisplayAlign)
+      position: PositionType = region.get_style(StyleProperties.Position)
+      extent: ExtentType = region.get_style(StyleProperties.Extent)
+      
+      if display_align == DisplayAlignType.after:
+        cue.set_line(round(position.v_offset.value + extent.height.value))
+        cue.set_align(VttCue.LineAlignment.end)
+      elif display_align == DisplayAlignType.before:
+        cue.set_line(round(position.v_offset.value))
+        cue.set_align(VttCue.LineAlignment.start)
+      else:
+        cue.set_line(round(position.v_offset.value + extent.height.value / 2))
+        cue.set_align(VttCue.LineAlignment.center)
+
+    self._paragraphs.append(cue)
+
+    for elem in list(element):
+      self.process_inline_element(elem, begin, end)
+    
+    self._paragraphs[-1].normalize_eol()
+
+    if self._paragraphs[-1].is_only_whitespace_or_empty():
+      LOGGER.debug("Removing empty paragraph.")
+      self._paragraphs.pop()
+      self._captions_counter -= 1
+
+  def add_isd(self, isd: ISD, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to VTT content"""
 
     LOGGER.debug(
@@ -171,6 +195,14 @@ class VttContext:
       float(begin),
       float(end) if end is not None else "unbounded"
     )
+
+    # filter the ISD to remove unsupported features
+
+    for vtt_filter in self._filters:
+      vtt_filter.process(isd)
+
+
+    # process the ISD regions
 
     is_isd_empty = True
 
@@ -181,7 +213,8 @@ class VttContext:
 
       for body in region:
         for div in list(body):
-          self.append_element(div, begin, end)
+          for p in list(div):
+            self.process_p(region, p, begin, end)
 
     if is_isd_empty:
       LOGGER.debug("Skipping empty paragraph.")
@@ -219,28 +252,23 @@ class VttContext:
 #
 
 
-def from_model(doc: model.ContentDocument, _isd_config = None, progress_callback=lambda _: None) -> str:
+def from_model(doc: model.ContentDocument, config = None, progress_callback=lambda _: None) -> str:
   """Converts the data model to a VTT document"""
 
-  vtt = VttContext()
-
   # split progress between ISD construction and VTT writing
-
   def _isd_progress(progress: float):
     progress_callback(progress / 2)
 
-  # Compute ISDs
+  # create context
+  vtt = VttContext(config if config is not None else VTTWriterConfiguration())
 
+  # Compute ISDs
   isds = ISD.generate_isd_sequence(doc, _isd_progress)
 
   # process ISDs
-
   for i, (begin, isd) in enumerate(isds):
 
     end = isds[i + 1][0] if i + 1 < len(isds) else None
-
-    for vtt_filter in vtt.filters:
-      vtt_filter.process(isd)
 
     vtt.add_isd(isd, begin, end)
 

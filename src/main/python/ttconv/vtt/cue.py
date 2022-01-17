@@ -25,6 +25,7 @@
 
 """WebVTT paragraph"""
 
+from enum import Enum
 import re
 from fractions import Fraction
 from typing import Optional, Union
@@ -32,8 +33,14 @@ from typing import Optional, Union
 from ttconv.time_code import ClockTime
 
 
-class VttParagraph:
-  """VTT paragraph definition class"""
+class VttCue:
+  """VTT cue class"""
+
+  class LineAlignment(Enum):
+    """WebVTT line alignment cue setting"""
+    start = "start"
+    center = "center"
+    end = "end"
 
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
@@ -42,6 +49,8 @@ class VttParagraph:
     self._begin: Optional[ClockTime] = None
     self._end: Optional[ClockTime] = None
     self._text: str = ""
+    self._line: int = None
+    self._align: VttCue.LineAlignment = None
 
   def set_begin(self, offset: Fraction):
     """Sets the paragraph begin time code"""
@@ -64,6 +73,22 @@ class VttParagraph:
     """Returns the paragraph end time code"""
     return self._end
 
+  def set_line(self, line: int):
+    """Sets the WebVTT line cue setting (in whole percent)"""
+    self._line = line
+
+  def get_line(self) -> Optional[int]:
+    """Return the WebVTT line cue setting (in whole percent)"""
+    return self._line
+
+  def set_align(self, align: LineAlignment):
+    """Sets the WebVTT line alignment cue setting"""
+    self._align = align
+
+  def get_align(self) -> Optional[LineAlignment]:
+    """Return the WebVTT line alignment cue setting"""
+    return self._align
+
   def is_only_whitespace_or_empty(self):
     """Returns whether the paragraph text contains only whitespace or is empty"""
     return len(self._text) == 0 or self._text.isspace()
@@ -71,7 +96,7 @@ class VttParagraph:
   def normalize_eol(self):
     """Remove line breaks at the beginning and end of the paragraph, and replace
     line break sequences with a single line break"""
-    self._text = VttParagraph._EOL_SEQ_RE.sub("\n", self._text).strip("\n\r")
+    self._text = VttCue._EOL_SEQ_RE.sub("\n", self._text).strip("\n\r")
 
   def append_text(self, text: str):
     """Appends text to the paragraph"""
@@ -91,5 +116,24 @@ class VttParagraph:
     return str(self)
 
   def __str__(self) -> str:
-    return "\n".join((str(self._id), str(self._begin) + " --> " + str(self._end), str(self._text))) \
-           + ("\n" if self._text else "")
+
+    # cue identifier
+    t = f"{self._id}\n"
+    
+    # cue timing
+    t += f"{self._begin} --> {self._end}"
+
+    # cue line position
+    if self._line is not None:
+      t += f" line:{self._line}%"
+
+      if self._align is not None:
+        t += f",{self._align.value}"
+
+    t += "\n"
+
+    # cue body
+    if self._text:
+      t += self._text + "\n"
+
+    return t
