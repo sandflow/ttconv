@@ -86,7 +86,7 @@ class ModuleConfiguration:
 @dataclass
 class GeneralConfiguration(ModuleConfiguration):
   """TT general configuration"""
-  log_level: Optional[str] = "WARN"
+  log_level: Optional[str] = "INFO"
   progress_bar: Optional[bool] = True
 
   @classmethod
