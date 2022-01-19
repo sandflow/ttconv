@@ -82,7 +82,7 @@ Example:
 
 `"progress_bar": true | false`
 
-Specifies whether a progress bar is displayed
+A progress bar is displayed if `progress_bar` is `true` and `log_level` is `"INFO"`.
 
 Default: `true`
 
