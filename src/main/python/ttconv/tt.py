@@ -341,7 +341,7 @@ def convert(args):
     if args.itype is not None:
       exit_str = f'Input type {args.itype} is not supported'
     else:
-      exit_str = f'Input file is {args.input} is not supported'
+      exit_str = f'Input file {args.input} is not supported'
 
     LOGGER.error(exit_str)
     sys.exit(exit_str)
