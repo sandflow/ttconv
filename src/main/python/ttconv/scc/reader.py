@@ -471,9 +471,8 @@ class _SccContext:
       self.push_active_caption_to_model(time_code)
 
     if self.buffered_caption is not None:
-      self.push_buffered_to_active_captions()
+      # Remove the buffered caption
       self.buffered_caption = None
-      self.push_active_caption_to_model(time_code)
 
   def process_line(self, line: SccLine) -> SmpteTimeCode:
     """Converts the SCC line to the data model"""
