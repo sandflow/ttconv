@@ -50,7 +50,7 @@ def from_model(
   with a real between 0 and 1, indicating the relative progress of the process.
   '''
   
-  et.register_namespace("ttml", xml_ns.TTML)
+  et.register_namespace("", xml_ns.TTML)
   et.register_namespace("ttp", xml_ns.TTP)
   et.register_namespace("tts", xml_ns.TTS)
   et.register_namespace("ittp", xml_ns.ITTP)

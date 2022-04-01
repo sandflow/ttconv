@@ -68,6 +68,18 @@ class ReaderWriterTest(unittest.TestCase):
     with open(file_path, "wb") as f:
       f.write(reparsed.toprettyxml(indent="  ", encoding="utf-8"))
 
+  def test_default_ns(self):
+    """Confirm that the tt ns is the default namespace"""
+    file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/animation/Animation001.ttml"
+    tree = et.parse(file_to_parse)
+    test_model = imsc_reader.to_model(tree)
+    tree_from_model = imsc_writer.from_model(test_model)
+    rough_string = et.tostring(tree_from_model.getroot(), 'unicode')
+
+    self.assertNotRegex(rough_string, "ttml:tt")
+    self.assertRegex(rough_string, "<tt")
+
+
   def test_animation_001(self):
     file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/animation/Animation001.ttml"
     
