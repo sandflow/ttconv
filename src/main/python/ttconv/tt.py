@@ -274,7 +274,7 @@ def convert(args):
     with open(args.config_file) as json_file:
       json_config_data = json.load(json_file)
 
-  general_config = read_config_from_json(GeneralConfiguration, json_config_data)
+  general_config : GeneralConfiguration = read_config_from_json(GeneralConfiguration, json_config_data)
 
   if general_config is not None:
 
@@ -345,6 +345,13 @@ def convert(args):
 
     LOGGER.error(exit_str)
     sys.exit(exit_str)
+
+  #
+  # apply document language
+  #
+
+  if general_config.document_lang is not None:
+    model.set_lang(general_config.document_lang)
 
   if writer_type is FileTypes.TTML:
     #
