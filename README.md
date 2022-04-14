@@ -100,7 +100,7 @@ Default: `"INFO"`
 
 Overrides the top-level language of the input document.
 
-Example: `"document_lang": "es419"`
+Example: `"document_lang": "es-419"`
 
 Default: `None`
 
