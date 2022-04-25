@@ -94,6 +94,16 @@ Logging verbosity
 
 Default: `"INFO"`
 
+### document_lang
+
+`"document_lang": <RFC 5646 language tag>`
+
+Overrides the top-level language of the input document.
+
+Example: `"document_lang": "es-419"`
+
+Default: `None`
+
 ### IMSC Writer configuration
 
 ### time_format

@@ -88,6 +88,7 @@ class GeneralConfiguration(ModuleConfiguration):
   """TT general configuration"""
   log_level: Optional[str] = "INFO"
   progress_bar: Optional[bool] = True
+  document_lang: Optional[str] = None
 
   @classmethod
   def name(cls):

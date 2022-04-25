@@ -45,7 +45,8 @@ class ConfigurationTest(unittest.TestCase):
     config_json = """{
       "general": {
         "progress_bar": false,
-        "log_level": "INFO"
+        "log_level": "INFO",
+        "document_lang" : "es-419"
       },
       "imsc_writer": {
         "fps": "30000/1001",
@@ -64,7 +65,7 @@ class ConfigurationTest(unittest.TestCase):
     config_dict = json.loads(config_json)
 
     expected_configurations = [
-      GeneralConfiguration(log_level='INFO', progress_bar=False),
+      GeneralConfiguration(log_level='INFO', progress_bar=False, document_lang="es-419"),
       IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001)),
       ISDConfiguration(multi_thread=False),
       SccReaderConfiguration(text_align=TextAlignment.RIGHT)

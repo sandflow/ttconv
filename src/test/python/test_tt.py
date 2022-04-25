@@ -198,5 +198,20 @@ class IMSCAppTest(unittest.TestCase):
     self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(tt.FileTypes.SRT.value, "asdf"))
     self.assertEqual(tt.FileTypes.SRT, tt.FileTypes.get_file_type(None, "srt"))
 
+  def test_document_lang_override(self):
+    out_path = "build/body_only.out.es-419.ttml"
+    in_path = "src/test/resources/ttml/body_only.ttml"
+
+    with open(in_path, encoding="utf-8") as f:
+      self.assertNotRegex(f.read(), "lang=['\"]es-419['\"]")
+    
+    tt.main(['convert', 
+      '-i', 'src/test/resources/ttml/body_only.ttml', 
+      '-o', out_path, 
+      '--config', '{"general": {"progress_bar":false, "document_lang":"es-419"}}'])
+    
+    with open(out_path, encoding="utf-8") as f:
+      self.assertRegex(f.read(), "lang=['\"]es-419['\"]")
+
 if __name__ == '__main__':
   unittest.main()
