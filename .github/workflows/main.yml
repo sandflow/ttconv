@@ -13,7 +13,7 @@ jobs:
         sudo apt-get -y install python3.7 python3-pip
         sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 10
         sudo update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 10
-        pip install pipenv
+        python3.7 -m pip install pipenv
         
     - name: Checkout repo
       uses: actions/checkout@v2
