@@ -61,18 +61,43 @@ class _TextParser(HTMLParser):
     self.parent.push_child(span)
     self.parent = span
 
-    if tag.lower().startswith("b"):
+    tag = tag.lower()
+
+    if tag.startswith("b"):
       span.set_style(styles.StyleProperties.FontWeight, styles.FontWeightType.bold)
-    elif tag.lower().startswith("i"):
+    elif tag.startswith("i"):
       span.set_style(styles.StyleProperties.FontStyle, styles.FontStyleType.italic)
-    elif tag.lower().startswith("u"):
+    elif tag.startswith("u"):
       span.set_style(styles.StyleProperties.TextDecoration, styles.TextDecorationType(underline=True))
-    elif tag.lower().startswith("c"):
+    elif tag == "ts":
+      ts = vtt_timestamp_to_secs(attrs[0][1])
+      parent_begin = None
+      parent = self.parent
+      while parent is not None:
+        parent_begin = parent.get_begin()
+        if parent_begin is not None:
+          break
+        parent = parent.parent()
+      if ts is not None and parent_begin is not None and parent_begin <= ts:
+        span.set_begin(ts - parent_begin)
+      else:
+        LOGGER.warning("Invalid timestamp tag %s", attrs[0][1])
+    elif tag.startswith("lang"):
+      try:
+        span.set_lang(attrs[0][0])
+      except IndexError:
+        LOGGER.warning("Lang tag without language present")
+    elif tag.startswith("c"):
       for c in tag.lower().split(".")[1:]:
-        if c == "blue":
-          span.set_style(styles.StyleProperties.Color, styles.NamedColors.blue.value)
-        elif c == "bg_blue":
-          span.set_style(styles.StyleProperties.BackgroundColor, styles.NamedColors.blue.value)
+        try:
+          if c.startswith("bg_"):
+            bg_color =  styles.NamedColors[c[3:]]
+            span.set_style(styles.StyleProperties.BackgroundColor, bg_color.value)
+          else:
+            color =  styles.NamedColors[c]
+            span.set_style(styles.StyleProperties.Color, color.value)
+        except KeyError:
+          LOGGER.warning("Ignoring class %s", c)
     else:
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
@@ -125,7 +150,7 @@ def _get_or_make_region(
   size = styles.LengthType(100)
   alignment = styles.TextAlignType.start
 
-  cue_settings = dict(x.split(":") for x in cue_settings_list.split())
+  cue_settings = dict(x.split(":") for x in cue_settings_list)
 
   # writing direction
 
@@ -234,6 +259,20 @@ def _get_or_make_region(
 
   return found_region
 
+_VTT_TS_RE = re.compile(r"(?:(?P<hh>[0-9]{2,3}):)?(?P<mm>[0-9]{2}):(?P<ss>[0-9]{2})\.(?P<ms>[0-9]{3})")
+_VTT_TS_TAG_RE = re.compile(r"<((?:[0-9]{2,3}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3})>")
+
+def vtt_timestamp_to_secs(vtt_ts: str):
+  m = _VTT_TS_RE.fullmatch(vtt_ts)
+
+  if m:
+    return int(m.group('hh') if m.group('hh') is not None else 0) * 3600 + \
+      int(m.group('mm')) * 60 + \
+      int(m.group('ss')) + \
+      int(m.group('ms')) / 1000
+
+  return None
+
 def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
 
@@ -280,31 +319,37 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
         state = _State.NOTE
         continue
 
-      m = _TIMECODE_RE.search(line)
-
-      if m is None:
+      if "-->" not in line:
         # skip over cue id
+        continue
+
+      # 00:00:05.000 --> 00:00:25.000 region:fred align:left
+
+      cue_params = line.split()
+
+      if len(cue_params) < 3:
+        LOGGER.warn("Invalid line %s", line_index)
+        continue
+
+      start_time = vtt_timestamp_to_secs(cue_params[0])
+      if start_time is None:
+        LOGGER.warn("Invalid timestamp %s at %s", cue_params[0], line_index)
+        continue
+
+      end_time = vtt_timestamp_to_secs(cue_params[2])
+      if end_time is None:
+        LOGGER.warn("Invalid timestamp %s at %s", cue_params[2], line_index)
         continue
 
       current_p = model.P(doc)
 
-      current_p.set_begin(
-        int(m.group('begin_h') if m.group('begin_h') is not None else 0) * 3600 + 
-        int(m.group('begin_m')) * 60 + 
-        int(m.group('begin_s')) +
-        int(m.group('begin_ms')) / 1000
-        )
+      current_p.set_begin(start_time)
 
-      current_p.set_end(
-        int(m.group('end_h') if m.group('begin_h') is not None else 0) * 3600 + 
-        int(m.group('end_m')) * 60 + 
-        int(m.group('end_s')) +
-        int(m.group('end_ms')) / 1000
-        )
+      current_p.set_end(end_time)
 
       # handle settings
 
-      current_p.set_region(_get_or_make_region(doc, ""))
+      current_p.set_region(_get_or_make_region(doc, cue_params[3:]))
 
       state = _State.TEXT
 
@@ -313,8 +358,8 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or _EMPTY_RE.fullmatch(line):
-        subtitle_text = subtitle_text.strip('\r\n')\
-          .replace(r"\n\r", "\n")
+        subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
+        subtitle_text = re.sub(_VTT_TS_TAG_RE, r"<ts v='\1'>", subtitle_text)
 
         parser = _TextParser(current_p, line_index)
         parser.feed(subtitle_text)

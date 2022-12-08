@@ -146,11 +146,27 @@ Hello <u>my</u> name is Bob
     else:
       self.fail()
 
+  def test_lang(self):
+    f = io.StringIO(r"""WEBVTT
+
+02:00.000 --> 02:05.000
+<lang es-419>Spanish as used in Latin America and the Caribbean</lang>
+""")
+
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_lang() == "es-419":
+        break
+    else:
+      self.fail()
+
+
   def test_multiline_tags(self):
-    f = io.StringIO(r"""1
-00:02:16,612 --> 00:02:19,376
-Hello <bold>my
-</bold> name is Bob
+    f = io.StringIO(r"""WEBVTT
+
+00:02:16.612 --> 00:02:19.376
+Hello <b>my
+</b> name is Bob
 """)
     doc = to_model(f)
     for e in doc.get_body().dfs_iterator():
@@ -160,9 +176,10 @@ Hello <bold>my
       self.fail()
 
   def test_long_hours(self):
-    f = io.StringIO(r"""1
-101:00:00,000 --> 101:00:01,000
-Hello <bold>my</bold> name is Bob
+    f = io.StringIO(r"""WEBVTT
+
+101:00:00.000 --> 101:00:01.000
+Hello my name is Bob
 """)
     doc = to_model(f)
 
@@ -175,7 +192,26 @@ Hello <bold>my</bold> name is Bob
       363601,
       doc.get_body().first_child().first_child().get_end()
     )
-    
+
+  def test_ts_tag(self):
+    f = io.StringIO(r"""WEBVTT
+
+00:00:01.000 --> 00:00:03.000
+Hello my name<00:02.000>is Bob
+""")
+    doc = to_model(f)
+
+    self.assertEqual(
+      1,
+      doc.get_body().first_child().first_child().get_begin()
+    )
+
+    second_span = list(doc.get_body().first_child().first_child())[1]
+
+    self.assertEqual(
+      1,
+      second_span.get_begin()
+    )
 
 if __name__ == '__main__':
   unittest.main()
