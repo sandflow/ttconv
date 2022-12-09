@@ -121,6 +121,7 @@ class _State(Enum):
   TEXT_MORE = 4
   START = 5
   NOTE = 6
+  STYLE = 7
 
 _EMPTY_RE = re.compile(r"\s+")
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
@@ -383,7 +384,7 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       state = _State.LOOKING
       continue
 
-    if state is _State.NOTE:
+    if state in (_State.NOTE, _State.STYLE):
       # we skip over notes
 
       if line is None:
@@ -401,8 +402,11 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
         continue
 
       if line.startswith("NOTE "):
-        # we ignore notes
         state = _State.NOTE
+        continue
+
+      if line.startswith("STYLE"):
+        state = _State.STYLE
         continue
 
       if "-->" not in line:

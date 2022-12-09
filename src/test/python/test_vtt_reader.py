@@ -216,5 +216,17 @@ Hello my name<00:02.000>is Bob
       second_span.get_begin()
     )
 
+  def test_ignore_style(self):
+    SAMPLE = """WEBVTT
+
+STYLE
+::cue { color:lime }
+
+00:00:00.000 --> 00:00:25.000
+Red or green?
+"""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNotNone(to_model(f))
+
 if __name__ == '__main__':
   unittest.main()
