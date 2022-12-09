@@ -28,10 +28,10 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 import unittest
 import io
+import os.path
 
 from ttconv.vtt.reader import to_model
 import ttconv.style_properties as styles
-
 
 
 class VTTReaderTest(unittest.TestCase):
@@ -49,9 +49,14 @@ class VTTReaderTest(unittest.TestCase):
     self.assertIsNotNone(to_model(f))
 
 
-  def test_sample_2(self):
-    with open("src/test/resources/vtt/alignment.vtt") as f:
-      self.assertIsNotNone(to_model(f))
+  def test_samples(self):
+    for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".vtt":
+          with self.subTest(name):
+            with open(os.path.join(root, filename)) as f:
+              self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
     f = io.StringIO(r"""WEBVTT

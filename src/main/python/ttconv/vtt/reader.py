@@ -181,13 +181,12 @@ def _get_or_make_region(
 
   value = cue_settings.get("size")
   if value is not None:
-    m = _VTT_PCT_RE.fullmatch(value)
-    if m:
-      pct = round(float(m.group(1)) * 100)
+    pct = parse_vtt_pct(value)
+    if pct is not None:
       if writing_mode in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
-        extent_height = styles.LengthType(pct)
+        extent_height = pct
       else:
-        extent_width = styles.LengthType(pct)
+        extent_width = pct
     else:
       LOGGER.warn("Bad size setting value: %s", value)
 

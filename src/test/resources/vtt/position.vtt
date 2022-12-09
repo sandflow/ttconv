@@ -1,0 +1,14 @@
+WEBVTT
+
+00:00:01.000 --> 00:00:02.000 position:75% size:25%
+p75 s25
+
+00:00:02.000 --> 00:00:03.000 position:75%,line-left size:25%
+p75,l s25
+
+00:00:03.000 --> 00:00:04.000 vertical:rl position:75% size:25%
+p75 s25
+
+00:00:04.000 --> 00:00:05.000 vertical:rl position:75%,line-left size:25%
+p75,l s25
+
