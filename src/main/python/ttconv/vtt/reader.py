@@ -35,7 +35,6 @@ from html.parser import HTMLParser
 
 from ttconv import model
 from ttconv import style_properties as styles
-from ttconv.imsc.utils import parse_color
 
 LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +123,6 @@ class _State(Enum):
   NOTE = 6
 
 _EMPTY_RE = re.compile(r"\s+")
-_TIMECODE_RE = re.compile(r"(?:(?P<begin_h>[0-9]{2,3}):)?(?P<begin_m>[0-9]{2}):(?P<begin_s>[0-9]{2})\.(?P<begin_ms>[0-9]{3})\s+-->\s+(?:(?P<end_h>[0-9]{2,3}):)?(?P<end_m>[0-9]{2}):(?P<end_s>[0-9]{2})\.(?P<end_ms>[0-9]{3})(?:\s+(?P<settings>.+))?")
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
 _DEFAULT_FONT_SIZE = styles.LengthType(80, styles.LengthType.Units.pct)
 _DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
@@ -132,8 +130,23 @@ _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
 _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
 
+_DEFAULT_ROWS = 23
+_DEFAULT_COLS = 40
+
 _VTT_PCT_RE = re.compile(r"(\d+\.?\d*)%")
-_VTT_INT = re.compile(r"(-?\d+)")
+_VTT_INT_RE = re.compile(r"(-?\d+)")
+
+def parse_vtt_pct(value: str):
+  m = _VTT_PCT_RE.fullmatch(value)
+  if m:
+    return round(float(m.group(1)))
+  return None
+
+def parse_vtt_int(value: str):
+  m = _VTT_INT_RE.fullmatch(value)
+  if m:
+    return int(m.group(1))
+  return None
 
 def _get_or_make_region(
   doc: model.ContentDocument,
@@ -142,13 +155,13 @@ def _get_or_make_region(
   """Returns a matching region from `doc` or creates one
   """
 
-  writing_direction = styles.WritingModeType.lrtb
-  extent = styles.ExtentType(
-    height=styles.LengthType(100),
-    width=styles.LengthType(100)
-  )
-  size = styles.LengthType(100)
-  alignment = styles.TextAlignType.start
+  writing_mode = styles.WritingModeType.lrtb
+  text_align = styles.TextAlignType.center
+  display_align = styles.DisplayAlignType.after
+  extent_height = 100 - 200/_DEFAULT_ROWS
+  extent_width = 100 - 200/_DEFAULT_COLS
+  origin_x = 100/_DEFAULT_COLS
+  origin_y = 100/_DEFAULT_ROWS
 
   cue_settings = dict(x.split(":") for x in cue_settings_list)
 
@@ -156,11 +169,12 @@ def _get_or_make_region(
 
   value = cue_settings.get("vertical")
   if value == "lr":
-    writing_direction = styles.WritingModeType.tblr
+    writing_mode = styles.WritingModeType.tblr
   elif value == "rl":
-    writing_direction = styles.WritingModeType.tbrl
+    writing_mode = styles.WritingModeType.tbrl
   elif value is not None:
-    LOGGER.warn(f"Bad vertical setting value: {value}")
+    LOGGER.warn("Bad vertical setting value: %s", value)
+
 
   # size
 
@@ -169,87 +183,159 @@ def _get_or_make_region(
     m = _VTT_PCT_RE.fullmatch(value)
     if m:
       pct = round(float(m.group(1)) * 100)
-      if writing_direction in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
-        extent.height = pct
+      if writing_mode in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
+        extent_height = styles.LengthType(pct)
       else:
-        extent.width = pct
+        extent_width = styles.LengthType(pct)
     else:
-      LOGGER.warn(f"Bad size setting value: {value}")
+      LOGGER.warn("Bad size setting value: %s", value)
 
   # text align
 
   value = cue_settings.get("align")
   if value == "left":
-    alignment = styles.TextAlignType.end if writing_direction ==  styles.WritingModeType.rltb else styles.TextAlignType.start
+    text_align = styles.TextAlignType.end if writing_mode == styles.WritingModeType.rltb else styles.TextAlignType.start
   elif value == "right":
-    alignment = styles.TextAlignType.start if writing_direction ==  styles.WritingModeType.rltb else styles.TextAlignType.end
+    text_align = styles.TextAlignType.start if writing_mode == styles.WritingModeType.rltb else styles.TextAlignType.end
   elif value == "start":
-    alignment = styles.TextAlignType.start
+    text_align = styles.TextAlignType.start
   elif value == "center":
-    alignment = styles.TextAlignType.center
+    text_align = styles.TextAlignType.center
   elif value == "end":
-    alignment = styles.TextAlignType.end
+    text_align = styles.TextAlignType.end
   elif value is not None:
-    LOGGER.warn(f"Bad vertical setting value: {value}")
+    LOGGER.warn("Bad vertical setting value: %s", value)
 
   # line
 
   value = cue_settings.get("line")
   if value is not None:
-    value.split(",")
-    line_align = value[1] if len(value) > 1 else None
-    value = value[0]
+    value = value.split(",")
+    line_align = value[1] if len(value) > 1 else "start"
+
+    line_offset = parse_vtt_pct(value[0])
+    if line_offset is None:
+      line_num = parse_vtt_int(value[0])
+      if line_num is not None:
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          line_offset = 100 * line_num/_DEFAULT_ROWS if line_num > 0 else 100 - 100 * line_num/_DEFAULT_ROWS
+        else:
+          line_offset = 100 * line_num/_DEFAULT_COLS if line_num > 0 else 100 - 100 * line_num/_DEFAULT_COLS
+
+    if line_offset is not None:
+      if line_align == "center":
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          extent_height = min(line_offset, 100 - line_offset) * 2
+          origin_y = line_offset - extent_height / 2
+        else:
+          extent_width = min(line_offset, 100 - line_offset) * 2
+          origin_x = line_offset - extent_height / 2
+        display_align = styles.DisplayAlignType.center
+      elif line_align == "start":
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          extent_height = 100 - line_offset
+          origin_y = line_offset
+        else:
+          extent_width = 100 - line_offset
+          origin_x = line_offset
+        display_align = styles.DisplayAlignType.before
+      elif line_align == "end":
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          extent_height = line_offset
+          origin_y = 0
+        else:
+          extent_width = line_offset
+          origin_x = 0
+        display_align = styles.DisplayAlignType.after
+      else:
+        LOGGER.warn("Bad line alignment setting value: %s", line_align)
+
+    else:
+      LOGGER.warn("Bad line setting value: %s", cue_settings.get("line"))
+
+  # position
+
+  value = cue_settings.get("position")
+  if value is not None:
+    value = value.split(",")
+
+    if len(value) > 1 and value[1] in ("center", "line-left", "line-right"):
+      line_align = value[1]
+    else:
+      if text_align == styles.TextAlignType.start:
+        line_align = "line-right" if writing_mode == styles.WritingModeType.rltb else "line-left"
+      elif text_align == styles.TextAlignType.end:
+        line_align = "line-left" if writing_mode == styles.WritingModeType.rltb else "line-right"
+      else:
+        line_align = "center"
+
+    position = parse_vtt_pct(value[0])
+    if position is not None:
+      if line_align == "center":
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          origin_x = position - extent_width / 2
+        else:
+          origin_y = position - extent_height / 2
+      elif line_align == "line-left":
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          origin_x = position
+        else:
+          origin_y = position
+      elif line_align == "line-right":
+        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+          origin_x = position - extent_width
+        else:
+          origin_y = position - extent_height
+      else:
+        LOGGER.warn("Bad position alignment setting value: %s", line_align)
+
+    else:
+      LOGGER.warn("Bad position setting value: %s", cue_settings.get("position"))
+
+
+  extent = styles.ExtentType(
+    height=styles.LengthType(extent_height),
+    width=styles.LengthType(extent_width)
+  )
+  origin = styles.CoordinateType(
+    x=styles.LengthType(origin_x),
+    y=styles.LengthType(origin_y)
+  )
 
   found_region = None
-
   regions = list(doc.iter_regions())
-
   for r in regions:
+
+    if r.get_style(styles.StyleProperties.WritingMode) != writing_mode:
+      continue
+
+    if r.get_style(styles.StyleProperties.Extent) != extent:
+      continue
+
+    if r.get_style(styles.StyleProperties.Origin) != origin:
+      continue
+
+    if r.get_style(styles.StyleProperties.TextAlign) != text_align:
+      continue
+
+    if r.get_style(styles.StyleProperties.DisplayAlign) != display_align:
+      continue
+
     found_region = r
     break
 
   if found_region is None:
     found_region = model.Region(f"r{len(regions)}", doc)
-    found_region.set_style(
-      styles.StyleProperties.Origin,
-      styles.CoordinateType(
-        x=styles.LengthType(5, styles.LengthType.Units.pct),
-        y=styles.LengthType(5, styles.LengthType.Units.pct)
-      )
-    )
-    found_region.set_style(
-      styles.StyleProperties.Extent,
-      styles.ExtentType(
-        height=styles.LengthType(90, styles.LengthType.Units.pct),
-        width=styles.LengthType(90, styles.LengthType.Units.pct)
-      )
-    )
-    found_region.set_style(
-      styles.StyleProperties.DisplayAlign,
-      styles.DisplayAlignType.after
-    )
-    found_region.set_style(
-      styles.StyleProperties.TextAlign,
-      styles.TextAlignType.center
-    )
-    found_region.set_style(
-      styles.StyleProperties.LineHeight,
-      _DEFAULT_LINE_HEIGHT
-    )
-    found_region.set_style(
-      styles.StyleProperties.FontFamily,
-      _DEFAULT_FONT_STACK
-    )
-    found_region.set_style(
-      styles.StyleProperties.FontSize,
-      _DEFAULT_FONT_SIZE
-    )
-    found_region.set_style(
-      styles.StyleProperties.Color,
-      _DEFAULT_TEXT_COLOR
-    )
-    found_region.set_style(
-      styles.StyleProperties.TextOutline,
+    found_region.set_style(styles.StyleProperties.Origin, origin)
+    found_region.set_style(styles.StyleProperties.Extent, extent)
+    found_region.set_style(styles.StyleProperties.DisplayAlign, display_align)
+    found_region.set_style(styles.StyleProperties.TextAlign, text_align)
+    found_region.set_style(styles.StyleProperties.WritingMode, writing_mode)
+    found_region.set_style(styles.StyleProperties.LineHeight, _DEFAULT_LINE_HEIGHT)
+    found_region.set_style(styles.StyleProperties.FontFamily, _DEFAULT_FONT_STACK)
+    found_region.set_style(styles.StyleProperties.FontSize, _DEFAULT_FONT_SIZE)
+    found_region.set_style(styles.StyleProperties.Color, _DEFAULT_TEXT_COLOR)
+    found_region.set_style(styles.StyleProperties.TextOutline,
       styles.TextOutlineType(
         _DEFAULT_OUTLINE_THICKNESS,
         _DEFAULT_OUTLINE_COLOR
@@ -322,6 +408,8 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       if "-->" not in line:
         # skip over cue id
         continue
+
+      progress_callback(line_index/len(lines))
 
       # 00:00:05.000 --> 00:00:25.000 region:fred align:left
 

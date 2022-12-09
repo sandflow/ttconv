@@ -41,6 +41,7 @@ import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 import ttconv.srt.reader as srt_reader
 import ttconv.stl.reader as stl_reader
+import ttconv.vtt.reader as vtt_reader
 from ttconv.vtt.config import VTTWriterConfiguration
 import ttconv.vtt.writer as vtt_writer
 from ttconv.config import GeneralConfiguration
@@ -337,6 +338,14 @@ def convert(args):
     with open(inputfile, "r", encoding="utf-8") as f:
       model = srt_reader.to_model(f, None, progress_callback_read)
 
+  elif reader_type is FileTypes.VTT:
+
+    #
+    # Open the file and pass it to the reader
+    #
+    with open(inputfile, "r", encoding="utf-8") as f:
+      model = vtt_reader.to_model(f, None, progress_callback_read)
+
   else:
     if args.itype is not None:
       exit_str = f'Input type {args.itype} is not supported'
@@ -349,8 +358,7 @@ def convert(args):
   #
   # apply document language
   #
-
-  if general_config.document_lang is not None:
+  if general_config is not None and general_config.document_lang is not None:
     model.set_lang(general_config.document_lang)
 
   if writer_type is FileTypes.TTML:

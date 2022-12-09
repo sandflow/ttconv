@@ -45,10 +45,13 @@ class VTTReaderTest(unittest.TestCase):
 04:00.000 --> 04:05.000
 <i>This is italic</i> and this is not
 """
-
     f = io.StringIO(SAMPLE)
-
     self.assertIsNotNone(to_model(f))
+
+
+  def test_sample_2(self):
+    with open("src/test/resources/vtt/alignment.vtt") as f:
+      self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
     f = io.StringIO(r"""WEBVTT
