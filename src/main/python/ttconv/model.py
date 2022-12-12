@@ -723,7 +723,18 @@ class Rtc(ContentElement):
     ])
 
   def push_child(self, child):
-    raise RuntimeError("Rtc children must be added using `push_children`")
+
+    if isinstance(self.first_child(), Rt):
+      expect = (Rt,)
+    elif isinstance(self.first_child(), Rp) and isinstance(self.last_child(), Rp):
+      expect = (type(None),)
+    else:
+      expect = (Rt, Rp)
+
+    if not isinstance(child, expect):
+      raise ValueError("Children of rtc do not conform to requirements")
+
+    super().push_child(child)
 
   def remove_child(self, child: ContentElement):
     raise RuntimeError("Rtc children must be removed using `remove_children`")
@@ -735,7 +746,7 @@ class Rtc(ContentElement):
       cs = cs[1:-1]
 
     if not all(isinstance(x, Rt) for x in cs):
-      raise ValueError("Childre of rtc do not conform to requirements")
+      raise ValueError("Children of rtc do not conform to requirements")
 
     for child in children:
       super().push_child(child)
