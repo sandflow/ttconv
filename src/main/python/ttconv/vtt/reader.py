@@ -52,22 +52,51 @@ class _TextParser(HTMLParser):
   def __init__(self, paragraph: model.P, line_number: int) -> None:
     self.line_num: int = line_number
     self.parent: model.ContentElement = paragraph
+
+    # handle the special case of ruby elements where children cannot be added one by one
+    self.ruby_rbc: typing.Optional[model.Rbc] = None
+    self.ruby_rtc: typing.Optional[model.Rtc] = None
     super().__init__()
 
   def handle_starttag(self, tag, attrs):
+
+    tag = tag.lower()
+
+    if tag.startswith("ruby"):
+      if self.ruby_rbc is not None or self.ruby_rtc is not None:
+        raise RuntimeError("Nested ruby tags are not allowed.")
+      span = model.Ruby(self.parent.get_doc())
+
+      # wrap <rb> and <rt> into <rbc> and <rtc>
+
+      self.ruby_rbc = model.Rbc(self.parent.get_doc())
+      self.ruby_rtc = model.Rtc(self.parent.get_doc())
+      span.push_children([self.ruby_rbc, self.ruby_rtc])
+      self.parent.push_child(span)
+      self.parent = span
+      return
+
+    if tag.startswith("rt"):
+      span = model.Rt(self.parent.get_doc())
+      self.ruby_rtc.push_child(span)
+      self.parent = span
+      return
+
+    # all other tags can be handled as a span
 
     span = model.Span(self.parent.get_doc())
     self.parent.push_child(span)
     self.parent = span
 
-    tag = tag.lower()
-
     if tag.startswith("b"):
       span.set_style(styles.StyleProperties.FontWeight, styles.FontWeightType.bold)
+
     elif tag.startswith("i"):
       span.set_style(styles.StyleProperties.FontStyle, styles.FontStyleType.italic)
+
     elif tag.startswith("u"):
       span.set_style(styles.StyleProperties.TextDecoration, styles.TextDecorationType(underline=True))
+
     elif tag == "ts":
       ts = vtt_timestamp_to_secs(attrs[0][1])
       parent_begin = None
@@ -81,11 +110,13 @@ class _TextParser(HTMLParser):
         span.set_begin(ts - parent_begin)
       else:
         LOGGER.warning("Invalid timestamp tag %s", attrs[0][1])
+
     elif tag.startswith("lang"):
       try:
         span.set_lang(attrs[0][0])
       except IndexError:
         LOGGER.warning("Lang tag without language present")
+
     elif tag.startswith("c"):
       for c in tag.lower().split(".")[1:]:
         try:
@@ -97,11 +128,20 @@ class _TextParser(HTMLParser):
             span.set_style(styles.StyleProperties.Color, color.value)
         except KeyError:
           LOGGER.warning("Ignoring class %s", c)
+
     else:
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
 
   def handle_endtag(self, tag):
+
+    if isinstance(self.parent, model.Ruby):
+      self.ruby_rbc = None
+      self.ruby_rtc = None
+    elif isinstance(self.parent, (model.Rt, model.Rb)):
+      # this is needed since <rb> and <rt> are nested in <rbc> and <rtc>
+      self.parent = self.parent.parent()
+
     self.parent = self.parent.parent()
 
   def handle_data(self, data):
@@ -112,7 +152,13 @@ class _TextParser(HTMLParser):
         self.parent.push_child(model.Br(self.parent.get_doc()))
       span = model.Span(self.parent.get_doc())
       span.push_child(model.Text(self.parent.get_doc(), line))
-      self.parent.push_child(span)
+      if isinstance(self.parent, model.Ruby):
+        rb = model.Rb(self.parent.get_doc())
+        rb.push_child(span)
+        self.ruby_rbc.push_child(rb)
+      else:
+        self.parent.push_child(span)
+
 
 class _State(Enum):
   LOOKING = 1

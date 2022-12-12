@@ -233,5 +233,18 @@ Red or green?
     f = io.StringIO(SAMPLE)
     self.assertIsNotNone(to_model(f))
 
+  def test_ruby(self):
+    # from WPT (bidi_vertical_lr.vrr)
+    SAMPLE = """WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+<ruby>.<rt>א<c>א</c></rt>ab)<rt>x</rt></ruby>
+"""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNotNone(to_model(f))
+
+
+
+
 if __name__ == '__main__':
   unittest.main()
