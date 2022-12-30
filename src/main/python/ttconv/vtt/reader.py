@@ -250,7 +250,7 @@ def _get_or_make_region(
   elif value == "end":
     text_align = styles.TextAlignType.end
   elif value is not None:
-    LOGGER.warn("Bad vertical setting value: %s", value)
+    LOGGER.warn("Bad alignment setting value: %s", value)
 
   # line
 
@@ -391,7 +391,7 @@ def _get_or_make_region(
 
   return found_region
 
-_VTT_TS_RE = re.compile(r"(?:(?P<hh>[0-9]{2,3}):)?(?P<mm>[0-9]{2}):(?P<ss>[0-9]{2})\.(?P<ms>[0-9]{3})")
+_VTT_TS_RE = re.compile(r"(?:(?P<hh>[0-9]{2,}):)?(?P<mm>[0-9]{2}):(?P<ss>[0-9]{2})\.(?P<ms>[0-9]{3})")
 _VTT_TS_TAG_RE = re.compile(r"<((?:[0-9]{2,3}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3})>")
 
 def vtt_timestamp_to_secs(vtt_ts: str):
@@ -406,7 +406,7 @@ def vtt_timestamp_to_secs(vtt_ts: str):
   return None
 
 def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None):
-  """Converts an SRT document to the data model"""
+  """Converts a WebVTT document to the data model"""
 
   doc = model.ContentDocument()
 
@@ -459,8 +459,6 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
         continue
 
       progress_callback(line_index/len(lines))
-
-      # 00:00:05.000 --> 00:00:25.000 region:fred align:left
 
       cue_params = line.split()
 
