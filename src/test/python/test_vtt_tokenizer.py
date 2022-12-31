@@ -51,6 +51,8 @@ class VTTTokenizerTest(unittest.TestCase):
     self.assertIsInstance(end_tag_token, tokenizer.EndTagToken)
     self.assertEqual(end_tag_token.tag, "c")
 
+    self.assertIsNone(t.next())
+
   def test_tokenizer_multiline_incomplete_elements(self):
     cue_text = """<c.yellow><c.bg_black >This</c></c>
 <c.bg_yellow>is
@@ -101,3 +103,5 @@ class VTTTokenizerTest(unittest.TestCase):
     string_token: tokenizer.StringToken = t.next()
     self.assertIsInstance(string_token, tokenizer.StringToken)
     self.assertEqual(string_token.value, "row 18")
+
+    self.assertIsNone(t.next())
