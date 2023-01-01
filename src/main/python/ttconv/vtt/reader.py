@@ -154,6 +154,9 @@ class Parser():
           except KeyError:
             LOGGER.warning("Ignoring class %s", c)
 
+    elif tag == "v":
+      pass
+
     else:
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
@@ -206,7 +209,9 @@ _DEFAULT_ROWS = 23
 _DEFAULT_COLS = 40
 
 _VTT_PCT_RE = re.compile(r"(\d+\.?\d*)%")
-_VTT_INT_RE = re.compile(r"(-?\d+)")
+
+# integer has at most 20 digits
+_VTT_INT_RE = re.compile(r"(-?\d{1,20})")
 
 def parse_vtt_pct(value: str):
   m = _VTT_PCT_RE.fullmatch(value)
@@ -235,7 +240,7 @@ def _get_or_make_region(
   origin_x = 100/_DEFAULT_COLS
   origin_y = 100/_DEFAULT_ROWS
 
-  cue_settings = dict(x.split(":") for x in cue_settings_list)
+  cue_settings = dict(filter(lambda x: len(x) == 2, [x.split(":") for x in cue_settings_list]))
 
   # writing direction
 

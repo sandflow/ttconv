@@ -55,7 +55,7 @@ class VTTReaderTest(unittest.TestCase):
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
           with self.subTest(name):
-            with open(os.path.join(root, filename)) as f:
+            with open(os.path.join(root, filename), encoding="utf-8") as f:
               self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
