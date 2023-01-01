@@ -70,9 +70,9 @@ class EndTagToken(Token):
     self.tag = tag
 
 class TimestampTagToken(Token):
-  def __init__(self, tag: str = "") -> None:
+  def __init__(self, timestamp: str = "") -> None:
     super().__init__()
-    self.tag = tag
+    self.timestamp = timestamp
 
 
 class Tokenizer:
@@ -142,6 +142,7 @@ class Tokenizer:
         elif c == ord("/"):
           state = Tokenizer.State.end_tag
         elif ord("0") <= c <= ord("9"):
+          result = StringBuf(chr(c))
           state = Tokenizer.State.ts_tag
         elif c == ord(">"):
           self.position += 1

@@ -31,10 +31,10 @@ import typing
 import re
 import logging
 from enum import Enum
-from html.parser import HTMLParser
 
 from ttconv import model
 from ttconv import style_properties as styles
+from ttconv.vtt.tokenizer import EndTagToken, StartTagToken, StringToken, Tokenizer, TimestampTagToken
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,27 @@ def _none_terminated(iterator):
     yield item
   yield None
 
-class _TextParser(HTMLParser):
+def parse_cue_text(cue_text: str, paragraph: model.P, line_number: int):
+  parser = Parser(paragraph, line_number)
+
+  tokens = Tokenizer(cue_text)
+
+  while True:
+    token = tokens.next()
+    if token is None:
+      break
+
+    if isinstance(token, StartTagToken):
+      parser.handle_starttag(token)
+    elif isinstance(token, EndTagToken):
+      parser.handle_endtag(token)
+    elif isinstance(token, StringToken):
+      parser.handle_string(token)
+    elif isinstance(token, TimestampTagToken):
+      parser.handle_ts(token)
+
+
+class Parser():
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
     self.line_num: int = line_number
@@ -56,11 +76,29 @@ class _TextParser(HTMLParser):
     # handle the special case of ruby elements where children cannot be added one by one
     self.ruby_rbc: typing.Optional[model.Rbc] = None
     self.ruby_rtc: typing.Optional[model.Rtc] = None
-    super().__init__()
 
-  def handle_starttag(self, tag, attrs):
+  def handle_ts(self, token: TimestampTagToken):
 
-    tag = tag.lower()
+    span = model.Span(self.parent.get_doc())
+    self.parent.push_child(span)
+    self.parent = span
+
+    ts = vtt_timestamp_to_secs(token.timestamp)
+    parent_begin = None
+    parent = self.parent
+    while parent is not None:
+      parent_begin = parent.get_begin()
+      if parent_begin is not None:
+        break
+      parent = parent.parent()
+    if ts is not None and parent_begin is not None and parent_begin <= ts:
+      span.set_begin(ts - parent_begin)
+    else:
+      LOGGER.warning("Invalid timestamp tag %s", token.timestamp)
+
+  def handle_starttag(self, token: StartTagToken):
+
+    tag = token.tag.lower()
 
     if tag.startswith("ruby"):
       if self.ruby_rbc is not None or self.ruby_rtc is not None:
@@ -97,43 +135,30 @@ class _TextParser(HTMLParser):
     elif tag.startswith("u"):
       span.set_style(styles.StyleProperties.TextDecoration, styles.TextDecorationType(underline=True))
 
-    elif tag == "ts":
-      ts = vtt_timestamp_to_secs(attrs[0][1])
-      parent_begin = None
-      parent = self.parent
-      while parent is not None:
-        parent_begin = parent.get_begin()
-        if parent_begin is not None:
-          break
-        parent = parent.parent()
-      if ts is not None and parent_begin is not None and parent_begin <= ts:
-        span.set_begin(ts - parent_begin)
-      else:
-        LOGGER.warning("Invalid timestamp tag %s", attrs[0][1])
-
     elif tag.startswith("lang"):
       try:
-        span.set_lang(attrs[0][0])
+        span.set_lang(token.annotation)
       except IndexError:
         LOGGER.warning("Lang tag without language present")
 
     elif tag.startswith("c"):
-      for c in tag.lower().split(".")[1:]:
-        try:
-          if c.startswith("bg_"):
-            bg_color =  styles.NamedColors[c[3:]]
-            span.set_style(styles.StyleProperties.BackgroundColor, bg_color.value)
-          else:
-            color =  styles.NamedColors[c]
-            span.set_style(styles.StyleProperties.Color, color.value)
-        except KeyError:
-          LOGGER.warning("Ignoring class %s", c)
+      if token.classes is not None:
+        for c in token.classes:
+          try:
+            if c.startswith("bg_"):
+              bg_color =  styles.NamedColors[c[3:]]
+              span.set_style(styles.StyleProperties.BackgroundColor, bg_color.value)
+            else:
+              color =  styles.NamedColors[c]
+              span.set_style(styles.StyleProperties.Color, color.value)
+          except KeyError:
+            LOGGER.warning("Ignoring class %s", c)
 
     else:
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
 
-  def handle_endtag(self, tag):
+  def handle_endtag(self, _token: EndTagToken):
 
     if isinstance(self.parent, model.Ruby):
       self.ruby_rbc = None
@@ -144,8 +169,8 @@ class _TextParser(HTMLParser):
 
     self.parent = self.parent.parent()
 
-  def handle_data(self, data):
-    lines = data.split("\n")
+  def handle_string(self, token: StringToken):
+    lines = token.value.split("\n")
 
     for i, line in enumerate(lines):
       if i > 0:
@@ -494,11 +519,8 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
 
       if line is None or _EMPTY_RE.fullmatch(line):
         subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
-        subtitle_text = re.sub(_VTT_TS_TAG_RE, r"<ts v='\1'>", subtitle_text)
 
-        parser = _TextParser(current_p, line_index)
-        parser.feed(subtitle_text)
-        parser.close()
+        parse_cue_text(subtitle_text, current_p, line_index)
 
         state = _State.LOOKING
         continue
