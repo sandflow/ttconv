@@ -36,72 +36,74 @@ class VTTTokenizerTest(unittest.TestCase):
   def test_tokenizer_classes(self):
     cue_text = "<c.yellow.bg_blue.magenta.bg_black>This is magenta text on a black background</c>"
 
-    t = tokenizer.Tokenizer(cue_text)
+    t = tokenizer.CueTextTokenizer(cue_text)
 
-    start_tag_token: tokenizer.StartTagToken = t.next()
+    start_tag_token: tokenizer.StartTagToken = next(t)
     self.assertIsInstance(start_tag_token, tokenizer.StartTagToken)
     self.assertEqual(start_tag_token.tag, "c")
     self.assertListEqual(start_tag_token.classes, ["yellow", "bg_blue", "magenta", "bg_black"])
 
-    string_token: tokenizer.StringToken = t.next()
+    string_token: tokenizer.StringToken = next(t)
     self.assertIsInstance(string_token, tokenizer.StringToken)
     self.assertEqual(string_token.value, "This is magenta text on a black background")
 
-    end_tag_token: tokenizer.EndTagToken = t.next()
+    end_tag_token: tokenizer.EndTagToken = next(t)
     self.assertIsInstance(end_tag_token, tokenizer.EndTagToken)
     self.assertEqual(end_tag_token.tag, "c")
 
-    self.assertIsNone(t.next())
+    with self.assertRaises(StopIteration):
+      next(t)
 
   def test_tokenizer_multiline_incomplete_elements(self):
     cue_text = """<c.yellow><c.bg_black >This</c></c>
 <c.bg_yellow>is
 <c.bg_red>row 18"""
 
-    t = tokenizer.Tokenizer(cue_text)
+    t = tokenizer.CueTextTokenizer(cue_text)
 
-    start_tag_token: tokenizer.StartTagToken = t.next()
+    start_tag_token: tokenizer.StartTagToken = next(t)
     self.assertIsInstance(start_tag_token, tokenizer.StartTagToken)
     self.assertEqual(start_tag_token.tag, "c")
     self.assertListEqual(start_tag_token.classes, ["yellow"])
 
-    start_tag_token: tokenizer.StartTagToken = t.next()
+    start_tag_token: tokenizer.StartTagToken = next(t)
     self.assertIsInstance(start_tag_token, tokenizer.StartTagToken)
     self.assertEqual(start_tag_token.tag, "c")
     self.assertListEqual(start_tag_token.classes, ["bg_black"])
 
-    string_token: tokenizer.StringToken = t.next()
+    string_token: tokenizer.StringToken = next(t)
     self.assertIsInstance(string_token, tokenizer.StringToken)
     self.assertEqual(string_token.value, "This")
 
-    end_tag_token: tokenizer.EndTagToken = t.next()
+    end_tag_token: tokenizer.EndTagToken = next(t)
     self.assertIsInstance(end_tag_token, tokenizer.EndTagToken)
     self.assertEqual(end_tag_token.tag, "c")
 
-    end_tag_token: tokenizer.EndTagToken = t.next()
+    end_tag_token: tokenizer.EndTagToken = next(t)
     self.assertIsInstance(end_tag_token, tokenizer.EndTagToken)
     self.assertEqual(end_tag_token.tag, "c")
 
-    string_token: tokenizer.StringToken = t.next()
+    string_token: tokenizer.StringToken = next(t)
     self.assertIsInstance(string_token, tokenizer.StringToken)
     self.assertEqual(string_token.value, "\n")
 
-    start_tag_token: tokenizer.StartTagToken = t.next()
+    start_tag_token: tokenizer.StartTagToken = next(t)
     self.assertIsInstance(start_tag_token, tokenizer.StartTagToken)
     self.assertEqual(start_tag_token.tag, "c")
     self.assertListEqual(start_tag_token.classes, ["bg_yellow"])
 
-    string_token: tokenizer.StringToken = t.next()
+    string_token: tokenizer.StringToken = next(t)
     self.assertIsInstance(string_token, tokenizer.StringToken)
     self.assertEqual(string_token.value, "is\n")
 
-    start_tag_token: tokenizer.StartTagToken = t.next()
+    start_tag_token: tokenizer.StartTagToken = next(t)
     self.assertIsInstance(start_tag_token, tokenizer.StartTagToken)
     self.assertEqual(start_tag_token.tag, "c")
     self.assertListEqual(start_tag_token.classes, ["bg_red"])
 
-    string_token: tokenizer.StringToken = t.next()
+    string_token: tokenizer.StringToken = next(t)
     self.assertIsInstance(string_token, tokenizer.StringToken)
     self.assertEqual(string_token.value, "row 18")
 
-    self.assertIsNone(t.next())
+    with self.assertRaises(StopIteration):
+      next(t)

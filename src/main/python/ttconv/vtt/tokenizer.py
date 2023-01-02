@@ -31,9 +31,9 @@ import re
 from typing import List, Optional
 import html
 
-EOF_MARKER = -1
-
 class StringBuf:
+  """Simple class that allows a string to be built from the concatenation of
+  multiple strings, starting with an initial string."""
   def __init__(self, initial_value: str = None) -> None:
     self.buf: List[str] = [initial_value] if initial_value is not None else []
 
@@ -50,14 +50,17 @@ class StringBuf:
     return len(self.buf) == 0 or all(map(lambda x: len(x) == 0, self.buf))
 
 class Token:
+  """Base class for WebVTT Cue Text tokens."""
   pass
 
 class StringToken(Token):
+  """WebVTT Cue Text string token."""
   def __init__(self, value: str = "") -> None:
     super().__init__()
     self.value = value
 
 class StartTagToken(Token):
+  """WebVTT Cue Text start tag token"""
   def __init__(self, tag: str = "", classes: Optional[List[str]] = None, annotation: Optional[str] = None) -> None:
     super().__init__()
     self.tag = tag
@@ -65,18 +68,24 @@ class StartTagToken(Token):
     self.annotation = annotation
 
 class EndTagToken(Token):
+  """WebVTT Cue Text end tag token"""
   def __init__(self, tag: str = "") -> None:
     super().__init__()
     self.tag = tag
 
 class TimestampTagToken(Token):
+  """WebVTT Cue Text timestamp tag token"""
   def __init__(self, timestamp: str = "") -> None:
     super().__init__()
     self.timestamp = timestamp
 
 
-class Tokenizer:
-  class State(Enum):
+def CueTextTokenizer(cue_text: str):
+  """Generator that outputs a sequence of WebVTT Cue Text tokens from a WebVTT
+  Cue Text."""
+  EOF_MARKER = -1
+
+  class _State(Enum):
     data = 1
     tag = 2
     data_cref = 3
@@ -87,38 +96,37 @@ class Tokenizer:
     ts_tag = 8
     annot_cref = 3
 
-  def __init__(self, cue_text: str) -> None:
-    self.cue_text: str = cue_text
-    self.position: int = 0
+  cue_text: str = cue_text
+  position: int = 0
 
-  def next(self) -> Optional[Token]:
-    if self.position >= len(self.cue_text):
-      return None
-
-    state: Tokenizer.State = Tokenizer.State.data
+  # token loop
+  while position < len(cue_text):
+    state: _State = _State.data
     result: StringBuf = StringBuf()
     classes: List[str] = []
     buffer: StringBuf = StringBuf()
 
+    # codepoint loop
     while True:
-      c = ord(self.cue_text[self.position]) if self.position < len(self.cue_text) else EOF_MARKER
+      c = ord(cue_text[position]) if position < len(cue_text) else EOF_MARKER
 
-      if state is Tokenizer.State.data:
-
+      if state is _State.data:
         if c == ord("&"):
-          state = Tokenizer.State.data_cref
+          state = _State.data_cref
           buffer = StringBuf("&")
         elif c == ord("<"):
           if result.is_empty():
-            state = Tokenizer.State.tag
+            state = _State.tag
           else:
-            return StringToken(str(result))
+            yield StringToken(str(result))
+            break
         elif c == EOF_MARKER:
-          return StringToken(str(result))
+          yield StringToken(str(result))
+          break
         else:
           result.append(chr(c))
 
-      elif state is Tokenizer.State.data_cref:
+      elif state is _State.data_cref:
         if c == ord(";"):
           coded_entity = str(buffer)
           decoded_entity = html.unescape(coded_entity)
@@ -126,85 +134,85 @@ class Tokenizer:
             result.extend(buffer)
           else:
             result.append(decoded_entity)
-          state = Tokenizer.State.data
+          state = _State.data
         elif c == EOF_MARKER:
           result.extend(buffer)
-          state = Tokenizer.State.data
+          state = _State.data
           continue
         else:
           buffer.append(chr(c))
 
-      elif state is Tokenizer.State.tag:
+      elif state is _State.tag:
         if c in (0x09, 0x0A, 0x0C, 0x20):
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
         elif c == ord("."):
-          state = Tokenizer.State.start_tag_class
+          state = _State.start_tag_class
         elif c == ord("/"):
-          state = Tokenizer.State.end_tag
+          state = _State.end_tag
         elif ord("0") <= c <= ord("9"):
           result = StringBuf(chr(c))
-          state = Tokenizer.State.ts_tag
-        elif c == ord(">"):
-          self.position += 1
-          return StringToken()
-        elif c == EOF_MARKER:
-          return StringToken()
+          state = _State.ts_tag
+        elif c in (ord(">"), EOF_MARKER):
+          if c == ord(">"):
+            position += 1
+          yield StringToken()
+          break
         else:
           result = StringBuf(chr(c))
-          state = Tokenizer.State.start_tag
+          state = _State.start_tag
 
-      elif state is Tokenizer.State.start_tag:
+      elif state is _State.start_tag:
         if c in (0x09, 0x0C, 0x20):
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
         elif c == 0x0A:
           buffer = StringBuf(chr(c))
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
         elif c is ord("."):
-          state = Tokenizer.State.start_tag_class
-        elif c == ord(">"):
-          self.position += 1
-          return StartTagToken(str(result))
-        elif c == EOF_MARKER:
-          return StartTagToken(str(result))
+          state = _State.start_tag_class
+        elif c in (ord(">"), EOF_MARKER):
+          if c == ord(">"):
+            position += 1
+          yield StartTagToken(str(result))
+          break
         else:
           result.append(chr(c))
 
-      elif state is Tokenizer.State.start_tag_class:
+      elif state is _State.start_tag_class:
         if c in (0x09, 0x0C, 0x20):
           classes.append(str(buffer))
           buffer = StringBuf()
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
         elif c == 0x0A:
           classes.append(str(buffer))
           buffer = StringBuf(chr(c))
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
         elif c is ord("."):
           classes.append(str(buffer))
           buffer = StringBuf()
-        elif c == ord(">"):
-          self.position += 1
+        elif c in (EOF_MARKER, ord(">")):
+          if c == ord(">"):
+            position += 1
           classes.append(str(buffer))
-          return StartTagToken(str(result), classes)
-        elif c == EOF_MARKER:
-          classes.append(str(buffer))
-          return StartTagToken(str(result), classes)
+          yield StartTagToken(str(result), classes)
+          break
         else:
           buffer.append(chr(c))
 
-      elif state is Tokenizer.State.start_tag_annot:
+      elif state is _State.start_tag_annot:
 
         if c == ord("&"):
-          state = Tokenizer.State.annot_cref
+          state = _State.annot_cref
           buffer = StringBuf("&")
         elif c in (ord(">"), EOF_MARKER):
           if c == ord(">"):
-            self.position += 1
+            position += 1
           annot = re.sub(r"\s+", " ", str(buffer).strip())
-          return StartTagToken(str(result), classes, annot)
+          yield StartTagToken(str(result), classes, annot)
+          break
         else:
           buffer.append(chr(c))
 
-      elif state is Tokenizer.State.annot_cref:
+      elif state is _State.annot_cref:
         if c == ord(";"):
           coded_entity = str(buffer)
           decoded_entity = html.unescape(coded_entity)
@@ -212,31 +220,31 @@ class Tokenizer:
             result.extend(buffer)
           else:
             result.append(decoded_entity)
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
         elif c in (EOF_MARKER, ord(">")):
           result.extend(buffer)
-          state = Tokenizer.State.start_tag_annot
+          state = _State.start_tag_annot
           continue
         else:
           buffer.append(chr(c))
 
-      elif state is Tokenizer.State.end_tag:
+      elif state is _State.end_tag:
         if c in (ord(">"), EOF_MARKER):
           if c == ord(">"):
-            self.position += 1
-          return EndTagToken(str(result))
-
+            position += 1
+          yield EndTagToken(str(result))
+          break
         result.append(chr(c))
 
-      elif state is Tokenizer.State.ts_tag:
+      elif state is _State.ts_tag:
         if c in (ord(">"), EOF_MARKER):
           if c == ord(">"):
-            self.position += 1
-          return TimestampTagToken(str(result))
-
+            position += 1
+          yield TimestampTagToken(str(result))
+          break
         result.append(chr(c))
 
       else:
         raise RuntimeError("Bad state")
 
-      self.position += 1
+      position += 1

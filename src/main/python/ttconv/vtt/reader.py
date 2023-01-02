@@ -34,7 +34,7 @@ from enum import Enum
 
 from ttconv import model
 from ttconv import style_properties as styles
-from ttconv.vtt.tokenizer import EndTagToken, StartTagToken, StringToken, Tokenizer, TimestampTagToken
+from ttconv.vtt.tokenizer import EndTagToken, StartTagToken, StringToken, CueTextTokenizer, TimestampTagToken, Token
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,26 +48,12 @@ def _none_terminated(iterator):
   yield None
 
 def parse_cue_text(cue_text: str, paragraph: model.P, line_number: int):
-  parser = Parser(paragraph, line_number)
+  parser = _TextCueParser(paragraph, line_number)
 
-  tokens = Tokenizer(cue_text)
+  for token in CueTextTokenizer(cue_text):
+    parser.handle_token(token)
 
-  while True:
-    token = tokens.next()
-    if token is None:
-      break
-
-    if isinstance(token, StartTagToken):
-      parser.handle_starttag(token)
-    elif isinstance(token, EndTagToken):
-      parser.handle_endtag(token)
-    elif isinstance(token, StringToken):
-      parser.handle_string(token)
-    elif isinstance(token, TimestampTagToken):
-      parser.handle_ts(token)
-
-
-class Parser():
+class _TextCueParser:
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
     self.line_num: int = line_number
@@ -77,7 +63,19 @@ class Parser():
     self.ruby_rbc: typing.Optional[model.Rbc] = None
     self.ruby_rtc: typing.Optional[model.Rtc] = None
 
-  def handle_ts(self, token: TimestampTagToken):
+  def handle_token(self, token: Token) -> None:
+    if isinstance(token, StartTagToken):
+      self._handle_starttag(token)
+    elif isinstance(token, EndTagToken):
+      self._handle_endtag(token)
+    elif isinstance(token, StringToken):
+      self._handle_string(token)
+    elif isinstance(token, TimestampTagToken):
+      self._handle_ts(token)
+    else:
+      raise ValueError("Unknown token type")
+
+  def _handle_ts(self, token: TimestampTagToken):
 
     span = model.Span(self.parent.get_doc())
     self.parent.push_child(span)
@@ -96,7 +94,7 @@ class Parser():
     else:
       LOGGER.warning("Invalid timestamp tag %s", token.timestamp)
 
-  def handle_starttag(self, token: StartTagToken):
+  def _handle_starttag(self, token: StartTagToken):
 
     tag = token.tag.lower()
 
@@ -161,7 +159,7 @@ class Parser():
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
 
-  def handle_endtag(self, _token: EndTagToken):
+  def _handle_endtag(self, _token: EndTagToken):
 
     if isinstance(self.parent, model.Ruby):
       self.ruby_rbc = None
@@ -172,7 +170,7 @@ class Parser():
 
     self.parent = self.parent.parent()
 
-  def handle_string(self, token: StringToken):
+  def _handle_string(self, token: StringToken):
     lines = token.value.split("\n")
 
     for i, line in enumerate(lines):
@@ -187,15 +185,6 @@ class Parser():
       else:
         self.parent.push_child(span)
 
-
-class _State(Enum):
-  LOOKING = 1
-  TC = 2
-  TEXT = 3
-  TEXT_MORE = 4
-  START = 5
-  NOTE = 6
-  STYLE = 7
 
 _EMPTY_RE = re.compile(r"\s+")
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
@@ -250,7 +239,7 @@ def _get_or_make_region(
   elif value == "rl":
     writing_mode = styles.WritingModeType.tbrl
   elif value is not None:
-    LOGGER.warn("Bad vertical setting value: %s", value)
+    LOGGER.warning("Bad vertical setting value: %s", value)
 
 
   # size
@@ -264,7 +253,7 @@ def _get_or_make_region(
       else:
         extent_width = pct
     else:
-      LOGGER.warn("Bad size setting value: %s", value)
+      LOGGER.warning("Bad size setting value: %s", value)
 
   # text align
 
@@ -280,7 +269,7 @@ def _get_or_make_region(
   elif value == "end":
     text_align = styles.TextAlignType.end
   elif value is not None:
-    LOGGER.warn("Bad alignment setting value: %s", value)
+    LOGGER.warning("Bad alignment setting value: %s", value)
 
   # line
 
@@ -324,10 +313,10 @@ def _get_or_make_region(
           origin_x = 0
         display_align = styles.DisplayAlignType.after
       else:
-        LOGGER.warn("Bad line alignment setting value: %s", line_align)
+        LOGGER.warning("Bad line alignment setting value: %s", line_align)
 
     else:
-      LOGGER.warn("Bad line setting value: %s", cue_settings.get("line"))
+      LOGGER.warning("Bad line setting value: %s", cue_settings.get("line"))
 
   # position
 
@@ -363,10 +352,10 @@ def _get_or_make_region(
         else:
           origin_y = position - extent_height
       else:
-        LOGGER.warn("Bad position alignment setting value: %s", line_align)
+        LOGGER.warning("Bad position alignment setting value: %s", line_align)
 
     else:
-      LOGGER.warn("Bad position setting value: %s", cue_settings.get("position"))
+      LOGGER.warning("Bad position setting value: %s", cue_settings.get("position"))
 
 
   extent = styles.ExtentType(
@@ -438,6 +427,16 @@ def vtt_timestamp_to_secs(vtt_ts: str):
 def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None):
   """Converts a WebVTT document to the data model"""
 
+  class _State(Enum):
+    LOOKING = 1
+    TC = 2
+    TEXT = 3
+    TEXT_MORE = 4
+    START = 5
+    NOTE = 6
+    STYLE = 7
+
+
   doc = model.ContentDocument()
 
   body = model.Body(doc)
@@ -455,7 +454,7 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
 
     if state is _State.START:
       if not line.startswith("WEBVTT"):
-        LOGGER.warn("The first line of the file does not start with WEBVTT")
+        LOGGER.warning("The first line of the file does not start with WEBVTT")
       state = _State.LOOKING
       continue
 
@@ -493,17 +492,17 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       cue_params = line.split()
 
       if len(cue_params) < 3:
-        LOGGER.warn("Invalid line %s", line_index)
+        LOGGER.warning("Invalid line %s", line_index)
         continue
 
       start_time = vtt_timestamp_to_secs(cue_params[0])
       if start_time is None:
-        LOGGER.warn("Invalid timestamp %s at %s", cue_params[0], line_index)
+        LOGGER.warning("Invalid timestamp %s at %s", cue_params[0], line_index)
         continue
 
       end_time = vtt_timestamp_to_secs(cue_params[2])
       if end_time is None:
-        LOGGER.warn("Invalid timestamp %s at %s", cue_params[2], line_index)
+        LOGGER.warning("Invalid timestamp %s at %s", cue_params[2], line_index)
         continue
 
       current_p = model.P(doc)
