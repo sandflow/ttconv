@@ -38,16 +38,12 @@ from ttconv.vtt.tokenizer import EndTagToken, StartTagToken, StringToken, CueTex
 
 LOGGER = logging.getLogger(__name__)
 
-#
-# SRT reader
-#
-
 def _none_terminated(iterator):
   for item in iterator:
     yield item
   yield None
 
-def parse_cue_text(cue_text: str, paragraph: model.P, line_number: int):
+def _parse_cue_text(cue_text: str, paragraph: model.P, line_number: int):
   parser = _TextCueParser(paragraph, line_number)
 
   for token in CueTextTokenizer(cue_text):
@@ -193,22 +189,23 @@ _DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
 _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
-
 _DEFAULT_ROWS = 23
 _DEFAULT_COLS = 40
 
 _VTT_PCT_RE = re.compile(r"(\d+\.?\d*)%")
 
-# integer has at most 20 digits
-_VTT_INT_RE = re.compile(r"(-?\d{1,20})")
-
 def parse_vtt_pct(value: str):
+  """Parse a WebVTT precentage value"""
   m = _VTT_PCT_RE.fullmatch(value)
   if m:
     return round(float(m.group(1)))
   return None
 
+# integer has at most 20 digits
+_VTT_INT_RE = re.compile(r"(-?\d{1,20})")
+
 def parse_vtt_int(value: str):
+  """Parse a WebVTT integer value"""
   m = _VTT_INT_RE.fullmatch(value)
   if m:
     return int(m.group(1))
@@ -524,7 +521,7 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       if line is None or _EMPTY_RE.fullmatch(line):
         subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
 
-        parse_cue_text(subtitle_text, current_p, line_index)
+        _parse_cue_text(subtitle_text, current_p, line_index)
 
         state = _State.LOOKING
         continue
