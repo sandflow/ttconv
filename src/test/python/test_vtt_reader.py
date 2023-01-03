@@ -32,6 +32,7 @@ import os.path
 
 from ttconv.vtt.reader import to_model
 import ttconv.style_properties as styles
+import ttconv.model as model
 
 
 class VTTReaderTest(unittest.TestCase):
@@ -177,11 +178,19 @@ Hello <b>my
 </b> name is Bob
 """)
     doc = to_model(f)
-    for e in doc.get_body().dfs_iterator():
-      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
-        break
-    else:
-      self.fail()
+    i = doc.get_body().first_child().first_child().dfs_iterator()
+
+    self.assertIsInstance(next(i), model.P)
+    self.assertIsInstance(next(i), model.Span)
+    self.assertIsInstance(next(i), model.Text)
+    e = next(i)
+    self.assertIsInstance(e, model.Span)
+    self.assertEqual(e.get_style(styles.StyleProperties.FontWeight), styles.FontWeightType.bold)
+    self.assertIsInstance(next(i), model.Span)
+    self.assertIsInstance(next(i), model.Text)
+    self.assertIsInstance(next(i), model.Br)
+    self.assertIsInstance(next(i), model.Span)
+    self.assertIsInstance(next(i), model.Text)
 
   def test_long_hours(self):
     f = io.StringIO(r"""WEBVTT
