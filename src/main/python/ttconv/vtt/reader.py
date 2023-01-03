@@ -73,7 +73,7 @@ class _TextCueParser:
 
   def _handle_ts(self, token: TimestampTagToken):
 
-    span = model.Span(self.parent.get_doc())
+    span = self._make_span(self.parent)
     self.parent.push_child(span)
     self.parent = span
 
@@ -116,9 +116,12 @@ class _TextCueParser:
 
     # all other tags can be handled as a span
 
-    span = model.Span(self.parent.get_doc())
+    span = self._make_span(self.parent)
     self.parent.push_child(span)
     self.parent = span
+
+    if isinstance(span.parent(), model.P):
+      span.set_style(styles.StyleProperties.BackgroundColor, _DEFAULT_BG_COLOR)
 
     if tag.startswith("b"):
       span.set_style(styles.StyleProperties.FontWeight, styles.FontWeightType.bold)
@@ -172,7 +175,7 @@ class _TextCueParser:
     for i, line in enumerate(lines):
       if i > 0:
         self.parent.push_child(model.Br(self.parent.get_doc()))
-      span = model.Span(self.parent.get_doc())
+      span = self._make_span(self.parent)
       span.push_child(model.Text(self.parent.get_doc(), line))
       if isinstance(self.parent, model.Ruby):
         rb = model.Rb(self.parent.get_doc())
@@ -181,14 +184,20 @@ class _TextCueParser:
       else:
         self.parent.push_child(span)
 
+  def _make_span(self, parent: model.ContentElement) -> model.Span:
+    span = model.Span(self.parent.get_doc())
+    if isinstance(parent, model.P):
+      span.set_style(styles.StyleProperties.BackgroundColor, _DEFAULT_BG_COLOR)
+    return span
+
 
 _EMPTY_RE = re.compile(r"\s+")
-_DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
-_DEFAULT_FONT_SIZE = styles.LengthType(80, styles.LengthType.Units.pct)
-_DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
+_DEFAULT_FONT_STACK = (styles.GenericFontFamilyType.sansSerif,)
+_DEFAULT_FONT_SIZE = styles.LengthType(15 * 5, styles.LengthType.Units.pct) # 5vh for ttp:cellResolution="32 15"
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
-_DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
+_DEFAULT_LINE_PADDING = styles.LengthType(0.5, styles.LengthType.Units.c)
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
+_DEFAULT_BG_COLOR = styles.ColorType((0, 0, 0, 204))
 _DEFAULT_ROWS = 23
 _DEFAULT_COLS = 40
 
@@ -397,12 +406,8 @@ def _get_or_make_region(
     found_region.set_style(styles.StyleProperties.FontFamily, _DEFAULT_FONT_STACK)
     found_region.set_style(styles.StyleProperties.FontSize, _DEFAULT_FONT_SIZE)
     found_region.set_style(styles.StyleProperties.Color, _DEFAULT_TEXT_COLOR)
-    found_region.set_style(styles.StyleProperties.TextOutline,
-      styles.TextOutlineType(
-        _DEFAULT_OUTLINE_THICKNESS,
-        _DEFAULT_OUTLINE_COLOR
-      )
-    )
+    found_region.set_style(styles.StyleProperties.LinePadding, _DEFAULT_LINE_PADDING)
+    found_region.set_style(styles.StyleProperties.FillLineGap, True)
     doc.put_region(found_region)
 
   return found_region
