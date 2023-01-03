@@ -1,0 +1,29 @@
+WEBVTT
+
+00:00:01.002 --> 00:00:03.004 align:left line:10%
+horizontal left; vertical top
+
+00:00:04.005 --> 00:00:06.007 align:start line:50%
+horizontal start; vertical middle
+
+00:00:07.008 --> 00:00:09.010 align:center
+horizontal center; vertical bottom
+
+00:00:10.011 --> 00:00:12.013 line:10%
+horizontal middle; vertical top
+
+00:00:13.014 --> 00:00:15.016 line:50%
+horizontal middle; vertical middle
+
+00:00:16.017 --> 00:00:18.019
+horizontal middle; vertical bottom
+
+00:00:19.020 --> 00:00:21.022 align:right line:10%
+horizontal right; vertical top
+
+00:00:22.023 --> 00:00:24.025 align:end line:50%
+horizontal end; vertical middle
+
+00:00:25.026 --> 00:00:27.028 align:right
+horizontal right; vertical bottom
+

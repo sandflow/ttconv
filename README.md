@@ -21,6 +21,8 @@ formats used in the presentations of captions, subtitles, karaoke, etc.
     EBU STL -------                         --- SRT
                   /
     SRT ---------
+                /
+    WebVTT ----
 
 _ttconv_ works by mapping the input document, whatever its format, into an internal canonical model, which is then mapped to the
 format of the output document is derived. The canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data model,
@@ -41,6 +43,7 @@ suggestions/contributions are welcome.
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
 * [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
+* [WebVTT](https://www.w3.org/TR/webvtt1/)
 
 ### Output Formats
 

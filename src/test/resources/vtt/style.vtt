@@ -1,0 +1,18 @@
+WEBVTT
+
+STYLE
+::cue {
+  background-color: transparent;
+}
+::cue(.yellow) {
+  color: #ffff00ff;
+}
+::cue(.bg_black) {
+  background-color: #000000ff;
+}
+
+1
+01:00:00.040 --> 01:00:03.000
+<c.yellow><c.bg_black >This</c></c>
+<c.bg_yellow>is
+<c.bg_red>row 18

@@ -596,11 +596,11 @@ class RubyTest(unittest.TestCase):
 
 class RtcTest(unittest.TestCase):
 
-  def test_push_child(self):
+  def test_push_child_bad(self):
 
     r = model.Rtc()
 
-    with self.assertRaises(RuntimeError):
+    with self.assertRaises(ValueError):
       r.push_child(model.P())
 
   def test_remove_child(self):
@@ -631,6 +631,20 @@ class RtcTest(unittest.TestCase):
 
     with self.assertRaises(ValueError):
       r.push_children([model.Rb(), model.Rt()])
+
+  def test_push_child(self):
+
+    r = model.Rtc()
+
+    r.push_child(model.Rt())
+    r.push_child(model.Rt())
+
+    r.remove_children()
+
+    r.push_children([model.Rp(), model.Rt(), model.Rt(), model.Rp()])
+
+    with self.assertRaises(ValueError):
+      r.push_child(model.Rt())
 
 class RbTest(unittest.TestCase):
 
