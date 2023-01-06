@@ -61,5 +61,12 @@ class VttCueTest(unittest.TestCase):
     self.assertEqual("123\n00:20:34.000 --> 00:39:05.000\nHello world!\n", str(paragraph))
     self.assertEqual("123\n00:20:34.000 --> 00:39:05.000\nHello world!\n", paragraph.to_string())
 
+  def test_paragraph_no_cue_id(self):
+    paragraph = VttCue()
+    paragraph.set_begin(Fraction(1234, 1))
+    paragraph.set_end(Fraction(2345, 1))
+    paragraph.append_text("Hello world!")
+    self.assertEqual("00:20:34.000 --> 00:39:05.000\nHello world!\n", str(paragraph))
+
 if __name__ == '__main__':
   unittest.main()
