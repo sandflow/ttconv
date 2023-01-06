@@ -40,3 +40,6 @@ class VTTWriterConfiguration(ModuleConfiguration):
 
   # outputs `line` and `line alignment` cue settings
   line_position: bool = field(default=False, metadata={"decoder": bool})
+
+  # outputs cue identifier
+  cue_id: bool = field(default=True, metadata={"decoder": bool})

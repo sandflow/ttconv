@@ -156,7 +156,7 @@ class VttContext:
 
     self._captions_counter += 1
 
-    cue = VttCue(self._captions_counter)
+    cue = VttCue(self._captions_counter if self._config.cue_id else None)
     cue.set_begin(begin)
     cue.set_end(end)
 

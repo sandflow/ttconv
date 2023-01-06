@@ -181,6 +181,14 @@ Default: `23`
 
 Default: `false`
 
+#### cue_id
+
+`"cue_id" : true | false`
+
+`true` means that the VTT writer outputs cue identifiers
+
+Default: `true`
+
 ### Library
 
 The overall architecture of the library is as follows:

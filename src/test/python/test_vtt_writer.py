@@ -150,6 +150,37 @@ Cool, got it, will do it by end of next week.
     vtt_from_model = vtt_writer.from_model(model, config)
     self.assertEqual(expected_vtt, vtt_from_model)
 
+  def test_cue_id(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001">
+  <body>
+    <div>
+      <p begin="00:00:03:12" end="00:00:12:00">Only one or two short samples are needed<br/>to make sure the conversion basically works</p>
+      <p begin="00:00:14:09" end="00:00:25:17">Cool, got it, will do it by end of next week.</p>
+    </div>
+  </body>
+</tt>"""
+
+    expected_vtt="""WEBVTT
+
+00:00:03.501 --> 00:00:12.000
+Only one or two short samples are needed
+to make sure the conversion basically works
+
+00:00:14.375 --> 00:00:25.709
+Cool, got it, will do it by end of next week.
+"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    config = VTTWriterConfiguration()
+    config.cue_id = False
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
+    config = VTTWriterConfiguration.parse(json.loads('{"cue_id":false}'))
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
   def test_scc_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/scc"):
       for filename in files:

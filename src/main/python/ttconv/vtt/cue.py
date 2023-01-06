@@ -44,7 +44,7 @@ class VttCue:
 
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
-  def __init__(self, identifier: int):
+  def __init__(self, identifier: Optional[int] = None):
     self._id: int = identifier
     self._begin: Optional[ClockTime] = None
     self._end: Optional[ClockTime] = None
@@ -118,7 +118,7 @@ class VttCue:
   def __str__(self) -> str:
 
     # cue identifier
-    t = f"{self._id}\n"
+    t = f"{self._id}\n" if self._id is not None else ""
     
     # cue timing
     t += f"{self._begin} --> {self._end}"
