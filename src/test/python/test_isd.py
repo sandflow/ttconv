@@ -326,6 +326,7 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertAlmostEqual(extent.height.value, 100*25/doc.get_px_resolution().height)
     self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
+  @unittest.skip("Removing support for 'c' units other with ebutts:linePadding")
   def test_compute_extent_c(self):
     doc = model.ContentDocument()
 
