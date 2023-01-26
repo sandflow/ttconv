@@ -455,7 +455,7 @@ class _SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
 
-    else:
+    elif self.buffered_caption is not None:
       self.buffered_caption.append_text(word)
 
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
@@ -541,7 +541,7 @@ class _SccContext:
         elif extended_char is not None:
           if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
             self.active_caption.get_current_text().backspace()
-          else:
+          elif self.buffered_caption is not None:
             self.buffered_caption.get_current_text().backspace()
 
           word = extended_char.get_unicode_value()
