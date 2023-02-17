@@ -504,6 +504,10 @@ class _SccContext:
         spec_char = SccSpecialCharacter.find(scc_word.value)
         extended_char = SccExtendedCharacter.find(scc_word.value)
 
+        if pac is None and self.buffered_caption is None and self.active_caption is None:
+          LOGGER.warning(f"Uninitialized caption: skip {hex(scc_word.value)} code.")
+          continue
+
         if pac is not None:
           debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
           if pac.get_color() is not None:

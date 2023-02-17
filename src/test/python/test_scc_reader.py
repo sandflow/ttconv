@@ -250,6 +250,59 @@ Scenarist_SCC V1.0
                        "consectetur adipiscing elit.")
     self.assertEqual(region_1, p_list[0].get_region())
 
+  def test_scc_pop_on_content_without_preamble_address_code(self):
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:02:16	942c
+
+00:00:03:01	9420 91ae 9421 4c6f 7265 6d20 6970 7375 6d20 9220 942c 942f
+
+00:00:07:29	9420 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:09:07	9420 656e 7465 7371 7565 2069 6e74 6572 6475 6d20 6c61 6369 6e69 6120 736f 6c6c 6963 6974 7564 696e 2e80 942c 942f
+
+00:00:11:27	9420
+"""
+
+    scc_disassembly = """\
+00:00:02:16	{EDM}
+00:00:03:01	{RCL}{I}{BS}Lorem ipsum Á{EDM}{EOC}
+00:00:07:29	{RCL}{1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:09:07	{RCL}entesque interdum lacinia sollicitudin.{EDM}{EOC}
+00:00:11:27	{RCL}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:08:26", None, "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
   def test_2_rows_roll_up_content(self):
     scc_content = """\
 Scenarist_SCC V1.0
