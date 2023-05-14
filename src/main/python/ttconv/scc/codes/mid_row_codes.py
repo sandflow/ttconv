@@ -28,13 +28,12 @@
 from __future__ import annotations
 
 import typing
-from enum import Enum
 
 from ttconv.scc.codes import SccCode, SCC_COLOR_MAPPING
 from ttconv.style_properties import FontStyleType, TextDecorationType, ColorType
 
 
-class SccMidRowCode(SccCode, Enum):
+class SccMidRowCode(SccCode):
   """SCC Mid-Row Code values"""
   WHITE = (0x1120, 0x1920)
   WHITE_UNDERLINE = (0x1121, 0x1921)

@@ -27,14 +27,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Optional
 
 from ttconv.scc.codes import SccCode
 from ttconv.style_properties import ColorType, NamedColors, TextDecorationType
 
 
-class SccAttributeCode(SccCode, Enum):
+class SccAttributeCode(SccCode):
   """SCC Foreground and Background Attribute Codes definition"""
   BWO = (0x1020, 0x1820, ColorType((0xFF, 0xFF, 0xFF, 0xFF)))  # Background White, Opaque
   BWS = (0x1021, 0x1821, ColorType((0xFF, 0xFF, 0xFF, 0x88)))  # Background White, Semi-transparent

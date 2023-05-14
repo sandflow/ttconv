@@ -28,12 +28,11 @@
 from __future__ import annotations
 
 import typing
-from enum import Enum
 
 from ttconv.scc.codes import SccCode
 
 
-class SccSpecialCharacter(SccCode, Enum):
+class SccSpecialCharacter(SccCode):
   """SCC Special character definition"""
 
   # Special characters specified in CEA-608
@@ -71,7 +70,7 @@ class SccSpecialCharacter(SccCode, Enum):
     return None
 
 
-class SccExtendedCharacter(SccCode, Enum):
+class SccExtendedCharacter(SccCode):
   """SCC Extended character definition"""
 
   # Spanish extended characters
