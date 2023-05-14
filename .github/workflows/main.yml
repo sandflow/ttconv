@@ -10,7 +10,10 @@ jobs:
 
     - uses: actions/setup-python@v4
       with:
-        python-version: '3.7' 
+        python-version: '3.7'
+
+    - name: Initialize pip environment
+      run: python -m pip install pipenv
 
     - name: Checkout repo
       uses: actions/checkout@v2
