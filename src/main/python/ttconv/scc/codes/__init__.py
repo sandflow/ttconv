@@ -25,6 +25,8 @@
 
 """SCC Codes"""
 
+from enum import Enum
+from typing import Tuple
 from ttconv.style_properties import NamedColors
 
 SCC_COLOR_MAPPING = {
@@ -45,7 +47,7 @@ SCC_COLOR_MAPPING = {
 }
 
 
-class SccCode:
+class SccCode(Enum):
   """SCC codes base definition class"""
 
   def __init__(self, channel_1: int, channel_2: int):
@@ -55,7 +57,7 @@ class SccCode:
     self._channel_1 = channel_1
     self._channel_2 = channel_2
 
-  def get_values(self) -> (int, int):
+  def get_values(self) -> Tuple[int, int]:
     """Returns SCC Code values"""
     return self._channel_1, self._channel_2
 

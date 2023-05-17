@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType, ActiveAreaType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
@@ -76,7 +76,7 @@ class _SccContext:
     self.roll_up_depth: int = 0
 
     # Cursor position in the active area
-    self.active_cursor: (int, int) = (0, 0)
+    self.active_cursor: Tuple[int, int] = (0, 0)
 
     self.current_text_decoration = None
     self.current_color = None
