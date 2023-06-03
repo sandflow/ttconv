@@ -9,8 +9,8 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
-    name='ttconv', 
-    version='1.0.6-beta.1',
+    name='ttconv',
+    version='1.0.6',
     description='Library for conversion of common timed text formats',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -30,7 +30,7 @@ setup(
     ],
     keywords='ttml, timed text, caption, subtitle, imsc, scc, srt, stl, smpte-tt, conversion, vtt, webvtt, 608',
 
-    package_dir={'ttconv': 'src/main/python/ttconv'}, 
+    package_dir={'ttconv': 'src/main/python/ttconv'},
 
     packages=find_packages(where='src/main/python'),
 
