@@ -171,6 +171,16 @@ Specifies a maximum number of rows for open subtitles, either the MNR field of t
 
 Default: `23`
 
+### SRT Writer configuration
+
+#### text_formatting
+
+`"text_formatting" : true | false`
+
+`false` means that the SRT writer does not output any text formatting tags
+
+Default: `true`
+
 ### VTT Writer configuration
 
 #### line_position
