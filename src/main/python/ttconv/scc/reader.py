@@ -481,7 +481,8 @@ class _SccContext:
 
     for scc_word in line.scc_words:
 
-      if self.previous_code == scc_word.value:
+      if self.previous_code == scc_word.value and self.previous_code_type is not str:
+        self.previous_code = None
         continue
 
       line.time_code.add_frames()
