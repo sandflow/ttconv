@@ -50,6 +50,7 @@ from ttconv.imsc.config import IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
 from ttconv.scc.config import SccReaderConfiguration
 from ttconv.stl.config import STLReaderConfiguration
+from ttconv.srt.config import SRTWriterConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
@@ -381,7 +382,7 @@ def convert(args):
     #
     # Read the config
     #
-    writer_config = read_config_from_json(ISDConfiguration, json_config_data)
+    writer_config = read_config_from_json(SRTWriterConfiguration, json_config_data)
 
     #
     # Construct and configure the writer
