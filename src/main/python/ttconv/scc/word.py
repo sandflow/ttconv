@@ -88,3 +88,8 @@ class SccWord:
   def to_text(self) -> str:
     """Converts SCC word to text"""
     return ''.join(SCC_STANDARD_CHARACTERS_MAPPING.get(byte, chr(byte)) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
+
+  def is_control_code(self) -> bool:
+    """Returns true if the word is a control code, i.e. the first byte
+    is a non-printing character in the range 10h to 1Fh."""
+    return 0x10 <= (self.value >> 8) <= 0x1F

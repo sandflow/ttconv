@@ -43,6 +43,7 @@ from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties, LengthType, GenericFontFamilyType
 from ttconv.time_code import SmpteTimeCode
 
@@ -62,7 +63,7 @@ class _SccContext:
     self.safe_area_y_offset: int = 0
 
     # Previously read SCC word value
-    self.previous_code = 0
+    self.previous_word: SccWord = None
     self.previous_code_type = None
 
     # Buffered caption being built
@@ -481,8 +482,8 @@ class _SccContext:
 
     for scc_word in line.scc_words:
 
-      if self.previous_code == scc_word.value and self.previous_code_type is not str:
-        self.previous_code = None
+      if self.previous_word is not None and self.previous_word.value == scc_word.value and self.previous_word.is_control_code():
+        self.previous_word = None
         continue
 
       line.time_code.add_frames()
@@ -493,12 +494,6 @@ class _SccContext:
       if scc_word.byte_1 < 0x20:
 
         control_code = SccControlCode.find(scc_word.value)
-        if control_code is not None \
-            and control_code is SccControlCode.find(self.previous_code):
-          # Skip duplicated control code from 'Field 2'
-          line.time_code.add_frames(-1)
-          continue
-
         attribute_code = SccAttributeCode.find(scc_word.value)
         mid_row_code = SccMidRowCode.find(scc_word.value)
         pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
@@ -561,7 +556,7 @@ class _SccContext:
         self.process_text(word, line.time_code)
         self.previous_code_type = str
 
-      self.previous_code = scc_word.value
+      self.previous_word = scc_word
 
     LOGGER.debug(debug)
 
