@@ -92,4 +92,4 @@ class SccWord:
   def is_control_code(self) -> bool:
     """Returns true if the word is a control code, i.e. the first byte
     is a non-printing character in the range 10h to 1Fh."""
-    return 0x10 <= (self.value >> 8) <= 0x1F
+    return 0x10 <= self.byte_1 <= 0x1F
