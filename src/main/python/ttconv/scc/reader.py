@@ -39,7 +39,7 @@ from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.scc.line import SccLine
-from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
+from ttconv.scc.caption_paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.style import SccCaptionStyle
 from ttconv.scc.word import SccWord
