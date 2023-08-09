@@ -38,7 +38,6 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
-from ttconv.scc.content import ROLL_UP_BASE_ROW
 from ttconv.scc.line import SccLine
 from ttconv.scc.paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
@@ -48,6 +47,8 @@ from ttconv.style_properties import StyleProperties, LengthType, GenericFontFami
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
+
+ROLL_UP_BASE_ROW = 15
 
 
 class _SccContext:

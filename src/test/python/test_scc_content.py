@@ -29,7 +29,8 @@
 
 import unittest
 
-from ttconv.scc.content import SccCaptionText, SccCaptionLine
+from ttconv.scc.caption_line import SccCaptionLine
+from ttconv.scc.caption_text import SccCaptionText
 from ttconv.style_properties import StyleProperties, NamedColors
 
 
