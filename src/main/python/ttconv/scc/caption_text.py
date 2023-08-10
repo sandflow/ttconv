@@ -95,6 +95,7 @@ class SccCaptionText:
   def backspace(self):
     """Remove last character"""
     self._text = self._text[:-1]
+    self._cursor = max(self._cursor - 1, 0)
 
   def get_style_properties(self) -> dict:
     """Sets the style properties map"""

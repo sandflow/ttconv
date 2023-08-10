@@ -206,10 +206,7 @@ class SccLine:
           context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccExtendedCharacter):
-          if context.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
-            context.active_caption.get_current_text().backspace()
-          else:
-            context.buffered_caption.get_current_text().backspace()
+          context.backspace()
 
           word = scc_code.get_unicode_value()
           debug += word

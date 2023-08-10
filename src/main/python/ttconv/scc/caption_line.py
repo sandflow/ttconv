@@ -67,7 +67,7 @@ class SccCaptionLine:
 
         # While the cursor is not on the last text element, and some text remains
         while self._current_text is not self._texts[-1] and len(remaining_text) > 0:
-          available = self._current_text.get_length() - self.get_current_text().get_cursor()
+          available = self._current_text.get_length() - self._current_text.get_cursor()
           text_to_write = remaining_text[:available]
 
           # Replace current text element content

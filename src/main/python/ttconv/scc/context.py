@@ -88,6 +88,16 @@ class SccContext:
     self.safe_area_x_offset = safe_area_x_offset
     self.safe_area_y_offset = safe_area_y_offset
 
+  def get_caption_to_process(self):
+    """Returns the caption currently being processed"""
+    if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
+      # If the Paint-On or Roll-Up style is activated, write directly on active caption
+      return self.active_caption
+    if self.current_style is SccCaptionStyle.PopOn:
+      # For Pop-On style, write first on a buffered caption
+      return self.buffered_caption
+    raise ValueError("SCC caption style not defined")
+
   def has_active_caption(self) -> bool:
     """Returns whether captions are being displayed or not"""
     return self.active_caption is not None
@@ -148,6 +158,12 @@ class SccContext:
         self.active_caption = None
 
       self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
+
+  def backspace(self):
+    """Move the cursors in a column to the left"""
+    self.get_caption_to_process().get_current_text().backspace()
+    (row, indent) = self.get_caption_to_process().get_cursor()
+    self.get_caption_to_process().set_cursor_at(row, max(indent - 1, 0))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
     """Initialize active caption for paint-on style"""
@@ -234,10 +250,7 @@ class SccContext:
   def process_mid_row_code(self, mid_row_code: SccMidRowCode, time_code: SmpteTimeCode):
     """Processes SCC Mid-Row Code to map it to the model"""
 
-    # If the Paint-On or Roll-Up style is activated, write directly on active caption
-    processed_caption = self.buffered_caption
-    if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
-      processed_caption = self.active_caption
+    processed_caption = self.get_caption_to_process()
 
     if processed_caption is None:
       raise ValueError("No current SCC caption initialized")
@@ -290,10 +303,7 @@ class SccContext:
   def process_attribute_code(self, attribute_code: SccAttributeCode):
     """Processes SCC Attribute Code to map it to the model"""
 
-    # If the Paint-On or Roll-Up style is activated, write directly on active caption
-    processed_caption = self.buffered_caption
-    if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
-      processed_caption = self.active_caption
+    processed_caption = self.get_caption_to_process()
 
     if processed_caption is None or processed_caption.get_current_text() is None:
       raise ValueError("No current SCC caption nor content initialized")
@@ -311,8 +321,6 @@ class SccContext:
 
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
-
-    processed_caption = self.buffered_caption
 
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
@@ -335,12 +343,7 @@ class SccContext:
       elif control_code is SccControlCode.RU4:
         self.roll_up_depth = 4
 
-    else:
-      # If the Paint-On or Roll-Up style is activated, write directly on active caption
-      if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
-        processed_caption = self.active_caption
-
-    if control_code is SccControlCode.EOC:
+    elif control_code is SccControlCode.EOC:
       # Display caption (Pop-On)
       self.set_buffered_caption_begin_time(time_code)
       self.flip_buffered_to_active_captions(time_code)
@@ -372,13 +375,13 @@ class SccContext:
       self.buffered_caption = None
 
     elif control_code is SccControlCode.TO1:
-      processed_caption.indent_cursor(1)
+      self.get_caption_to_process().indent_cursor(1)
 
     elif control_code is SccControlCode.TO2:
-      processed_caption.indent_cursor(2)
+      self.get_caption_to_process().indent_cursor(2)
 
     elif control_code is SccControlCode.TO3:
-      processed_caption.indent_cursor(3)
+      self.get_caption_to_process().indent_cursor(3)
 
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
@@ -410,7 +413,7 @@ class SccContext:
       # Backspace
       # When a Backspace is received, the cursor moves to the left one column position erasing
       # the character or Mid-Row Code occupying that location, unless the cursor is in Column 1
-      processed_caption.get_current_text().backspace()
+      self.backspace()
 
   def process_text(self, word: str, time_code: SmpteTimeCode):
     """Processes SCC text words"""
