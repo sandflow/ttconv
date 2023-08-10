@@ -34,9 +34,10 @@ from typing import List, Optional
 from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.extended_characters import SccExtendedCharacter
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
-from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
+from ttconv.scc.codes.special_characters import SccSpecialCharacter
 from ttconv.scc.context import SccContext
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
 from ttconv.scc.word import SccWord
@@ -179,29 +180,22 @@ class SccLine:
         scc_code = scc_word.get_code()
 
         if isinstance(scc_code, SccPreambleAddressCode):
-          debug += "[PAC|" + str(scc_code.get_row()) + "|" + str(scc_code.get_indent())
-          if scc_code.get_color() is not None:
-            debug += "|" + str(scc_code.get_color())
-          if scc_code.get_font_style() is not None:
-            debug += "|I"
-          if scc_code.get_text_decoration() is not None:
-            debug += "|U"
-          debug += "/" + hex(scc_word.value) + "]"
+          debug += scc_code.debug(scc_word.value)
           context.process_preamble_address_code(scc_code, self.time_code)
           context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccAttributeCode):
-          debug += "[ATC/" + hex(scc_word.value) + "]"
+          debug += scc_code.debug(scc_word.value)
           context.process_attribute_code(scc_code)
           context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccMidRowCode):
-          debug += "[MRC|" + scc_code.get_name() + "/" + hex(scc_word.value) + "]"
+          debug += scc_code.debug(scc_word.value)
           context.process_mid_row_code(scc_code, self.time_code)
           context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccControlCode):
-          debug += "[CC|" + scc_code.get_name() + "/" + hex(scc_word.value) + "]"
+          debug += scc_code.debug(scc_word.value)
           context.process_control_code(scc_code, self.time_code)
           context.previous_word_type = type(scc_code)
 

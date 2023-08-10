@@ -162,3 +162,15 @@ class SccPreambleAddressCode:
     if byte_2 not in list(range(0x40, 0x80)):
       return None
     return _SccPacDescriptionBits(byte_2 & 0x1F)
+
+  def debug(self, value: int) -> str:
+    """Debug representation of the code"""
+    debug = "[PAC|" + str(self.get_row()) + "|" + str(self.get_indent())
+    if self.get_color() is not None:
+      debug += "|" + str(self.get_color())
+    if self.get_font_style() is not None:
+      debug += "|I"
+    if self.get_text_decoration() is not None:
+      debug += "|U"
+    debug += "/" + hex(value) + "]"
+    return debug

@@ -74,3 +74,7 @@ class SccControlCode(SccCode):
       if control_code.contains_value(value):
         return control_code
     return None
+
+  def debug(self, value: int) -> str:
+    """Debug representation of the code"""
+    return "[CC|" + self.get_name() + "/" + hex(value) + "]"

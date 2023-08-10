@@ -87,3 +87,7 @@ class SccMidRowCode(SccCode):
       if mid_row_code.contains_value(value):
         return mid_row_code
     return None
+
+  def debug(self, value: int) -> str:
+    """Debug representation of the code"""
+    return "[MRC|" + self.get_name() + "/" + hex(value) + "]"

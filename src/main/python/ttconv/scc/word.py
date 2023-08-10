@@ -32,9 +32,10 @@ from typing import Optional
 from ttconv.scc.codes import SccCode
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.extended_characters import SccExtendedCharacter
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
-from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
+from ttconv.scc.codes.special_characters import SccSpecialCharacter
 from ttconv.scc.codes.standard_characters import SCC_STANDARD_CHARACTERS_MAPPING
 
 PARITY_BIT_MASK = 0b01111111
