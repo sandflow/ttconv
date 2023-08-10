@@ -31,13 +31,14 @@ import logging
 import re
 from typing import List, Optional
 
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
+from ttconv.scc.context import SccContext
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
-from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.word import SccWord
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
@@ -156,3 +157,84 @@ class SccLine:
         disassembly_line += scc_word.to_text()
 
     return disassembly_line
+
+  def process(self, context: SccContext) -> SmpteTimeCode:
+    """Converts the SCC line to the data model"""
+
+    debug = str(self.time_code) + "\t"
+
+    for scc_word in self.scc_words:
+
+      if context.previous_word is not None and context.previous_word.value == scc_word.value and context.previous_word.is_code():
+        context.previous_word = None
+        continue
+
+      self.time_code.add_frames()
+
+      if scc_word.value == 0x0000:
+        continue
+
+      if scc_word.byte_1 < 0x20:
+
+        scc_code = scc_word.get_code()
+
+        if isinstance(scc_code, SccPreambleAddressCode):
+          debug += "[PAC|" + str(scc_code.get_row()) + "|" + str(scc_code.get_indent())
+          if scc_code.get_color() is not None:
+            debug += "|" + str(scc_code.get_color())
+          if scc_code.get_font_style() is not None:
+            debug += "|I"
+          if scc_code.get_text_decoration() is not None:
+            debug += "|U"
+          debug += "/" + hex(scc_word.value) + "]"
+          context.process_preamble_address_code(scc_code, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccAttributeCode):
+          debug += "[ATC/" + hex(scc_word.value) + "]"
+          context.process_attribute_code(scc_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccMidRowCode):
+          debug += "[MRC|" + scc_code.get_name() + "/" + hex(scc_word.value) + "]"
+          context.process_mid_row_code(scc_code, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccControlCode):
+          debug += "[CC|" + scc_code.get_name() + "/" + hex(scc_word.value) + "]"
+          context.process_control_code(scc_code, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccSpecialCharacter):
+          word = scc_code.get_unicode_value()
+          debug += word
+          context.process_text(word, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccExtendedCharacter):
+          if context.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
+            context.active_caption.get_current_text().backspace()
+          else:
+            context.buffered_caption.get_current_text().backspace()
+
+          word = scc_code.get_unicode_value()
+          debug += word
+          context.process_text(word, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        else:
+          debug += "[??/" + hex(scc_word.value) + "]"
+          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
+          context.previous_word_type = None
+
+      else:
+        text = scc_word.to_text()
+        debug += text
+        context.process_text(text, self.time_code)
+        context.previous_word_type = str
+
+      context.previous_word = scc_word
+
+    LOGGER.debug(debug)
+
+    return self.time_code
