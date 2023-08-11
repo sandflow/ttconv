@@ -33,8 +33,8 @@ from typing import Optional, List, Dict, Union
 
 from ttconv.model import Region, ContentDocument, P, Br, Span, Text
 from ttconv.scc.caption_line import SccCaptionLine
-from ttconv.scc.caption_text import SccCaptionText
 from ttconv.scc.caption_style import SccCaptionStyle
+from ttconv.scc.caption_text import SccCaptionText
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
 from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType, \
   TextAlignType, NamedColors
@@ -86,7 +86,7 @@ class SccCaptionParagraph:
     """Sets caption begin time code"""
     self._begin = copy.copy(time_code)
 
-  def get_begin(self) -> SmpteTimeCode:
+  def get_begin(self) -> Optional[SmpteTimeCode]:
     """Returns the caption begin time code"""
     return self._begin
 
@@ -94,7 +94,7 @@ class SccCaptionParagraph:
     """Sets caption end time code"""
     self._end = copy.copy(time_code)
 
-  def get_end(self) -> SmpteTimeCode:
+  def get_end(self) -> Optional[SmpteTimeCode]:
     """Returns the caption end time code"""
     return self._end
 
@@ -105,6 +105,10 @@ class SccCaptionParagraph:
   def get_safe_area_y_offset(self):
     """Returns the safe area y offset"""
     return self._safe_area_y_offset
+
+  def set_caption_style(self, caption_style: SccCaptionStyle):
+    """Sets the caption style"""
+    self._caption_style = caption_style
 
   def get_caption_style(self) -> SccCaptionStyle:
     """Returns the caption style"""

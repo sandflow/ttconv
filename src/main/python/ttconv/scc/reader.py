@@ -48,15 +48,16 @@ LOGGER = logging.getLogger(__name__)
 def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts a SCC document to the data model"""
 
-  context = SccContext(config)
   document = ContentDocument()
 
   # Safe area must be a 32x15 grid, that represents 80% of the root area
   root_cell_resolution = CellResolutionType(rows=SCC_ROOT_CELL_RESOLUTION_ROWS, columns=SCC_ROOT_CELL_RESOLUTION_COLUMNS)
   document.set_cell_resolution(root_cell_resolution)
 
-  context.set_safe_area(int((root_cell_resolution.columns - SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS) / 2),
-                        int((root_cell_resolution.rows - SCC_SAFE_AREA_CELL_RESOLUTION_ROWS) / 2))
+  safe_area_x_offset = int((root_cell_resolution.columns - SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS) / 2)
+  safe_area_y_offset = int((root_cell_resolution.rows - SCC_SAFE_AREA_CELL_RESOLUTION_ROWS) / 2)
+
+  context = SccContext(safe_area_x_offset, safe_area_y_offset, config)
 
   # The active area is equivalent to the safe area
   active_area = ActiveAreaType(
