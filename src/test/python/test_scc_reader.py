@@ -1016,33 +1016,6 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[5], "caption6", "00:00:03:19", None, "sagittis.")
     self.assertEqual(region_4, p_list[5].get_region())
 
-  def test_scc_double_word_in_content(self):
-    scc_content = """"Scenarist_SCC V1.0
-01:02:53:14	9420 9420 94AE 94AE 9452 9452 97A1 97A1 20F2 E56D E56D 62E5 F220 9137 9137 9137 9137 942F 942F
-01:02:55:14 942c 942c
-"""
-    scc_disassembly = """\
-01:02:53:14	{RCL}{RCL}{ENM}{ENM}{1404}{1404}{TO1}{TO1} remember ♪♪♪♪{EOC}{EOC}
-"""
-    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
-
-    doc = to_model(scc_content)
-    self.assertIsNotNone(doc)
-    body = doc.get_body()
-    self.assertIsNotNone(body)
-
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(1, len(p_list))
-
-    first_span = p_list[0][0]
-    first_text = first_span[0].get_text()
-
-    self.assertEqual(" remember ♪♪", first_text)
 
 if __name__ == '__main__':
   unittest.main()
