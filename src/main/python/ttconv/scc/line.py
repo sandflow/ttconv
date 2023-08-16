@@ -37,7 +37,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.word import SccWord
 from ttconv.time_code import SmpteTimeCode, FPS_30
 

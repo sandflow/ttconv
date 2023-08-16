@@ -32,7 +32,7 @@ from fractions import Fraction
 
 from ttconv.model import ContentDocument, Span, Br
 from ttconv.scc.caption_paragraph import SccCaptionParagraph
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.caption_line import SccCaptionLine
 from ttconv.style_properties import TextAlignType
 from ttconv.time_code import SmpteTimeCode, FPS_30

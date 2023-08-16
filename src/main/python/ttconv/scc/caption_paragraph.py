@@ -34,7 +34,7 @@ from typing import Optional, List, Dict, Union
 from ttconv.model import Region, ContentDocument, P, Br, Span, Text
 from ttconv.scc.caption_line import SccCaptionLine
 from ttconv.scc.caption_text import SccCaptionText
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
 from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType, \
   TextAlignType, NamedColors

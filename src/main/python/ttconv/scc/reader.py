@@ -41,7 +41,7 @@ from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.scc.line import SccLine
 from ttconv.scc.caption_paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
   SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties, LengthType, GenericFontFamilyType
 from ttconv.time_code import SmpteTimeCode
