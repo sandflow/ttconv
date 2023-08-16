@@ -29,6 +29,10 @@
 
 import unittest
 
+from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.mid_row_codes import SccMidRowCode
+from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
+from ttconv.scc.codes.special_characters import SccExtendedCharacter
 from ttconv.scc.word import SccWord
 
 
@@ -101,3 +105,34 @@ class SccWordTest(unittest.TestCase):
     self.assertEqual('\x01', scc_word.to_text())
 
     self.assertRaises(ValueError, SccWord.from_value, 0x01020304)
+
+  def test_scc_word_get_code(self):
+    self.assertEqual(SccControlCode.RCL, SccWord.from_str("9420").get_code())
+    self.assertEqual(SccMidRowCode.ITALICS, SccWord.from_str("91ae").get_code())
+    self.assertEqual(SccControlCode.BS, SccWord.from_str("9421").get_code())
+    self.assertEqual(None, SccWord.from_str("4c6f").get_code()) # "Lo"
+    self.assertEqual(None, SccWord.from_str("7265").get_code()) # "re"
+    self.assertEqual(None, SccWord.from_str("6d20").get_code()) # "m "
+    self.assertEqual(None, SccWord.from_str("6970").get_code()) # "ip"
+    self.assertEqual(None, SccWord.from_str("7375").get_code()) # "su"
+    self.assertEqual(None, SccWord.from_str("6d20").get_code()) # "m "
+    self.assertEqual(SccExtendedCharacter.LATIN_CAPITAL_LETTER_A_WITH_ACUTE, SccWord.from_str("9220").get_code())
+    self.assertEqual(SccControlCode.EDM, SccWord.from_str("942c").get_code())
+    self.assertEqual(SccControlCode.EOC, SccWord.from_str("942f").get_code())
+    self.assertEqual(SccControlCode.RU2, SccWord.from_str("9425").get_code())
+    self.assertEqual(SccControlCode.CR, SccWord.from_str("94ad").get_code())
+    self.assertEqual(SccPreambleAddressCode, SccWord.from_str("9673").get_code().__class__)
+    self.assertEqual(None, SccWord.from_str("636f").get_code()) # "co"
+    self.assertEqual(None, SccWord.from_str("6e73").get_code()) # "ns"
+    self.assertEqual(None, SccWord.from_str("6563").get_code()) # "ec"
+    self.assertEqual(None, SccWord.from_str("7465").get_code()) # "te"
+    self.assertEqual(None, SccWord.from_str("7475").get_code()) # "tu"
+    self.assertEqual(None, SccWord.from_str("7220").get_code()) # "r "
+    self.assertEqual(None, SccWord.from_str("6164").get_code()) # "ad"
+    self.assertEqual(None, SccWord.from_str("6970").get_code()) # "ip"
+    self.assertEqual(None, SccWord.from_str("6973").get_code()) # "is"
+    self.assertEqual(None, SccWord.from_str("6369").get_code()) # "ci"
+    self.assertEqual(None, SccWord.from_str("6e67").get_code()) # "ng"
+    self.assertEqual(None, SccWord.from_str("2065").get_code()) # " e"
+    self.assertEqual(None, SccWord.from_str("6c69").get_code()) # "li"
+    self.assertEqual(None, SccWord.from_str("742e").get_code()) # "t."

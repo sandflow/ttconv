@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Type
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType, ActiveAreaType
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
@@ -39,8 +39,8 @@ from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.scc.line import SccLine
-from ttconv.scc.caption_paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, \
-  SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
+from ttconv.scc.caption_paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, \
+  SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties, LengthType, GenericFontFamilyType
@@ -64,8 +64,8 @@ class _SccContext:
     self.safe_area_y_offset: int = 0
 
     # Previously read SCC word value
-    self.previous_word: SccWord = None
-    self.previous_code_type = None
+    self.previous_word: Optional[SccWord] = None
+    self.previous_word_type: Optional[Type] = None
 
     # Buffered caption being built
     self.buffered_caption: Optional[SccCaptionParagraph] = None
@@ -250,7 +250,7 @@ class _SccContext:
     font_style = mid_row_code.get_font_style()
     text_decoration = mid_row_code.get_text_decoration()
 
-    if self.previous_code_type is not SccMidRowCode:
+    if self.previous_word_type is not SccMidRowCode:
       # In case of multiple mid-row codes, move right only after the first code
 
       # If there is already text on the current line
@@ -483,7 +483,7 @@ class _SccContext:
 
     for scc_word in line.scc_words:
 
-      if self.previous_word is not None and self.previous_word.value == scc_word.value and self.previous_word.is_control_code():
+      if self.previous_word is not None and self.previous_word.value == scc_word.value and self.previous_word.is_code():
         self.previous_word = None
         continue
 
@@ -494,68 +494,62 @@ class _SccContext:
 
       if scc_word.byte_1 < 0x20:
 
-        control_code = SccControlCode.find(scc_word.value)
-        attribute_code = SccAttributeCode.find(scc_word.value)
-        mid_row_code = SccMidRowCode.find(scc_word.value)
-        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialCharacter.find(scc_word.value)
-        extended_char = SccExtendedCharacter.find(scc_word.value)
+        scc_code = scc_word.get_code()
 
-        if pac is not None:
-          debug += "[PAC|" + str(pac.get_row()) + "|" + str(pac.get_indent())
-          if pac.get_color() is not None:
-            debug += "|" + str(pac.get_color())
-          if pac.get_font_style() is not None:
+        if isinstance(scc_code, SccPreambleAddressCode):
+          debug += "[PAC|" + str(scc_code.get_row()) + "|" + str(scc_code.get_indent())
+          if scc_code.get_color() is not None:
+            debug += "|" + str(scc_code.get_color())
+          if scc_code.get_font_style() is not None:
             debug += "|I"
-          if pac.get_text_decoration() is not None:
+          if scc_code.get_text_decoration() is not None:
             debug += "|U"
           debug += "/" + hex(scc_word.value) + "]"
-          self.process_preamble_address_code(pac, line.time_code)
-          self.previous_code_type = type(pac)
+          self.process_preamble_address_code(scc_code, line.time_code)
+          self.previous_word_type = type(scc_code)
 
-        elif attribute_code is not None:
+        elif isinstance(scc_code, SccAttributeCode):
           debug += "[ATC/" + hex(scc_word.value) + "]"
-          self.process_attribute_code(attribute_code)
-          self.previous_code_type = type(attribute_code)
+          self.process_attribute_code(scc_code)
+          self.previous_word_type = type(scc_code)
 
-        elif mid_row_code is not None:
-          debug += "[MRC|" + mid_row_code.get_name() + "/" + hex(scc_word.value) + "]"
-          self.process_mid_row_code(mid_row_code, line.time_code)
-          self.previous_code_type = type(mid_row_code)
+        elif isinstance(scc_code, SccMidRowCode):
+          debug += "[MRC|" + scc_code.get_name() + "/" + hex(scc_word.value) + "]"
+          self.process_mid_row_code(scc_code, line.time_code)
+          self.previous_word_type = type(scc_code)
 
-        elif control_code is not None:
-          debug += "[CC|" + control_code.get_name() + "/" + hex(scc_word.value) + "]"
-          self.process_control_code(control_code, line.time_code)
-          self.previous_code_type = type(control_code)
+        elif isinstance(scc_code, SccControlCode):
+          debug += "[CC|" + scc_code.get_name() + "/" + hex(scc_word.value) + "]"
+          self.process_control_code(scc_code, line.time_code)
+          self.previous_word_type = type(scc_code)
 
-
-        elif spec_char is not None:
-          word = spec_char.get_unicode_value()
+        elif isinstance(scc_code, SccSpecialCharacter):
+          word = scc_code.get_unicode_value()
           debug += word
           self.process_text(word, line.time_code)
-          self.previous_code_type = type(spec_char)
+          self.previous_word_type = type(scc_code)
 
-        elif extended_char is not None:
+        elif isinstance(scc_code, SccExtendedCharacter):
           if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
             self.active_caption.get_current_text().backspace()
           else:
             self.buffered_caption.get_current_text().backspace()
 
-          word = extended_char.get_unicode_value()
+          word = scc_code.get_unicode_value()
           debug += word
           self.process_text(word, line.time_code)
-          self.previous_code_type = type(extended_char)
+          self.previous_word_type = type(scc_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
-          self.previous_code_type = None
+          self.previous_word_type = None
 
       else:
-        word = scc_word.to_text()
-        debug += word
-        self.process_text(word, line.time_code)
-        self.previous_code_type = str
+        text = scc_word.to_text()
+        debug += text
+        self.process_text(text, line.time_code)
+        self.previous_word_type = str
 
       self.previous_word = scc_word
 

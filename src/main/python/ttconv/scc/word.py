@@ -27,6 +27,14 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
+from ttconv.scc.codes import SccCode
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
+from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.mid_row_codes import SccMidRowCode
+from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
+from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
 from ttconv.scc.codes.standard_characters import SCC_STANDARD_CHARACTERS_MAPPING
 
 PARITY_BIT_MASK = 0b01111111
@@ -35,10 +43,10 @@ PARITY_BIT_MASK = 0b01111111
 class SccWord:
   """SCC hexadecimal word definition"""
 
-  def __init__(self):
-    self.value = None
-    self.byte_1 = None
-    self.byte_2 = None
+  def __init__(self, byte_1: int, byte_2: int):
+    self.byte_1 = byte_1
+    self.byte_2 = byte_2
+    self.value = byte_1 * 0x100 + byte_2
 
   @staticmethod
   def _is_hex_word(word: str) -> bool:
@@ -69,12 +77,10 @@ class SccWord:
     """Creates a SCC word from the specified bytes"""
     if byte_1 > 0xFF or byte_2 > 0xFF:
       raise ValueError(f"Expected two 1-byte int values, instead got {hex(byte_1)} and {hex(byte_2)}")
-    scc_word = SccWord()
-    scc_word.byte_1 = SccWord._decipher_parity_bit(byte_1)
-    scc_word.byte_2 = SccWord._decipher_parity_bit(byte_2)
-    scc_word.value = scc_word.byte_1 * 0x100 + scc_word.byte_2
+    byte_1 = SccWord._decipher_parity_bit(byte_1)
+    byte_2 = SccWord._decipher_parity_bit(byte_2)
 
-    return scc_word
+    return SccWord(byte_1, byte_2)
 
   @staticmethod
   def from_str(hex_word: str) -> SccWord:
@@ -89,7 +95,18 @@ class SccWord:
     """Converts SCC word to text"""
     return ''.join(SCC_STANDARD_CHARACTERS_MAPPING.get(byte, chr(byte)) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
 
-  def is_control_code(self) -> bool:
-    """Returns true if the word is a control code, i.e. the first byte
+  def get_code(self) -> Optional[SccCode]:
+    """Find corresponding code"""
+    if self.is_code():
+      return SccControlCode.find(self.value) or \
+      SccAttributeCode.find(self.value) or \
+      SccMidRowCode.find(self.value) or \
+      SccPreambleAddressCode.find(self.byte_1, self.byte_2) or \
+      SccSpecialCharacter.find(self.value) or \
+      SccExtendedCharacter.find(self.value)
+    return None
+
+  def is_code(self) -> bool:
+    """Returns true if the word is an SCC code, i.e. the first byte
     is a non-printing character in the range 10h to 1Fh."""
     return 0x10 <= self.byte_1 <= 0x1F
