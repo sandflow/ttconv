@@ -30,7 +30,7 @@ from __future__ import annotations
 SCC_STANDARD_CHARACTERS_MAPPING = dict([
   (0x20, " "),  # Standard space
   (0x21, "!"),  # Exclamation mark
-  (0x22, "``"),  # Quotation mark
+  (0x22, "\""),  # Quotation mark
   (0x23, "#"),  # Pounds (number) sign
   (0x24, "$"),  # Dollar sign
   (0x25, "%"),  # Percentage sign

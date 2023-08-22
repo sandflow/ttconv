@@ -37,7 +37,7 @@ class SccStandardCharactersTest(unittest.TestCase):
   def test_scc_standard_character_values(self):
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x20], " ")
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x21], "!")
-    self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x22], "``")
+    self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x22], '"')
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x23], "#")
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x24], "$")
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x25], "%")
