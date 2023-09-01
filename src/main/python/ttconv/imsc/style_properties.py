@@ -868,8 +868,8 @@ class StyleProperties:
 
       else:
 
-        style_style = style_style if style_style is not None else "circle"
-        style_symbol = style_symbol if style_symbol is not None else "filled"
+        style_style = style_style if style_style is not None else "filled"
+        style_symbol = style_symbol if style_symbol is not None else "circle"
         style = styles.TextEmphasisType.Style(f"{style_style} {style_symbol}")
 
       position = position if position is not None else styles.TextEmphasisType.Position.outside
