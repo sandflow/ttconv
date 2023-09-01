@@ -490,6 +490,7 @@ class InheritanceStyleTest(unittest.TestCase):
     )
 
   def test_textEmphasis_auto(self):
+    """https://github.com/sandflow/ttconv/issues/400"""
     xml_str = """<?xml version="1.0" encoding="utf-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
 <head>
