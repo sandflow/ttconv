@@ -35,6 +35,7 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
+import ttconv.imsc.style_properties as imsc_styles
 
 class IMSCReaderTest(unittest.TestCase):
 
@@ -240,6 +241,23 @@ class IMSCReaderTest(unittest.TestCase):
       self.assertIsNotNone(imsc_reader.to_model(tree))
       if len(logs.output) != 2:
         self.fail(logs.output)
+
+  def test_text_emphasis(self):
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "dot after")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.filled_dot)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.after)
+
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "dot before")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.filled_dot)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
+
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "filled after")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.filled_circle)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.after)
+
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "open before")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.open_circle)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
 
 if __name__ == '__main__':
   unittest.main()
