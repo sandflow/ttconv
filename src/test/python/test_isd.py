@@ -489,6 +489,36 @@ class InheritanceStyleTest(unittest.TestCase):
       )
     )
 
+  def test_textEmphasis_auto(self):
+    """https://github.com/sandflow/ttconv/issues/400"""
+    xml_str = """<?xml version="1.0" encoding="utf-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
+<head>
+<styling>
+<initial tts:writingMode="lrtb"/>
+<style xml:id="s1" tts:textEmphasis="auto outside"/>
+</styling>
+</head>
+<body>
+<div>
+<p begin="0s" end="2s"><span style="s1">hello</span></p>
+</div>
+</body>
+</tt>"""
+
+    tree = et.ElementTree(et.fromstring(xml_str))
+    doc = imsc_reader.to_model(tree)
+    isd = ISD.from_model(doc, 0)
+
+    regions = list(isd.iter_regions())
+
+    span = regions[0][0][0][0][0]
+
+    self.assertEqual(
+      span.get_style(styles.StyleProperties.TextEmphasis).position,
+      styles.TextEmphasisType.Position.outside
+    )
+
 class ContentDocument1Test(unittest.TestCase):
 
   """

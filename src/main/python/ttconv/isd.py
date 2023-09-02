@@ -770,10 +770,11 @@ def _make_rw_length(value: numbers.Number) -> styles.LengthType:
     units=styles.LengthType.Units.rw
   )
 
-def _get_writing_mode(isd_element: model.ContentElement) -> styles.WritingModeType:
+def _get_writing_mode(isd_parent: model.ContentElement, isd_element: model.ContentElement) -> styles.WritingModeType:
 
-  while not isinstance(isd_element, ISD.Region):
-    isd_element = isd_element.get_parent()
+  while isd_parent is not None:
+    isd_element = isd_parent
+    isd_parent = isd_element.parent()
 
   return isd_element.get_style(styles.StyleProperties.WritingMode)
 
@@ -1227,7 +1228,7 @@ class StyleProcessors:
 
         if value.style is styles.TextEmphasisType.Style.auto:
 
-          wm: styles.WritingModeType = _get_writing_mode(parent)
+          wm: styles.WritingModeType = _get_writing_mode(parent, element)
 
           if wm in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
 
