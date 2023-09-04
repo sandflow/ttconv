@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import copy
+import logging
 from typing import Optional, Type, Tuple
 
 from ttconv.model import Div
@@ -43,6 +44,8 @@ from ttconv.style_properties import StyleProperties
 from ttconv.time_code import SmpteTimeCode
 
 ROLL_UP_BASE_ROW = 15
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SccContext:
@@ -96,7 +99,7 @@ class SccContext:
     """Resets buffered caption"""
     self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset)
 
-  def get_caption_to_process(self):
+  def get_caption_to_process(self) -> Optional[SccCaptionParagraph]:
     """Returns the caption currently being processed"""
     if self.current_style in (SccCaptionStyle.PaintOn, SccCaptionStyle.RollUp):
       # If the Paint-On or Roll-Up style is activated, write directly on active caption
@@ -104,7 +107,9 @@ class SccContext:
     if self.current_style is SccCaptionStyle.PopOn:
       # For Pop-On style, write first on a buffered caption
       return self.buffered_caption
-    raise ValueError("SCC caption style not defined")
+
+    LOGGER.warning("SCC caption style not defined")
+    return None
 
   def has_active_caption(self) -> bool:
     """Returns whether captions are being displayed or not"""
@@ -147,7 +152,8 @@ class SccContext:
       if clear_active_caption:
         self.active_caption = None
 
-      self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
+      if not previous_caption.is_empty():
+        self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def backspace(self):
     """Move the cursors in a column to the left"""
@@ -226,7 +232,7 @@ class SccContext:
       self.buffered_caption.set_cursor_at(pac_row, pac_indent)
 
     else:
-      raise ValueError("SCC caption style not defined")
+      LOGGER.warning("SCC caption style not defined")
 
     self.current_color = pac.get_color()
     self.current_font_style = pac.get_font_style()
@@ -248,8 +254,9 @@ class SccContext:
       # In case of multiple mid-row codes, move right only after the first code
 
       # If there is already text on the current line
-      if processed_caption.get_current_text() is not None \
-          and processed_caption.get_current_text().get_text() != "":
+      if processed_caption is not None \
+          and processed_caption.get_current_text() is not None \
+          and not processed_caption.get_current_text().is_empty():
 
         # In case of paint-on replacing text
         if self.current_style is SccCaptionStyle.PaintOn \
@@ -264,7 +271,7 @@ class SccContext:
             processed_caption.append_text(" ")
             processed_caption.new_caption_text()
 
-      else:
+      elif processed_caption is not None:
         processed_caption.append_text(" ")
 
       self.current_color = color
@@ -279,10 +286,12 @@ class SccContext:
       if text_decoration is not None:
         self.current_text_decoration = text_decoration
 
-      processed_caption.append_text(" ")
-      processed_caption.new_caption_text()
+      if processed_caption is not None:
+        processed_caption.append_text(" ")
+        processed_caption.new_caption_text()
 
-    if processed_caption.get_caption_style() is SccCaptionStyle.PaintOn:
+    if processed_caption is not None \
+        and processed_caption.get_caption_style() is SccCaptionStyle.PaintOn:
       processed_caption.get_current_text().set_begin(time_code)
 
   def process_attribute_code(self, attribute_code: SccAttributeCode):
@@ -291,7 +300,8 @@ class SccContext:
     processed_caption = self.get_caption_to_process()
 
     if processed_caption is None or processed_caption.get_current_text() is None:
-      raise ValueError("No current SCC caption nor content initialized")
+      LOGGER.warning("No current SCC caption nor content initialized")
+      return
 
     if processed_caption.get_current_text() is not None and processed_caption.get_current_text().get_text():
       processed_caption.new_caption_text()
@@ -460,7 +470,7 @@ class SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
 
-    else:
+    elif self.current_style is SccCaptionStyle.PopOn:
       self.buffered_caption.append_text(word)
 
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)

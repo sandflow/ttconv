@@ -1016,6 +1016,181 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[5], "caption6", "00:00:03:19", None, "sagittis.")
     self.assertEqual(region_4, p_list[5].get_region())
 
+  def test_scc_content_parsing_from_text(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:03:01	6970 7375 6d00 942c 942f
+
+00:00:07:29	9420 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:09:07	942c
+"""
+
+    scc_disassembly = """\
+00:00:03:01	ipsum{EDM}{EOC}
+00:00:07:29	{RCL}{1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:09:07	{EDM}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+  def test_scc_content_parsing_from_mid_row_code(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:03:01	91ae 6970 7375 6d00 942c 942f
+
+00:00:07:29	9420 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:09:07	942c
+"""
+
+    scc_disassembly = """\
+00:00:03:01	{I}ipsum{EDM}{EOC}
+00:00:07:29	{RCL}{1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:09:07	{EDM}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+  def test_scc_content_parsing_from_control_code(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:03:01	942c 6970 7375 6d00 942c 942f
+
+00:00:07:29	9420 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:09:07	942c
+"""
+
+    scc_disassembly = """\
+00:00:03:01	{EDM}ipsum{EDM}{EOC}
+00:00:07:29	{RCL}{1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:09:07	{EDM}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+  def test_scc_content_parsing_from_preamble_address_code(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:03:01	9370 6970 7375 6d00 942c 942f
+
+00:00:07:29	9420 94D0 646f 6c6f 7220 7369 7420 616d 6574 2c80 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e 942c 942f
+
+00:00:09:07	942c
+"""
+
+    scc_disassembly = """\
+00:00:03:01	{1300}ipsum{EDM}{EOC}
+00:00:07:29	{RCL}{1400}dolor sit amet,{1500}consectetur adipiscing elit.{EDM}{EOC}
+00:00:09:07	{EDM}
+"""
+
+    self.assertEqual(scc_disassembly, to_disassembly(scc_content))
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_1, p_list[0].get_region())
 
 if __name__ == '__main__':
   unittest.main()

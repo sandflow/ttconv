@@ -187,6 +187,10 @@ class SccCaptionParagraph:
     """Returns the paragraph lines per row"""
     return self._caption_lines
 
+  def is_empty(self) -> bool:
+    """Returns whether the paragraph has no content"""
+    return not self._caption_lines
+
   def copy_lines(self) -> Dict[int, SccCaptionLine]:
     """Copy paragraph lines (without time attributes)"""
     lines_copy = {}
@@ -264,6 +268,9 @@ class SccCaptionParagraph:
 
     def get_line_right_offset(line: SccCaptionLine) -> int:
       return SCC_ROOT_CELL_RESOLUTION_COLUMNS - (line.get_indent() + line.get_length())
+
+    if self.is_empty():
+      return TextAlignType.start
 
     # look for longest line
     longest_line = max(self._caption_lines.values(), key=lambda line: line.get_length())
