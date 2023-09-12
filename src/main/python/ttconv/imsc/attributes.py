@@ -128,7 +128,7 @@ class CellResolutionAttribute:
 
       if m is not None:
 
-        return model.CellResolutionType(int(m.group(1)), int(m.group(2)))
+        return model.CellResolutionType(columns=int(m.group(1)), rows=int(m.group(2)))
 
       LOGGER.error("ttp:cellResolution invalid syntax")
 
