@@ -259,5 +259,16 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(value.style, styles.TextEmphasisType.Style.open_circle)
     self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
 
+  def test_cell_resolution(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        ttp:cellResolution="32 15">
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    self.assertEqual(doc.get_cell_resolution().columns, 32)
+    self.assertEqual(doc.get_cell_resolution().rows, 15)
+
 if __name__ == '__main__':
   unittest.main()
