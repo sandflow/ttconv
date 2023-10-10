@@ -167,7 +167,7 @@ class SccCaptionParagraph:
     self._current_line = self._caption_lines.get(row)
 
     if indent is not None:
-      self._current_line.set_cursor(self._cursor[1] - self._current_line.get_indent())
+      self._update_current_line_cursor()
 
   def get_cursor(self) -> (int, int):
     """Returns cursor coordinates"""
@@ -181,7 +181,16 @@ class SccCaptionParagraph:
       # If the current line is empty, set cursor indent as a line tabulation
       self._current_line.indent(indent)
     else:
-      self._current_line.set_cursor(self._cursor[1] - self._current_line.get_indent())
+      self._update_current_line_cursor()
+
+  def _update_current_line_cursor(self):
+    """Updates cursor position on current line"""
+    new_cursor_position = self._cursor[1] - self._current_line.get_indent()
+
+    if new_cursor_position < 0:
+      self._current_line.indent(new_cursor_position)
+
+    self._current_line.set_cursor(new_cursor_position)
 
   def get_lines(self) -> Dict[int, SccCaptionLine]:
     """Returns the paragraph lines per row"""

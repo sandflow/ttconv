@@ -1192,5 +1192,43 @@ Scenarist_SCC V1.0
                        "consectetur adipiscing elit.")
     self.assertEqual(region_1, p_list[0].get_region())
 
+  def test_scc_with_negative_cursor(self):
+    scc_content = """Scenarist_SCC V1.0
+00:00:01:00	94AE 94AE 9420 9420 94F8 94F8 45E5 E5E3 68A1 94F4 94F4 D3E3 61F2 79A1 942C 942C 942F 942F
+00:00:02:00	942F 942F
+"""
+    scc_disassembly_expected = """\
+00:00:01:00	{ENM}{ENM}{RCL}{RCL}{1516}{1516}Eeech!{1508}{1508}Scary!{EDM}{EDM}{EOC}{EOC}
+00:00:02:00	{EOC}{EOC}
+"""
+    scc_disassembly = to_disassembly(scc_content)
+    self.assertEqual(scc_disassembly_expected, scc_disassembly)
+
+    doc = to_model(scc_content)
+
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 12, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 14, 1, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:01:12", "00:00:02:01", "Scary!  Eeech!")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+
 if __name__ == '__main__':
   unittest.main()

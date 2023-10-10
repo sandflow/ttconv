@@ -79,6 +79,11 @@ class SccCaptionText:
 
   def append(self, text: str):
     """Add or replace text content at cursor position"""
+    if self._cursor < 0:
+      # Insert space characters before current text
+      self._text = ' ' * -self._cursor + self._text
+      self._cursor = 0
+
     # print("Append text: ", text, "to", self._text, "at", self._cursor)
     self._text = self._text[:self._cursor] + text + self._text[(self._cursor + len(text)):]
     self._cursor += len(text)

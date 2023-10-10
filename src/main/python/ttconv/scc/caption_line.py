@@ -58,9 +58,9 @@ class SccCaptionLine:
 
       if self._current_text is None:
         # Initialize a new text element if necessary
-        self._texts.append(SccCaptionText(text))
+        self._texts.append(SccCaptionText())
         self._current_text = self._texts[-1]
-        self._cursor = self._current_text.get_length()
+        self._append_text(text)
 
       else:
         remaining_text = text
@@ -71,8 +71,7 @@ class SccCaptionLine:
           text_to_write = remaining_text[:available]
 
           # Replace current text element content
-          self._current_text.append(text_to_write)
-          self.set_cursor(self._cursor + len(text_to_write))
+          self._append_text(text_to_write)
           remaining_text = remaining_text[available:]
 
         # If some text remains on the last text element
@@ -80,11 +79,18 @@ class SccCaptionLine:
           assert self._current_text is self._texts[-1]
 
           # Replace and append to current text element content
-          self._current_text.append(remaining_text)
-          self.set_cursor(self._cursor + len(remaining_text))
+          self._append_text(remaining_text)
 
     else:
       raise ValueError("Unsupported text type for SCC caption line")
+
+  def _append_text(self, text: str):
+    """Appends text and update cursor position"""
+    self._current_text.append(text)
+    if self._cursor < 0:
+      self._cursor = 0
+
+    self.set_cursor(self._cursor + len(text))
 
   def indent(self, indent: int):
     """Indent current line"""
