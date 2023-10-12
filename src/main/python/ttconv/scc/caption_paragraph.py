@@ -52,6 +52,11 @@ SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 
 class SccCaptionParagraph:
   """Caption paragraph"""
 
+  @staticmethod
+  def default(caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
+    """Initializes a default caption paragraph"""
+    return SccCaptionParagraph(caption_style=caption_style)
+
   def __init__(self, safe_area_x_offset: int = 0, safe_area_y_offset: int = 0,
                caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
     self._caption_id: str = ""
@@ -70,6 +75,8 @@ class SccCaptionParagraph:
     self._current_line: Optional[SccCaptionLine] = None
     # Lines per row in the active area (will be separated by line-breaks)
     self._caption_lines: Dict[int, SccCaptionLine] = {}
+    # Initialize first default line
+    self.new_caption_line()
 
     self._caption_style: SccCaptionStyle = caption_style
     self._style_properties = {}
@@ -114,14 +121,12 @@ class SccCaptionParagraph:
     """Returns the caption style"""
     return self._caption_style
 
-  def get_current_line(self) -> Optional[SccCaptionLine]:
+  def get_current_line(self) -> SccCaptionLine:
     """Returns the current caption line"""
     return self._current_line
 
-  def get_current_text(self) -> Optional[SccCaptionText]:
+  def get_current_text(self) -> SccCaptionText:
     """Returns the current caption text"""
-    if self._current_line is None:
-      return None
     return self._current_line.get_current_text()
 
   def append_text(self, text: str):
@@ -155,9 +160,14 @@ class SccCaptionParagraph:
   def set_cursor_at(self, row: int, indent: Optional[int] = None):
     """Set cursor position and initialize a new line if necessary"""
 
-    # Remove current line if empty (useless)
-    if self._current_line is not None and self._current_line.is_empty():
-      del self._caption_lines[self._current_line.get_row()]
+    if self._caption_lines.get(self._current_line.get_row()) is not None:
+      # Set current line if necessary
+      if self._caption_lines.get(self._current_line.get_row()) is not self._current_line:
+        self._current_line = self._caption_lines.get(self._current_line.get_row())
+
+      # Remove current line if empty (i.e. useless)
+      if self._current_line.is_empty():
+        del self._caption_lines[self._current_line.get_row()]
 
     self._cursor = (row, indent if indent is not None else 0)
 
@@ -198,7 +208,11 @@ class SccCaptionParagraph:
 
   def is_empty(self) -> bool:
     """Returns whether the paragraph has no content"""
-    return not self._caption_lines
+    return self._get_length() == 0
+
+  def _get_length(self) -> int:
+    """Returns the total length of contained text"""
+    return sum([line.get_length() for line in self._caption_lines.values()])
 
   def copy_lines(self) -> Dict[int, SccCaptionLine]:
     """Copy paragraph lines (without time attributes)"""
@@ -217,10 +231,6 @@ class SccCaptionParagraph:
 
   def new_caption_text(self):
     """Appends a new caption text content, and keeps reference on it"""
-    if self._current_line is None:
-      LOGGER.warning("Add a new caption line to add new caption text")
-      self.new_caption_line()
-
     self._current_line.add_text(SccCaptionText())
 
   def new_caption_line(self):
@@ -245,7 +255,7 @@ class SccCaptionParagraph:
 
   def get_origin(self) -> CoordinateType:
     """Computes and returns the current paragraph origin, based on its content"""
-    if len(self._caption_lines) > 0:
+    if not self.is_empty():
       x_offsets = [text.get_indent() for text in self._caption_lines.values()]
       y_offsets = [text.get_row() - 1 for text in self._caption_lines.values()]
 
@@ -255,7 +265,7 @@ class SccCaptionParagraph:
 
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
-    if len(self._caption_lines) == 0:
+    if self.is_empty():
       return get_extent_from_dimensions(0, 0)
 
     paragraph_rows = self._caption_lines.keys()

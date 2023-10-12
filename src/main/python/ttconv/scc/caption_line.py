@@ -28,7 +28,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, List, Union
+from typing import List, Union
 
 from ttconv.scc.caption_text import SccCaptionText
 
@@ -38,13 +38,18 @@ LOGGER = logging.getLogger(__name__)
 class SccCaptionLine:
   """Caption paragraph line"""
 
+  @staticmethod
+  def default():
+    """Initializes a default caption paragraph line"""
+    return SccCaptionLine(0, 0)
+
   def __init__(self, row: int, indent: int):
-    self._texts: List[SccCaptionText] = []
     self._row: int = row  # Row in the active area
     self._indent: int = indent  # Indentation in the active area
 
     self._cursor: int = 0  # Position of the cursor on the line
-    self._current_text: Optional[SccCaptionText] = None  # Text content where the cursor is
+    self._current_text: SccCaptionText = SccCaptionText()  # Text content where the cursor is
+    self._texts: List[SccCaptionText] = [self._current_text]
 
   def add_text(self, text: Union[SccCaptionText, str]):
     """Add text to line"""
@@ -55,31 +60,23 @@ class SccCaptionLine:
       self._cursor = self.get_length()
 
     elif isinstance(text, str):
+      remaining_text = text
 
-      if self._current_text is None:
-        # Initialize a new text element if necessary
-        self._texts.append(SccCaptionText())
-        self._current_text = self._texts[-1]
-        self._append_text(text)
+      # While the cursor is not on the last text element, and some text remains
+      while self._current_text is not self._texts[-1] and len(remaining_text) > 0:
+        available = self._current_text.get_length() - self._current_text.get_cursor()
+        text_to_write = remaining_text[:available]
 
-      else:
-        remaining_text = text
+        # Replace current text element content
+        self._append_text(text_to_write)
+        remaining_text = remaining_text[available:]
 
-        # While the cursor is not on the last text element, and some text remains
-        while self._current_text is not self._texts[-1] and len(remaining_text) > 0:
-          available = self._current_text.get_length() - self._current_text.get_cursor()
-          text_to_write = remaining_text[:available]
+      # If some text remains on the last text element
+      if len(remaining_text) > 0:
+        assert self._current_text is self._texts[-1]
 
-          # Replace current text element content
-          self._append_text(text_to_write)
-          remaining_text = remaining_text[available:]
-
-        # If some text remains on the last text element
-        if len(remaining_text) > 0:
-          assert self._current_text is self._texts[-1]
-
-          # Replace and append to current text element content
-          self._append_text(remaining_text)
+        # Replace and append to current text element content
+        self._append_text(remaining_text)
 
     else:
       raise ValueError("Unsupported text type for SCC caption line")
@@ -96,7 +93,7 @@ class SccCaptionLine:
     """Indent current line"""
     self._indent += indent
 
-  def get_current_text(self) -> Optional[SccCaptionText]:
+  def get_current_text(self) -> SccCaptionText:
     """Returns current text content"""
     return self._current_text
 
@@ -145,24 +142,26 @@ class SccCaptionLine:
   def clear(self):
     """Clears the line text contents"""
     self._texts.clear()
-    self._current_text = None
+    self._current_text = SccCaptionText()
+    self._texts = [self._current_text]
     self.set_cursor(0)
 
   def is_empty(self) -> bool:
     """Returns whether the line text is empty or not"""
-    # no caption texts or an empty text
-    return len(self._texts) == 0 or (len(self._texts) == 1 and self._texts[-1].get_text() == "")
+    return self.get_length() == 0
 
   def get_leading_spaces(self) -> int:
     """Returns the number of leading space characters of the line"""
     index = 0
     leading_spaces = 0
-    first_text = self.get_texts()[index].get_text()
 
-    while first_text.isspace() and index < len(self.get_texts()):
-      leading_spaces += len(first_text)
-      index += 1
+    while index < len(self.get_texts()):
       first_text = self.get_texts()[index].get_text()
+      if first_text.isspace():
+        leading_spaces += len(first_text)
+        index += 1
+      else:
+        break
 
     return leading_spaces + len(first_text) - len(first_text.lstrip())
 

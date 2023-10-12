@@ -50,11 +50,11 @@ class SccCaptionLineTest(unittest.TestCase):
     self.assertEqual(7, caption_line.get_row())
     self.assertEqual(4, caption_line.get_indent())
 
-    self.assertIsNone(caption_line.get_current_text())
+    self.assertTrue(caption_line.is_empty())
     self.assertEqual(0, caption_line.get_cursor())
     self.assertEqual(0, caption_line.get_length())
-    self.assertTrue(caption_line.is_empty())
-    self.assertListEqual([], caption_line.get_texts())
+    self.assertEqual(1, len(caption_line.get_texts()))
+    self.assertTrue(caption_line.get_current_text().is_empty())
 
     caption_line.set_cursor(10)
     self.assertEqual(0, caption_line.get_cursor())
@@ -134,7 +134,7 @@ class SccCaptionLineTest(unittest.TestCase):
     caption_line.clear()
     self.assertEqual(0, caption_line.get_cursor())
     self.assertEqual(0, caption_line.get_length())
-    self.assertListEqual([], caption_line.get_texts())
+    self.assertTrue(caption_line.is_empty())
 
   def test_line_text_leading_and_trailing_spaces(self):
     line = SccCaptionLine(0, 0)

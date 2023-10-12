@@ -58,3 +58,8 @@ class SccCaptionStyle(Enum):
   #  - EDM (to erase the displayed caption, optional)
   #  - EOC (to display the current caption)
   PopOn = 3
+
+  @staticmethod
+  def default():
+    """Returns the default caption style"""
+    return SccCaptionStyle.PopOn

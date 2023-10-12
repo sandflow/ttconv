@@ -66,12 +66,12 @@ class SccContext:
     self.previous_word: Optional[SccWord] = None
     self.previous_word_type: Optional[Type] = None
 
+    # Caption style (Pop-on, Roll-up, Paint-on) currently processed
+    self.current_style = SccCaptionStyle.default()
     # Buffered caption being built
     self.buffered_caption = None
     # Captions being displayed
     self.active_caption: Optional[SccCaptionParagraph] = None
-    # Caption style (Pop-on, Roll-up, Paint-on) currently processed
-    self.current_style = SccCaptionStyle.Unknown
 
     # Roll-up caption number of lines
     self.roll_up_depth: int = 0
@@ -97,7 +97,7 @@ class SccContext:
 
   def new_buffered_caption(self):
     """Resets buffered caption"""
-    self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset)
+    self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, SccCaptionStyle.PopOn)
 
   def get_caption_to_process(self) -> Optional[SccCaptionParagraph]:
     """Returns the caption currently being processed"""
@@ -204,9 +204,6 @@ class SccContext:
 
       self.active_caption.set_cursor_at(pac_row, pac_indent)
 
-      if self.active_caption.get_current_text() is None:
-        self.active_caption.new_caption_text()
-
     elif self.current_style is SccCaptionStyle.RollUp:
 
       if not self.has_active_caption():
@@ -299,11 +296,11 @@ class SccContext:
 
     processed_caption = self.get_caption_to_process()
 
-    if processed_caption is None or processed_caption.get_current_text() is None:
+    if processed_caption is None:
       LOGGER.warning("No current SCC caption nor content initialized")
       return
 
-    if processed_caption.get_current_text() is not None and processed_caption.get_current_text().get_text():
+    if processed_caption.get_current_text().get_text():
       processed_caption.new_caption_text()
 
     if attribute_code.is_background():
@@ -320,11 +317,6 @@ class SccContext:
     if control_code is SccControlCode.RCL:
       # Start a new Pop-On caption
       self.current_style = SccCaptionStyle.PopOn
-
-      if self.buffered_caption.get_caption_style() is SccCaptionStyle.Unknown:
-        self.buffered_caption.set_caption_style(self.current_style)
-        self.buffered_caption.new_caption_line()
-        self.buffered_caption.new_caption_text()
 
     elif control_code is SccControlCode.RDC:
       # Start a new Paint-On caption
@@ -398,6 +390,11 @@ class SccContext:
       # Roll the displayed caption up one row (Roll-Up)
 
       if self.has_active_caption():
+        if self.active_caption.get_caption_style() is not SccCaptionStyle.RollUp:
+          LOGGER.warning("Cannot roll-up active %s-styled caption, erase it instead.", self.active_caption.get_caption_style().name)
+          self.push_active_caption_to_model(time_code)
+          return
+
         if self.active_caption.get_current_text().is_empty():
           self.count -= 1
           previous_lines = []
@@ -432,6 +429,10 @@ class SccContext:
   def process_text(self, word: str, time_code: SmpteTimeCode):
     """Processes SCC text words"""
     if self.current_style is SccCaptionStyle.PaintOn:
+      if not self.has_active_caption():
+        LOGGER.warning("Initialize active caption buffer to handle paint-on text at %s", time_code)
+        self.paint_on_active_caption(time_code)
+
       if word.startswith(" "):
 
         if self.active_caption.get_caption_style() is not SccCaptionStyle.PaintOn:
@@ -464,6 +465,10 @@ class SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
 
     elif self.current_style is SccCaptionStyle.RollUp:
+      if not self.has_active_caption():
+        LOGGER.warning("Initialize active caption buffer to handle roll-up text at %s", time_code)
+        self.new_active_caption(time_code, self.current_style)
+
       self.active_caption.append_text(word)
 
       self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)

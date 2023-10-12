@@ -39,7 +39,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter
 from ttconv.scc.context import SccContext
-from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
+from ttconv.scc.disassembly import get_scc_word_disassembly
 from ttconv.scc.word import SccWord
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
@@ -99,63 +99,7 @@ class SccLine:
     disassembly_line = str(self.time_code) + "\t"
 
     for scc_word in self.scc_words:
-
-      if scc_word.value == 0x0000:
-        disassembly_line += "{}"
-        continue
-
-      if scc_word.byte_1 < 0x20:
-
-        attribute_code = SccAttributeCode.find(scc_word.value)
-        control_code = SccControlCode.find(scc_word.value)
-        mid_row_code = SccMidRowCode.find(scc_word.value)
-        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialCharacter.find(scc_word.value)
-        extended_char = SccExtendedCharacter.find(scc_word.value)
-
-        if pac is not None:
-          disassembly_line += f"{{{pac.get_row():02}"
-          color = pac.get_color()
-          indent = pac.get_indent()
-          if indent is not None and indent > 0:
-            disassembly_line += f"{indent :02}"
-          elif color is not None:
-            disassembly_line += get_color_disassembly(color)
-            disassembly_line += get_font_style_disassembly(pac.get_font_style())
-            disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
-          else:
-            disassembly_line += "00"
-          disassembly_line += "}"
-
-        elif attribute_code is not None:
-          disassembly_line += "{"
-          disassembly_line += "B" if attribute_code.is_background() else ""
-          disassembly_line += get_color_disassembly(attribute_code.get_color())
-          disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
-          disassembly_line += "}"
-
-        elif mid_row_code is not None:
-          disassembly_line += "{"
-          disassembly_line += get_color_disassembly(mid_row_code.get_color())
-          disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
-          disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
-          disassembly_line += "}"
-
-        elif control_code is not None:
-          disassembly_line += "{" + control_code.get_name() + "}"
-
-        elif spec_char is not None:
-          disassembly_line += spec_char.get_unicode_value()
-
-        elif extended_char is not None:
-          disassembly_line += extended_char.get_unicode_value()
-
-        else:
-          disassembly_line += "{??}"
-          LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
-
-      else:
-        disassembly_line += scc_word.to_text()
+      disassembly_line += get_scc_word_disassembly(scc_word)
 
     return disassembly_line
 

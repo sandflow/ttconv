@@ -49,12 +49,8 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(4, caption_paragraph._safe_area_x_offset)
     self.assertEqual(2, caption_paragraph._safe_area_y_offset)
 
-    self.assertIsNone(caption_paragraph.get_current_text())
-    self.assertEqual(0, len(caption_paragraph._caption_lines))
-
-    caption_paragraph.new_caption_text()
     self.assertEqual(caption_paragraph.get_current_line(), caption_paragraph.get_lines()[0])
-    self.assertIsNotNone(caption_paragraph.get_current_text())
+    self.assertTrue(caption_paragraph.get_current_text().is_empty())
     self.assertEqual(1, len(caption_paragraph._caption_lines))
 
     caption_paragraph.set_cursor_at(4, 4)

@@ -1016,7 +1016,7 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[5], "caption6", "00:00:03:19", None, "sagittis.")
     self.assertEqual(region_4, p_list[5].get_region())
 
-  def test_scc_content_parsing_from_text(self):
+  def test_scc_content_starting_with_text(self):
     scc_content = """\
 Scenarist_SCC V1.0
 
@@ -1040,10 +1040,17 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 5, 16, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("pop2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -1054,13 +1061,16 @@ Scenarist_SCC V1.0
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(1, len(p_list))
+    self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
-                       "consectetur adipiscing elit.")
+    self.check_caption(p_list[0], "caption1", "00:00:03:06", "00:00:08:26", "ipsum")
     self.assertEqual(region_1, p_list[0].get_region())
 
-  def test_scc_content_parsing_from_mid_row_code(self):
+    self.check_caption(p_list[1], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+  def test_scc_content_starting_with_mid_row_code(self):
     scc_content = """\
 Scenarist_SCC V1.0
 
@@ -1084,10 +1094,17 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 6, 16, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("pop2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -1098,13 +1115,16 @@ Scenarist_SCC V1.0
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(1, len(p_list))
+    self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
-                       "consectetur adipiscing elit.")
+    self.check_caption(p_list[0], "caption1", "00:00:03:07", "00:00:08:26", " ipsum")
     self.assertEqual(region_1, p_list[0].get_region())
 
-  def test_scc_content_parsing_from_control_code(self):
+    self.check_caption(p_list[1], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+  def test_scc_content_starting_with_control_code(self):
     scc_content = """\
 Scenarist_SCC V1.0
 
@@ -1128,10 +1148,17 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 5, 16, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("pop2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -1142,13 +1169,16 @@ Scenarist_SCC V1.0
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(1, len(p_list))
+    self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
-                       "consectetur adipiscing elit.")
+    self.check_caption(p_list[0], "caption1", "00:00:03:07", "00:00:08:26", "ipsum")
     self.assertEqual(region_1, p_list[0].get_region())
 
-  def test_scc_content_parsing_from_preamble_address_code(self):
+    self.check_caption(p_list[1], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+  def test_scc_content_starting_with_preamble_address_code(self):
     scc_content = """\
 Scenarist_SCC V1.0
 
@@ -1172,10 +1202,17 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 15, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 28, 2, doc.get_cell_resolution())
+    self.check_region_origin(region_1, 4, 14, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 5, 3, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("pop2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -1186,11 +1223,14 @@ Scenarist_SCC V1.0
     self.assertIsNotNone(div)
 
     p_list = list(div)
-    self.assertEqual(1, len(p_list))
+    self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
-                       "consectetur adipiscing elit.")
+    self.check_caption(p_list[0], "caption1", "00:00:03:07", "00:00:08:26", "ipsum")
     self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+                       "consectetur adipiscing elit.")
+    self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_with_negative_cursor(self):
     scc_content = """Scenarist_SCC V1.0
@@ -1228,6 +1268,227 @@ Scenarist_SCC V1.0
 
     self.check_caption(p_list[0], "caption1", "00:00:01:12", "00:00:02:01", "Scary!  Eeech!")
     self.assertEqual(region_1, p_list[0].get_region())
+
+  def test_scc_content_starting_with_backspace(self):
+    scc_content = """Scenarist_SCC V1.0
+10:01:44;17	94AE 9420 9470 9723 946E 80C1 92B0 20ec 6120 e6e9 6e20 64e5 7320 616e 6edc e573 2031 38b0 b02c 942C 8080 8080 942F
+"""
+
+    expected_scc_disassembly = """\
+10:01:44;17	{ENM}{RCL}{1500}{TO3}{15WhI}{??}À la fin des années 1800,{EDM}{}{}{EOC}
+"""
+
+    scc_disassembly = to_disassembly(scc_content)
+    self.assertEqual(expected_scc_disassembly, scc_disassembly)
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 25, 1, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "10:01:45;10", None, "À la fin des années 1800,")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+  def test_scc_content_roll_up_empty_caption(self):
+    scc_content = """Scenarist_SCC V1.0
+10:03:20:16	94ad 94ad 9426 9426 92d0 92d0 a880 9138 9138 2064 942c 942c e575 f820 76ef e9f8 2c20 e56e 2061 6e67 ec61 e973 29ba
+"""
+    expected_scc_disassembly = """\
+10:03:20:16	{CR}{CR}{RU3}{RU3}{0300}{0300}(àà d{EDM}{EDM}eux voix, en anglais):
+"""
+
+    scc_disassembly = to_disassembly(scc_content)
+    self.assertEqual(expected_scc_disassembly, scc_disassembly)
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("rollup1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 4, 15, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 22, 15, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(2, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "10:03:20:18", "10:03:20:24", "(à d")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "10:03:20:24", None, "eux voix, en anglais):")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+  def test_scc_text_without_style_nor_position(self):
+    scc_content = """Scenarist_SCC V1.0
+10:55:31:29	2080 3280 2046 3180
+"""
+    expected_scc_disassembly = """\
+10:55:31:29	 2 F1
+"""
+
+    scc_disassembly = to_disassembly(scc_content)
+    self.assertEqual(expected_scc_disassembly, scc_disassembly)
+
+    doc = to_model(scc_content)
+    self.assertIsNotNone(doc)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+    self.assertEqual(0, len(list(div)))
+
+  def test_scc_content_with_paragraph_of_spaces(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:03:01	9370 6970 7375 6d00 942c 942f
+
+09:59:59:18	9420 9476 9723 2080 9420 942c 942f 9420 97f4 a8e3 616d e5f2 6120 7368 75f4 f4e5 f229 9452 9723 91ae bce3 6861 eff4 e9e3 20e3 61e3 ef70 68ef 6e79 9470 9723 91ae e5f8 e973 f473 20f4 68f2 ef75 6768 ef75 f420 70f2 ef67 f261 6d3e 9420 942c 942f 9420 94f4 a870 ec61 79e6 75ec 206d 7573 e9e3 2980
+
+11:00:09:07	942c
+"""
+
+    expected_disassembly = """\
+00:00:03:01	{1300}ipsum{EDM}{EOC}
+09:59:59:18	{RCL}{1512}{TO3} {RCL}{EDM}{EOC}{RCL}{1008}(camera shutter){1404}{TO3}{I}<chaotic cacophony{1500}{TO3}{I}exists throughout program>{RCL}{EDM}{EOC}{RCL}{1508}(playful music)
+11:00:09:07	{EDM}
+"""
+
+    disassembly = to_disassembly(scc_content)
+    self.assertEqual(expected_disassembly, disassembly)
+
+    doc = to_model(scc_content)
+
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 14, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 5, 3, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("pop2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 19, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 1, 1, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_3 = doc.get_region("pop3")
+    self.assertIsNotNone(region_3)
+    self.check_region_origin(region_3, 7, 11, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 27, 6, doc.get_cell_resolution())
+    self.check_element_style(region_3, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_3, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(3, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "00:00:03:07", "09:59:59:25", "ipsum")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "09:59:59:25", "10:00:01:06", " ")
+    self.assertEqual(region_2, p_list[1].get_region())
+
+    self.check_caption(p_list[2], "caption3", "10:00:01:06", "11:00:09:09", "(camera shutter)", Br, Br, Br, Br,
+                       " <chaotic cacophony", Br, " exists throughout program>")
+    self.assertEqual(region_3, p_list[2].get_region())
+
+  def test_scc_content_trying_to_roll_up_pop_on_paragraph(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+11:19:24:05	9420 946E A861 7070 EC61 7564 E973 73E5 6DE5 6EF4 7329 9420 942C 942F
+
+11:19:30:17	9426 94AD 946E 3E3E 3E20 CE61 F2F2 61F4 E575 F2BA 2043 E5F4 F4E5
+"""
+    expected_disassembly = """\
+11:19:24:05	{RCL}{15WhI}(applaudissements){RCL}{EDM}{EOC}
+11:19:30:17	{RU3}{CR}{15WhI}>>> Narrateur: Cette
+"""
+
+    disassembly = to_disassembly(scc_content)
+    self.assertEqual(expected_disassembly, disassembly)
+
+    doc = to_model(scc_content)
+
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 18, 1, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("rollup2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 2, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 20, 15, doc.get_cell_resolution())
+    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(2, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "11:19:24:19", "11:19:30:19", "(applaudissements)")
+    self.assertEqual(region_1, p_list[0].get_region())
+
+    self.check_caption(p_list[1], "caption2", "11:19:30:20", None, ">>> Narrateur: Cette")
+    self.assertEqual(region_2, p_list[1].get_region())
 
 
 if __name__ == '__main__':
