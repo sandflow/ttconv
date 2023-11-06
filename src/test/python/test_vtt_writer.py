@@ -114,21 +114,25 @@ Pellentesque interdum lacinia sollicitudin.
   <head>
     <styling>
       <style xml:id="style.center" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="center"/>
+      <style xml:id="style.left" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="left"/>
+      <style xml:id="style.right" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="right"/>
     </styling>
     <layout>
       <region xml:id="region.after" tts:displayAlign="after" tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
       <region xml:id="region.before" tts:displayAlign="before" tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
+      <region xml:id="region.center" tts:displayAlign="center" tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
     </layout>
   </head>
   <body>
     <div>
       <p style="style.center" region="region.after" begin="00:00:03:12" end="00:00:12:00">Only one or two short samples are needed<br/>to make sure the conversion basically works</p>
-      <p style="style.center" region="region.before" begin="00:00:14:09" end="00:00:25:17">Cool, got it, will do it by end of next week.</p>
+      <p style="style.left" region="region.before" begin="00:00:14:09" end="00:00:25:17">Cool, got it, will do it by end of next week.</p>
+      <p style="style.right" region="region.center" begin="00:00:26:00" end="00:00:28:00">Yes.</p>
     </div>
   </body>
 </tt>"""
 
-    expected_vtt="""WEBVTT
+    expected_vtt_line="""WEBVTT
 
 1
 00:00:03.501 --> 00:00:12.000 line:90%,end
@@ -138,17 +142,57 @@ to make sure the conversion basically works
 2
 00:00:14.375 --> 00:00:25.709 line:10%,start
 Cool, got it, will do it by end of next week.
+
+3
+00:00:26.000 --> 00:00:28.000 line:50%,center
+Yes.
+"""
+    expected_vtt_align="""WEBVTT
+
+1
+00:00:03.501 --> 00:00:12.000 align:middle
+Only one or two short samples are needed
+to make sure the conversion basically works
+
+2
+00:00:14.375 --> 00:00:25.709 align:left
+Cool, got it, will do it by end of next week.
+
+3
+00:00:26.000 --> 00:00:28.000 align:right
+Yes.
+"""
+    expected_vtt_line_and_align="""WEBVTT
+
+1
+00:00:03.501 --> 00:00:12.000 align:middle line:90%,end
+Only one or two short samples are needed
+to make sure the conversion basically works
+
+2
+00:00:14.375 --> 00:00:25.709 align:left line:10%,start
+Cool, got it, will do it by end of next week.
+
+3
+00:00:26.000 --> 00:00:28.000 align:right line:50%,center
+Yes.
 """
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = VTTWriterConfiguration()
     config.line_position = True
     vtt_from_model = vtt_writer.from_model(model, config)
-    self.assertEqual(expected_vtt, vtt_from_model)
-
-    config = VTTWriterConfiguration.parse(json.loads('{"line_position":true}'))
+    self.assertEqual(expected_vtt_line, vtt_from_model)
+    config.text_position = True
     vtt_from_model = vtt_writer.from_model(model, config)
-    self.assertEqual(expected_vtt, vtt_from_model)
+    self.assertEqual(expected_vtt_line_and_align, vtt_from_model)
+    config.line_position = False
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt_align, vtt_from_model)
+
+    config = VTTWriterConfiguration.parse(json.loads('{"line_position":true, "text_position":true}'))
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt_line_and_align, vtt_from_model)
 
   def test_cue_id(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>

@@ -209,6 +209,14 @@ Default: `true`
 
 Default: `false`
 
+#### text_position
+
+`"text_position" : true | false`
+
+`true` means that the VTT writer outputs text alignment cue settings
+
+Default: `false`
+
 #### cue_id
 
 `"cue_id" : true | false`

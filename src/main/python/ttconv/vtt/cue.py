@@ -42,6 +42,12 @@ class VttCue:
     center = "center"
     end = "end"
 
+  class TextAlignment(Enum):
+    """WebVTT text alignment cue setting"""
+    left = "left"
+    middle = "middle"
+    right = "right"
+
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
   def __init__(self, identifier: Optional[int] = None):
@@ -51,6 +57,7 @@ class VttCue:
     self._text: str = ""
     self._line: int = None
     self._align: VttCue.LineAlignment = None
+    self._textalign: VttCue.TextAlignment = None
 
   def set_begin(self, offset: Fraction):
     """Sets the paragraph begin time code"""
@@ -89,6 +96,10 @@ class VttCue:
     """Return the WebVTT line alignment cue setting"""
     return self._align
 
+  def set_textalign(self, textalign: TextAlignment):
+    """Sets the WebVTT text alignment cue setting"""
+    self._textalign = textalign
+
   def is_only_whitespace_or_empty(self):
     """Returns whether the paragraph text contains only whitespace or is empty"""
     return len(self._text) == 0 or self._text.isspace()
@@ -122,6 +133,10 @@ class VttCue:
     
     # cue timing
     t += f"{self._begin} --> {self._end}"
+
+    # cue text position
+    if self._textalign is not None:
+      t += f" align:{self._textalign.value}"
 
     # cue line position
     if self._line is not None:
