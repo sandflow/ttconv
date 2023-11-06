@@ -191,6 +191,14 @@ Default: `true`
 
 Default: `false`
 
+#### text_align
+
+`"text_align" : true | false`
+
+`true` means that the VTT writer outputs text alignment cue settings
+
+Default: `false`
+
 #### cue_id
 
 `"cue_id" : true | false`
