@@ -171,6 +171,14 @@ Specifies a maximum number of rows for open subtitles, either the MNR field of t
 
 Default: `23`
 
+#### force_bottom
+
+`"force_bottom" : true | false`
+
+Overrides line positions, force to bottom
+
+Default: `false`
+
 ### SRT Writer configuration
 
 #### text_formatting

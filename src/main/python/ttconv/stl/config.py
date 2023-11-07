@@ -78,6 +78,7 @@ class STLReaderConfiguration(ModuleConfiguration):
   font_stack: typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]] = \
                   field(default=None, metadata={"decoder": _decode_font_stack})
   max_row_count: typing.Optional[typing.Union[int, str]] = field(default=None, metadata={"decoder": _decode_max_row_count})
+  force_bottom: bool = field(default=False, metadata={"decoder": bool})
 
   @classmethod
   def name(cls):

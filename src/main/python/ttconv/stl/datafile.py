@@ -249,7 +249,8 @@ class DataFile:
     disable_line_padding: bool = False,
     start_tc: typing.Optional[str] = None,
     font_stack: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]] = None,
-    max_row_count: typing.Optional[typing.Union[int, str]] = None
+    max_row_count: typing.Optional[typing.Union[int, str]] = None,
+    force_bottom: bool = False,
     ):
     
     self.gsi = _GSIBlock._make(
@@ -373,6 +374,8 @@ class DataFile:
         self.start_offset = DEFAULT_TELETEXT_ROWS
     else:
       self.max_row_count = max_row_count
+
+    self.force_bottom = force_bottom
 
     # p_element for use across cumulative subtitles 
     self.cur_p_element = None
@@ -521,10 +524,24 @@ class DataFile:
       safe_area_height =  round(100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT * 2)
       safe_area_width =  round(100 - DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT * 2)
 
+      if self.force_bottom:
+        # single region of the full safe area
+        r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT
+        r_height = 100 - r_y
+        
+        region = _get_region_from_model(
+          self.doc,
+          round(DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT),
+          r_y,
+          safe_area_width,
+          r_height,
+          styles.DisplayAlignType.after
+        )
+
       # assume that VP < max number of rows/2 means bottom-aligned and otherwise top-aligned
       # probably should offer an option to override this
 
-      if tti.VP < self.get_max_row_count() // 2:
+      elif tti.VP < self.get_max_row_count() // 2:
         # top-aligned large region
         
         r_y = DEFAULT_VERTICAL_SAFE_MARGIN_PCT + ((tti.VP - 1) / self.get_max_row_count()) * safe_area_height
