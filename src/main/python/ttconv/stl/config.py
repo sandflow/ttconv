@@ -75,6 +75,9 @@ class STLReaderConfiguration(ModuleConfiguration):
   disable_fill_line_gap: bool = field(default=False, metadata={"decoder": bool})
   program_start_tc: typing.Optional[str] = field(default=None, metadata={"decoder": _decode_start_tc})
   disable_line_padding: bool = field(default=False, metadata={"decoder": bool})
+  disable_ebu_style: bool = field(default=False, metadata={"decoder": bool})
+  if disable_ebu_style:
+    disable_line_padding=True
   font_stack: typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]] = \
                   field(default=None, metadata={"decoder": _decode_font_stack})
   max_row_count: typing.Optional[typing.Union[int, str]] = field(default=None, metadata={"decoder": _decode_max_row_count})

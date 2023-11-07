@@ -147,6 +147,16 @@ Default: `false`
 
 Default: `false`
 
+#### disable_ebu_style
+
+`"disable_ebu_style" : true | false`
+
+`true` means that the STL reader does not try to map EBU style as described in EBU Tech 3360
+
+Implies `disable_line_padding`
+
+Default: `false`
+
 #### program_start_tc
 
 `"program_start_tc" : "TCP" | "HH:MM:SS:FF"`
