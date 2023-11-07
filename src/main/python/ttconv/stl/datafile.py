@@ -247,6 +247,7 @@ class DataFile:
     gsi_block: bytes,
     disable_fill_line_gap: bool = False,
     disable_line_padding: bool = False,
+    disable_ebu_style: bool = False,
     start_tc: typing.Optional[str] = None,
     font_stack: typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]] = None,
     max_row_count: typing.Optional[typing.Union[int, str]] = None
@@ -260,21 +261,22 @@ class DataFile:
 
     self.doc = model.ContentDocument()
 
-    self.doc.set_cell_resolution(
-      model.CellResolutionType(
-        columns=round(100 * DEFAULT_TELETEXT_COLS / (100 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT)),
-        rows=round(100 * DEFAULT_TELETEXT_ROWS / (100 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT))
+    if not disable_ebu_style:
+      self.doc.set_cell_resolution(
+        model.CellResolutionType(
+          columns=round(100 * DEFAULT_TELETEXT_COLS / (100 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT)),
+          rows=round(100 * DEFAULT_TELETEXT_ROWS / (100 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT))
+        )
       )
-    )
 
-    self.doc.set_active_area(
-      model.ActiveAreaType(
-        left_offset=DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 100,
-        top_offset=DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 100,
-        width=1 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 100,
-        height=1 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 100
+      self.doc.set_active_area(
+        model.ActiveAreaType(
+          left_offset=DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 100,
+          top_offset=DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 100,
+          width=1 - 2 * DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT / 100,
+          height=1 - 2 * DEFAULT_VERTICAL_SAFE_MARGIN_PCT / 100
+        )
       )
-    )
 
     self.body = model.Body(self.doc)
     
@@ -284,7 +286,7 @@ class DataFile:
         True
       )
 
-    if not disable_line_padding:
+    if not disable_line_padding and not disable_ebu_style:
       self.body.set_style(
         styles.StyleProperties.LinePadding,
         styles.LengthType(
@@ -373,6 +375,8 @@ class DataFile:
         self.start_offset = DEFAULT_TELETEXT_ROWS
     else:
       self.max_row_count = max_row_count
+
+    self.disable_ebu_style = disable_ebu_style
 
     # p_element for use across cumulative subtitles 
     self.cur_p_element = None
@@ -499,24 +503,25 @@ class DataFile:
       else:
         self.cur_p_element.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.center)
 
-      self.cur_p_element.set_style(
-        styles.StyleProperties.LineHeight,
-        styles.LengthType(DEFAULT_LINE_HEIGHT_PCT,
-        styles.LengthType.Units.pct)
-      )
-
       if self.is_teletext() and not is_double_height_characters:
         font_size = DEFAULT_SINGLE_HEIGHT_FONT_SIZE_PCT
       else:
         font_size = DEFAULT_DOUBLE_HEIGHT_FONT_SIZE_PCT
 
-      self.cur_p_element.set_style(
-        styles.StyleProperties.FontSize,
-        styles.LengthType(
-          font_size,
-          styles.LengthType.Units.pct
+      if not self.disable_ebu_style:
+        self.cur_p_element.set_style(
+          styles.StyleProperties.FontSize,
+          styles.LengthType(
+            font_size,
+            styles.LengthType.Units.pct
+          )
         )
-      )
+        
+        self.cur_p_element.set_style(
+          styles.StyleProperties.LineHeight,
+          styles.LengthType(DEFAULT_LINE_HEIGHT_PCT,
+          styles.LengthType.Units.pct)
+        )
 
       safe_area_height =  round(100 - DEFAULT_VERTICAL_SAFE_MARGIN_PCT * 2)
       safe_area_width =  round(100 - DEFAULT_HORIZONTAL_SAFE_MARGIN_PCT * 2)

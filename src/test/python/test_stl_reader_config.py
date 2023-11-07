@@ -83,6 +83,18 @@ class STLReaderConfigurationTest(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f, config)
       self.assertIsNone(doc.get_body().get_style(styles.StyleProperties.LinePadding))
 
+  def test_disable_ebu_style(self):
+    config_json = '{"disable_ebu_style":true}'
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads(config_json))
+
+    with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f, config)
+      self.assertIsNone(doc.get_active_area())
+      self.assertIs(doc.get_cell_resolution().rows, 15)
+      self.assertIsNone(doc.get_body().get_style(styles.StyleProperties.LinePadding))
+      self.assertIsNone(doc.get_body().first_child().first_child().get_style(styles.StyleProperties.FontSize))
+      self.assertIsNone(doc.get_body().first_child().first_child().get_style(styles.StyleProperties.LineHeight))
+
   def test_default_line_padding(self):
     with open("src/test/resources/stl/sandflow/setting_background_before_startbox.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
