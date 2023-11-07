@@ -68,6 +68,18 @@ def _decode_max_row_count(value: typing.Optional[str]) -> typing.Optional[typing
 
   raise ValueError(f"Invalid max_row_count '{value}' value. Expect: 'MNR' or integer.")
 
+def _decode_force_bottom_align_with_margin(value: typing.Optional[str]) -> typing.Optional[float]:
+  if value is None:
+    return None
+
+  if isinstance(value, float):
+    return value
+
+  if isinstance(value, int):
+    return float(value)
+
+  raise ValueError(f"Invalid force_bottom_align_with_margin '{value}' value. Expect: float or integer.")
+
 @dataclass
 class STLReaderConfiguration(ModuleConfiguration):
   """STL reader configuration"""
@@ -79,6 +91,7 @@ class STLReaderConfiguration(ModuleConfiguration):
   font_stack: typing.Optional[typing.Tuple[typing.Union[str, styles.GenericFontFamilyType]]] = \
                   field(default=None, metadata={"decoder": _decode_font_stack})
   max_row_count: typing.Optional[typing.Union[int, str]] = field(default=None, metadata={"decoder": _decode_max_row_count})
+  force_bottom_align_with_margin: typing.Optional[float] = field(default=None, metadata={"decoder": _decode_force_bottom_align_with_margin})
 
   @classmethod
   def name(cls):

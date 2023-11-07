@@ -50,7 +50,8 @@ def to_model(data_file: typing.IO, config: typing.Optional[STLReaderConfiguratio
     disable_ebu_style=False if config is None else config.disable_ebu_style,
     start_tc=None if config is None else config.program_start_tc,
     font_stack=None if config is None else config.font_stack,
-    max_row_count=None if config is None else config.max_row_count
+    max_row_count=None if config is None else config.max_row_count,
+    force_bottom_align_with_margin=None if config is None else config.force_bottom_align_with_margin
     )
 
   for i in itertools.count():

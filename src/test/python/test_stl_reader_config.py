@@ -164,5 +164,21 @@ class STLReaderConfigurationTest(unittest.TestCase):
         ("Times New Roman", styles.GenericFontFamilyType.serif)
       )
 
+  def test_force_bottom_align_with_margin(self):
+    config_json = '{"force_bottom_align_with_margin":0}'
+    config = ttconv.stl.config.STLReaderConfiguration.parse(json.loads(config_json))
+
+    with open("src/test/resources/stl/sandflow/vp01_vp08.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f, config)
+      regions = list(doc.iter_regions())
+      self.assertIs(len(regions), 1)
+      displayAlign = regions[0].get_style(styles.StyleProperties.DisplayAlign)
+      origin = regions[0].get_style(styles.StyleProperties.Origin)
+      extent = regions[0].get_style(styles.StyleProperties.Extent)
+      self.assertIs(displayAlign, styles.DisplayAlignType.after)
+      self.assertIs(origin.y.units, styles.LengthType.Units.pct)
+      self.assertIs(extent.height.units, styles.LengthType.Units.pct)
+      self.assertEqual(origin.y.value + extent.height.value, 100)
+
 if __name__ == '__main__':
   unittest.main()

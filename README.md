@@ -181,6 +181,14 @@ Specifies a maximum number of rows for open subtitles, either the MNR field of t
 
 Default: `23`
 
+#### force_bottom_align_with_margin
+
+`"force_bottom_align_with_margin" : float`
+
+Overrides line positions, force to bottom with defined safe margin in percents: 0 means sticked to bottom of display
+
+Default: None
+
 ### SRT Writer configuration
 
 #### text_formatting
