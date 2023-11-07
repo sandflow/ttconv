@@ -173,7 +173,7 @@ Overrides the font stack
 
 Default: `"Verdana, Arial, Tiresias, sansSerif"`
 
-#### ax_row_count
+#### max_row_count
 
 `"max_row_count" : "MNR" | integer`
 
@@ -289,9 +289,11 @@ Unit test code coverage is provided by the script at `scripts/coverage.sh`
 
 Automated testing is provided by the script at `scripts/ci.sh`
 
+Before first use, run `git submodule update --init` to get some required TTML samples from the W3C
+
 #### Local
 
-Run `./scripts/ci.sh`
+Run `PYTHONPATH=src/main/python scripts/ci.sh`
 
 #### GitHub actions
 
