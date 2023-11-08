@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ttconv.scc.codes import SccCode
+from ttconv.scc.codes import SccCode, SccChannel
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.extended_characters import SccExtendedCharacter
@@ -48,6 +48,7 @@ class SccWord:
     self.byte_1 = byte_1
     self.byte_2 = byte_2
     self.value = byte_1 * 0x100 + byte_2
+    self.code: Optional[SccCode | SccPreambleAddressCode] = self._find_code()
 
   @staticmethod
   def _is_hex_word(word: str) -> bool:
@@ -92,22 +93,34 @@ class SccWord:
     data = bytes.fromhex(hex_word)
     return SccWord.from_bytes(data[0], data[1])
 
+  def _find_code(self) -> Optional[SccCode | SccPreambleAddressCode]:
+    """Find corresponding code"""
+    if self.is_code():
+      return SccControlCode.find(self.value) or \
+        SccAttributeCode.find(self.value) or \
+        SccMidRowCode.find(self.value) or \
+        SccPreambleAddressCode.find(self.byte_1, self.byte_2) or \
+        SccSpecialCharacter.find(self.value) or \
+        SccExtendedCharacter.find(self.value)
+    return None
+
   def to_text(self) -> str:
     """Converts SCC word to text"""
     return ''.join(SCC_STANDARD_CHARACTERS_MAPPING.get(byte, chr(byte)) for byte in [self.byte_1, self.byte_2] if byte != 0x00)
 
   def get_code(self) -> Optional[SccCode]:
-    """Find corresponding code"""
-    if self.is_code():
-      return SccControlCode.find(self.value) or \
-      SccAttributeCode.find(self.value) or \
-      SccMidRowCode.find(self.value) or \
-      SccPreambleAddressCode.find(self.byte_1, self.byte_2) or \
-      SccSpecialCharacter.find(self.value) or \
-      SccExtendedCharacter.find(self.value)
-    return None
+    """Returns the SCC code if any"""
+    return self.code
 
   def is_code(self) -> bool:
     """Returns true if the word is an SCC code, i.e. the first byte
     is a non-printing character in the range 10h to 1Fh."""
     return 0x10 <= self.byte_1 <= 0x1F
+
+  def get_channel(self) -> Optional[SccChannel]:
+    """Returns the caption channel, if the word is an SCC code"""
+    if self.is_code():
+      if isinstance(self.code, SccPreambleAddressCode):
+        return self.code.get_channel()
+      return self.code.get_channel(self.value)
+    return None

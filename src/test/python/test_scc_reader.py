@@ -1490,6 +1490,42 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[1], "caption2", "11:19:30:20", None, ">>> Narrateur: Cette")
     self.assertEqual(region_2, p_list[1].get_region())
 
+  def test_skipping_channel_2_content(self):
+    scc_content = """\
+01:03:27:29	1c20 1cd0 a843 4332 2920 1c2c 94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f
+"""
+    expected_disassembly = """\
+01:03:27:29	{CC2|RCL}{CC2|1400}(CC2) {CC2|EDM}{CC1|ENM}{CC1|ENM}{CC1|RCL}{CC1|RCL}{CC1|1504}{CC1|1504}HEY, THERE.{CC1|EDM}{CC1|EDM}{}{}{CC1|EOC}{CC1|EOC}
+"""
+
+    disassembly = to_disassembly(scc_content, show_channels=True)
+    self.assertEqual(expected_disassembly, disassembly)
+
+    doc = to_model(scc_content)
+
+    self.assertIsNotNone(doc)
+
+    region_1 = doc.get_region("pop1")
+    self.assertIsNotNone(region_1)
+    self.check_region_origin(region_1, 8, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 11, 1, doc.get_cell_resolution())
+    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
+    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    body = doc.get_body()
+    self.assertIsNotNone(body)
+
+    div_list = list(body)
+    self.assertEqual(1, len(div_list))
+    div = div_list[0]
+    self.assertIsNotNone(div)
+
+    p_list = list(div)
+    self.assertEqual(1, len(p_list))
+
+    self.check_caption(p_list[0], "caption1", "01:03:28:18", None, "HEY, THERE.")
+    self.assertEqual(region_1, p_list[0].get_region())
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -34,6 +34,7 @@ from typing import Optional, Type, Tuple
 from ttconv.model import Div
 from ttconv.scc.caption_paragraph import SccCaptionParagraph
 from ttconv.scc.caption_style import SccCaptionStyle
+from ttconv.scc.codes import SccChannel
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
@@ -72,6 +73,9 @@ class SccContext:
     self.buffered_caption = None
     # Captions being displayed
     self.active_caption: Optional[SccCaptionParagraph] = None
+
+    # Current caption channel (default is CC1)
+    self.current_channel = SccChannel.CHANNEL_1
 
     # Roll-up caption number of lines
     self.roll_up_depth: int = 0

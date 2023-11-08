@@ -88,4 +88,4 @@ class SccAttributeCode(SccCode):
 
   def debug(self, value: int) -> str:
     """Debug representation of the code"""
-    return "[ATC|" + self.get_name() + "/" + hex(value) + "]"
+    return "[" + str(self.get_channel(value)) + "|ATC|" + self.get_name() + "/" + hex(value) + "]"

@@ -77,4 +77,4 @@ class SccControlCode(SccCode):
 
   def debug(self, value: int) -> str:
     """Debug representation of the code"""
-    return "[CC|" + self.get_name() + "/" + hex(value) + "]"
+    return "[" + str(self.get_channel(value)) + "|CC|" + self.get_name() + "/" + hex(value) + "]"

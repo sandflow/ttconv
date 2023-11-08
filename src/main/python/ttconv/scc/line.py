@@ -32,6 +32,7 @@ import re
 from typing import List, Optional
 
 from ttconv.scc.caption_style import SccCaptionStyle
+from ttconv.scc.codes import SccChannel
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.extended_characters import SccExtendedCharacter
@@ -94,12 +95,12 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_disassembly(self) -> str:
+  def to_disassembly(self, show_channels = False) -> str:
     """Converts SCC line into the disassembly format"""
     disassembly_line = str(self.time_code) + "\t"
 
     for scc_word in self.scc_words:
-      disassembly_line += get_scc_word_disassembly(scc_word)
+      disassembly_line += get_scc_word_disassembly(scc_word, show_channels)
 
     return disassembly_line
 
@@ -122,6 +123,15 @@ class SccLine:
       if scc_word.byte_1 < 0x20:
 
         scc_code = scc_word.get_code()
+        caption_channel = scc_word.get_channel()
+
+        if caption_channel is not SccChannel.CHANNEL_1:
+          if context.current_channel is not caption_channel:
+            LOGGER.warning("Skip Caption Channel 2 content")
+          context.current_channel = caption_channel
+          continue
+
+        context.current_channel = caption_channel
 
         if isinstance(scc_code, SccPreambleAddressCode):
           debug += scc_code.debug(scc_word.value)
@@ -163,6 +173,10 @@ class SccLine:
           context.previous_word_type = None
 
       else:
+        if context.current_channel is not SccChannel.CHANNEL_1:
+          # LOGGER.warning("Skip Caption Channel 2 code")
+          continue
+
         text = scc_word.to_text()
         debug += text
         context.process_text(text, self.time_code)

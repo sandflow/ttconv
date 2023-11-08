@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from ttconv.scc.codes import SCC_COLOR_MAPPING
+from ttconv.scc.codes import SCC_COLOR_MAPPING, SccChannel
 from ttconv.style_properties import NamedColors, TextDecorationType, \
   FontStyleType, ColorType
 
@@ -103,7 +103,7 @@ class SccPreambleAddressCode:
     self._font_style: Optional[bool] = FontStyleType.italic if desc_bits.get_italic() else None
     self._text_decoration: Optional[TextDecorationType] = \
       TextDecorationType(underline=True) if desc_bits.get_underline() else None
-    self._channel = 2 if byte_1 & 0x08 else 1
+    self._channel = SccChannel.CHANNEL_2 if byte_1 & 0x08 else SccChannel.CHANNEL_1
 
   def get_row(self) -> int:
     """Returns the PAC row"""
@@ -125,7 +125,7 @@ class SccPreambleAddressCode:
     """Returns PAC text decoration"""
     return self._text_decoration
 
-  def get_channel(self):
+  def get_channel(self) -> SccChannel:
     """Returns PAC channel"""
     return self._channel
 
@@ -165,7 +165,8 @@ class SccPreambleAddressCode:
 
   def debug(self, value: int) -> str:
     """Debug representation of the code"""
-    debug = "[PAC|" + str(self.get_row()) + "|" + str(self.get_indent())
+    debug = "[" + str(self.get_channel()) + "|"
+    debug += "PAC|" + str(self.get_row()) + "|" + str(self.get_indent())
     if self.get_color() is not None:
       debug += "|" + str(self.get_color())
     if self.get_font_style() is not None:

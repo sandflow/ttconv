@@ -104,8 +104,8 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
   return document
 
 
-def to_disassembly(scc_content: str) -> str:
-  """Dumps a SCC document into the disassembly format"""
+def to_disassembly(scc_content: str, show_channels = False) -> str:
+  """Dumps an SCC document into the disassembly format"""
   disassembly = ""
   for line in scc_content.splitlines():
     LOGGER.debug(line)
@@ -114,7 +114,7 @@ def to_disassembly(scc_content: str) -> str:
     if scc_line is None:
       continue
 
-    line_to_disassembly = scc_line.to_disassembly()
+    line_to_disassembly = scc_line.to_disassembly(show_channels)
     LOGGER.debug(line_to_disassembly)
 
     disassembly += line_to_disassembly + "\n"
