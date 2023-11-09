@@ -31,13 +31,16 @@ import logging
 import re
 from typing import List, Optional
 
+from ttconv.scc.caption_style import SccCaptionStyle
+from ttconv.scc.codes import SccChannel
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.extended_characters import SccExtendedCharacter
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
-from ttconv.scc.codes.special_characters import SccSpecialCharacter, SccExtendedCharacter
-from ttconv.scc.disassembly import get_color_disassembly, get_font_style_disassembly, get_text_decoration_disassembly
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.codes.special_characters import SccSpecialCharacter
+from ttconv.scc.context import SccContext
+from ttconv.scc.disassembly import get_scc_word_disassembly
 from ttconv.scc.word import SccWord
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
@@ -92,67 +95,95 @@ class SccLine:
 
     return SccCaptionStyle.Unknown
 
-  def to_disassembly(self) -> str:
+  def to_disassembly(self, show_channels = False) -> str:
     """Converts SCC line into the disassembly format"""
     disassembly_line = str(self.time_code) + "\t"
 
     for scc_word in self.scc_words:
+      disassembly_line += get_scc_word_disassembly(scc_word, show_channels)
+
+    return disassembly_line
+
+  def process(self, context: SccContext) -> SmpteTimeCode:
+    """Converts the SCC line to the data model"""
+
+    debug = str(self.time_code) + "\t"
+
+    for scc_word in self.scc_words:
+
+      if context.previous_word is not None and context.previous_word.value == scc_word.value and context.previous_word.is_code():
+        context.previous_word = None
+        continue
+
+      self.time_code.add_frames()
 
       if scc_word.value == 0x0000:
-        disassembly_line += "{}"
         continue
 
       if scc_word.byte_1 < 0x20:
 
-        attribute_code = SccAttributeCode.find(scc_word.value)
-        control_code = SccControlCode.find(scc_word.value)
-        mid_row_code = SccMidRowCode.find(scc_word.value)
-        pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
-        spec_char = SccSpecialCharacter.find(scc_word.value)
-        extended_char = SccExtendedCharacter.find(scc_word.value)
+        scc_code = scc_word.get_code()
+        caption_channel = scc_word.get_channel()
 
-        if pac is not None:
-          disassembly_line += f"{{{pac.get_row():02}"
-          color = pac.get_color()
-          indent = pac.get_indent()
-          if indent is not None and indent > 0:
-            disassembly_line += f"{indent :02}"
-          elif color is not None:
-            disassembly_line += get_color_disassembly(color)
-            disassembly_line += get_font_style_disassembly(pac.get_font_style())
-            disassembly_line += get_text_decoration_disassembly(pac.get_text_decoration())
-          else:
-            disassembly_line += "00"
-          disassembly_line += "}"
+        if caption_channel is not SccChannel.CHANNEL_1:
+          if context.current_channel is not caption_channel:
+            LOGGER.warning("Skip Caption Channel 2 content")
+          context.current_channel = caption_channel
+          continue
 
-        elif attribute_code is not None:
-          disassembly_line += "{"
-          disassembly_line += "B" if attribute_code.is_background() else ""
-          disassembly_line += get_color_disassembly(attribute_code.get_color())
-          disassembly_line += get_text_decoration_disassembly(attribute_code.get_text_decoration())
-          disassembly_line += "}"
+        context.current_channel = caption_channel
 
-        elif mid_row_code is not None:
-          disassembly_line += "{"
-          disassembly_line += get_color_disassembly(mid_row_code.get_color())
-          disassembly_line += get_font_style_disassembly(mid_row_code.get_font_style())
-          disassembly_line += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
-          disassembly_line += "}"
+        if isinstance(scc_code, SccPreambleAddressCode):
+          debug += scc_code.debug(scc_word.value)
+          context.process_preamble_address_code(scc_code, self.time_code)
+          context.previous_word_type = type(scc_code)
 
-        elif control_code is not None:
-          disassembly_line += "{" + control_code.get_name() + "}"
+        elif isinstance(scc_code, SccAttributeCode):
+          debug += scc_code.debug(scc_word.value)
+          context.process_attribute_code(scc_code)
+          context.previous_word_type = type(scc_code)
 
-        elif spec_char is not None:
-          disassembly_line += spec_char.get_unicode_value()
+        elif isinstance(scc_code, SccMidRowCode):
+          debug += scc_code.debug(scc_word.value)
+          context.process_mid_row_code(scc_code, self.time_code)
+          context.previous_word_type = type(scc_code)
 
-        elif extended_char is not None:
-          disassembly_line += extended_char.get_unicode_value()
+        elif isinstance(scc_code, SccControlCode):
+          debug += scc_code.debug(scc_word.value)
+          context.process_control_code(scc_code, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccSpecialCharacter):
+          word = scc_code.get_unicode_value()
+          debug += word
+          context.process_text(word, self.time_code)
+          context.previous_word_type = type(scc_code)
+
+        elif isinstance(scc_code, SccExtendedCharacter):
+          context.backspace()
+
+          word = scc_code.get_unicode_value()
+          debug += word
+          context.process_text(word, self.time_code)
+          context.previous_word_type = type(scc_code)
 
         else:
-          disassembly_line += "{??}"
+          debug += "[??/" + hex(scc_word.value) + "]"
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
+          context.previous_word_type = None
 
       else:
-        disassembly_line += scc_word.to_text()
+        if context.current_channel is not SccChannel.CHANNEL_1:
+          # LOGGER.warning("Skip Caption Channel 2 code")
+          continue
 
-    return disassembly_line
+        text = scc_word.to_text()
+        debug += text
+        context.process_text(text, self.time_code)
+        context.previous_word_type = str
+
+      context.previous_word = scc_word
+
+    LOGGER.debug(debug)
+
+    return self.time_code

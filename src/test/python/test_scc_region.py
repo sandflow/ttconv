@@ -30,8 +30,8 @@
 import unittest
 
 from ttconv.model import ContentDocument, CellResolutionType
-from ttconv.scc.paragraph import SccCaptionParagraph, _SccParagraphRegion
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_paragraph import SccCaptionParagraph, _SccParagraphRegion
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.style_properties import StyleProperties, ShowBackgroundType
 
 

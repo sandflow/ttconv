@@ -29,7 +29,7 @@
 import unittest
 
 from ttconv.scc.line import SccLine
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.time_code import SmpteTimeCode, FPS_30
 
 

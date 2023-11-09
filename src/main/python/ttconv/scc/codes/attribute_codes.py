@@ -85,3 +85,7 @@ class SccAttributeCode(SccCode):
       if attribute_code.contains_value(value):
         return attribute_code
     return None
+
+  def debug(self, value: int) -> str:
+    """Debug representation of the code"""
+    return "[" + str(self.get_channel(value)) + "|ATC|" + self.get_name() + "/" + hex(value) + "]"
