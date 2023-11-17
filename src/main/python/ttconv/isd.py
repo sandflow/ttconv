@@ -505,6 +505,17 @@ class ISD(model.Document):
       styles_to_be_computed.add(spec_style_prop)
       isd_element.set_style(spec_style_prop, element.get_style(spec_style_prop))
 
+    # direction special semantics
+    # https://www.w3.org/TR/ttml2/#style-attribute-direction-special-semantics
+
+    if isinstance(element, model.Region) and \
+        (not element.has_style(styles.StyleProperties.Direction)) and \
+        element.get_style(styles.StyleProperties.WritingMode) in (styles.WritingModeType.lrtb, styles.WritingModeType.rltb):
+      styles_to_be_computed.add(styles.StyleProperties.Direction)
+      direction = styles.DirectionType.ltr if element.get_style(styles.StyleProperties.WritingMode) == styles.WritingModeType.lrtb \
+                  else styles.DirectionType.rtl
+      isd_element.set_style(styles.StyleProperties.Direction, direction)
+
     # inherited styling
 
     if not isinstance(element, (model.Br, model.Text, model.Region)):
