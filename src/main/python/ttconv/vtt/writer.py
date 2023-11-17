@@ -39,7 +39,8 @@ from ttconv.filters.supported_style_properties import SupportedStylePropertiesFi
 from ttconv.isd import ISD
 from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
-from ttconv.style_properties import ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType, DisplayAlignType, WritingModeType, TextAlignType
+from ttconv.style_properties import DirectionType, ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, \
+                                    FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -87,8 +88,8 @@ class VttContext:
 
     if self._config.text_align:
       supported_styles.update({
-        StyleProperties.WritingMode: [],
         StyleProperties.TextAlign: [],
+        StyleProperties.Direction: [],
       })
 
     self._filters.append(SupportedStylePropertiesFilter(supported_styles))
@@ -166,10 +167,6 @@ class VttContext:
     cue.set_begin(begin)
     cue.set_end(end)
 
-    writing_mode = region.get_style(StyleProperties.WritingMode)
-    if writing_mode not in (None, WritingModeType.rltb, WritingModeType.lrtb):
-        raise ValueError("Vertical text direction is not implemented")
-
     if self._config.line_position:
       display_align = region.get_style(StyleProperties.DisplayAlign)
       position: PositionType = region.get_style(StyleProperties.Position)
@@ -186,13 +183,14 @@ class VttContext:
         cue.set_align(VttCue.LineAlignment.center)
 
     if self._config.text_align:
+      direction = element.get_style(StyleProperties.Direction)
       text_align = element.get_style(StyleProperties.TextAlign)
       if text_align == TextAlignType.center:
         cue.set_textalign(VttCue.TextAlignment.center)
       elif text_align == TextAlignType.start:
-        cue.set_textalign(VttCue.TextAlignment.right if writing_mode == WritingModeType.rltb else VttCue.TextAlignment.left)
+        cue.set_textalign(VttCue.TextAlignment.right if direction == DirectionType.rtl else VttCue.TextAlignment.left)
       elif text_align == TextAlignType.end:
-        cue.set_textalign(VttCue.TextAlignment.left if writing_mode == WritingModeType.rltb else VttCue.TextAlignment.right)
+        cue.set_textalign(VttCue.TextAlignment.left if direction == DirectionType.rtl else VttCue.TextAlignment.right)
 
     self._paragraphs.append(cue)
 
