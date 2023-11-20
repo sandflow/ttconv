@@ -150,6 +150,60 @@ Cool, got it, will do it by end of next week.
     vtt_from_model = vtt_writer.from_model(model, config)
     self.assertEqual(expected_vtt, vtt_from_model)
 
+  def test_align(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
+  <head>
+    <styling>
+      <style xml:id="style.center" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="center"/>
+      <style xml:id="style.start" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="start"/>
+      <style xml:id="style.end" tts:fontFamily="Arial" tts:fontSize="100%" tts:fontStyle="normal" tts:fontWeight="normal" tts:backgroundColor="transparent" tts:color="white" tts:textAlign="end"/>
+    </styling>
+    <layout>
+      <region xml:id="lr"                      tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
+      <region xml:id="rl" tts:writingMode="rl" tts:backgroundColor="transparent" tts:origin="10% 10%" tts:extent="80% 80%"/>
+    </layout>
+  </head>
+  <body>
+    <div>
+      <p style="style.center" region="lr" begin="00:00:03:12" end="00:00:12:00">Only one or two short samples are needed<br/>to make sure the conversion basically works</p>
+      <p style="style.start" region="lr" begin="00:00:14:09" end="00:00:25:17">Cool, got it, will do it by end of next week.</p>
+      <p style="style.end" region="lr" begin="00:00:26:00" end="00:00:28:00">Yes.</p>
+      <p style="style.end" region="rl" begin="00:00:29:00" end="00:00:31:00">Good.</p>
+    </div>
+  </body>
+</tt>"""
+
+    expected_vtt="""WEBVTT
+
+1
+00:00:03.501 --> 00:00:12.000 align:center
+Only one or two short samples are needed
+to make sure the conversion basically works
+
+2
+00:00:14.375 --> 00:00:25.709 align:left
+Cool, got it, will do it by end of next week.
+
+3
+00:00:26.000 --> 00:00:28.000 align:right
+Yes.
+
+4
+00:00:29.000 --> 00:00:31.000 align:left
+Good.
+"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    config = VTTWriterConfiguration()
+    config.text_align = True
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
+    config = VTTWriterConfiguration.parse(json.loads('{"text_align":true}'))
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
   def test_cue_id(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001">

@@ -39,7 +39,8 @@ from ttconv.filters.supported_style_properties import SupportedStylePropertiesFi
 from ttconv.isd import ISD
 from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
-from ttconv.style_properties import ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType, DisplayAlignType
+from ttconv.style_properties import DirectionType, ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, \
+                                    FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +85,13 @@ class VttContext:
         StyleProperties.DisplayAlign: [],
         StyleProperties.Extent: [],
       })
-    
+
+    if self._config.text_align:
+      supported_styles.update({
+        StyleProperties.TextAlign: [],
+        StyleProperties.Direction: [],
+      })
+
     self._filters.append(SupportedStylePropertiesFilter(supported_styles))
 
     self._filters.append(
@@ -174,6 +181,16 @@ class VttContext:
       else:
         cue.set_line(round(position.v_offset.value + extent.height.value / 2))
         cue.set_align(VttCue.LineAlignment.center)
+
+    if self._config.text_align:
+      direction = element.get_style(StyleProperties.Direction)
+      text_align = element.get_style(StyleProperties.TextAlign)
+      if text_align == TextAlignType.center:
+        cue.set_textalign(VttCue.TextAlignment.center)
+      elif text_align == TextAlignType.start:
+        cue.set_textalign(VttCue.TextAlignment.right if direction == DirectionType.rtl else VttCue.TextAlignment.left)
+      elif text_align == TextAlignType.end:
+        cue.set_textalign(VttCue.TextAlignment.left if direction == DirectionType.rtl else VttCue.TextAlignment.right)
 
     self._paragraphs.append(cue)
 
