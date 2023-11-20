@@ -163,7 +163,7 @@ Overrides the font stack
 
 Default: `"Verdana, Arial, Tiresias, sansSerif"`
 
-#### ax_row_count
+#### max_row_count
 
 `"max_row_count" : "MNR" | integer`
 
