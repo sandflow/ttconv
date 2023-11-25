@@ -23,48 +23,53 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Filter for style properties supported by the output"""
+"""Regions merging filter"""
 
 import logging
-from typing import Dict, List, Type
 
-from ttconv.model import ContentDocument, ContentElement
-from ttconv.style_properties import StyleProperty
+from ttconv.filters.isd import Filter
+from ttconv.isd import ISD
+from ttconv.model import Body
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SupportedStylePropertiesFilter:
-  """Filter that remove unsupported style properties"""
+class RegionsMergingFilter(Filter):
+  """Filter for merging ISD document regions into a single region"""
 
-  def __init__(self, supported_style_properties: Dict[Type[StyleProperty], List]):
-    self.supported_style_properties = supported_style_properties
+  def process(self, isd: ISD):
+    """Merges the ISD document regions"""
+    LOGGER.debug("Apply regions merging filter to ISD.")
 
-  def process_initial_values(self, doc: ContentDocument):
-    for style_prop, value in list(doc.iter_initial_values()):
+    original_regions = list(isd.iter_regions())
 
-      if style_prop in self.supported_style_properties:
-        supported_values = self.supported_style_properties[style_prop]
+    not_empty_regions = 0
+    for region in original_regions:
+      not_empty_regions += len(region)
 
-        if len(supported_values) == 0 or value in supported_values:
-          continue
+    if len(original_regions) <= 1 or not_empty_regions <= 1:
+      return
 
-      doc.put_initial_value(style_prop, None)
+    LOGGER.warning("Merging ISD regions.")
 
-  def process_element(self, element: ContentElement, recursive = True):
-    """Filter element style properties"""
+    target_body = Body(isd)
+    region_ids = []
 
-    for style_prop in list(element.iter_styles()):
+    for region in original_regions:
+      region_id = region.get_id()
+      for body in region:
 
-      if style_prop in self.supported_style_properties:
-        value = element.get_style(style_prop)
-        supported_values = self.supported_style_properties[style_prop]
+        for child in body:
+          # Remove child from its parent body
+          child.remove()
 
-        if len(supported_values) == 0 or value in supported_values:
-          continue
+          # Add it to the target body
+          target_body.push_child(child)
 
-      element.set_style(style_prop, None)
+      region_ids.append(region_id)
+      isd.remove_region(region_id)
 
-    if recursive:
-      for child in element:
-        self.process_element(child)
+    target_region = ISD.Region("_".join(region_ids), isd)
+    target_region.push_child(target_body)
+
+    isd.put_region(target_region)

@@ -213,5 +213,16 @@ class IMSCAppTest(unittest.TestCase):
     with open(out_path, encoding="utf-8") as f:
       self.assertRegex(f.read(), "lang=['\"]es-419['\"]")
 
+  def test_lcd_filter(self):
+    out_path = "build/referential_styling.ttml"
+    in_path = "src/test/resources/ttml/referential_styling.ttml"
+
+    tt.main(['convert',
+      '-i', in_path,
+      '-o', out_path,
+      '--filter', 'lcd',
+      '--config', '{"lcd": {"bg_color": "blue", "safe_area": 0, "color": "red"}}'
+      ])
+
 if __name__ == '__main__':
   unittest.main()

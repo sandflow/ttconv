@@ -30,7 +30,7 @@
 from typing import List
 import unittest
 
-from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
+from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement, Br
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-# Copyright (c) 2020, Sandflow Consulting LLC
+# Copyright (c) 2023, Sandflow Consulting LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,53 +23,62 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Regions merging filter"""
+'''Common utilities'''
 
-import logging
+import re
+import ttconv.style_properties as styles
 
-from ttconv.filters import Filter
-from ttconv.isd import ISD
-from ttconv.model import Body
+_HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
+_DEC_COLOR_RE = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
+_DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 
-LOGGER = logging.getLogger(__name__)
+def parse_color(attr_value: str) -> styles.ColorType:
+  '''Parses the TTML \\<color\\> value contained in `attr_value`
+  '''
 
+  lower_attr_value = str.lower(attr_value)
 
-class RegionsMergingFilter(Filter):
-  """Filter for merging ISD document regions into a single region"""
+  if lower_attr_value in styles.NamedColors.__members__:
 
-  def process(self, isd: ISD):
-    """Merges the ISD document regions"""
-    LOGGER.debug("Apply regions merging filter to ISD.")
+    return styles.NamedColors[lower_attr_value].value
 
-    original_regions = list(isd.iter_regions())
+  m = _HEX_COLOR_RE.match(attr_value)
 
-    not_empty_regions = 0
-    for region in original_regions:
-      not_empty_regions += len(region)
+  if m:
 
-    if len(original_regions) <= 1 or not_empty_regions <= 1:
-      return
+    return styles.ColorType(
+      (
+        int(m.group(1), 16),
+        int(m.group(2), 16),
+        int(m.group(3), 16),
+        int(m.group(4), 16) if m.group(4) else 255
+      )
+    )
 
-    LOGGER.warning("Merging ISD regions.")
+  m = _DEC_COLOR_RE.match(attr_value)
 
-    target_body = Body(isd)
-    region_ids = []
+  if m:
 
-    for region in original_regions:
-      region_id = region.get_id()
-      for body in region:
+    return styles.ColorType(
+      (
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        255
+      )
+    )
 
-        for child in body:
-          # Remove child from its parent body
-          child.remove()
+  m = _DEC_COLORA_RE.match(attr_value)
 
-          # Add it to the target body
-          target_body.push_child(child)
+  if m:
 
-      region_ids.append(region_id)
-      isd.remove_region(region_id)
+    return styles.ColorType(
+      (
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        int(m.group(4))
+      )
+    )
 
-    target_region = ISD.Region("_".join(region_ids), isd)
-    target_region.push_child(target_body)
-
-    isd.put_region(target_region)
+  raise ValueError("Bad Syntax")

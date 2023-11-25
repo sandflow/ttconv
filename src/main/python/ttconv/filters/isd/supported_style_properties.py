@@ -23,12 +23,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Style properties default values filter"""
+"""Filter for style properties supported by the output"""
 
 import logging
-from typing import Dict, Type, Any
+from typing import Dict, List, Type
 
-from ttconv.filters import Filter
+from ttconv.filters.isd import Filter
 from ttconv.isd import ISD
 from ttconv.model import ContentElement
 from ttconv.style_properties import StyleProperty
@@ -36,11 +36,11 @@ from ttconv.style_properties import StyleProperty
 LOGGER = logging.getLogger(__name__)
 
 
-class DefaultStylePropertyValuesFilter(Filter):
-  """Filter that remove default style properties"""
+class SupportedStylePropertiesFilter(Filter):
+  """Filter that remove unsupported style properties"""
 
-  def __init__(self, style_property_default_values: Dict[Type[StyleProperty], Any]):
-    self.style_property_default_values = style_property_default_values
+  def __init__(self, supported_style_properties: Dict[Type[StyleProperty], List]):
+    self.supported_style_properties = supported_style_properties
 
   def _process_element(self, element: ContentElement):
     """Filter ISD element style properties"""
@@ -48,28 +48,21 @@ class DefaultStylePropertyValuesFilter(Filter):
     element_styles = list(element.iter_styles())
     for style_prop in element_styles:
 
-      value = element.get_style(style_prop)
-      default_value = self.style_property_default_values.get(style_prop)
+      if style_prop in self.supported_style_properties.keys():
+        value = element.get_style(style_prop)
+        supported_values = self.supported_style_properties[style_prop]
 
-      parent = element.parent()
-      if parent is not None and style_prop.is_inherited:
-        # If the parent style property value has not been removed, it means
-        # the value is not set to default, and so that the child style property
-        # value may have been "forced" to the default value, so let's skip it.
-        parent_value = parent.get_style(style_prop)
-        if parent_value is not None and parent_value is not value:
+        if len(supported_values) == 0 or value in supported_values:
           continue
 
-      # Remove the style property if its value is default (and if it is not inherited)
-      if default_value is not None and value == default_value:
-        element.set_style(style_prop, None)
+      element.set_style(style_prop, None)
 
     for child in element:
       self._process_element(child)
 
   def process(self, isd: ISD):
     """Filter ISD document style properties"""
-    LOGGER.debug("Apply default style properties filter to ISD.")
+    LOGGER.debug("Filter default style properties from ISD.")
 
     for region in isd.iter_regions():
       self._process_element(region)

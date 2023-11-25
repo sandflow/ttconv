@@ -29,7 +29,7 @@
 
 import unittest
 
-from ttconv.filters.merge_regions import RegionsMergingFilter
+from ttconv.filters.isd.merge_regions import RegionsMergingFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement
 

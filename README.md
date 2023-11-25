@@ -69,19 +69,15 @@ tt convert -i <input .scc file> -o <output .ttml file>
 
 * `--itype`: `TTML` | `SCC` | `STL` | `SRT` (extrapolated from the filename, if omitted)
 * `--otype`: `TTML` | `SRT` | `VTT` (extrapolated from the filename, if omitted)
-* `--config` and `--config_file`: JSON dictionaries with the following members:
-  * `"general": JSON object`: General configuration options (see below)
-  * `"imsc_writer": JSON object`: IMSC Writer configuration options (see below)
-  * `"stl_reader": JSON object`: STL Reader configuration options (see below)
-  * `"vtt_writer": JSON object`: WebVTT Writer configuration options (see below)
-  * `"srt_writer": JSON object`: SRT Writer configuration options (see below)
-  * `"scc_reader": JSON object`: SCC Reader configuration options (see below)
+* `--filter`: specifies by name a filter to be applied to the content
+* `--config` and `--config_file`: JSON dictionary where each property specifies
+  (optional) configuration parameters for readers, writers and filters.
 
 Example:
 
-`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --config '{"general": {"progress_bar":false, "log_level":"WARN"}}'`
+`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --filter lcd --config '{"general": {"progress_bar":false, "log_level":"WARN"}, "lcd": {"bg_color": "blue"}}'`
 
-### General configuration
+### General configuration (`"general"`)
 
 #### progress_bar
 
@@ -109,7 +105,7 @@ Example: `"document_lang": "es-419"`
 
 Default: `None`
 
-### IMSC Writer configuration
+### IMSC Writer configuration (`"imsc_writer"`)
 
 ### time_format
 
@@ -131,7 +127,7 @@ Example:
 
 `--config '{"general": {"progress_bar":false, "log_level":"WARN"}, "imsc_writer": {"time_format":"clock_time_with_frames", "fps": "25/1"}}'`
 
-### STL Reader configuration
+### STL Reader configuration (`"stl_reader"`)
 
 #### disable_fill_line_gap
 
@@ -173,7 +169,7 @@ Specifies a maximum number of rows for open subtitles, either the MNR field of t
 
 Default: `23`
 
-### SRT Writer configuration
+### SRT Writer configuration (`"srt_writer"`)
 
 #### text_formatting
 
@@ -183,7 +179,7 @@ Default: `23`
 
 Default: `true`
 
-### VTT Writer configuration
+### VTT Writer configuration (`"vtt_writer"`)
 
 #### line_position
 
@@ -220,7 +216,33 @@ text alignment.
 
 Default: `"auto"`
 
-### Library
+### LCD filter configuration (`"lcd"`)
+
+#### safe_area
+
+`"safe_area" : <integer between 0 and 30>`
+
+Specifies the safe area (as a percentage of the height and width of the root container)
+
+Default: `10`
+
+#### color
+
+`"color" : <TTML color> | null`
+
+If not `null`, overrides text color
+
+Default: `null`
+
+#### bg_color
+
+`"color" : <TTML color>`
+
+Specifies the background color of text areas
+
+Default: `"black"`
+
+## Library
 
 The overall architecture of the library is as follows:
 

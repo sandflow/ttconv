@@ -32,10 +32,10 @@ from typing import Dict, List, Optional
 import ttconv.model as model
 from ttconv.vtt.config import VTTWriterConfiguration
 import ttconv.vtt.style as style
-from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
-from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
-from ttconv.filters.merge_regions import RegionsMergingFilter
-from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
+from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesFilter
+from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingFilter
+from ttconv.filters.isd.merge_regions import RegionsMergingFilter
+from ttconv.filters.isd.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import ISD
 from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass

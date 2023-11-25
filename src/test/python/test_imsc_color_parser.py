@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.imsc.utils import parse_color
+from ttconv.utils import parse_color
 from ttconv.style_properties import ColorType
 
 class IMSCReaderTest(unittest.TestCase):

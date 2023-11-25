@@ -29,7 +29,7 @@
 from fractions import Fraction
 import unittest
 
-from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
+from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesFilter
 from ttconv.isd import ISD
 from ttconv.model import P, ContentDocument, Region, Body, Div, Span, Text
 from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType

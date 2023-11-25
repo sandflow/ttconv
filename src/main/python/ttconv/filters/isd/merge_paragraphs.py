@@ -27,7 +27,7 @@
 
 import logging
 
-from ttconv.filters import Filter
+from ttconv.filters.isd import Filter
 from ttconv.isd import ISD
 from ttconv.model import Div, P, Br, ContentElement
 
