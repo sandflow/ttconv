@@ -211,7 +211,7 @@ Default: `true`
 
 ### SCC Reader configuration
 
-#### text_alignment
+#### text_align
 
 `"text_align" : "auto" | "left" | "center" | "right"`
 
