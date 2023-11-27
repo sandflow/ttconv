@@ -74,6 +74,8 @@ tt convert -i <input .scc file> -o <output .ttml file>
   * `"imsc_writer": JSON object`: IMSC Writer configuration options (see below)
   * `"stl_reader": JSON object`: STL Reader configuration options (see below)
   * `"vtt_writer": JSON object`: WebVTT Writer configuration options (see below)
+  * `"srt_writer": JSON object`: SRT Writer configuration options (see below)
+  * `"scc_reader": JSON object`: SCC Reader configuration options (see below)
 
 Example:
 
@@ -207,6 +209,17 @@ Default: `false`
 
 Default: `true`
 
+### SCC Reader configuration
+
+#### text_align
+
+`"text_align" : "auto" | "left" | "center" | "right"`
+
+Specifies the text alignment. `"auto"` means the reader will use heuristics to determine
+text alignment.
+
+Default: `"auto"`
+
 ### Library
 
 The overall architecture of the library is as follows:
@@ -281,7 +294,7 @@ Automated testing is provided by the script at `scripts/ci.sh`
 
 #### Local
 
-Run `./scripts/ci.sh`
+Run `PYTHONPATH=src/main/python ./scripts/ci.sh`
 
 #### GitHub actions
 
