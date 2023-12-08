@@ -184,7 +184,7 @@ class ISD(model.Document):
 
     return (begin_time, end_time)
 
-  def _region_always_has_background(region: typing.Type[model.Region]):
+  def _region_always_has_background(region: typing.Type[model.Region]) -> bool:
 
     if region.get_style(styles.StyleProperties.Opacity) == 0:
       return False
