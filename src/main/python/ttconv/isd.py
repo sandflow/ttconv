@@ -184,6 +184,30 @@ class ISD(model.Document):
 
     return (begin_time, end_time)
 
+  def _region_always_has_background(region: typing.Type[model.Region]) -> bool:
+
+    if region.get_style(styles.StyleProperties.Opacity) == 0:
+      return False
+
+    if region.get_style(styles.StyleProperties.Display) is styles.DisplayType.none:
+      return False
+
+    if region.get_style(styles.StyleProperties.Visibility) is styles.VisibilityType.hidden:
+      return False
+
+    if region.get_style(styles.StyleProperties.ShowBackground) is styles.ShowBackgroundType.whenActive:
+      return False
+
+    bg_color: styles.ColorType = region.get_style(styles.StyleProperties.BackgroundColor)
+    if bg_color is not None:
+      if bg_color.ident is not styles.ColorType.Colorimetry.RGBA8:
+        raise RuntimeError(f"Unsupported colorimetry system: {bg_color.ident}")
+
+      if bg_color.components[3] == 0:
+        return False
+
+    return True
+
   @staticmethod
   def significant_times(doc: model.ContentDocument) -> SignificantTimes:
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
@@ -204,7 +228,8 @@ class ISD(model.Document):
 
       interval_cache[element] = (begin_time, end_time)
 
-      if isinstance(element, (model.Br, model.Span)):
+      if isinstance(element, (model.Br, model.Span)) or \
+          isinstance(element, (model.Region)) and ISD._region_always_has_background(element):
         content_interval[0] = begin_time if content_interval[0] is None else min(begin_time, content_interval[0])
         content_interval[1] = None if end_time is None or content_interval[1] is None else max(end_time, content_interval[1])
 
@@ -249,14 +274,14 @@ class ISD(model.Document):
 
       interval_cache = {}
 
+      content_interval = [None, 0]
+
       # add significant times for regions
 
       for region in cached_doc.iter_regions():
-        compute_sig_times(interval_cache, None, s_times, region, 0, None)
+        compute_sig_times(interval_cache, content_interval, s_times, region, 0, None)
 
       # add significant times for body and its descendents
-
-      content_interval = [None, 0]
 
       if cached_doc.get_body() is not None:
         compute_sig_times(interval_cache, content_interval, s_times, cached_doc.get_body(), 0, None)
