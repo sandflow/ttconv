@@ -40,7 +40,7 @@ class DocumentFilter:
     self.config = config
 
   def process(self, doc: ContentDocument) -> ContentDocument:
-    """Process the specified doc and returns it."""
+    """Processes the specified document in place and returns it."""
     raise NotImplementedError
 
   @classmethod
