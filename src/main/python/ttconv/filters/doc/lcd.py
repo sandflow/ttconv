@@ -37,7 +37,7 @@ from ttconv.filters.remove_animations import RemoveAnimationFilter
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
 from ttconv.isd import StyleProcessors
 from ttconv.model import ContentDocument, ContentElement, Region, P
-from ttconv.style_properties import ColorType, CoordinateType, DisplayAlignType, ExtentType, LengthType, StyleProperties, WritingModeType, NamedColors
+from ttconv.style_properties import TextAlignType, ColorType, CoordinateType, DisplayAlignType, ExtentType, LengthType, StyleProperties, WritingModeType, NamedColors
 import ttconv.utils
 
 LOGGER = logging.getLogger(__name__)
@@ -73,6 +73,9 @@ class LCDFilterConfig(ModuleConfiguration):
   # specifies the safe area as an integer percentage
   safe_area: typing.Optional[int] = field(default=10, metadata={"decoder": int})
 
+  # preserve text alignment the text color
+  preserve_text_align: typing.Optional[bool] = field(default=False, metadata={"decoder": bool})
+
   # overrides the text color
   color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": ttconv.utils.parse_color})
 
@@ -99,6 +102,9 @@ class LCDFilter(DocumentFilter):
       StyleProperties.Origin: [],
       StyleProperties.Position: []
     }
+
+    if self.config.preserve_text_align:
+      supported_styles.update({StyleProperties.TextAlign: []})
 
     if self.config.color is None:
       supported_styles.update({StyleProperties.Color: []})
@@ -189,7 +195,6 @@ class LCDFilter(DocumentFilter):
       region.set_style(StyleProperties.DisplayAlign, new_display_align)
 
       # reposition region
-      # TODO: allow configurable safe area
       region.set_style(
         StyleProperties.Origin,
         CoordinateType(
@@ -237,3 +242,6 @@ class LCDFilter(DocumentFilter):
     # apply text color
     if doc.get_body() is not None and self.config.color is not None:
       doc.get_body().set_style(StyleProperties.Color, self.config.color)
+
+    if doc.get_body() is not None and not self.config.preserve_text_align:
+      doc.get_body().set_style(StyleProperties.TextAlign, TextAlignType.center)

@@ -221,7 +221,7 @@ class IMSCAppTest(unittest.TestCase):
       '-i', in_path,
       '-o', out_path,
       '--filter', 'lcd',
-      '--config', '{"lcd": {"bg_color": "blue", "safe_area": 0, "color": "red"}}'
+      '--config', '{"lcd": {"bg_color": "blue", "safe_area": 0, "color": "red", "preserve_text_align": true}}'
       ])
 
 if __name__ == '__main__':

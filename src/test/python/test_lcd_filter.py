@@ -293,6 +293,35 @@ class LCDFilterTests(unittest.TestCase):
       styles.DisplayAlignType.after
     )
 
+  def test_text_align(self):
+    doc = model.ContentDocument()
+
+    # r1: origin=10,10 extent=80,20
+    r1 = model.Region("r1", doc)
+    doc.put_region(r1)
+
+    # body
+    body = model.Body(doc)
+    doc.set_body(body)
+
+    # div
+    div = model.Div(doc)
+    body.push_child(div)
+
+    # p1: r1
+    p1 = model.P(doc)
+    p1.set_id("p1")
+    p1.set_region(r1)
+    p1.set_style(styles.StyleProperties.TextAlign, styles.TextAlignType.end)
+    div.push_child(p1)
+
+    # apply filter
+    filter = LCDFilter(LCDFilterConfig())
+
+    filter.process(doc)
+
+    self.assertIsNone(p1.get_style(styles.StyleProperties.TextAlign))
+    self.assertEqual(body.get_style(styles.StyleProperties.TextAlign), styles.TextAlignType.center)
 
 if __name__ == '__main__':
   unittest.main()
