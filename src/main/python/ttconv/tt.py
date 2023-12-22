@@ -258,7 +258,7 @@ def subcommand(args=None, parent=subparsers):
   argument("-o", "--output", help="Output file path", required=True),
   argument("--itype", help="Input file type", required=False),
   argument("--otype", help="Output file type", required=False),
-  argument("--filter", nargs="*", help="Document filter", required=False, default=[]),
+  argument("--filter", action="append", help="Document filter", required=False, default=[]),
   argument("--config", help="Configuration in json. Overridden by --config_file.", required=False),
   argument("--config_file", help="Configuration file. Overrides --config_file.", required=False)
 ])
