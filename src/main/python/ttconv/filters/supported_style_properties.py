@@ -31,9 +31,6 @@ from typing import Dict, List, Type
 from ttconv.model import ContentDocument, ContentElement
 from ttconv.style_properties import StyleProperty
 
-LOGGER = logging.getLogger(__name__)
-
-
 class SupportedStylePropertiesFilter:
   """Filter that remove unsupported style properties"""
 

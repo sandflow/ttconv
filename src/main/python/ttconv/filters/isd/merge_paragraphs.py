@@ -27,14 +27,14 @@
 
 import logging
 
-from ttconv.filters.isd import Filter
+from ttconv.filters.isd_filter import ISDFilter
 from ttconv.isd import ISD
 from ttconv.model import Div, P, Br, ContentElement
 
 LOGGER = logging.getLogger(__name__)
 
 
-class ParagraphsMergingFilter(Filter):
+class ParagraphsMergingISDFilter(ISDFilter):
   """Filter for merging ISD document paragraphs per region into a single paragraph"""
 
   def _get_paragraphs(self, element: ContentElement):

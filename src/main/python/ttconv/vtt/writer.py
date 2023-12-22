@@ -32,10 +32,10 @@ from typing import Dict, List, Optional
 import ttconv.model as model
 from ttconv.vtt.config import VTTWriterConfiguration
 import ttconv.vtt.style as style
-from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesFilter
-from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingFilter
-from ttconv.filters.isd.merge_regions import RegionsMergingFilter
-from ttconv.filters.isd.supported_style_properties import SupportedStylePropertiesFilter
+from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesISDFilter
+from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingISDFilter
+from ttconv.filters.isd.merge_regions import RegionsMergingISDFilter
+from ttconv.filters.isd.supported_style_properties import SupportedStylePropertiesISDFilter
 from ttconv.isd import ISD
 from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
@@ -61,9 +61,9 @@ class VttContext:
     self._filters = []
 
     if not self._config.line_position:
-      self._filters.append(RegionsMergingFilter())
+      self._filters.append(RegionsMergingISDFilter())
 
-    self._filters.append(ParagraphsMergingFilter())
+    self._filters.append(ParagraphsMergingISDFilter())
 
     supported_styles = {
       StyleProperties.FontWeight: [],
@@ -92,10 +92,10 @@ class VttContext:
         StyleProperties.Direction: [],
       })
 
-    self._filters.append(SupportedStylePropertiesFilter(supported_styles))
+    self._filters.append(SupportedStylePropertiesISDFilter(supported_styles))
 
     self._filters.append(
-      DefaultStylePropertyValuesFilter({
+      DefaultStylePropertyValuesISDFilter({
         StyleProperties.Color: NamedColors.white.value,
         StyleProperties.BackgroundColor: NamedColors.transparent.value,
         StyleProperties.FontWeight: FontWeightType.normal,

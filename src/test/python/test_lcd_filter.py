@@ -28,7 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.filters.doc.lcd import LCDFilter, LCDFilterConfig
+from ttconv.filters.doc.lcd import LCDDocFilter, LCDDocFilterConfig
 import ttconv.model as model
 import ttconv.style_properties as styles
 
@@ -129,7 +129,7 @@ class LCDFilterTests(unittest.TestCase):
     p5.set_region(r5)
     div.push_child(p5)
 
-    filter = LCDFilter(LCDFilterConfig())
+    filter = LCDDocFilter(LCDDocFilterConfig())
 
     self.assertIsNone(filter.process(doc))
 
@@ -254,7 +254,7 @@ class LCDFilterTests(unittest.TestCase):
     div.push_child(p4)
 
     # apply filter
-    filter = LCDFilter(LCDFilterConfig())
+    filter = LCDDocFilter(LCDDocFilterConfig())
 
     self.assertIsNone(filter.process(doc))
 
@@ -316,7 +316,7 @@ class LCDFilterTests(unittest.TestCase):
     div.push_child(p1)
 
     # apply filter
-    filter = LCDFilter(LCDFilterConfig())
+    filter = LCDDocFilter(LCDDocFilterConfig())
 
     self.assertIsNone(filter.process(doc))
 

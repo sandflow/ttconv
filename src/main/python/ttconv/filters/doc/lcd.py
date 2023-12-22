@@ -23,8 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Least common denominator filter. Merges regions and removes all text
-formatting but color."""
+"""Defines the Least common denominator (LCD) filter."""
 
 from __future__ import annotations
 import logging
@@ -63,8 +62,8 @@ def _safe_area_decoder(s):
   return safe_area
 
 @dataclass
-class LCDFilterConfig(ModuleConfiguration):
-  """Configuration class for the Simplify Regions filter"""
+class LCDDocFilterConfig(ModuleConfiguration):
+  """Configuration class for the Least common denominator (LCD) filter"""
 
   @classmethod
   def name(cls):
@@ -82,14 +81,15 @@ class LCDFilterConfig(ModuleConfiguration):
   # specifies the paragraph background color
   bg_color: typing.Optional[ColorType] = field(default=NamedColors.black.value, metadata={"decoder": ttconv.utils.parse_color})
 
-class LCDFilter(DocumentFilter):
-  """Filter that simplifies regions"""
+class LCDDocFilter(DocumentFilter):
+  """Merges regions and removes all text formatting with the exception of color
+  and text alignment."""
 
   @classmethod
   def get_config_class(cls) -> ModuleConfiguration:
-    return LCDFilterConfig
+    return LCDDocFilterConfig
 
-  def __init__(self, config: LCDFilterConfig):
+  def __init__(self, config: LCDDocFilterConfig):
     super().__init__(config)
 
   def process(self, doc: ContentDocument) -> ContentDocument:

@@ -27,14 +27,14 @@
 
 import logging
 
-from ttconv.filters.isd import Filter
+from ttconv.filters.isd_filter import ISDFilter
 from ttconv.isd import ISD
 from ttconv.model import Body
 
 LOGGER = logging.getLogger(__name__)
 
 
-class RegionsMergingFilter(Filter):
+class RegionsMergingISDFilter(ISDFilter):
   """Filter for merging ISD document regions into a single region"""
 
   def process(self, isd: ISD):

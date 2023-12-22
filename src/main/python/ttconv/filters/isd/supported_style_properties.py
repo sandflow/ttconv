@@ -28,41 +28,24 @@
 import logging
 from typing import Dict, List, Type
 
-from ttconv.filters.isd import Filter
+from ttconv.filters.isd_filter import ISDFilter
 from ttconv.isd import ISD
 from ttconv.model import ContentElement
 from ttconv.style_properties import StyleProperty
+import ttconv.filters.supported_style_properties
 
 LOGGER = logging.getLogger(__name__)
 
 
-class SupportedStylePropertiesFilter(Filter):
+class SupportedStylePropertiesISDFilter(ISDFilter):
   """Filter that remove unsupported style properties"""
 
   def __init__(self, supported_style_properties: Dict[Type[StyleProperty], List]):
-    self.supported_style_properties = supported_style_properties
-
-  def _process_element(self, element: ContentElement):
-    """Filter ISD element style properties"""
-
-    element_styles = list(element.iter_styles())
-    for style_prop in element_styles:
-
-      if style_prop in self.supported_style_properties.keys():
-        value = element.get_style(style_prop)
-        supported_values = self.supported_style_properties[style_prop]
-
-        if len(supported_values) == 0 or value in supported_values:
-          continue
-
-      element.set_style(style_prop, None)
-
-    for child in element:
-      self._process_element(child)
+    self.filter = ttconv.filters.supported_style_properties.SupportedStylePropertiesFilter(supported_style_properties)
 
   def process(self, isd: ISD):
     """Filter ISD document style properties"""
     LOGGER.debug("Filter default style properties from ISD.")
 
     for region in isd.iter_regions():
-      self._process_element(region)
+      self.filter.process_element(region)

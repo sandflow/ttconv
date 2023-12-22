@@ -29,7 +29,7 @@
 from fractions import Fraction
 import unittest
 
-from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesFilter
+from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesISDFilter
 from ttconv.isd import ISD
 from ttconv.model import P, ContentDocument, Region, Body, Div, Span, Text
 from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType
@@ -38,7 +38,7 @@ from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType,
 class DefaultStylesFilterTest(unittest.TestCase):
 
   def test_process_element(self):
-    default_style_value_filter = DefaultStylePropertyValuesFilter({
+    default_style_value_filter = DefaultStylePropertyValuesISDFilter({
       StyleProperties.Color: StyleProperties.Color.make_initial_value()
     })
 
@@ -55,7 +55,7 @@ class DefaultStylesFilterTest(unittest.TestCase):
     self.assertEqual(len(StyleProperties.ALL) - 1, len(p._styles))
 
   def test_process_isd(self):
-    default_style_value_filter = DefaultStylePropertyValuesFilter({
+    default_style_value_filter = DefaultStylePropertyValuesISDFilter({
       StyleProperties.BackgroundColor: NamedColors.red.value,
       StyleProperties.Direction: DirectionType.ltr
     })

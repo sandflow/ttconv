@@ -25,12 +25,5 @@
 
 """Data model filter"""
 
-from ttconv.isd import ISD
 
 
-class Filter:
-  """Abstract base class for filters"""
-
-  def process(self, isd: ISD):
-    """Process the specified ISD and returns it."""
-    raise NotImplementedError

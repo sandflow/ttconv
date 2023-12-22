@@ -23,29 +23,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Filter removing animations"""
+"""Data model filter"""
 
-import logging
-from typing import Dict, List, Type
+from ttconv.isd import ISD
 
-from ttconv.model import ContentDocument, ContentElement
-from ttconv.style_properties import StyleProperty
+class ISDFilter:
+  """Abstract base class for filters"""
 
-class RemoveAnimationFilter:
-  """Filter that remove animations"""
-
-  def __init__(self) -> None:
-    self._has_removed_animations = False
-
-  def has_removed_animations(self) -> bool:
-    return self._has_removed_animations
-
-  def process_element(self, element: ContentElement, recursive = True):
-
-    for step in element.iter_animation_steps():
-      element.remove_animation_step(step)
-      self._has_removed_animations = True
-
-    if recursive:
-      for child in element:
-        self.process_element(child)
+  def process(self, isd: ISD):
+    """Process the specified ISD and returns it."""
+    raise NotImplementedError
