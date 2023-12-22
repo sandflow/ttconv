@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Filter removing animations"""
+"""Filter that remove animations"""
 
 import logging
 from typing import Dict, List, Type
@@ -41,6 +41,7 @@ class RemoveAnimationFilter:
     return self._has_removed_animations
 
   def process_element(self, element: ContentElement, recursive = True):
+    """Removes animations from content elements"""
 
     for step in element.iter_animation_steps():
       element.remove_animation_step(step)

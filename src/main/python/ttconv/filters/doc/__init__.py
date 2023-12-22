@@ -23,12 +23,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Data model filter"""
+"""Collects document instance filters"""
 
 import importlib
 import pkgutil
 import os.path
 import sys
+
+# registers all document instance filters
 
 for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(__file__)]):
   full_name = f"{__name__}.{package_name}"

@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Filter for style properties supported by the output"""
+"""Filters style properties"""
 
 import logging
 from typing import Dict, List, Type
@@ -32,12 +32,13 @@ from ttconv.model import ContentDocument, ContentElement
 from ttconv.style_properties import StyleProperty
 
 class SupportedStylePropertiesFilter:
-  """Filter that remove unsupported style properties"""
+  """Filter that removes unsupported style properties"""
 
   def __init__(self, supported_style_properties: Dict[Type[StyleProperty], List]):
     self.supported_style_properties = supported_style_properties
 
   def process_initial_values(self, doc: ContentDocument):
+    """Removes initial values that target unsupported style properties"""
     for style_prop, value in list(doc.iter_initial_values()):
 
       if style_prop in self.supported_style_properties:
@@ -49,7 +50,7 @@ class SupportedStylePropertiesFilter:
       doc.put_initial_value(style_prop, None)
 
   def process_element(self, element: ContentElement, recursive = True):
-    """Filter element style properties"""
+    """Removes unsupported style properties from content elements"""
 
     for style_prop in list(element.iter_styles()):
 
