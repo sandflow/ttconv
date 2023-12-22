@@ -131,7 +131,7 @@ class LCDFilterTests(unittest.TestCase):
 
     filter = LCDFilter(LCDFilterConfig())
 
-    self.assertIs(filter.process(doc), doc)
+    self.assertIsNone(filter.process(doc))
 
     self.assertSetEqual(
       set(["r1", "r3", "r5"]),
@@ -256,7 +256,7 @@ class LCDFilterTests(unittest.TestCase):
     # apply filter
     filter = LCDFilter(LCDFilterConfig())
 
-    self.assertIs(filter.process(doc), doc)
+    self.assertIsNone(filter.process(doc))
 
     self.assertSetEqual(
       set(["r1", "r2"]),
@@ -318,7 +318,7 @@ class LCDFilterTests(unittest.TestCase):
     # apply filter
     filter = LCDFilter(LCDFilterConfig())
 
-    self.assertIs(filter.process(doc), doc)
+    self.assertIsNone(filter.process(doc))
 
     self.assertIsNone(p1.get_style(styles.StyleProperties.TextAlign))
     self.assertEqual(body.get_style(styles.StyleProperties.TextAlign), styles.TextAlignType.center)

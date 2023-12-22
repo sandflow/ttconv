@@ -245,5 +245,3 @@ class LCDFilter(DocumentFilter):
 
     if doc.get_body() is not None and not self.config.preserve_text_align:
       doc.get_body().set_style(StyleProperties.TextAlign, TextAlignType.center)
-
-    return doc

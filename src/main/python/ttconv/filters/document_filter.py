@@ -39,8 +39,8 @@ class DocumentFilter:
   def __init__(self, config: ModuleConfiguration) -> None:
     self.config = config
 
-  def process(self, doc: ContentDocument) -> ContentDocument:
-    """Processes the specified document in place and returns it."""
+  def process(self, doc: ContentDocument):
+    """Processes the specified document in place."""
     raise NotImplementedError
 
   @classmethod
