@@ -29,6 +29,7 @@ from __future__ import annotations
 import logging
 import typing
 from dataclasses import dataclass, field
+from numbers import Number
 
 from ttconv.config import ModuleConfiguration
 from ttconv.filters.document_filter import DocumentFilter
@@ -55,11 +56,20 @@ def _apply_bg_color(element: ContentElement, bg_color: ColorType):
     for child in element:
       _apply_bg_color(child, bg_color)
 
-def _safe_area_decoder(s):
+def _safe_area_decoder(s: Number) -> int:
   safe_area = int(s)
   if 30 < safe_area < 0:
     raise ValueError("Safe area must be an integer between 0 and 30")
   return safe_area
+
+def _color_decoder(s: typing.Optional[ColorType]) -> typing.Optional[ColorType]:
+  if s is None:
+    return None
+
+  if not isinstance(s, str):
+    raise ValueError("Color specification must be a string")
+
+  return ttconv.utils.parse_color(s)
 
 @dataclass
 class LCDDocFilterConfig(ModuleConfiguration):
@@ -70,16 +80,16 @@ class LCDDocFilterConfig(ModuleConfiguration):
     return "lcd"
 
   # specifies the safe area as an integer percentage
-  safe_area: typing.Optional[int] = field(default=10, metadata={"decoder": int})
+  safe_area: typing.Optional[int] = field(default=10, metadata={"decoder": _safe_area_decoder})
 
   # preserve text alignment the text color
   preserve_text_align: typing.Optional[bool] = field(default=False, metadata={"decoder": bool})
 
   # overrides the text color
-  color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": ttconv.utils.parse_color})
+  color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": _color_decoder})
 
   # overrides the background color
-  bg_color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": ttconv.utils.parse_color})
+  bg_color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": _color_decoder})
 
 class LCDDocFilter(DocumentFilter):
   """Merges regions and removes all text formatting with the exception of color

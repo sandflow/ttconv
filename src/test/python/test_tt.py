@@ -224,5 +224,12 @@ class IMSCAppTest(unittest.TestCase):
       '--config', '{"lcd": {"bg_color": "blue", "safe_area": 0, "color": "red", "preserve_text_align": true}}'
       ])
 
+    tt.main(['convert',
+      '-i', in_path,
+      '-o', out_path,
+      '--filter', 'lcd',
+      '--config', '{"lcd": {"bg_color":"red"}}'
+      ])
+
 if __name__ == '__main__':
   unittest.main()
