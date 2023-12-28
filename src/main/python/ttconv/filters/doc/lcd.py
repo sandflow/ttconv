@@ -78,8 +78,8 @@ class LCDDocFilterConfig(ModuleConfiguration):
   # overrides the text color
   color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": ttconv.utils.parse_color})
 
-  # specifies the paragraph background color
-  bg_color: typing.Optional[ColorType] = field(default=NamedColors.black.value, metadata={"decoder": ttconv.utils.parse_color})
+  # overrides the background color
+  bg_color: typing.Optional[ColorType] = field(default=None, metadata={"decoder": ttconv.utils.parse_color})
 
 class LCDDocFilter(DocumentFilter):
   """Merges regions and removes all text formatting with the exception of color
@@ -108,6 +108,9 @@ class LCDDocFilter(DocumentFilter):
 
     if self.config.color is None:
       supported_styles.update({StyleProperties.Color: []})
+
+    if self.config.bg_color is None:
+      supported_styles.update({StyleProperties.BackgroundColor: []})
 
     style_filter = SupportedStylePropertiesFilter(supported_styles)
 
@@ -236,12 +239,13 @@ class LCDDocFilter(DocumentFilter):
         doc.remove_region(region.get_id())
 
     # apply background color
-    if doc.get_body() is not None and self.config.bg_color is not None:
+    if self.config.bg_color is not None:
       _apply_bg_color(doc.get_body(), self.config.bg_color)
 
     # apply text color
     if doc.get_body() is not None and self.config.color is not None:
       doc.get_body().set_style(StyleProperties.Color, self.config.color)
 
+    # apply text align
     if doc.get_body() is not None and not self.config.preserve_text_align:
       doc.get_body().set_style(StyleProperties.TextAlign, TextAlignType.center)

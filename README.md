@@ -75,7 +75,7 @@ tt convert -i <input .scc file> -o <output .ttml file>
 
 Example:
 
-`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --filter lcd --config '{"general": {"progress_bar":false, "log_level":"WARN"}, "lcd": {"bg_color": "blue"}}'`
+`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --filter lcd --config '{"general": {"progress_bar":false, "log_level":"WARN"}, "lcd": {"bg_color": "transparent", "color": "#FF0000"}}'`
 
 ### General configuration (`"general"`)
 
@@ -230,17 +230,23 @@ Default: `10`
 
 `"color" : <TTML color> | null`
 
-If not `null`, overrides text color
+If not `null`, overrides text color. The syntax of `TTML color` is
+specified at <https://www.w3.org/TR/ttml2/#style-value-color>.
 
 Default: `null`
 
+Examples: `"#FFFFFF"` (white), `"white"`
+
 #### bg_color
 
-`"color" : <TTML color>`
+`"bg_color" : <TTML color>`
 
-Specifies the background color of text areas
+If not `null`, overrides the background color. The syntax of `TTML color` is
+specified at <https://www.w3.org/TR/ttml2/#style-value-color>.
 
-Default: `"black"`
+Default: `null`
+
+Examples: `"#FF0000"` (red), `"transparent"`, `"black`
 
 ## Library
 
