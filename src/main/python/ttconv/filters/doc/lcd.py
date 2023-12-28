@@ -82,7 +82,7 @@ class LCDDocFilterConfig(ModuleConfiguration):
   # specifies the safe area as an integer percentage
   safe_area: typing.Optional[int] = field(default=10, metadata={"decoder": _safe_area_decoder})
 
-  # preserve text alignment the text color
+  # preserve text alignment
   preserve_text_align: typing.Optional[bool] = field(default=False, metadata={"decoder": bool})
 
   # overrides the text color

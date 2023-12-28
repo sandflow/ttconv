@@ -218,6 +218,11 @@ Default: `"auto"`
 
 ### LCD filter configuration (`"lcd"`)
 
+#### Description
+
+The LCD filter merges regions and removes all text formatting with the exception
+of color and text alignment.
+
 #### safe_area
 
 `"safe_area" : <integer between 0 and 30>`
@@ -246,7 +251,15 @@ specified at <https://www.w3.org/TR/ttml2/#style-value-color>.
 
 Default: `null`
 
-Examples: `"#FF0000"` (red), `"transparent"`, `"black`
+Examples: `"#FF0000"` (red), `"transparent"`, `"black"`
+
+#### preserve_text_align
+
+`"preserve_text_align" : true | false`
+
+If `true`, text alignment is preserved, otherwise text is centered.
+
+Default: `false`
 
 ## Library
 
