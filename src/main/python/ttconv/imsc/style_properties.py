@@ -29,6 +29,7 @@ import inspect
 import math
 import typing
 import ttconv.imsc.namespaces as xml_ns
+import ttconv.utils
 import ttconv.style_properties as styles
 import ttconv.imsc.utils as utils
 import ttconv.model as model
@@ -95,7 +96,7 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      return utils.parse_color(xml_attrib)
+      return ttconv.utils.parse_color(xml_attrib)
 
     @classmethod
     def from_model(cls, xml_element, model_value: styles.ColorType):
@@ -114,7 +115,7 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      return utils.parse_color(xml_attrib)
+      return ttconv.utils.parse_color(xml_attrib)
 
     @classmethod
     def from_model(cls, xml_element, model_value):
@@ -860,7 +861,7 @@ class StyleProperties:
 
         else:
 
-          color = utils.parse_color(c)
+          color = ttconv.utils.parse_color(c)
 
       if style_style is None and style_symbol is None:
 
@@ -924,7 +925,7 @@ class StyleProperties:
 
       thickness = StyleProperties.ttml_length_to_model(context, s[-1])
 
-      color = utils.parse_color(s[0]) if len(s) == 2 else None
+      color = ttconv.utils.parse_color(s[0]) if len(s) == 2 else None
       
       return styles.TextOutlineType(
         color=color,
@@ -1000,12 +1001,12 @@ class StyleProperties:
 
           except ValueError:
 
-            color = utils.parse_color(cs[2])
+            color = ttconv.utils.parse_color(cs[2])
 
         else: # len(cs) == 4
 
           blur_radius = StyleProperties.ttml_length_to_model(context, cs[2])
-          color = utils.parse_color(cs[3])
+          color = ttconv.utils.parse_color(cs[3])
 
         shadows.append(
           styles.TextShadowType.Shadow(

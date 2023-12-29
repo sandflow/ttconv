@@ -30,6 +30,7 @@ from fractions import Fraction
 import unittest
 
 from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
+from ttconv.filters.isd.supported_style_properties import SupportedStylePropertiesISDFilter as SupportedStylePropertiesFilterISD
 from ttconv.isd import ISD
 from ttconv.model import P, ContentDocument, Region, Body, Div, Span, Text
 from ttconv.style_properties import StyleProperties, NamedColors, FontStyleType, DirectionType, ExtentType, LengthType
@@ -53,7 +54,7 @@ class SupportedStylePropertiesFilterTest(unittest.TestCase):
     self.assertEqual(StyleProperties.Color.make_initial_value(), p.get_style(StyleProperties.Color))
     self.assertEqual(StyleProperties.Extent.make_initial_value(), p.get_style(StyleProperties.Extent))
 
-    supported_style_properties._process_element(p)
+    supported_style_properties.process_element(p)
 
     self.assertIsNone(p.get_style(StyleProperties.Color))
     self.assertEqual(StyleProperties.Extent.make_initial_value(), p.get_style(StyleProperties.Extent))
@@ -61,14 +62,14 @@ class SupportedStylePropertiesFilterTest(unittest.TestCase):
 
     p.set_style(StyleProperties.Color, NamedColors.red.value)
 
-    supported_style_properties._process_element(p)
+    supported_style_properties.process_element(p)
 
     self.assertEqual(2, len(p._styles))
     self.assertEqual(NamedColors.red.value, p.get_style(StyleProperties.Color))
     self.assertEqual(StyleProperties.Extent.make_initial_value(), p.get_style(StyleProperties.Extent))
 
   def test_process_isd(self):
-    supported_style_properties = SupportedStylePropertiesFilter({
+    supported_style_properties = SupportedStylePropertiesFilterISD({
       StyleProperties.BackgroundColor: [
         NamedColors.red.value
       ],

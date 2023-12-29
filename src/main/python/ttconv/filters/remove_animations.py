@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Filters style properties"""
+"""Filter that remove animations"""
 
 import logging
 from typing import Dict, List, Type
@@ -31,37 +31,21 @@ from typing import Dict, List, Type
 from ttconv.model import ContentDocument, ContentElement
 from ttconv.style_properties import StyleProperty
 
-class SupportedStylePropertiesFilter:
-  """Filter that removes unsupported style properties"""
+class RemoveAnimationFilter:
+  """Filter that remove animations"""
 
-  def __init__(self, supported_style_properties: Dict[Type[StyleProperty], List]):
-    self.supported_style_properties = supported_style_properties
+  def __init__(self) -> None:
+    self._has_removed_animations = False
 
-  def process_initial_values(self, doc: ContentDocument):
-    """Removes initial values that target unsupported style properties"""
-    for style_prop, value in list(doc.iter_initial_values()):
-
-      if style_prop in self.supported_style_properties:
-        supported_values = self.supported_style_properties[style_prop]
-
-        if len(supported_values) == 0 or value in supported_values:
-          continue
-
-      doc.put_initial_value(style_prop, None)
+  def has_removed_animations(self) -> bool:
+    return self._has_removed_animations
 
   def process_element(self, element: ContentElement, recursive = True):
-    """Removes unsupported style properties from content elements"""
+    """Removes animations from content elements"""
 
-    for style_prop in list(element.iter_styles()):
-
-      if style_prop in self.supported_style_properties:
-        value = element.get_style(style_prop)
-        supported_values = self.supported_style_properties[style_prop]
-
-        if len(supported_values) == 0 or value in supported_values:
-          continue
-
-      element.set_style(style_prop, None)
+    for step in element.iter_animation_steps():
+      element.remove_animation_step(step)
+      self._has_removed_animations = True
 
     if recursive:
       for child in element:

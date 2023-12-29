@@ -125,6 +125,10 @@ class ConfigurationTest(unittest.TestCase):
     for exp_config in expected_configurations:
       self.assertTrue(exp_config in module_configurations)
 
+  def test_empty_config_parsing(self):
+
+    config_dict = json.loads('{}')
+
 
 if __name__ == '__main__':
   unittest.main()
