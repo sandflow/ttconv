@@ -11,22 +11,26 @@
 
 ## Introduction
 
-_ttconv_ is a library and command line application written in pure Python for converting between timed text
-formats used in the presentations of captions, subtitles, karaoke, etc.
+_ttconv_ is a library and command line application written in pure Python for
+converting between timed text formats used in the presentations of captions,
+subtitles, karaoke, etc.
 
-    TTML / IMSC ---                         --- IMSC / TTML
-                    \                     /
-    SCC / CEA 608 ----- Canonical Model -------- WebVTT
-                    /                     \
-    EBU STL -------                         --- SRT
+    TTML / IMSC ---                                       --- IMSC / TTML
+                    \                                   /
+    SCC / CEA 608 ------- 0 or more document filters --------- WebVTT
+                    /        [ Canonical Model ]        \
+    EBU STL -------                                       --- SRT
                   /
     SRT ---------
                 /
     WebVTT ----
 
-_ttconv_ works by mapping the input document, whatever its format, into an internal canonical model, which is then mapped to the
-format of the output document is derived. The canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data model,
-as constrained by the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification.
+_ttconv_ works by mapping the input document, whatever its format, into an
+internal canonical model, which is then optionally transformed by document
+filters, and finally mapped to the format of the output document is derived. The
+canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data
+model, as constrained by the [IMSC 1.1 Text
+Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification.
 
 ## Online demo
 
