@@ -260,7 +260,7 @@ def subcommand(args=None, parent=subparsers):
   argument("--otype", help="Output file type", required=False),
   argument("--filter", action="append", help="Document filter", required=False, default=[]),
   argument("--config", help="Configuration in json. Overridden by --config_file.", required=False),
-  argument("--config_file", help="Configuration file. Overrides --config_file.", required=False)
+  argument("--config_file", help="Configuration file. Overrides --config.", required=False)
 ])
 def convert(args):
   '''Process input and output through the reader, converter, and writer'''
