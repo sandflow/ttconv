@@ -23,26 +23,53 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""WebVTT configuration"""
+"""Regions merging filter"""
 
-from __future__ import annotations
+import logging
 
-from dataclasses import dataclass, field
-from ttconv.config import ModuleConfiguration
+from ttconv.filters.isd_filter import ISDFilter
+from ttconv.isd import ISD
+from ttconv.model import Body
 
-@dataclass
-class VTTWriterConfiguration(ModuleConfiguration):
-  """VTT writer configuration"""
-  
-  @classmethod
-  def name(cls):
-    return "vtt_writer"
+LOGGER = logging.getLogger(__name__)
 
-  # outputs `line` and `line alignment` cue settings
-  line_position: bool = field(default=False, metadata={"decoder": bool})
 
-  # outputs `text alignment` cue settings
-  text_align: bool = field(default=False, metadata={"decoder": bool})
+class RegionsMergingISDFilter(ISDFilter):
+  """Filter for merging ISD document regions into a single region"""
 
-  # outputs cue identifier
-  cue_id: bool = field(default=True, metadata={"decoder": bool})
+  def process(self, isd: ISD):
+    """Merges the ISD document regions"""
+    LOGGER.debug("Apply regions merging filter to ISD.")
+
+    original_regions = list(isd.iter_regions())
+
+    not_empty_regions = 0
+    for region in original_regions:
+      not_empty_regions += len(region)
+
+    if len(original_regions) <= 1 or not_empty_regions <= 1:
+      return
+
+    LOGGER.warning("Merging ISD regions.")
+
+    target_body = Body(isd)
+    region_ids = []
+
+    for region in original_regions:
+      region_id = region.get_id()
+      for body in region:
+
+        for child in body:
+          # Remove child from its parent body
+          child.remove()
+
+          # Add it to the target body
+          target_body.push_child(child)
+
+      region_ids.append(region_id)
+      isd.remove_region(region_id)
+
+    target_region = ISD.Region("_".join(region_ids), isd)
+    target_region.push_child(target_body)
+
+    isd.put_region(target_region)

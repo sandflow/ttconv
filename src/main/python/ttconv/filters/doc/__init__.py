@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-# Copyright (c) 2020, Sandflow Consulting LLC
+# Copyright (c) 2023, Sandflow Consulting LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,26 +23,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""WebVTT configuration"""
+"""Collects document instance filters"""
 
-from __future__ import annotations
+import importlib
+import pkgutil
+import os.path
+import sys
 
-from dataclasses import dataclass, field
-from ttconv.config import ModuleConfiguration
+# registers all document instance filters
 
-@dataclass
-class VTTWriterConfiguration(ModuleConfiguration):
-  """VTT writer configuration"""
-  
-  @classmethod
-  def name(cls):
-    return "vtt_writer"
-
-  # outputs `line` and `line alignment` cue settings
-  line_position: bool = field(default=False, metadata={"decoder": bool})
-
-  # outputs `text alignment` cue settings
-  text_align: bool = field(default=False, metadata={"decoder": bool})
-
-  # outputs cue identifier
-  cue_id: bool = field(default=True, metadata={"decoder": bool})
+for importer, package_name, _ in pkgutil.iter_modules([os.path.dirname(__file__)]):
+  full_name = f"{__name__}.{package_name}"
+  importlib.import_module(full_name)

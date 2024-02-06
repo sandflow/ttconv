@@ -31,11 +31,11 @@ from typing import List, Optional
 
 import ttconv.model as model
 import ttconv.srt.style as style
-from ttconv.filters import Filter
-from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
-from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
-from ttconv.filters.merge_regions import RegionsMergingFilter
-from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
+from ttconv.filters.isd_filter import ISDFilter
+from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesISDFilter
+from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingISDFilter
+from ttconv.filters.isd.merge_regions import RegionsMergingISDFilter
+from ttconv.filters.isd.supported_style_properties import SupportedStylePropertiesISDFilter
 from ttconv.isd import ISD
 from ttconv.srt.paragraph import SrtParagraph
 from ttconv.srt.config import SRTWriterConfiguration
@@ -47,10 +47,10 @@ LOGGER = logging.getLogger(__name__)
 class SrtContext:
   """SRT writer context"""
 
-  filters: List[Filter] = (
-    RegionsMergingFilter(),
-    ParagraphsMergingFilter(),
-    SupportedStylePropertiesFilter({
+  filters: List[ISDFilter] = (
+    RegionsMergingISDFilter(),
+    ParagraphsMergingISDFilter(),
+    SupportedStylePropertiesISDFilter({
       StyleProperties.FontWeight: [
         # Every values
       ],
@@ -65,7 +65,7 @@ class SrtContext:
         # Every values
       ],
     }),
-    DefaultStylePropertyValuesFilter({
+    DefaultStylePropertyValuesISDFilter({
       StyleProperties.Color: NamedColors.white.value,
       StyleProperties.FontWeight: FontWeightType.normal,
       StyleProperties.FontStyle: FontStyleType.normal,

@@ -35,7 +35,7 @@ from html.parser import HTMLParser
 
 from ttconv import model
 from ttconv import style_properties as styles
-from ttconv.imsc.utils import parse_color
+from ttconv.utils import parse_color
 
 LOGGER = logging.getLogger(__name__)
 
