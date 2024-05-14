@@ -119,8 +119,8 @@ class SccWord:
 
   def get_channel(self) -> Optional[SccChannel]:
     """Returns the caption channel, if the word is an SCC code"""
-    if self.is_code():
-      if isinstance(self.code, SccPreambleAddressCode):
-        return self.code.get_channel()
-      return self.code.get_channel(self.value)
-    return None
+    if self.code is None:
+      return None
+    if isinstance(self.code, SccPreambleAddressCode):
+      return self.code.get_channel()
+    return self.code.get_channel(self.value)

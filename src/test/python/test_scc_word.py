@@ -29,6 +29,7 @@
 
 import unittest
 
+from ttconv.scc.codes import SccChannel
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.extended_characters import SccExtendedCharacter
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
@@ -136,3 +137,26 @@ class SccWordTest(unittest.TestCase):
     self.assertEqual(None, SccWord.from_str("2065").get_code())  # " e"
     self.assertEqual(None, SccWord.from_str("6c69").get_code())  # "li"
     self.assertEqual(None, SccWord.from_str("742e").get_code())  # "t."
+
+  def test_scc_word_get_channel(self):
+    # invalid codes
+    self.assertEqual(None, SccWord.from_value(0x1000).get_channel())
+    self.assertEqual(None, SccWord.from_value(0x1432).get_channel())
+    self.assertEqual(None, SccWord.from_value(0x1d00).get_channel())
+    self.assertEqual(None, SccWord.from_value(0x1f38).get_channel())
+
+    # Preamble Address Code
+    self.assertEqual(SccChannel.CHANNEL_1, SccWord.from_value(0x91d0).get_channel())
+    self.assertEqual(SccChannel.CHANNEL_2, SccWord.from_value(0x99d0).get_channel())
+
+    # Attribute Code
+    self.assertEqual(SccChannel.CHANNEL_1, SccWord.from_value(0x1020).get_channel())
+    self.assertEqual(SccChannel.CHANNEL_2, SccWord.from_value(0x1820).get_channel())
+
+  def test_scc_word_all_values(self):
+    # check that all possible values decode to something
+    for i in range(0x10000):
+      scc_word = SccWord.from_value(i)
+      scc_word.to_text()
+      scc_word.get_code()
+      scc_word.get_channel()
