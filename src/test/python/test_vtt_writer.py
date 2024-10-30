@@ -131,7 +131,7 @@ Pellentesque interdum lacinia sollicitudin.
     expected_vtt="""WEBVTT
 
 1
-00:00:03.501 --> 00:00:12.000 line:90%,end
+00:00:03.500 --> 00:00:12.000 line:90%,end
 Only one or two short samples are needed
 to make sure the conversion basically works
 
@@ -177,7 +177,7 @@ Cool, got it, will do it by end of next week.
     expected_vtt="""WEBVTT
 
 1
-00:00:03.501 --> 00:00:12.000 align:center
+00:00:03.500 --> 00:00:12.000 align:center
 Only one or two short samples are needed
 to make sure the conversion basically works
 
@@ -217,7 +217,7 @@ Good.
 
     expected_vtt="""WEBVTT
 
-00:00:03.501 --> 00:00:12.000
+00:00:03.500 --> 00:00:12.000
 Only one or two short samples are needed
 to make sure the conversion basically works
 
