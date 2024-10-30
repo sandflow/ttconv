@@ -66,5 +66,22 @@ class TimeCodeTest(unittest.TestCase):
     self.assertEqual("24:00:01,500", str(time_code))
     self.assertEqual(seconds, time_code.to_seconds())
 
+  def test_from_seconds_rounding_up(self):
+      seconds = Fraction(41039999,7500)
+      time_code = ClockTime.from_seconds(seconds)
+      self.assertEqual(time_code.get_hours(), 1)
+      self.assertEqual(time_code.get_minutes(), 31)
+      self.assertEqual(time_code.get_seconds(), 12)
+      self.assertEqual(time_code.get_milliseconds(), 0)
+
+
+  def test_from_seconds_rounding_down(self):
+      seconds = 5471.9994
+      time_code = ClockTime.from_seconds(seconds)
+      self.assertEqual(time_code.get_hours(), 1)
+      self.assertEqual(time_code.get_minutes(), 31)
+      self.assertEqual(time_code.get_seconds(), 11)
+      self.assertEqual(time_code.get_milliseconds(), 999)
+
 if __name__ == '__main__':
   unittest.main()
