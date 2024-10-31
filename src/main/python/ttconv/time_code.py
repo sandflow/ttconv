@@ -97,12 +97,12 @@ class ClockTime(_HHMMSSTimeExpression):
 
   @staticmethod
   def from_seconds(seconds: Union[float, Fraction]) -> ClockTime:
-    """Creates a time code from time offset in seconds"""
+    """Creates a time code from time offset in seconds (rounds to the closest millisecond)"""
 
     if seconds < 0:
       raise ValueError("Seconds must not be less than zero")
 
-    seconds = float(seconds)
+    seconds = round(seconds, 3)
 
     h = floor(seconds / 3600)
     m = floor(seconds / 60 % 60)
