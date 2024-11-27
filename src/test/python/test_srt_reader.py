@@ -31,6 +31,7 @@ import io
 
 from ttconv.srt.reader import to_model
 import ttconv.style_properties as styles
+import ttconv.model as model
 
 
 
@@ -78,7 +79,7 @@ Hello <bold>my</bold> name is Bob
   def test_blank_lines(self):
     # from https://en.wikipedia.org/wiki/SubRip
     SAMPLE = """
-    
+
 1
 00:02:16,612 --> 00:02:19,376
 Senator, we're making
@@ -135,7 +136,7 @@ Hello {italic}my{/italic} name is Bob
       if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
         break
     else:
-      self.fail()     
+      self.fail()
 
   def test_underline(self):
     f = io.StringIO(r"""1
@@ -161,7 +162,7 @@ Hello {underline}my{/underline} name is Bob
       if text_decoration is not None and text_decoration.underline:
         break
     else:
-      self.fail()     
+      self.fail()
 
   def test_blue(self):
     f = io.StringIO(r"""1
@@ -205,7 +206,35 @@ Hello <bold>my</bold> name is Bob
       363601,
       doc.get_body().first_child().first_child().get_end()
     )
-    
+
+  def test_single_line_text(self):
+    f = io.StringIO(r"""1
+101:00:00,000 --> 101:00:01,000
+Hello
+""")
+    doc = to_model(f)
+
+    p_children = list(doc.get_body().first_child().first_child())
+    self.assertEqual(len(p_children), 1)
+    self.assertIsInstance(p_children[0], model.Span)
+    self.assertEqual(p_children[0].first_child().get_text(), "Hello")
+
+  def test_multiline_text(self):
+    f = io.StringIO(r"""1
+101:00:00,000 --> 101:00:01,000
+Hello
+World
+""")
+    doc = to_model(f)
+
+    p_children = list(doc.get_body().first_child().first_child())
+    self.assertEqual(len(p_children), 3)
+    self.assertIsInstance(p_children[0], model.Span)
+    self.assertEqual(p_children[0].first_child().get_text(), "Hello")
+    self.assertIsInstance(p_children[1], model.Br)
+    self.assertIsInstance(p_children[2], model.Span)
+    self.assertEqual(p_children[2].first_child().get_text(), "World")
+
 
 if __name__ == '__main__':
   unittest.main()
