@@ -256,9 +256,6 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
         div.push_child(current_p)
         subtitle_text = ""
 
-      if state is _State.TEXT_MORE:
-        current_p.push_child(model.Br(current_p.get_doc()))
-
       subtitle_text += line
 
       state = _State.TEXT_MORE
