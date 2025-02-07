@@ -451,6 +451,7 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
 
   state = _State.START
   current_p = None
+  subtitle_text = None
 
   for line_index, line in enumerate(_none_terminated(lines)):
 
@@ -524,11 +525,17 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or _EMPTY_RE.fullmatch(line):
-        subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
-
-        _parse_cue_text(subtitle_text, current_p, line_index)
+        if subtitle_text is not None:
+          _parse_cue_text(
+            subtitle_text.strip('\r\n').replace(r"\n\r", "\n"),
+            current_p,
+            line_index
+          )
+        else:
+          LOGGER.warning("Ignoring cue due to a spurious blank line at line %s", line_index)
 
         state = _State.LOOKING
+        subtitle_text = None
         continue
 
       if state is _State.TEXT:
