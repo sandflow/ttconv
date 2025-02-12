@@ -191,7 +191,7 @@ class _TextCueParser:
     return span
 
 
-_EMPTY_RE = re.compile(r"\s+")
+_EMPTY_RE = re.compile(r"[\n\r]*")
 _DEFAULT_FONT_STACK = (styles.GenericFontFamilyType.sansSerif,)
 _DEFAULT_FONT_SIZE = styles.LengthType(15 * 5, styles.LengthType.Units.pct) # 5vh for ttp:cellResolution="32 15"
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
@@ -518,15 +518,20 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       current_p.set_region(_get_or_make_region(doc, cue_params[3:]))
 
       state = _State.TEXT
-
+      subtitle_text = None
       continue
 
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or _EMPTY_RE.fullmatch(line):
-        subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
-
-        _parse_cue_text(subtitle_text, current_p, line_index)
+        if subtitle_text is not None:
+          _parse_cue_text(
+            subtitle_text.strip('\r\n').replace(r"\n\r", "\n"),
+            current_p,
+            line_index
+          )
+        else:
+          LOGGER.warning("Ignoring cue due to a spurious blank line at line %s", line_index)
 
         state = _State.LOOKING
         continue

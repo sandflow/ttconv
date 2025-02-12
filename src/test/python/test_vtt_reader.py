@@ -97,6 +97,50 @@ There was no danger at all.
     f = io.StringIO(SAMPLE)
     self.assertIsNotNone(to_model(f))
 
+  def test_malformed_blank_lines(self):
+    # from https://github.com/sandflow/ttconv/issues/439
+    # the first cue should be ignored since it is malformed
+    SAMPLE = """WEBVTT
+Kind: captions
+Language: en
+
+00:00:00.799 --> 00:00:02.869 align:start position:0%
+
+hi<00:00:01.040><c> everyone</c><00:00:01.920><c> today</c><00:00:02.240><c> we're</c><00:00:02.399><c> going</c><00:00:02.639><c> to</c><00:00:02.720><c> be</c>
+
+00:00:02.869 --> 00:00:02.879 align:start position:0%
+hi everyone today we're going to be
+"""
+
+    doc = to_model(io.StringIO(SAMPLE))
+    self.assertIsNotNone(doc)
+    body = list(doc.get_body())
+    self.assertEqual(len(body), 1)
+    div = list(body[0])
+    self.assertEqual(len(div), 1)
+
+  def test_single_line_with_space(self):
+    # from https://github.com/sandflow/ttconv/issues/439
+    # the first cue is not ignored since the first line contains a single space
+    SAMPLE = """WEBVTT
+Kind: captions
+Language: en
+
+00:00:00.799 --> 00:00:02.869 align:start position:0%
+\x20
+hi<00:00:01.040><c> everyone</c><00:00:01.920><c> today</c><00:00:02.240><c> we're</c><00:00:02.399><c> going</c><00:00:02.639><c> to</c><00:00:02.720><c> be</c>
+
+00:00:02.869 --> 00:00:02.879 align:start position:0%
+hi everyone today we're going to be
+"""
+
+    doc = to_model(io.StringIO(SAMPLE))
+    self.assertIsNotNone(doc)
+    body = list(doc.get_body())
+    self.assertEqual(len(body), 1)
+    div = list(body[0])
+    self.assertEqual(len(div), 2)
+
   def test_italic(self):
     f = io.StringIO(r"""WEBVTT
 
