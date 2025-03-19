@@ -195,24 +195,6 @@ class SCCContext:
 
       lines = [_Line(e, alignment) for e in reflowed_lines];
 
-      #       # limit lines to _max_line_width characters
-      # while (len(_lines[-1].text) > _max_line_width):
-      #   if not allow_reflow:
-      #     raise RuntimeError(f"Line width exceeds the maximum allowes by the SCC writer ({_max_line_width})")
-
-      #   line = _lines[-1].text
-      #   break_i = _max_line_width
-
-      #   for i in range(len(line) - 2, 0, -1):
-      #     c = line[i]
-      #     if c in (ord(' '), ord('-')) and i < _max_line_width:
-      #       break_i = i
-      #       break
-
-      #   _lines.append(_Line( line[break_i + 1:], _lines[-1].alignment))
-      #   _lines[-2].text = line[:break_i]
-
-
     packet_buffer: _Line21Buffer = _Line21Buffer()
 
     packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
@@ -259,7 +241,7 @@ class SCCContext:
     pass
 
   def __str__(self) -> str:
-    return "Scenarist_SCC V1.0\n\n" + "\n".join(self._events)
+    return "Scenarist_SCC V1.0\n\n" + "\n\n".join(self._events)
 
 
 #
