@@ -49,7 +49,6 @@ class _Line:
 def _LinesFromRegion(region: model.Region):
   """Returns the list of lines that are flowed into the Region"""
   _lines: List[_Line] = []
-  _max_line_width: int = 32
 
   def _process_element(element: model.ContentElement):
 
@@ -75,21 +74,6 @@ def _LinesFromRegion(region: model.Region):
 
     if isinstance(element, model.Text):
       _lines[-1].text = _lines[-1].text + element.get_text().encode('ascii')
-
-      # limit lines to _max_line_width characters
-      while (len(_lines[-1].text) > _max_line_width):
-        line = _lines[-1].text
-        break_i = _max_line_width
-
-        for i in range(len(line) - 2, 0, -1):
-          c = line[i]
-          if c in (ord(' '), ord('-')) and i < _max_line_width:
-            break_i = i
-            break
-
-        _lines.append(_Line( line[break_i + 1:], _lines[-1].alignment))
-        _lines[-2].text = line[:break_i]
-
       return
 
   for body in region:
@@ -148,8 +132,11 @@ class _Line21Buffer:
 class SCCContext:
   """SCC writer state"""
 
+  MAX_LINEWIDTH = 32
+
   def __init__(self, config: SccWriterConfiguration):
     self._events: List[str] = []
+    self._config = config
 
   def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to SRT content"""
@@ -175,6 +162,56 @@ class SCCContext:
     region = regions[0]
 
     lines = _LinesFromRegion(region)
+
+    if len(lines) == 0:
+      LOGGER.info("Skipping ISD at %ss because it has no lines of text", float(begin))
+      return
+
+    if any(len(e.text) > SCCContext.MAX_LINEWIDTH for e in lines):
+      if not self._config.allow_reflow:
+        raise RuntimeError(f"Line width exceeds the maximum allowed by the SCC writer ({SCCContext.MAX_LINEWIDTH})")
+
+      # reflow text
+      reflowed_lines: List[bytes] = []
+
+      # remove duplicate spaces
+      text = re.sub(b' +', b' ', b' '.join(e.text for e in lines))
+
+      while len(text) > SCCContext.MAX_LINEWIDTH:
+        break_i = SCCContext.MAX_LINEWIDTH
+
+        for i in range(len(text) - 2, 0, -1):
+          c = text[i]
+          if c == ord(' ') and i < SCCContext.MAX_LINEWIDTH:
+            break_i = i
+            break
+
+        reflowed_lines.append(text[:break_i])
+        text = text[break_i + 1:]
+
+      reflowed_lines.append(text)
+
+      alignment = lines[0].alignment
+
+      lines = [_Line(e, alignment) for e in reflowed_lines];
+
+      #       # limit lines to _max_line_width characters
+      # while (len(_lines[-1].text) > _max_line_width):
+      #   if not allow_reflow:
+      #     raise RuntimeError(f"Line width exceeds the maximum allowes by the SCC writer ({_max_line_width})")
+
+      #   line = _lines[-1].text
+      #   break_i = _max_line_width
+
+      #   for i in range(len(line) - 2, 0, -1):
+      #     c = line[i]
+      #     if c in (ord(' '), ord('-')) and i < _max_line_width:
+      #       break_i = i
+      #       break
+
+      #   _lines.append(_Line( line[break_i + 1:], _lines[-1].alignment))
+      #   _lines[-2].text = line[:break_i]
+
 
     packet_buffer: _Line21Buffer = _Line21Buffer()
 
