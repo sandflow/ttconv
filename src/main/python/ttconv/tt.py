@@ -39,6 +39,7 @@ from ttconv.filters.document_filter import DocumentFilter
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.reader as scc_reader
+import ttconv.scc.writer as scc_writer
 import ttconv.srt.writer as srt_writer
 import ttconv.srt.reader as srt_reader
 import ttconv.stl.reader as stl_reader
@@ -49,7 +50,7 @@ from ttconv.config import GeneralConfiguration
 from ttconv.config import ModuleConfiguration
 from ttconv.imsc.config import IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
-from ttconv.scc.config import SccReaderConfiguration
+from ttconv.scc.config import SccReaderConfiguration, SccWriterConfiguration
 from ttconv.stl.config import STLReaderConfiguration
 from ttconv.srt.config import SRTWriterConfiguration
 
@@ -435,6 +436,24 @@ def convert(args):
     #
     with open(outputfile, "w", encoding="utf-8") as vtt_file:
       vtt_file.write(vtt_document)
+
+  elif writer_type is FileTypes.SCC:
+    #
+    # Read the config
+    #
+    writer_config = read_config_from_json(SccWriterConfiguration, json_config_data)
+
+    #
+    # Construct and configure the writer
+    #
+    scc_document = scc_writer.from_model(model, writer_config, progress_callback_write)
+
+    #
+    # Write out the converted file
+    #
+    with open(outputfile, "w", encoding="utf-8") as scc_file:
+      scc_file.write(scc_document)
+
 
   else:
     if args.otype is not None:
