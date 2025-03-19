@@ -87,7 +87,7 @@ def _LinesFromRegion(region: model.Region):
             break_i = i
             break
 
-        _lines.append(_Line( line[break_i:], _lines[-1].alignment))
+        _lines.append(_Line( line[break_i + 1:], _lines[-1].alignment))
         _lines[-2].text = line[:break_i]
 
       return
@@ -176,8 +176,6 @@ class SCCContext:
 
     lines = _LinesFromRegion(region)
 
-    first_line = 15 - len(lines)
-
     packet_buffer: _Line21Buffer = _Line21Buffer()
 
     packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
@@ -186,18 +184,18 @@ class SCCContext:
     packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
     packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
 
-    for line in lines:
+    for line_num, line in enumerate(lines, 15 - len(lines)):
       if line.alignment == TextAlignType.center:
         indent = int(32 - len(line.text) / 2)
       elif line.alignment == TextAlignType.end:
         indent = int(32 - len(line.text))
       else:
-        indent = 0
+        indent = None
 
-      spaces = indent % 4
-      indent = indent // 4
+      spaces = indent % 4 if indent is not None else 0
+      indent = indent // 4 if indent is not None else None
 
-      pac = SccPreambleAddressCode(1, first_line, NamedColors.white, indent if indent is not None else None, False, False)
+      pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
       packet_buffer.push_control_code(pac.get_ch1_packet())
       packet_buffer.push_control_code(pac.get_ch1_packet())
 
@@ -224,7 +222,7 @@ class SCCContext:
     pass
 
   def __str__(self) -> str:
-    return "\n".join(self._events)
+    return "Scenarist_SCC V1.0\n\n" + "\n".join(self._events)
 
 
 #
