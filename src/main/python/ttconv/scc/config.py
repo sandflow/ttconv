@@ -71,3 +71,11 @@ class SccReaderConfiguration(ModuleConfiguration):
   @classmethod
   def name(cls):
     return "scc_reader"
+
+@dataclass
+class SccWriterConfiguration(ModuleConfiguration):
+  """SCC writer configuration"""
+
+  @classmethod
+  def name(cls):
+    return "scc_writer"
