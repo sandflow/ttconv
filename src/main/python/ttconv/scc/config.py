@@ -76,6 +76,11 @@ class SccReaderConfiguration(ModuleConfiguration):
 class SccWriterConfiguration(ModuleConfiguration):
   """SCC writer configuration"""
 
+  allow_reflow: bool = field(
+    default=False,
+    metadata={"decoder": bool}
+  )
+
   @classmethod
   def name(cls):
     return "scc_writer"
