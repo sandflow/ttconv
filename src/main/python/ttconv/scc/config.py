@@ -81,6 +81,11 @@ class SccWriterConfiguration(ModuleConfiguration):
     metadata={"decoder": bool}
   )
 
+  force_rollup: bool = field(
+    default=False,
+    metadata={"decoder": bool}
+  )
+
   @classmethod
   def name(cls):
     return "scc_writer"
