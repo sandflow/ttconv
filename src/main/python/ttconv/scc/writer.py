@@ -25,7 +25,6 @@
 
 """SCC writer"""
 
-from itertools import islice
 import logging
 from fractions import Fraction
 import re
@@ -33,6 +32,7 @@ from typing import List, Optional
 
 import ttconv.model as model
 from ttconv.isd import ISD
+from ttconv.scc.codes.characters import unicode_to_scc
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccWriterConfiguration
 from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType, TextAlignType, DisplayAlignType
@@ -73,7 +73,7 @@ def _LinesFromRegion(region: model.Region) -> List[_Line]:
       return
 
     if isinstance(element, model.Text):
-      _lines[-1].text = _lines[-1].text + element.get_text().encode('ascii')
+      _lines[-1].text = _lines[-1].text + unicode_to_scc(element.get_text())
       return
 
   for body in region:
@@ -207,7 +207,7 @@ class SCCContext:
       pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
       packet_buffer.push_control_code(pac.get_ch1_packet())
 
-      for c in lines[0].text:
+      for c in lines[-1].text:
         packet_buffer.push_octet(c)
 
       scc_begin = SmpteTimeCode.from_seconds(begin, Fraction(30000, 1001))
