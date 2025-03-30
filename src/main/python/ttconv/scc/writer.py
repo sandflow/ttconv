@@ -46,7 +46,7 @@ class _Line:
     self.text = text
     self.alignment = alignment
 
-def _LinesFromRegion(region: model.Region):
+def _LinesFromRegion(region: model.Region) -> List[_Line]:
   """Returns the list of lines that are flowed into the Region"""
   _lines: List[_Line] = []
 
@@ -137,9 +137,10 @@ class SCCContext:
   def __init__(self, config: SccWriterConfiguration):
     self._events: List[str] = []
     self._config = config
+    self._last_lines: Optional[List[_Line]] = None
 
   def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
-    """Converts and appends ISD content to SRT content"""
+    """Converts and appends ISD content to SCC content"""
 
     LOGGER.debug(
       "Append ISD from %ss to %ss to SCC content.",
@@ -193,50 +194,70 @@ class SCCContext:
 
       alignment = lines[0].alignment
 
-      lines = [_Line(e, alignment) for e in reflowed_lines];
+      lines = [_Line(e, alignment) for e in reflowed_lines]
 
     packet_buffer: _Line21Buffer = _Line21Buffer()
 
-    packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
-    packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
+    if self._config.force_rollup:
 
-    packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
-    packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
+      packet_buffer.push_control_code(SccControlCode.RU4.get_ch1_value())
 
-    for line_num, line in enumerate(lines, 15 - len(lines)):
-      if line.alignment == TextAlignType.center:
-        indent = int(32 - len(line.text) / 2)
-      elif line.alignment == TextAlignType.end:
-        indent = int(32 - len(line.text))
-      else:
-        indent = None
+      packet_buffer.push_control_code(SccControlCode.CR.get_ch1_value())
 
-      spaces = indent % 4 if indent is not None else 0
-      indent = indent // 4 if indent is not None else None
-
-      pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
-      packet_buffer.push_control_code(pac.get_ch1_packet())
+      pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
       packet_buffer.push_control_code(pac.get_ch1_packet())
 
-      for i in range(spaces):
-        packet_buffer.push_octet(0x20)
-      for c in line.text:
+      for c in lines[0].text:
         packet_buffer.push_octet(c)
 
-    packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
-    packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
+      scc_begin = SmpteTimeCode.from_seconds(begin, Fraction(30000, 1001))
+      self._events.append(str(scc_begin) + "\t" + str(packet_buffer))
+    else:
+      packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
+      packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
 
-    packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
-    packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
+      packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
+      packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
 
-    scc_begin = SmpteTimeCode.from_seconds(begin - len(packet_buffer) * Fraction(1001, 30000) / 2, Fraction(30000, 1001))
-    self._events.append(str(scc_begin) + "\t" + str(packet_buffer))
+      for line_num, line in enumerate(lines, 15 - len(lines)):
+        if line.alignment == TextAlignType.center:
+          indent = int(32 - len(line.text) / 2)
+        elif line.alignment == TextAlignType.end:
+          indent = int(32 - len(line.text))
+        else:
+          indent = None
 
-    packet_buffer: _Line21Buffer = _Line21Buffer()
-    packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
+        spaces = indent % 4 if indent is not None else 0
+        indent = indent // 4 if indent is not None else None
 
-    scc_end = SmpteTimeCode.from_seconds(end - len(packet_buffer) * Fraction(1001, 30000) / 2, Fraction(30000, 1001))
-    self._events.append(str(scc_end) + "\t" + str(packet_buffer))
+        pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
+        packet_buffer.push_control_code(pac.get_ch1_packet())
+        packet_buffer.push_control_code(pac.get_ch1_packet())
+
+        for i in range(spaces):
+          packet_buffer.push_octet(0x20)
+        for c in line.text:
+          packet_buffer.push_octet(c)
+
+      packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
+      packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
+
+      packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
+      packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
+
+      # TODO: should the start be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000) / 2? 
+      scc_begin = SmpteTimeCode.from_seconds(begin, Fraction(30000, 1001))
+      self._events.append(str(scc_begin) + "\t" + str(packet_buffer))
+
+      packet_buffer: _Line21Buffer = _Line21Buffer()
+      packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
+
+      # TODO: should the end be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000) / 2? 
+      scc_end = SmpteTimeCode.from_seconds(end, Fraction(30000, 1001))
+      self._events.append(str(scc_end) + "\t" + str(packet_buffer))
+
+    self._last_lines = lines
+
   def finish(self):
     pass
 
