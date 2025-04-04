@@ -108,12 +108,12 @@ class _Line21Chunk:
     return self._start_frame
 
   def get_dur(self) -> int:
-    return len(self._octet_buffer)
+    return (len(self._octet_buffer) + 1) // 2
 
   def get_end(self) -> Optional[int]:
     if self._start_frame is None:
       return None
-    return self._start_frame + len(self._octet_buffer)
+    return self._start_frame + self.get_dur()
 
   def push_control_code(self, cc: int):
     hi_octet = cc // 256
@@ -135,15 +135,19 @@ class _Line21Chunk:
       raise RuntimeError("Line 21 octet is out of range")
     self._octet_buffer.append(octet)
 
+  def overlap(self, other: _Line21Chunk) -> bool:
+    """Checks if the other chunk overlaps with the current chunk"""
+    return other.get_begin() <= self.get_end() and other.get_end() >= self.get_begin()
+
   def insert(self, other: _Line21Chunk):
     """Inserts the other chunk while preserving the begin time of the current chunk"""
     if other.get_begin() is None or other.get_end() is None:
       raise RuntimeError("Cannot insert chunk with no begin time")
 
-    if other.get_begin() < self.get_begin() or other.get_end() > self.get_end():
-      raise IndexError("Invalid insertion position")
+    if not self.overlap(other):
+      raise RuntimeError("Cannot insert chunk that does not overlap")
 
-    loc = other.get_begin() - self.get_begin()
+    loc = max(0, other.get_begin() - self.get_begin())
     self._octet_buffer[loc:loc] = other._octet_buffer
 
     # adjust the begin time preserving the end time
@@ -162,7 +166,7 @@ class _Line21Chunk:
     if len(self._octet_buffer) % 2 == 1:
       packets.append(_octet2hex(self._octet_buffer[-1]) + _octet2hex(0))
 
-    return " ".join(packets)
+    return str(SmpteTimeCode.from_frames(self.get_begin(), Fraction(30000, 1001))) + "\t" + " ".join(packets)
 
 
 class SCCContext:
@@ -187,14 +191,12 @@ class SCCContext:
 
     regions : List[ISD.Region] = list(isd.iter_regions())
 
-    # for now, handle only one region
-
-    if len(regions) > 1:
-      LOGGER.error("Skipping ISD at %ss because it has more than one region", float(begin))
+    if len(regions) == 0:
       return
 
-    if len(regions) == 0:
-      LOGGER.info("Skipping ISD at %ss because it has no regions", float(begin))
+    # for now, handle only one region
+    if len(regions) > 1:
+      LOGGER.error("Skipping ISD at %ss because it has more than one region", float(begin))
       return
 
     region = regions[0]
@@ -233,29 +235,31 @@ class SCCContext:
 
       lines = [_Line(e, alignment) for e in reflowed_lines]
 
-    packet_buffer: _Line21Chunk = _Line21Chunk()
-
     if self._config.force_rollup:
 
-      packet_buffer.push_control_code(SccControlCode.RU4.get_ch1_value())
-      packet_buffer.push_control_code(SccControlCode.CR.get_ch1_value())
-      pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
-      packet_buffer.push_control_code(pac.get_ch1_packet())
+      ru_chunk: _Line21Chunk = _Line21Chunk()
 
-      begin_f = int(begin * self.FRAME_RATE - len(packet_buffer))
+      ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
+      ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
+      pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
+      ru_chunk.push_control_code(pac.get_ch1_packet())
+
+      begin_f = int(begin * self.FRAME_RATE - ru_chunk.get_dur())
       if len(self._chunks) > 0 and begin_f < self._chunks[-1].get_end():
         begin_f = self._chunks[-1].get_end()
         LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, self.FRAME_RATE))
-      packet_buffer.set_begin(begin_f)
+      ru_chunk.set_begin(begin_f)
 
       for c in lines[-1].text:
-        packet_buffer.push_octet(c)
+        ru_chunk.push_octet(c)
 
-      self._chunks.append(packet_buffer)
+      self._chunks.append(ru_chunk)
 
     else:
-      packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
-      packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
+      enm_chunk: _Line21Chunk = _Line21Chunk()
+
+      enm_chunk.push_control_code(SccControlCode.RCL.get_ch1_value())
+      enm_chunk.push_control_code(SccControlCode.ENM.get_ch1_value())
       for line_num, line in enumerate(lines, 15 - len(lines)):
         if line.alignment == TextAlignType.center:
           indent = int(32 - len(line.text) / 2)
@@ -268,30 +272,32 @@ class SCCContext:
         indent = indent // 4 if indent is not None else None
 
         pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
-        packet_buffer.push_control_code(pac.get_ch1_packet())
+        enm_chunk.push_control_code(pac.get_ch1_packet())
 
         for i in range(spaces):
-          packet_buffer.push_octet(0x20)
+          enm_chunk.push_octet(0x20)
         for c in line.text:
-          packet_buffer.push_octet(c)
-      packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
+          enm_chunk.push_octet(c)
+      enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
 
-      begin_f = int(begin * self.FRAME_RATE - packet_buffer.get_dur())
-      if len(self._chunks) > 0 and begin_f < self._chunks[-1].get_end():
-        begin_f = self._chunks[-1].get_end()
-        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, self.FRAME_RATE))
-      packet_buffer.set_begin(begin_f)
+      enm_chunk.set_begin(int(begin * self.FRAME_RATE - enm_chunk.get_dur()))
+      # check if there is an overlap with the previous chunk
+      if len(self._chunks) > 0:
+        if self._chunks[-2].get_end() + self._chunks[-1].get_dur() > enm_chunk.get_begin():
+          LOGGER.warning("Skipping caption at %s due to overlap", float(begin))
+          return
 
-      # TODO: should the start be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000)? 
-      scc_begin = SmpteTimeCode.from_seconds(begin, Fraction(30000, 1001))
-      self._events.append(str(scc_begin) + "\t" + str(packet_buffer))
+        if enm_chunk.overlap(self._chunks[-1]):
+          enm_chunk.insert(self._chunks[-1])
+          self._chunks.pop()
 
-      packet_buffer: _Line21Chunk = _Line21Chunk()
-      packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
+      self._chunks.append(enm_chunk)
 
-      # TODO: should the end be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000)? 
-      scc_end = SmpteTimeCode.from_seconds(end, Fraction(30000, 1001))
-      self._events.append(str(scc_end) + "\t" + str(packet_buffer))
+      # initialize the EDM chunk
+      edm_chunk = _Line21Chunk()
+      edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+      edm_chunk.set_begin(int(end * self.FRAME_RATE - edm_chunk.get_dur()))
+      self._chunks.append(edm_chunk)
 
     self._last_lines = lines
 
@@ -299,7 +305,7 @@ class SCCContext:
     pass
 
   def __str__(self) -> str:
-    return "Scenarist_SCC V1.0\n\n" + "\n\n".join(self._events)
+    return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(str, self._chunks))
 
 
 #
