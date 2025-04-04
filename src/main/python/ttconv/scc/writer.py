@@ -25,6 +25,8 @@
 
 """SCC writer"""
 
+from __future__ import annotations
+
 import logging
 from fractions import Fraction
 import re
@@ -82,7 +84,7 @@ def _LinesFromRegion(region: model.Region) -> List[_Line]:
 
   return _lines
 
-class _Line21Buffer:
+class _Line21Chunk:
 
   ODD_PARITY_OCTETS = [
     128, 1, 2, 131, 4, 133, 134, 7, 8, 137, 138, 11, 140, 13, 14, 143,
@@ -96,7 +98,22 @@ class _Line21Buffer:
   ]
 
   def __init__(self):
-    self._octet_buffer : List[int] = []
+    self._octet_buffer : bytearray = bytearray()
+    self._start_frame : Optional[int] = None
+
+  def set_begin(self, frame: Optional[int]):
+    self._start_frame = frame
+
+  def get_begin(self) -> Optional[int]:
+    return self._start_frame
+
+  def get_dur(self) -> int:
+    return len(self._octet_buffer)
+
+  def get_end(self) -> Optional[int]:
+    if self._start_frame is None:
+      return None
+    return self._start_frame + len(self._octet_buffer)
 
   def push_control_code(self, cc: int):
     hi_octet = cc // 256
@@ -108,17 +125,36 @@ class _Line21Buffer:
     self._octet_buffer.append(hi_octet)
     self._octet_buffer.append(lo_octet)
 
+    # per spec, always double up control codes
+    if 0x10 <= hi_octet <= 0x1F:
+      self._octet_buffer.append(hi_octet)
+      self._octet_buffer.append(lo_octet)
+
   def push_octet(self, octet: int):
     if (octet > 127):
       raise RuntimeError("Line 21 octet is out of range")
     self._octet_buffer.append(octet)
+
+  def insert(self, other: _Line21Chunk):
+    """Inserts the other chunk while preserving the begin time of the current chunk"""
+    if other.get_begin() is None or other.get_end() is None:
+      raise RuntimeError("Cannot insert chunk with no begin time")
+
+    if other.get_begin() < self.get_begin() or other.get_end() > self.get_end():
+      raise IndexError("Invalid insertion position")
+
+    loc = other.get_begin() - self.get_begin()
+    self._octet_buffer[loc:loc] = other._octet_buffer
+
+    # adjust the begin time preserving the end time
+    self._start_frame -= other.get_dur()
 
   def __len__(self):
     return len(self._octet_buffer)
 
   def __str__(self):
     def _octet2hex(octet):
-      return format(_Line21Buffer.ODD_PARITY_OCTETS[octet], 'x')
+      return format(_Line21Chunk.ODD_PARITY_OCTETS[octet], 'x')
 
     packets = []
     for i in range(len(self._octet_buffer) // 2):
@@ -133,11 +169,12 @@ class SCCContext:
   """SCC writer state"""
 
   MAX_LINEWIDTH = 32
+  FRAME_RATE = Fraction(30000, 1001)
 
   def __init__(self, config: SccWriterConfiguration):
-    self._events: List[str] = []
     self._config = config
     self._last_lines: Optional[List[_Line]] = None
+    self._chunks: List[_Line21Chunk] = []
 
   def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to SCC content"""
@@ -196,29 +233,29 @@ class SCCContext:
 
       lines = [_Line(e, alignment) for e in reflowed_lines]
 
-    packet_buffer: _Line21Buffer = _Line21Buffer()
+    packet_buffer: _Line21Chunk = _Line21Chunk()
 
     if self._config.force_rollup:
 
       packet_buffer.push_control_code(SccControlCode.RU4.get_ch1_value())
-
       packet_buffer.push_control_code(SccControlCode.CR.get_ch1_value())
-
       pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
       packet_buffer.push_control_code(pac.get_ch1_packet())
+
+      begin_f = int(begin * self.FRAME_RATE - len(packet_buffer))
+      if len(self._chunks) > 0 and begin_f < self._chunks[-1].get_end():
+        begin_f = self._chunks[-1].get_end()
+        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, self.FRAME_RATE))
+      packet_buffer.set_begin(begin_f)
 
       for c in lines[-1].text:
         packet_buffer.push_octet(c)
 
-      scc_begin = SmpteTimeCode.from_seconds(begin, Fraction(30000, 1001))
-      self._events.append(str(scc_begin) + "\t" + str(packet_buffer))
+      self._chunks.append(packet_buffer)
+
     else:
       packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
-      packet_buffer.push_control_code(SccControlCode.RCL.get_ch1_value())
-
       packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
-      packet_buffer.push_control_code(SccControlCode.ENM.get_ch1_value())
-
       for line_num, line in enumerate(lines, 15 - len(lines)):
         if line.alignment == TextAlignType.center:
           indent = int(32 - len(line.text) / 2)
@@ -232,27 +269,27 @@ class SCCContext:
 
         pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
         packet_buffer.push_control_code(pac.get_ch1_packet())
-        packet_buffer.push_control_code(pac.get_ch1_packet())
 
         for i in range(spaces):
           packet_buffer.push_octet(0x20)
         for c in line.text:
           packet_buffer.push_octet(c)
-
-      packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
-      packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
-
-      packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
       packet_buffer.push_control_code(SccControlCode.EOC.get_ch1_value())
 
-      # TODO: should the start be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000) / 2? 
+      begin_f = int(begin * self.FRAME_RATE - packet_buffer.get_dur())
+      if len(self._chunks) > 0 and begin_f < self._chunks[-1].get_end():
+        begin_f = self._chunks[-1].get_end()
+        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, self.FRAME_RATE))
+      packet_buffer.set_begin(begin_f)
+
+      # TODO: should the start be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000)? 
       scc_begin = SmpteTimeCode.from_seconds(begin, Fraction(30000, 1001))
       self._events.append(str(scc_begin) + "\t" + str(packet_buffer))
 
-      packet_buffer: _Line21Buffer = _Line21Buffer()
+      packet_buffer: _Line21Chunk = _Line21Chunk()
       packet_buffer.push_control_code(SccControlCode.EDM.get_ch1_value())
 
-      # TODO: should the end be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000) / 2? 
+      # TODO: should the end be offset by the length of the packet buffer: - len(packet_buffer) * Fraction(1001, 30000)? 
       scc_end = SmpteTimeCode.from_seconds(end, Fraction(30000, 1001))
       self._events.append(str(scc_end) + "\t" + str(packet_buffer))
 
