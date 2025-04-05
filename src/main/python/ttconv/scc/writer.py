@@ -148,21 +148,21 @@ class _Chunk:
 
   def __init__(self):
     self._octet_buffer : bytearray = bytearray()
-    self._start_frame : Optional[int] = None
+    self._begin_frame : Optional[int] = None
 
   def set_begin(self, frame: Optional[int]):
-    self._start_frame = frame
+    self._begin_frame = frame
 
   def get_begin(self) -> Optional[int]:
-    return self._start_frame
+    return self._begin_frame
 
   def get_dur(self) -> int:
     return (len(self._octet_buffer) + 1) // 2
 
   def get_end(self) -> Optional[int]:
-    if self._start_frame is None:
+    if self._begin_frame is None:
       return None
-    return self._start_frame + self.get_dur()
+    return self._begin_frame + self.get_dur()
 
   def push_control_code(self, cc: int):
     hi_octet = cc // 256
@@ -196,11 +196,11 @@ class _Chunk:
     if not self.overlap(other):
       raise RuntimeError("Cannot insert chunk that does not overlap")
 
-    loc = max(0, other.get_begin() - self.get_begin())
+    loc = 2 * max(0, other.get_begin() - self.get_begin())
     self._octet_buffer[loc:loc] = other._octet_buffer
 
     # adjust the begin time preserving the end time
-    self._start_frame -= other.get_dur()
+    self.set_begin(self.get_begin() - other.get_dur())
 
   def __len__(self):
     return len(self._octet_buffer)
@@ -241,7 +241,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
     progress_callback(0.5 + (i + 1) / len(isds) / 4)
     LOGGER.debug("Processing ISD at %ss to SCC content", float(begin))
 
-    if len(captions) > 0:
+    if len(captions) > 0 and captions[-1].get_end() is None:
       captions[-1].set_end(begin)
 
     if len(isd) == 0:
@@ -340,7 +340,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       # check if there is an overlap with the previous chunk
       if len(chunks) > 0:
         if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
-          LOGGER.warning("Skipping caption at %s due to overlap", float(begin))
+          LOGGER.warning("Skipping ISD at %s due to overlap in line 21 packets with previous ISD", float(caption.get_begin()))
           continue
 
         if enm_chunk.overlap(chunks[-1]):

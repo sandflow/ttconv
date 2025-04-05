@@ -50,8 +50,9 @@ class SCCWriterTest(unittest.TestCase):
     ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
   <body>
     <div>
-      <p begin="5s" end="6s">Only one or two short samples are needed<br/>to make sure the conversion basically works</p>
-    </div>
+      <p begin="30f" end="90f">Line 1<br/>Line 2</p>
+      <p begin="400f" end="450f">Line 3 blah<br/>Line 4 blah</p>
+     </div>
   </body>
 </tt>"""
 
