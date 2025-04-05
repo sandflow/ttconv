@@ -37,54 +37,103 @@ from ttconv.isd import ISD
 from ttconv.scc.codes.characters import unicode_to_scc
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccWriterConfiguration
-from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType, TextAlignType, DisplayAlignType
+from ttconv.style_properties import StyleProperties, NamedColors, TextAlignType
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
 
-class _Line:
-  def __init__(self, text: bytes, alignment: TextAlignType = TextAlignType.start):
-    self.text = text
-    self.alignment = alignment
+class _Caption:
+  """Collection of lines of text with a begin and end time and an alignment"""
 
-def _LinesFromRegion(region: model.Region) -> List[_Line]:
-  """Returns the list of lines that are flowed into the Region"""
-  _lines: List[_Line] = []
+  def __init__(self):
+    self._begin: Fraction = 0
+    self._end: Fraction = None
+    self._lines: List[bytes] = []
+    self._alignment: TextAlignType = TextAlignType.start
 
-  def _process_element(element: model.ContentElement):
+  def set_begin(self, begin: Fraction):
+    """Sets the begin time of the lines"""
+    self._begin = begin
 
-    if isinstance(element, model.Div):
-      for elem in element:
-        _process_element(elem)
-      return
+  def get_begin(self) -> Fraction:
+    """Returns the begin time of the lines"""
+    return self._begin
 
-    if isinstance(element, model.P):
-      _lines.append(_Line(bytes(), element.get_style(StyleProperties.TextAlign)))
-      for elem in element:
-        _process_element(elem)
-      return
+  def set_end(self, end: Fraction):
+    """Sets the end time of the lines"""
+    self._end = end
 
-    if isinstance(element, model.Span):
-      for elem in element:
-        _process_element(elem)
-      return
+  def get_end(self) -> Optional[Fraction]:
+    """Returns the end time of the lines"""
+    return self._end
 
-    if isinstance(element, model.Br):
-      _lines.append(_Line(bytes(), _lines[-1].alignment))
-      return
+  def set_alignment(self, alignment: TextAlignType):
+    """Sets the alignment of the lines"""
+    self._alignment = alignment
 
-    if isinstance(element, model.Text):
-      _lines[-1].text = _lines[-1].text + unicode_to_scc(element.get_text())
-      return
+  def get_alignment(self) -> TextAlignType:
+    """Returns the alignment of the lines"""
+    return self._alignment
 
-  for body in region:
-    for div in body:
-      _process_element(div)
+  def set_lines(self, lines: List[bytes]):
+    """Sets the lines of text"""
+    self._lines = lines
 
-  return _lines
+  def __len__(self):
+    return len(self._lines)
 
-class _Line21Chunk:
+  def __getitem__(self, index: int) -> bytes:
+    return self._lines[index]
+
+  def __setitem__(self, index: int, value: bytes):
+    self._lines[index] = value
+
+  def __iter__(self):
+    return iter(self._lines)
+
+  def append(self, line: bytes):
+    self._lines.append(line)
+
+  @staticmethod
+  def from_region(region: model.Region) -> _Caption:
+    """Returns the list of lines that are flowed into the Region"""
+    _lines: _Caption = _Caption()
+
+    def _process_element(element: model.ContentElement):
+
+      if isinstance(element, model.Div):
+        for elem in element:
+          _process_element(elem)
+        return
+
+      if isinstance(element, model.P):
+        _lines.append(bytes())
+        _lines.set_alignment(element.get_style(StyleProperties.TextAlign))
+        for elem in element:
+          _process_element(elem)
+        return
+
+      if isinstance(element, model.Span):
+        for elem in element:
+          _process_element(elem)
+        return
+
+      if isinstance(element, model.Br):
+        _lines.append(bytes())
+        return
+
+      if isinstance(element, model.Text):
+        _lines[-1] = _lines[-1] + unicode_to_scc(element.get_text())
+        return
+
+    for body in region:
+      for div in body:
+        _process_element(div)
+
+    return _lines
+
+class _Chunk:
 
   ODD_PARITY_OCTETS = [
     128, 1, 2, 131, 4, 133, 134, 7, 8, 137, 138, 11, 140, 13, 14, 143,
@@ -135,11 +184,11 @@ class _Line21Chunk:
       raise RuntimeError("Line 21 octet is out of range")
     self._octet_buffer.append(octet)
 
-  def overlap(self, other: _Line21Chunk) -> bool:
+  def overlap(self, other: _Chunk) -> bool:
     """Checks if the other chunk overlaps with the current chunk"""
     return other.get_begin() <= self.get_end() and other.get_end() >= self.get_begin()
 
-  def insert(self, other: _Line21Chunk):
+  def insert(self, other: _Chunk):
     """Inserts the other chunk while preserving the begin time of the current chunk"""
     if other.get_begin() is None or other.get_end() is None:
       raise RuntimeError("Cannot insert chunk with no begin time")
@@ -158,7 +207,7 @@ class _Line21Chunk:
 
   def __str__(self):
     def _octet2hex(octet):
-      return format(_Line21Chunk.ODD_PARITY_OCTETS[octet], 'x')
+      return format(_Chunk.ODD_PARITY_OCTETS[octet], 'x')
 
     packets = []
     for i in range(len(self._octet_buffer) // 2):
@@ -168,61 +217,64 @@ class _Line21Chunk:
 
     return str(SmpteTimeCode.from_frames(self.get_begin(), Fraction(30000, 1001))) + "\t" + " ".join(packets)
 
+MAX_LINEWIDTH = 32
+FRAME_RATE = Fraction(30000, 1001)
 
-class SCCContext:
-  """SCC writer state"""
+#
+# scc writer
+#
+def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfiguration] = None, progress_callback=lambda _: None) -> str:
+  """Converts the data model to an SCC document"""
 
-  MAX_LINEWIDTH = 32
-  FRAME_RATE = Fraction(30000, 1001)
+  # split progress between ISD construction and SCC writing
+  def _isd_progress(progress: float):
+    progress_callback(progress / 2)
 
-  def __init__(self, config: SccWriterConfiguration):
-    self._config = config
-    self._last_lines: Optional[List[_Line]] = None
-    self._chunks: List[_Line21Chunk] = []
+  config : SccWriterConfiguration = config if config is not None else SccWriterConfiguration()
+  isds = ISD.generate_isd_sequence(doc, _isd_progress)
 
-  def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
-    """Converts and appends ISD content to SCC content"""
+  # generate list of captions
+  captions: List[_Caption] = []
+  for i, (begin, isd) in enumerate(isds):
 
-    LOGGER.debug(
-      "Append ISD from %ss to %ss to SCC content.",
-      float(begin),
-      float(end) if end is not None else "indefinite"
-    )
+    # 25% for creating captions
+    progress_callback(0.5 + (i + 1) / len(isds) / 4)
+    LOGGER.debug("Processing ISD at %ss to SCC content", float(begin))
 
-    regions : List[ISD.Region] = list(isd.iter_regions())
+    if len(captions) > 0:
+      captions[-1].set_end(begin)
 
-    if len(regions) == 0:
-      return
+    if len(isd) == 0:
+      # skip empty ISD
+      continue
 
     # for now, handle only one region
-    if len(regions) > 1:
+    if len(isd) > 1:
       LOGGER.error("Skipping ISD at %ss because it has more than one region", float(begin))
-      return
+      continue
 
-    region = regions[0]
+    caption: _Caption = _Caption.from_region(next(iter(isd.iter_regions())))
+    caption.set_begin(begin)
 
-    lines = _LinesFromRegion(region)
-
-    if len(lines) == 0:
+    if len(caption) == 0:
       LOGGER.info("Skipping ISD at %ss because it has no lines of text", float(begin))
-      return
+      continue
 
-    if any(len(e.text) > SCCContext.MAX_LINEWIDTH for e in lines):
-      if not self._config.allow_reflow:
-        raise RuntimeError(f"Line width exceeds the maximum allowed by the SCC writer ({SCCContext.MAX_LINEWIDTH})")
+    if any(len(e) > MAX_LINEWIDTH for e in caption):
+      if not config.allow_reflow:
+        raise RuntimeError(f"Line width exceeds the maximum allowed by the SCC writer ({MAX_LINEWIDTH})")
+
+      # merge the lines of the caption and remove duplicate spaces
+      text = re.sub(b' +', b' ', b' '.join(caption))
 
       # reflow text
       reflowed_lines: List[bytes] = []
-
-      # remove duplicate spaces
-      text = re.sub(b' +', b' ', b' '.join(e.text for e in lines))
-
-      while len(text) > SCCContext.MAX_LINEWIDTH:
-        break_i = SCCContext.MAX_LINEWIDTH
+      while len(text) > MAX_LINEWIDTH:
+        break_i = MAX_LINEWIDTH
 
         for i in range(len(text) - 2, 0, -1):
           c = text[i]
-          if c == ord(' ') and i < SCCContext.MAX_LINEWIDTH:
+          if c == ord(' ') and i < MAX_LINEWIDTH:
             break_i = i
             break
 
@@ -231,40 +283,44 @@ class SCCContext:
 
       reflowed_lines.append(text)
 
-      alignment = lines[0].alignment
+      caption.set_lines(reflowed_lines)
 
-      lines = [_Line(e, alignment) for e in reflowed_lines]
+    captions.append(caption)
 
-    if self._config.force_rollup:
+  chunks : List[_Chunk] = []
+  for i, caption in enumerate(captions):
+    # 25% for SCC writing
+    progress_callback(0.75 + (i + 1) / len(captions) / 4)
 
-      ru_chunk: _Line21Chunk = _Line21Chunk()
+    if config.force_rollup:
+      ru_chunk: _Chunk = _Chunk()
 
       ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
       ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
       pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
       ru_chunk.push_control_code(pac.get_ch1_packet())
 
-      begin_f = int(begin * self.FRAME_RATE - ru_chunk.get_dur())
-      if len(self._chunks) > 0 and begin_f < self._chunks[-1].get_end():
-        begin_f = self._chunks[-1].get_end()
-        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, self.FRAME_RATE))
+      begin_f = int(caption.get_begin() * FRAME_RATE - ru_chunk.get_dur())
+      if len(chunks) > 0 and begin_f < chunks[-1].get_end():
+        begin_f = chunks[-1].get_end()
+        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, FRAME_RATE))
       ru_chunk.set_begin(begin_f)
 
-      for c in lines[-1].text:
+      for c in caption[-1]:
         ru_chunk.push_octet(c)
 
-      self._chunks.append(ru_chunk)
+      chunks.append(ru_chunk)
 
     else:
-      enm_chunk: _Line21Chunk = _Line21Chunk()
+      enm_chunk: _Chunk = _Chunk()
 
       enm_chunk.push_control_code(SccControlCode.RCL.get_ch1_value())
       enm_chunk.push_control_code(SccControlCode.ENM.get_ch1_value())
-      for line_num, line in enumerate(lines, 15 - len(lines)):
-        if line.alignment == TextAlignType.center:
-          indent = int(32 - len(line.text) / 2)
-        elif line.alignment == TextAlignType.end:
-          indent = int(32 - len(line.text))
+      for line_num, line in enumerate(caption, 15 - len(caption)):
+        if caption.get_alignment() == TextAlignType.center:
+          indent = int(32 - len(line) / 2)
+        elif caption.get_alignment() == TextAlignType.end:
+          indent = int(32 - len(line))
         else:
           indent = None
 
@@ -276,67 +332,28 @@ class SCCContext:
 
         for i in range(spaces):
           enm_chunk.push_octet(0x20)
-        for c in line.text:
+        for c in line:
           enm_chunk.push_octet(c)
       enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
 
-      enm_chunk.set_begin(int(begin * self.FRAME_RATE - enm_chunk.get_dur()))
+      enm_chunk.set_begin(int(caption.get_begin() * FRAME_RATE - enm_chunk.get_dur()))
       # check if there is an overlap with the previous chunk
-      if len(self._chunks) > 0:
-        if self._chunks[-2].get_end() + self._chunks[-1].get_dur() > enm_chunk.get_begin():
+      if len(chunks) > 0:
+        if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
           LOGGER.warning("Skipping caption at %s due to overlap", float(begin))
-          return
+          continue
 
-        if enm_chunk.overlap(self._chunks[-1]):
-          enm_chunk.insert(self._chunks[-1])
-          self._chunks.pop()
+        if enm_chunk.overlap(chunks[-1]):
+          enm_chunk.insert(chunks[-1])
+          chunks.pop()
 
-      self._chunks.append(enm_chunk)
+      chunks.append(enm_chunk)
 
       # initialize the EDM chunk
-      edm_chunk = _Line21Chunk()
-      edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-      edm_chunk.set_begin(int(end * self.FRAME_RATE - edm_chunk.get_dur()))
-      self._chunks.append(edm_chunk)
+      if caption.get_end() is not None:
+        edm_chunk = _Chunk()
+        edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE - edm_chunk.get_dur()))
+        chunks.append(edm_chunk)
 
-    self._last_lines = lines
-
-  def finish(self):
-    pass
-
-  def __str__(self) -> str:
-    return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(str, self._chunks))
-
-
-#
-# scc writer
-#
-def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfiguration] = None, progress_callback=lambda _: None) -> str:
-  """Converts the data model to an SCC document"""
-
-  scc_context = SCCContext(config if config is not None else SccWriterConfiguration())
-
-  # split progress between ISD construction and SRT writing
-
-  def _isd_progress(progress: float):
-    progress_callback(progress / 2)
-
-  # Compute ISDs
-
-  isds = list(
-    ISD.generate_isd_sequence(doc, _isd_progress)
-  )
-
-  # process ISDs
-
-  for i, (begin, isd) in enumerate(isds):
-
-    end = isds[i + 1][0] if i + 1 < len(isds) else None
-
-    scc_context.add_isd(isd, begin, end)
-
-    progress_callback(0.5 + (i + 1) / len(isds) / 2)
-
-  scc_context.finish()
-
-  return str(scc_context)
+  return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(str, chunks))
