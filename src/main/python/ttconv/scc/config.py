@@ -77,11 +77,11 @@ class SccWriterConfiguration(ModuleConfiguration):
   """SCC writer configuration"""
 
   allow_reflow: bool = field(
-    default=False,
+    default=True,
     metadata={"decoder": bool}
   )
 
-  force_rollup: bool = field(
+  force_popon: bool = field(
     default=False,
     metadata={"decoder": bool}
   )

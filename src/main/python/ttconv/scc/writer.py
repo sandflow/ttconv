@@ -30,7 +30,7 @@ from __future__ import annotations
 import logging
 from fractions import Fraction
 import re
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 import ttconv.model as model
 from ttconv.isd import ISD
@@ -96,7 +96,7 @@ class _Caption:
     self._lines.append(line)
 
   @staticmethod
-  def from_region(region: model.Region) -> _Caption:
+  def from_regions(regions: Sequence[model.Region]) -> _Caption:
     """Returns the list of lines that are flowed into the Region"""
     _lines: _Caption = _Caption()
 
@@ -127,9 +127,10 @@ class _Caption:
         _lines[-1] = _lines[-1] + unicode_to_scc(element.get_text())
         return
 
-    for body in region:
-      for div in body:
-        _process_element(div)
+    for region in regions:
+      for body in region:
+        for div in body:
+          _process_element(div)
 
     return _lines
 
@@ -232,6 +233,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
   config : SccWriterConfiguration = config if config is not None else SccWriterConfiguration()
   isds = ISD.generate_isd_sequence(doc, _isd_progress)
+  is_rollup = None
 
   # generate list of captions
   captions: List[_Caption] = []
@@ -248,12 +250,12 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       # skip empty ISD
       continue
 
-    # for now, handle only one region
+    # SCC can only handle one region at a time
     if len(isd) > 1:
-      LOGGER.error("Skipping ISD at %ss because it has more than one region", float(begin))
+      LOGGER.warning("ISD at %ss has more than one region", float(begin))
       continue
 
-    caption: _Caption = _Caption.from_region(next(iter(isd.iter_regions())))
+    caption: _Caption = _Caption.from_regions(list(isd.iter_regions()))
     caption.set_begin(begin)
 
     if len(caption) == 0:
@@ -261,9 +263,10 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       continue
 
     if any(len(e) > MAX_LINEWIDTH for e in caption):
-      if not config.allow_reflow:
-        raise RuntimeError(f"Line width exceeds the maximum allowed by the SCC writer ({MAX_LINEWIDTH})")
-
+      if config.allow_reflow:
+        LOGGER.warning("Line width exceeded at %ss", float(begin))
+      else:
+        raise RuntimeError(f"Line width exceeded at {float(begin)}s, reflow disabled")
       # merge the lines of the caption and remove duplicate spaces
       text = re.sub(b' +', b' ', b' '.join(caption))
 
@@ -285,6 +288,16 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
       caption.set_lines(reflowed_lines)
 
+    # detect roll-up captions
+    if len(captions) > 0 and is_rollup is not False:
+      if caption[-1].startswith(captions[-1][-1]) or \
+        len(caption) > 1 and caption[-2] == captions[-1][-1]:
+        is_rollup = True
+      else:
+        if is_rollup is True:
+          LOGGER.warning("Inconsistent roll-up captions, defaulting to pop-on")
+        is_rollup = False
+
     captions.append(caption)
 
   chunks : List[_Chunk] = []
@@ -292,21 +305,24 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
     # 25% for SCC writing
     progress_callback(0.75 + (i + 1) / len(captions) / 4)
 
-    if config.force_rollup:
+    if is_rollup is True and not config.force_popon:
       ru_chunk: _Chunk = _Chunk()
 
-      ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
-      ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
-      pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
-      ru_chunk.push_control_code(pac.get_ch1_packet())
+      is_painton = i > 0 and caption[-1].startswith(captions[i - 1][-1])
 
-      begin_f = int(caption.get_begin() * FRAME_RATE - ru_chunk.get_dur())
+      if not is_painton:
+        ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
+        ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
+        pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
+        ru_chunk.push_control_code(pac.get_ch1_packet())
+
+      begin_f = int(caption.get_begin() * FRAME_RATE) - ru_chunk.get_dur()
       if len(chunks) > 0 and begin_f < chunks[-1].get_end():
         begin_f = chunks[-1].get_end()
         LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, FRAME_RATE))
       ru_chunk.set_begin(begin_f)
 
-      for c in caption[-1]:
+      for c in (caption[-1][len(captions[i - 1][-1]):] if is_painton else caption[-1]):
         ru_chunk.push_octet(c)
 
       chunks.append(ru_chunk)
