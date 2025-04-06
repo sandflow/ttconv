@@ -141,6 +141,28 @@ hi everyone today we're going to be
     div = list(body[0])
     self.assertEqual(len(div), 2)
 
+  def test_toplevel_timestamp_tags(self):
+    # from https://github.com/sandflow/ttconv/issues/439
+    SAMPLE = """WEBVTT
+Kind: captions
+Language: en
+
+00:00:00.799 --> 00:00:02.869 align:start position:0%
+\x20
+hi<00:00:01.040><c> everyone</c><00:00:01.920><c> today</c><00:00:02.240><c> we're</c><00:00:02.399><c> going</c><00:00:02.639><c> to</c><00:00:02.720><c> be</c>
+
+00:00:02.869 --> 00:00:02.879 align:start position:0%
+hi everyone today we're going to be
+"""
+
+    doc = to_model(io.StringIO(SAMPLE))
+    body = list(doc.get_body())
+    spans_and_brs = list(body[0][0])
+    self.assertIsNone(spans_and_brs[0].get_begin()) # \x20
+    self.assertIsNone(spans_and_brs[2].get_begin()) # hi
+    self.assertEqual(spans_and_brs[3].get_begin(), 1.040 - 0.799) # everyone
+    self.assertEqual(spans_and_brs[4].get_begin(), 1.920 - 0.799) # today
+
   def test_italic(self):
     f = io.StringIO(r"""WEBVTT
 
