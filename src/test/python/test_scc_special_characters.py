@@ -43,7 +43,7 @@ class SccSpecialCharactersTest(unittest.TestCase):
         # skip the TRANSPARENT_SPACE character
         if unicode_char == " ":
           continue
-        self.assertEqual(int.from_bytes(unicode_to_scc(unicode_char)), spec_char.get_ch1_value())
+        self.assertEqual(int.from_bytes(unicode_to_scc(unicode_char), byteorder='big'), spec_char.get_ch1_value())
 
 
   def test_scc_special_character_values(self):
