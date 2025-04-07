@@ -71,5 +71,32 @@ class SCCWriterTest(unittest.TestCase):
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 
+  def test_rollup(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
+  <body>
+    <div>
+      <p begin="30f" end="90f">Hello</p>
+      <p begin="90f" end="120f">Hello my name</p>
+      <p begin="150f" end="300f">Hello my name<br/>is Paul.</p>
+     </div>
+  </body>
+</tt>"""
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;24	94a7 94a7 94ad 94ad 9470 9470 c8e5 ecec ef80
+
+00:00:03;00	206d 7920 6e61 6de5
+
+00:00:04;24	94a7 94a7 94ad 94ad 9470 9470 e973 20d0 6175 ecae"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
+
 if __name__ == '__main__':
   unittest.main()

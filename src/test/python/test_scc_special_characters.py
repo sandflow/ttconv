@@ -29,11 +29,22 @@
 
 import unittest
 
+from ttconv.scc.codes.characters import unicode_to_scc
 from ttconv.scc.codes.extended_characters import SccExtendedCharacter
 from ttconv.scc.codes.special_characters import SccSpecialCharacter
 
 
 class SccSpecialCharactersTest(unittest.TestCase):
+
+  def test_unicode_to_scc_special_character(self):
+    for spec_char in list(SccSpecialCharacter):
+      unicode_char = spec_char.get_unicode_value()
+      with self.subTest(unicode_char=unicode_char):
+        # skip the TRANSPARENT_SPACE character
+        if unicode_char == " ":
+          continue
+        self.assertEqual(int.from_bytes(unicode_to_scc(unicode_char)), spec_char.get_ch1_value())
+
 
   def test_scc_special_character_values(self):
     special_char_codes = list(range(0x1130, 0x1140)) + list(range(0x1930, 0x1940))
