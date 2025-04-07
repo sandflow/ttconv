@@ -252,7 +252,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
     # SCC can only handle one region at a time
     if len(isd) > 1:
-      LOGGER.warning("ISD at %ss has more than one region", float(begin))
+      LOGGER.warning("Merging multiple regions exist at %ss; errors may result", float(begin))
       continue
 
     caption: _Caption = _Caption.from_regions(list(isd.iter_regions()))
