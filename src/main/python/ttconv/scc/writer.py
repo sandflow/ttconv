@@ -259,7 +259,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
     caption.set_begin(begin)
 
     if len(caption) == 0:
-      LOGGER.info("Skipping ISD at %ss because it has no lines of text", float(begin))
+      # skip ISD with no text
       continue
 
     if any(len(e) > MAX_LINEWIDTH for e in caption):
