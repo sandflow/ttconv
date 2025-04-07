@@ -50,13 +50,21 @@ class SCCWriterTest(unittest.TestCase):
     ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
   <body>
     <div>
-      <p begin="30f" end="90f">Line 1<br/>Line 2</p>
-      <p begin="400f" end="450f">Line 3 blah<br/>Line 4 blah</p>
+      <p begin="30f" end="90f">Hello</p>
+      <p begin="120f" end="150f">Bonjour</p>
      </div>
   </body>
 </tt>"""
 
-    expected_scc=""""""
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;19	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
+
+00:00:02;28	942c 942c
+
+00:00:03;18	9420 9420 94ae 94ae 9440 9440 c2ef 6eea ef75 f280 942f 942f
+
+00:00:04;28	942c 942c"""
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = SccWriterConfiguration()
