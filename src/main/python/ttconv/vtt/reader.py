@@ -53,6 +53,7 @@ class _TextCueParser:
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
     self.line_num: int = line_number
+    self.paragraph: model.P = paragraph
     self.parent: model.ContentElement = paragraph
 
     # handle the special case of ruby elements where children cannot be added one by one
@@ -73,22 +74,24 @@ class _TextCueParser:
 
   def _handle_ts(self, token: TimestampTagToken):
 
-    span = self._make_span(self.parent)
-    self.parent.push_child(span)
-    self.parent = span
-
     ts = vtt_timestamp_to_secs(token.timestamp)
-    parent_begin = None
-    parent = self.parent
-    while parent is not None:
-      parent_begin = parent.get_begin()
-      if parent_begin is not None:
-        break
-      parent = parent.parent()
-    if ts is not None and parent_begin is not None and parent_begin <= ts:
-      span.set_begin(ts - parent_begin)
-    else:
+    if ts is None:
+      LOGGER.warning("Invalid timestamp tag %s at line %s", token.timestamp, self.line_num)
+      return
+
+    # we handle only top-level timestamp tags
+    if self.parent.get_begin() is None:
+      LOGGER.warning("Nested timestamp tag %s at line %s", token.timestamp, self.line_num)
+      return
+
+    p_begin = self.paragraph.get_begin()
+    if p_begin is None or p_begin >= ts:
       LOGGER.warning("Invalid timestamp tag %s", token.timestamp)
+
+    span = self._make_span(self.paragraph)
+    span.set_begin(ts - p_begin)
+    self.paragraph.push_child(span)
+    self.parent = span
 
   def _handle_starttag(self, token: StartTagToken):
 
