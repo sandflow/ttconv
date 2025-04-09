@@ -311,15 +311,19 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       is_painton = i > 0 and caption[-1].startswith(captions[i - 1][-1])
 
       if not is_painton:
-        ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
-        ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
+        if config.rollup_lines == 2:
+          ru_chunk.push_control_code(SccControlCode.RU2.get_ch1_value())
+        elif config.rollup_lines == 3:
+          ru_chunk.push_control_code(SccControlCode.RU3.get_ch1_value())
+        else:
+          ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
         pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
         ru_chunk.push_control_code(pac.get_ch1_packet())
 
       begin_f = int(caption.get_begin() * FRAME_RATE) - ru_chunk.get_dur()
       if len(chunks) > 0 and begin_f < chunks[-1].get_end():
         begin_f = chunks[-1].get_end()
-        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(begin_f, FRAME_RATE))
+        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(caption.get_begin(), FRAME_RATE))
       ru_chunk.set_begin(begin_f)
 
       for c in (caption[-1][len(captions[i - 1][-1]):] if is_painton else caption[-1]):

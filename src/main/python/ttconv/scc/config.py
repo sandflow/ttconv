@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+import typing
 
 from ttconv.config import ModuleConfiguration
 from ttconv.style_properties import TextAlignType
@@ -72,6 +73,14 @@ class SccReaderConfiguration(ModuleConfiguration):
   def name(cls):
     return "scc_reader"
 
+def _decode_rollup_lines(value: str) -> int:
+  decoded_value = int(value)
+
+  if decoded_value < 2 or decoded_value > 4:
+    raise ValueError(f"Invalid rollup_lines '{value}' value. Expect: 2-4.")
+
+  return decoded_value
+
 @dataclass
 class SccWriterConfiguration(ModuleConfiguration):
   """SCC writer configuration"""
@@ -84,6 +93,11 @@ class SccWriterConfiguration(ModuleConfiguration):
   force_popon: bool = field(
     default=False,
     metadata={"decoder": bool}
+  )
+
+  rollup_lines: int = field(
+    default=4,
+    metadata={"decoder": _decode_rollup_lines}
   )
 
   @classmethod
