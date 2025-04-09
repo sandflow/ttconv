@@ -62,6 +62,14 @@ class SccSpecialCharacter(SccCode):
     return self._unicode
 
   @staticmethod
+  def from_unicode(c: str) -> typing.Optional[SccSpecialCharacter]:
+    """Find the special character corresponding to the Unicode character"""
+    for spec_char in list(SccSpecialCharacter):
+      if spec_char.get_unicode_value() == c:
+        return spec_char
+    return None
+
+  @staticmethod
   def find(value: int) -> typing.Optional[SccSpecialCharacter]:
     """Find the special character corresponding to the specified value"""
     for spec_char in list(SccSpecialCharacter):
