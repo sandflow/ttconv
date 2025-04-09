@@ -317,6 +317,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
           ru_chunk.push_control_code(SccControlCode.RU3.get_ch1_value())
         else:
           ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
+        ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
         pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
         ru_chunk.push_control_code(pac.get_ch1_packet())
 
