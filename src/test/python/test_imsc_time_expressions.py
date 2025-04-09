@@ -59,6 +59,9 @@ class IMSCTimeExpressionsTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       parse_time_expression(None, 24, "100:00:00:100")
 
+  def test_bad_frame_count_non_strict(self):
+    self.assertEqual(parse_time_expression(None, 24, "100:00:00:100", False), 360000 + 23/24) 
+
   def test_bad_syntax(self):
     with self.assertRaises(ValueError):
       parse_time_expression(60, 24, "100:00:00;01")

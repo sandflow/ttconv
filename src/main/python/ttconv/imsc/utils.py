@@ -25,10 +25,13 @@
 
 '''IMSC style properties'''
 
+import logging
 import re
 import typing
 from fractions import Fraction
 import ttconv.style_properties as styles
+
+LOGGER = logging.getLogger(__name__)
 
 _LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
@@ -104,7 +107,7 @@ def serialize_font_family(font_family: typing.Tuple[typing.Union[str, styles.Gen
   return ", ".join(map(_serialize_one_family, font_family))
 
 
-def parse_time_expression(tick_rate: typing.Optional[int], frame_rate: typing.Optional[Fraction], time_expr: str) -> Fraction:
+def parse_time_expression(tick_rate: typing.Optional[int], frame_rate: typing.Optional[Fraction], time_expr: str, strict: bool = True) -> Fraction:
   '''Parse a TTML time expression in a fractional number in seconds
   '''
 
@@ -144,14 +147,18 @@ def parse_time_expression(tick_rate: typing.Optional[int], frame_rate: typing.Op
     return Fraction(m.group(1)) * 3600 + \
             Fraction(m.group(2)) * 60 + \
             Fraction(m.group(3))
-  
+
   m = _CLOCK_TIME_FRAMES_RE.match(time_expr)
 
   if m and frame_rate is not None:
     frames = Fraction(m.group(4)) if m.group(4) else 0
 
     if frames >= frame_rate:
-      raise ValueError("Frame cound exceeds frame rate")
+      if strict:
+        raise ValueError("Frame count exceeds frame rate")
+      else:
+        LOGGER.error("Frame count %s exceeds frame rate %s, rounding to frame rate minus 1", frames, frame_rate)
+        frames = round(frame_rate) - 1
 
     return Fraction(m.group(1)) * 3600 + \
             Fraction(m.group(2)) * 60 + \
