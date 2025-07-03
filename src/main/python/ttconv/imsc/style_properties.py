@@ -1114,8 +1114,11 @@ class StyleProperties:
       if xml_attrib == "rl":
         return styles.WritingModeType.rltb
 
-      if xml_attrib == "tb":
-        return styles.WritingModeType.tbrl
+      if xml_attrib.startswith("tb"):
+        if xml_attrib == "tbrl":
+          return styles.WritingModeType.tbrl
+        elif xml_attrib == "tbrl"
+          return styles.WritingModeType.tblr
 
       return styles.WritingModeType[xml_attrib]
 
