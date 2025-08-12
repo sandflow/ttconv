@@ -801,17 +801,17 @@ Scenarist_SCC V1.0
     self.assertEqual(4, len(p_list))
 
     paragraph = p_list[0]
-    self.check_caption(paragraph, "caption1", "00:02:53:16", "00:02:54:01", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
+    self.check_caption(paragraph, "caption1", "00:02:53:17", "00:02:54:03", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
     self.assertEqual(region_1, paragraph.get_region())
 
     self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertAlmostEqual(0.100, float(list(paragraph)[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.200, float(list(paragraph)[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.300, float(list(paragraph)[3].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.3666, float(list(paragraph)[4].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 4, float(list(paragraph)[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 7, float(list(paragraph)[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 10, float(list(paragraph)[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 12, float(list(paragraph)[4].get_begin()), delta=0.0001)
 
     paragraph = p_list[1]
-    self.check_caption(paragraph, "caption2", "00:02:54:01", "00:02:56:02", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,", Br,
+    self.check_caption(paragraph, "caption2", "00:02:54:03", "00:02:56:03", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,", Br,
                        "consectetur ", "adipiscing", " elit.")
     self.assertEqual(region_1, paragraph.get_region())
 
@@ -821,24 +821,24 @@ Scenarist_SCC V1.0
     self.assertIsNone(list(paragraph)[3].get_begin())
     self.assertIsNone(list(paragraph)[4].get_begin())
     self.assertIsNone(list(paragraph)[6].get_begin())
-    self.assertAlmostEqual(0.200, float(list(paragraph)[7].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.400, float(list(paragraph)[8].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 7, float(list(paragraph)[7].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 13, float(list(paragraph)[8].get_begin()), delta=0.0001)
 
     paragraph = p_list[2]
-    self.check_caption(paragraph, "caption3", "00:02:56:02", "00:02:56:27", "Pellentesque", " interdum ", "lacinia ",
+    self.check_caption(paragraph, "caption3", "00:02:56:03", "00:02:56:28", "Pellentesque", " interdum ", "lacinia ",
                        "sollicitudin.", Br, "consectetur ", "adipiscing", " elit.")
     self.assertEqual(region_1, paragraph.get_region())
 
     self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertAlmostEqual(0.2333, float(list(paragraph)[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.3666, float(list(paragraph)[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.5000, float(list(paragraph)[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 8, float(list(paragraph)[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 12, float(list(paragraph)[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 16, float(list(paragraph)[3].get_begin()), delta=0.0001)
     self.assertIsNone(list(paragraph)[5].get_begin())
     self.assertIsNone(list(paragraph)[6].get_begin())
     self.assertIsNone(list(paragraph)[7].get_begin())
 
     paragraph = p_list[3]
-    self.check_caption(paragraph, "caption4", "00:02:56:27", None, "Pellentesque", " interdum ", "lacinia ",
+    self.check_caption(paragraph, "caption4", "00:02:56:28", None, "Pellentesque", " interdum ", "lacinia ",
                        "sollicitudin.", Br, "Integer ", "luctus", " et ", "ligula", " ac ",
                        "sagittis.")
     self.assertEqual(region_1, paragraph.get_region())
@@ -848,11 +848,11 @@ Scenarist_SCC V1.0
     self.assertIsNone(list(paragraph)[2].get_begin())
     self.assertIsNone(list(paragraph)[3].get_begin())
     self.assertIsNone(list(paragraph)[5].get_begin())
-    self.assertAlmostEqual(0.1333, float(list(paragraph)[6].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.2666, float(list(paragraph)[7].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.3000, float(list(paragraph)[8].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.4333, float(list(paragraph)[9].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(0.4666, float(list(paragraph)[10].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 5, float(list(paragraph)[6].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 9, float(list(paragraph)[7].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 10, float(list(paragraph)[8].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 14, float(list(paragraph)[9].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/30 * 15, float(list(paragraph)[10].get_begin()), delta=0.0001)
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
