@@ -1000,19 +1000,19 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(6, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:00:20", "00:00:01:17", "Lorem ipsum dolor sit amet,")
+    self.check_caption(p_list[0], "caption1", "00:00:00:20", "00:00:01:16", "Lorem ipsum dolor sit amet,")
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "00:00:01:18", "00:00:02:02", "consectetur adipiscing elit.")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:04", "consectetur adipiscing elit.", Br)
+    self.check_caption(p_list[2], "caption3", "00:00:02:02", "00:00:02:03", "consectetur adipiscing elit.", Br)
     self.assertEqual(region_2, p_list[2].get_region())
 
-    self.check_caption(p_list[3], "caption4", "00:00:02:04", "00:00:03:03", "Pellentesque interdum lacinia sollicitudin.")
+    self.check_caption(p_list[3], "caption4", "00:00:02:04", "00:00:03:02", "Pellentesque interdum lacinia sollicitudin.")
     self.assertEqual(region_2, p_list[3].get_region())
 
-    self.check_caption(p_list[4], "caption5", "00:00:03:03", "00:00:03:19", "Integer ", "luctus", " et ", "ligula", " ac ")
+    self.check_caption(p_list[4], "caption5", "00:00:03:03", "00:00:03:18", "Integer ", "luctus", " et ", "ligula", " ac ")
     self.assertEqual(region_3, p_list[4].get_region())
 
     self.check_caption(p_list[5], "caption6", "00:00:03:19", None, "sagittis.")
