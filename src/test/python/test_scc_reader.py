@@ -1346,10 +1346,10 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "10:03:20:18", "10:03:20:24", "(à d")
+    self.check_caption(p_list[0], "caption1", "10:03:20:19", "10:03:20:27", "(à d")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "10:03:20:24", None, "eux voix, en anglais):")
+    self.check_caption(p_list[1], "caption2", "10:03:20:29", None, "eux voix, en anglais):")
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_text_without_style_nor_position(self):
