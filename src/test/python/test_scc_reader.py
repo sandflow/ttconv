@@ -1431,13 +1431,13 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(3, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:03:07", "09:59:59:25", "ipsum")
+    self.check_caption(p_list[0], "caption1", "00:00:03:07", "09:59:59:24", "ipsum")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "09:59:59:25", "10:00:01:06", " ")
+    self.check_caption(p_list[1], "caption2", "09:59:59:25", "10:00:01:05", " ")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "10:00:01:06", "11:00:09:09", "(camera shutter)", Br, Br, Br, Br,
+    self.check_caption(p_list[2], "caption3", "10:00:01:06", "11:00:09:08", "(camera shutter)", Br, Br, Br, Br,
                        " <chaotic cacophony", Br, " exists throughout program>")
     self.assertEqual(region_3, p_list[2].get_region())
 
