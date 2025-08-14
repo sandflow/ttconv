@@ -1173,10 +1173,10 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:03:07", "00:00:08:26", "ipsum")
+    self.check_caption(p_list[0], "caption1", "00:00:03:07", "00:00:08:25", "ipsum")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "00:00:08:26", "00:00:09:09", "dolor sit amet,", Br,
+    self.check_caption(p_list[1], "caption2", "00:00:08:26", "00:00:09:08", "dolor sit amet,", Br,
                        "consectetur adipiscing elit.")
     self.assertEqual(region_2, p_list[1].get_region())
 
