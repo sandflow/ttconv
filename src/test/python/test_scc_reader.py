@@ -1268,7 +1268,7 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(1, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:01:12", "00:00:02:01", "Scary!  Eeech!")
+    self.check_caption(p_list[0], "caption1", "00:00:01:17", "00:00:02:01", "Scary!  Eeech!")
     self.assertEqual(region_1, p_list[0].get_region())
 
   def test_scc_content_starting_with_backspace(self):
