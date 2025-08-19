@@ -109,8 +109,11 @@ class SccLine:
 
     debug = str(self.time_code) + "\t"
 
+    first = True
     for scc_word in self.scc_words:
-      self.time_code.add_frames()
+      if not first:
+        self.time_code.add_frames()
+      first = False
 
       if context.previous_word is not None and context.previous_word.value == scc_word.value and context.previous_word.is_code():
         context.previous_word = None
