@@ -34,8 +34,13 @@ import xml.etree.ElementTree as et
 from fractions import Fraction
 from pathlib import Path
 
+import sys
+from ttconv.imsc.attributes import TimeExpressionSyntaxEnum
+from ttconv.imsc.config import IMSCWriterConfiguration
 import ttconv.imsc.reader as imsc_reader
+import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.writer as scc_writer
+import ttconv.scc.reader as scc_reader
 from ttconv.scc.config import SccWriterConfiguration
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
@@ -67,9 +72,15 @@ class SCCWriterTest(unittest.TestCase):
 00:00:04;28	942c 942c"""
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    assert model is not None
     config = SccWriterConfiguration()
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
+
+    rt_model = scc_reader.to_model(scc_from_model)
+    cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
+    imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
+
 
   def test_rollup(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
