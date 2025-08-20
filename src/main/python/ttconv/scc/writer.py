@@ -310,6 +310,8 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
       is_painton = i > 0 and caption[-1].startswith(captions[i - 1][-1])
 
+      begin_f = int(caption.get_begin() * FRAME_RATE)
+
       if not is_painton:
         if config.rollup_lines == 2:
           ru_chunk.push_control_code(SccControlCode.RU2.get_ch1_value())
@@ -320,8 +322,8 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
         pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
         ru_chunk.push_control_code(pac.get_ch1_packet())
+        begin_f = begin_f - 2
 
-      begin_f = int(caption.get_begin() * FRAME_RATE) - ru_chunk.get_dur()
       if len(chunks) > 0 and begin_f < chunks[-1].get_end():
         begin_f = chunks[-1].get_end()
         LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(caption.get_begin(), FRAME_RATE))
@@ -357,7 +359,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
           enm_chunk.push_octet(c)
       enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
 
-      enm_chunk.set_begin(int(caption.get_begin() * FRAME_RATE - enm_chunk.get_dur()))
+      enm_chunk.set_begin(int(caption.get_begin() * FRAME_RATE - enm_chunk.get_dur() + 2))
       # check if there is an overlap with the previous chunk
       if len(chunks) > 0:
         if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
@@ -374,7 +376,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       if caption.get_end() is not None:
         edm_chunk = _Chunk()
         edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE - edm_chunk.get_dur()))
+        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE - edm_chunk.get_dur() + 2))
         chunks.append(edm_chunk)
 
   return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(str, chunks))

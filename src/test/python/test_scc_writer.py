@@ -63,13 +63,13 @@ class SCCWriterTest(unittest.TestCase):
 
     expected_scc="""Scenarist_SCC V1.0
 
-00:00:00;19	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
+00:00:00;21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
 
-00:00:02;28	942c 942c
+00:00:03;00	942c 942c
 
-00:00:03;18	9420 9420 94ae 94ae 9440 9440 c2ef 6eea ef75 f280 942f 942f
+00:00:03;20	9420 9420 94ae 94ae 9440 9440 c2ef 6eea ef75 f280 942f 942f
 
-00:00:04;28	942c 942c"""
+00:00:05;00	942c 942c"""
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     assert model is not None
@@ -90,7 +90,7 @@ class SCCWriterTest(unittest.TestCase):
   <body>
     <div>
       <p begin="30f" end="90f">Hello</p>
-      <p begin="90f" end="120f">Hello my name</p>
+      <p begin="90f" end="150f">Hello my name</p>
       <p begin="150f" end="300f">Hello my name<br/>is Paul.</p>
      </div>
   </body>
@@ -98,16 +98,32 @@ class SCCWriterTest(unittest.TestCase):
 
     expected_scc="""Scenarist_SCC V1.0
 
-00:00:00;24	94a7 94a7 94ad 94ad 9470 9470 c8e5 ecec ef80
+00:00:00;28	94a7 94a7 94ad 94ad 9470 9470 c8e5 ecec ef80
 
 00:00:03;00	206d 7920 6e61 6de5
 
-00:00:04;24	94a7 94a7 94ad 94ad 9470 9470 e973 20d0 6175 ecae"""
+00:00:04;28	94a7 94a7 94ad 94ad 9470 9470 e973 20d0 6175 ecae"""
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = SccWriterConfiguration()
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
+    
+    rt_model = scc_reader.to_model(scc_from_model)
+
+
+    cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
+    imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
+
+    b = rt_model.get_body()
+    div = list(b)[0]
+    p0 = list(div)[0]
+    self.assertEqual(Fraction(30 * 1001, 30000), p0.get_begin())
+    p1 = list(div)[1]
+    self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
+    self.assertEqual(None, p0.get_end())
+
+
 
 if __name__ == '__main__':
   unittest.main()
