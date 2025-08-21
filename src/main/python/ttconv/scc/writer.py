@@ -319,10 +319,12 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
           ru_chunk.push_control_code(SccControlCode.RU3.get_ch1_value())
         else:
           ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
+        # the caption begins when the CR code is received
+        begin_f = begin_f - ru_chunk.get_dur()
         ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
         pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
         ru_chunk.push_control_code(pac.get_ch1_packet())
-        begin_f = begin_f - 2
+        
 
       if len(chunks) > 0 and begin_f < chunks[-1].get_end():
         begin_f = chunks[-1].get_end()
@@ -333,6 +335,13 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         ru_chunk.push_octet(c)
 
       chunks.append(ru_chunk)
+
+      # erase the display after the last caption
+      if i == len(captions) - 1 and caption.get_end() is not None:
+        edm_chunk = _Chunk()
+        edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
+        chunks.append(edm_chunk)
 
     else:
       enm_chunk: _Chunk = _Chunk()
@@ -376,7 +385,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       if caption.get_end() is not None:
         edm_chunk = _Chunk()
         edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE - edm_chunk.get_dur() + 2))
+        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
         chunks.append(edm_chunk)
 
   return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(str, chunks))
