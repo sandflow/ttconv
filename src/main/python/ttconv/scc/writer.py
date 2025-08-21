@@ -234,6 +234,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
   config : SccWriterConfiguration = config if config is not None else SccWriterConfiguration()
   isds = ISD.generate_isd_sequence(doc, _isd_progress)
   is_rollup = None
+  is_last_empty = True
 
   # generate list of captions
   captions: List[_Caption] = []
@@ -248,8 +249,11 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
     if len(isd) == 0:
       # skip empty ISD
+      is_last_empty = True
       continue
 
+    is_last_empty = False
+    
     # SCC can only handle one region at a time
     if len(isd) > 1:
       LOGGER.warning("Merging multiple regions exist at %ss; errors may result", float(begin))
@@ -289,7 +293,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       caption.set_lines(reflowed_lines)
 
     # detect roll-up captions
-    if len(captions) > 0 and is_rollup is not False:
+    if len(captions) > 1 and is_rollup is not False and not is_last_empty:
       if caption[-1].startswith(captions[-1][-1]) or \
         len(caption) > 1 and caption[-2] == captions[-1][-1]:
         is_rollup = True
@@ -337,11 +341,12 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       chunks.append(ru_chunk)
 
       # erase the display after the last caption
-      if i == len(captions) - 1 and caption.get_end() is not None:
-        edm_chunk = _Chunk()
-        edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
-        chunks.append(edm_chunk)
+      if i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin():
+        if caption.get_end() is not None:
+          edm_chunk = _Chunk()
+          edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+          edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
+          chunks.append(edm_chunk)
 
     else:
       enm_chunk: _Chunk = _Chunk()
