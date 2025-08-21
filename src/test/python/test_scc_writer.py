@@ -102,7 +102,9 @@ class SCCWriterTest(unittest.TestCase):
 
 00:00:03;00	206d 7920 6e61 6de5
 
-00:00:04;28	94a7 94a7 94ad 94ad 9470 9470 e973 20d0 6175 ecae"""
+00:00:04;28	94a7 94a7 94ad 94ad 9470 9470 e973 20d0 6175 ecae
+
+00:00:10;00	942c 942c"""
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = SccWriterConfiguration()
@@ -121,7 +123,7 @@ class SCCWriterTest(unittest.TestCase):
     self.assertEqual(Fraction(30 * 1001, 30000), p0.get_begin())
     p1 = list(div)[1]
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
-    self.assertEqual(None, p0.get_end())
+    self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
 
 
 
