@@ -15,13 +15,13 @@ _ttconv_ is a library and command line application written in pure Python for
 converting between timed text formats used in the presentations of captions,
 subtitles, karaoke, etc.
 
-    TTML / IMSC ---                                       --- IMSC / TTML
+    TTML / IMSC ---                                       ---- IMSC / TTML
                     \                                   /
     SCC / CEA 608 ------- 0 or more document filters --------- WebVTT
                     /        [ Canonical Model ]        \
-    EBU STL -------                                       --- SRT
-                  /
-    SRT ---------
+    EBU STL -------                                       ---- SRT
+                  /                                        \
+    SRT ---------                                           -- SCC
                 /
     WebVTT ----
 
@@ -54,6 +54,7 @@ suggestions/contributions are welcome.
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
 * [WebVTT](https://www.w3.org/TR/webvtt1/)
+* [CEA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 
 ## Quick start
 
@@ -72,7 +73,7 @@ tt convert -i <input .scc file> -o <output .ttml file>
 `tt convert [-h] -i INPUT -o OUTPUT [--itype ITYPE] [--otype OTYPE] [--config CONFIG] [--config_file CONFIG_FILE]`
 
 * `--itype`: `TTML` | `SCC` | `STL` | `SRT` (extrapolated from the filename, if omitted)
-* `--otype`: `TTML` | `SRT` | `VTT` (extrapolated from the filename, if omitted)
+* `--otype`: `TTML` | `SCC` | `SRT` | `VTT` (extrapolated from the filename, if omitted)
 * `--filter`: specifies by name a filter to be applied to the content
 * `--config` and `--config_file`: JSON dictionary where each property specifies
   (optional) configuration parameters for readers, writers and filters.
@@ -219,6 +220,42 @@ Specifies the text alignment. `"auto"` means the reader will use heuristics to d
 text alignment.
 
 Default: `"auto"`
+
+### SCC Writer configuration
+
+#### allow_reflow
+
+`"allow_reflow" :  true | false`
+
+If `true`, the writer reflows text to fit within the 32 columns.
+
+Default: `true`
+
+#### force_popon
+
+`"force_popon" :  true | false`
+
+If `true`, the writer does not detect roll-up captions and always emits pop-on captions.
+
+Default: `false`
+
+#### rollup_lines
+
+`"rollup_lines" :  2 | 3 | 4`
+
+Specifies the number of lines the writer should use in the roll-up region.
+
+Default: `4`
+
+#### frame_rate
+
+`"frame_rate" : "30" | "2997"`
+
+If `frame_rate` is `"30"`, the output SCC file uses 30 fps non drop frame (NDF) timecode.
+
+If `frame_rate` is `"2997"`, the output SCC file uses 29.97 fps drop frame (DF) timecode.
+
+Default: `"2997"`
 
 ### LCD filter configuration (`"lcd"`)
 

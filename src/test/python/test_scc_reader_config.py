@@ -29,7 +29,7 @@
 import json
 import unittest
 
-from ttconv.scc.config import SccReaderConfiguration, TextAlignment
+from ttconv.scc.config import SccReaderConfiguration, SccWriterConfiguration, TextAlignment
 
 
 class SccReaderConfigurationTest(unittest.TestCase):
@@ -81,7 +81,6 @@ class SccReaderConfigurationTest(unittest.TestCase):
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
     self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.AUTO))
-
 
 if __name__ == '__main__':
   unittest.main()
