@@ -41,10 +41,55 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.writer as scc_writer
 import ttconv.scc.reader as scc_reader
-from ttconv.scc.config import SccWriterConfiguration
+from ttconv.scc.config import SCCFrameRate, SccWriterConfiguration
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
 
+class SccWriterConfigurationTest(unittest.TestCase):
+
+  def test_defaults(self):
+    config = SccWriterConfiguration()
+
+    self.assertEqual(config.allow_reflow, True)
+    self.assertEqual(config.force_popon, False)
+    self.assertEqual(config.frame_rate, SCCFrameRate.FPS_2997)
+
+  def test_allow_reflow(self):
+    config = SccWriterConfiguration.parse(json.loads("""{"allow_reflow": true }"""))
+    self.assertEqual(config.allow_reflow, True)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"allow_reflow": false }"""))
+    self.assertEqual(config.allow_reflow, False)
+
+  def test_force_popon(self):
+    config = SccWriterConfiguration.parse(json.loads("""{"force_popon": true }"""))
+    self.assertEqual(config.force_popon, True)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"force_popon": false }"""))
+    self.assertEqual(config.force_popon, False)
+
+  def test_rollup_lines(self):
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 2 }"""))
+    self.assertEqual(config.rollup_lines, 2)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 3 }"""))
+    self.assertEqual(config.rollup_lines, 3)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 4 }"""))
+    self.assertEqual(config.rollup_lines, 4)
+
+    with self.assertRaises(ValueError):
+      config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 5 }"""))
+
+  def test_frame_rate(self):
+    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "30" }"""))
+    self.assertEqual(config.frame_rate.fps, Fraction(30))
+
+    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "2997" }"""))
+    self.assertEqual(config.frame_rate.fps, Fraction(30000, 1001))
+
+    with self.assertRaises(ValueError):
+      config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": 30 }"""))
 
 class SCCWriterTest(unittest.TestCase):
 
@@ -131,6 +176,36 @@ class SCCWriterTest(unittest.TestCase):
     p1 = list(div)[1]
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
+
+  def test_basic_30FPS(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30">
+  <body>
+    <div>
+      <p begin="30f" end="90f">Hello</p>
+      <p begin="120f" end="150f">Bonjour</p>
+     </div>
+  </body>
+</tt>"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    assert model is not None
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00:21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
+
+00:00:03:00	942c 942c
+
+00:00:03:20	9420 9420 94ae 94ae 9440 9440 c2ef 6eea ef75 f280 942f 942f
+
+00:00:05:00	942c 942c"""
+
+    config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30)
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
 
 if __name__ == '__main__':
   unittest.main()
