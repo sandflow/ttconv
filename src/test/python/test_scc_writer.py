@@ -77,9 +77,18 @@ class SCCWriterTest(unittest.TestCase):
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 
+    # round-trip test
     rt_model = scc_reader.to_model(scc_from_model)
-    cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
-    imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
+    # cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
+    # imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
+    b = rt_model.get_body()
+    div = list(b)[0]
+    p0 = list(div)[0]
+    self.assertEqual(Fraction(30 * 1001, 30000), p0.get_begin())
+    self.assertEqual(Fraction(90 * 1001, 30000), p0.get_end())
+    p1 = list(div)[1]
+    self.assertEqual(Fraction(120 * 1001, 30000), p1.get_begin())
+    self.assertEqual(Fraction(150 * 1001, 30000), p1.get_end())
 
 
   def test_rollup(self):
@@ -110,13 +119,11 @@ class SCCWriterTest(unittest.TestCase):
     config = SccWriterConfiguration()
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
-    
+
+    # round-trip test
     rt_model = scc_reader.to_model(scc_from_model)
-
-
-    cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
-    imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
-
+    # cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
+    # imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
     b = rt_model.get_body()
     div = list(b)[0]
     p0 = list(div)[0]
@@ -124,8 +131,6 @@ class SCCWriterTest(unittest.TestCase):
     p1 = list(div)[1]
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
-
-
 
 if __name__ == '__main__':
   unittest.main()

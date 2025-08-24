@@ -253,7 +253,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       continue
 
     is_last_empty = False
-    
+
     # SCC can only handle one region at a time
     if len(isd) > 1:
       LOGGER.warning("Merging multiple regions exist at %ss; errors may result", float(begin))
@@ -328,7 +328,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
         pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
         ru_chunk.push_control_code(pac.get_ch1_packet())
-        
+
 
       if len(chunks) > 0 and begin_f < chunks[-1].get_end():
         begin_f = chunks[-1].get_end()
@@ -340,13 +340,13 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
       chunks.append(ru_chunk)
 
-      # erase the display after the last caption
-      if i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin():
-        if caption.get_end() is not None:
-          edm_chunk = _Chunk()
-          edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-          edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
-          chunks.append(edm_chunk)
+      # erase the display if there is a gap between roll-up captions
+      if caption.get_end() is not None and \
+        (i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin()):
+        edm_chunk = _Chunk()
+        edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
+        chunks.append(edm_chunk)
 
     else:
       enm_chunk: _Chunk = _Chunk()

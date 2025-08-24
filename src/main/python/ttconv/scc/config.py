@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from fractions import Fraction
 import typing
 
 from ttconv.config import ModuleConfiguration
@@ -59,6 +60,28 @@ class TextAlignment(Enum):
 
     raise ValueError(f"Invalid text align '{value}' value. Expect: 'left', 'center', 'right' or 'auto'.")
 
+class SCCFrameRate(Enum):
+  """SCC Frame Rates"""
+
+  FPS_30 = ("30", Fraction(30))
+  FPS_2997 = ("2997", Fraction(30000, 1001))
+
+  def __init__(self, label: str, fps: Fraction):
+    self.label = label
+    self.fps = fps
+
+  @staticmethod
+  def from_value(value: str | SCCFrameRate) -> SCCFrameRate:
+    """Create a Frame Rate from a specified value"""
+    if isinstance(value, SCCFrameRate):
+      return value
+
+    if isinstance(value, str):
+      for e in list(SCCFrameRate):
+        if value.lower() == e.label.lower():
+          return e
+
+    raise ValueError(f"Invalid SCC Frame Rate '{value}'. Expect {','.join([e.label for e in list(SCCFrameRate)])}.")
 
 @dataclass
 class SccReaderConfiguration(ModuleConfiguration):
@@ -98,6 +121,11 @@ class SccWriterConfiguration(ModuleConfiguration):
   rollup_lines: int = field(
     default=4,
     metadata={"decoder": _decode_rollup_lines}
+  )
+
+  frame_rate: SCCFrameRate = field(
+    default=SCCFrameRate.FPS_2997,
+    metadata={"decoder": SCCFrameRate.from_value}
   )
 
   @classmethod
