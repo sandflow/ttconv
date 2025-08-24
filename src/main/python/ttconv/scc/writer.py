@@ -39,7 +39,7 @@ from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccWriterConfiguration
 from ttconv.style_properties import StyleProperties, NamedColors, TextAlignType
 from ttconv.scc.codes.control_codes import SccControlCode
-from ttconv.time_code import SmpteTimeCode
+from ttconv.time_code import FPS_29_97, FPS_30, SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
 
@@ -206,7 +206,10 @@ class _Chunk:
   def __len__(self):
     return len(self._octet_buffer)
 
-  def __str__(self):
+  def to_string(self, fps):
+    if fps not in (FPS_29_97, FPS_30):
+      raise ValueError(f"Frame rate {fps} out-of-range")
+
     def _octet2hex(octet):
       return format(_Chunk.ODD_PARITY_OCTETS[octet], 'x')
 
@@ -216,10 +219,12 @@ class _Chunk:
     if len(self._octet_buffer) % 2 == 1:
       packets.append(_octet2hex(self._octet_buffer[-1]) + _octet2hex(0))
 
-    return str(SmpteTimeCode.from_frames(self.get_begin(), Fraction(30000, 1001))) + "\t" + " ".join(packets)
+    return str(SmpteTimeCode.from_frames(self.get_begin(), fps)) + "\t" + " ".join(packets)
+
+  def __str__(self):
+    return self.to_string(FPS_29_97)
 
 MAX_LINEWIDTH = 32
-FRAME_RATE = Fraction(30000, 1001)
 
 #
 # scc writer
@@ -314,7 +319,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
       is_painton = i > 0 and caption[-1].startswith(captions[i - 1][-1])
 
-      begin_f = int(caption.get_begin() * FRAME_RATE)
+      begin_f = int(caption.get_begin() * config.frame_rate.fps)
 
       if not is_painton:
         if config.rollup_lines == 2:
@@ -332,7 +337,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
       if len(chunks) > 0 and begin_f < chunks[-1].get_end():
         begin_f = chunks[-1].get_end()
-        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(caption.get_begin(), FRAME_RATE))
+        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(caption.get_begin(), config.frame_rate.fps))
       ru_chunk.set_begin(begin_f)
 
       for c in (caption[-1][len(captions[i - 1][-1]):] if is_painton else caption[-1]):
@@ -345,7 +350,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         (i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin()):
         edm_chunk = _Chunk()
         edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
+        edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
         chunks.append(edm_chunk)
 
     else:
@@ -373,7 +378,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
           enm_chunk.push_octet(c)
       enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
 
-      enm_chunk.set_begin(int(caption.get_begin() * FRAME_RATE - enm_chunk.get_dur() + 2))
+      enm_chunk.set_begin(int(caption.get_begin() * config.frame_rate.fps - enm_chunk.get_dur() + 2))
       # check if there is an overlap with the previous chunk
       if len(chunks) > 0:
         if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
@@ -390,7 +395,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       if caption.get_end() is not None:
         edm_chunk = _Chunk()
         edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * FRAME_RATE))
+        edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
         chunks.append(edm_chunk)
 
-  return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(str, chunks))
+  return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(lambda e: e.to_string(config.frame_rate.fps), chunks))
