@@ -29,10 +29,16 @@
 
 import unittest
 
+from ttconv.scc.codes.characters import unicode_to_scc
 from ttconv.scc.codes.standard_characters import SCC_STANDARD_CHARACTERS_MAPPING
 
 
 class SccStandardCharactersTest(unittest.TestCase):
+
+  def test_unicode_to_scc_standard_character(self):
+    for scc_char, unicode_char in SCC_STANDARD_CHARACTERS_MAPPING.items():
+      with self.subTest(unicode_char=unicode_char):
+        self.assertEqual(unicode_to_scc(unicode_char)[0], scc_char)
 
   def test_scc_standard_character_values(self):
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x20], " ")
