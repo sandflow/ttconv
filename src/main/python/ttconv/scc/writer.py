@@ -367,9 +367,9 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       enm_chunk.push_control_code(SccControlCode.ENM.get_ch1_value())
       for line_num, line in enumerate(caption, 15 - len(caption)):
         if caption.get_alignment() == TextAlignType.center:
-          indent = int(32 - len(line) / 2)
+          indent = (32 - len(line)) // 2
         elif caption.get_alignment() == TextAlignType.end:
-          indent = int(32 - len(line))
+          indent = 32 - len(line)
         else:
           indent = None
 
