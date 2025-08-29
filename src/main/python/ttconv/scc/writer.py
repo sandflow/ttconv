@@ -48,8 +48,8 @@ class _Caption:
 
   def __init__(self):
     self._begin: Fraction = 0
-    self._end: Fraction = None
-    self._lines: List[bytes] = []
+    self._end: Optional[Fraction] = None
+    self._lines: List[str] = []
     self._alignment: TextAlignType = TextAlignType.start
 
   def set_begin(self, begin: Fraction):
@@ -76,23 +76,23 @@ class _Caption:
     """Returns the alignment of the lines"""
     return self._alignment
 
-  def set_lines(self, lines: List[bytes]):
+  def set_lines(self, lines: List[str]):
     """Sets the lines of text"""
     self._lines = lines
 
   def __len__(self):
     return len(self._lines)
 
-  def __getitem__(self, index: int) -> bytes:
+  def __getitem__(self, index: int) -> str:
     return self._lines[index]
 
-  def __setitem__(self, index: int, value: bytes):
+  def __setitem__(self, index: int, value: str):
     self._lines[index] = value
 
   def __iter__(self):
     return iter(self._lines)
 
-  def append(self, line: bytes):
+  def append(self, line: str):
     self._lines.append(line)
 
   @staticmethod
@@ -108,7 +108,7 @@ class _Caption:
         return
 
       if isinstance(element, model.P):
-        _lines.append(bytes())
+        _lines.append("")
         _lines.set_alignment(element.get_style(StyleProperties.TextAlign))
         for elem in element:
           _process_element(elem)
@@ -120,11 +120,11 @@ class _Caption:
         return
 
       if isinstance(element, model.Br):
-        _lines.append(bytes())
+        _lines.append("")
         return
 
       if isinstance(element, model.Text):
-        _lines[-1] = _lines[-1] + unicode_to_scc(element.get_text())
+        _lines[-1] = _lines[-1] + element.get_text()
         return
 
     for region in regions:
@@ -180,10 +180,17 @@ class _Chunk:
       self._octet_buffer.append(hi_octet)
       self._octet_buffer.append(lo_octet)
 
-  def push_octet(self, octet: int):
-    if (octet > 127):
-      raise RuntimeError("Line 21 octet is out of range")
-    self._octet_buffer.append(octet)
+  def push_char(self, char: str):
+    if len(char) != 1:
+      raise ValueError("Length of string must be exactly 1")
+    
+    scc_bytes = unicode_to_scc(char)
+
+    if len(scc_bytes) > 1 and len(self._octet_buffer) % 2 == 1:
+      self._octet_buffer.append(0)
+    
+    for b in scc_bytes:
+      self._octet_buffer.append(b)
 
   def overlap(self, other: _Chunk) -> bool:
     """Checks if the other chunk overlaps with the current chunk"""
@@ -277,10 +284,10 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       else:
         raise RuntimeError(f"Line width exceeded at {float(begin)}s, reflow disabled")
       # merge the lines of the caption and remove duplicate spaces
-      text = re.sub(b' +', b' ', b' '.join(caption))
+      text: str = re.sub(' +', ' ', ' '.join(caption))
 
       # reflow text
-      reflowed_lines: List[bytes] = []
+      reflowed_lines: List[str] = []
       while len(text) > MAX_LINEWIDTH:
         break_i = MAX_LINEWIDTH
 
@@ -341,7 +348,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       ru_chunk.set_begin(begin_f)
 
       for c in (caption[-1][len(captions[i - 1][-1]):] if is_painton else caption[-1]):
-        ru_chunk.push_octet(c)
+        ru_chunk.push_char(c)
 
       chunks.append(ru_chunk)
 
@@ -373,9 +380,9 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         enm_chunk.push_control_code(pac.get_ch1_packet())
 
         for i in range(spaces):
-          enm_chunk.push_octet(0x20)
+          enm_chunk.push_char(" ")
         for c in line:
-          enm_chunk.push_octet(c)
+          enm_chunk.push_char(c)
       enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
 
       enm_chunk.set_begin(int(caption.get_begin() * config.frame_rate.fps - enm_chunk.get_dur() + 2))
