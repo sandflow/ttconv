@@ -206,9 +206,12 @@ class _Chunk:
   def __len__(self):
     return len(self._octet_buffer)
 
-  def to_string(self, fps):
+  def to_string(self, fps : Fraction, is_df: bool):
     if fps not in (FPS_29_97, FPS_30):
       raise ValueError(f"Frame rate {fps} out-of-range")
+    
+    if fps != FPS_29_97 and is_df:
+      raise ValueError("Frame rate must be fractional if drop frame is true")
 
     def _octet2hex(octet):
       return format(_Chunk.ODD_PARITY_OCTETS[octet], 'x')
@@ -219,10 +222,7 @@ class _Chunk:
     if len(self._octet_buffer) % 2 == 1:
       packets.append(_octet2hex(self._octet_buffer[-1]) + _octet2hex(0))
 
-    return str(SmpteTimeCode.from_frames(self.get_begin(), fps)) + "\t" + " ".join(packets)
-
-  def __str__(self):
-    return self.to_string(FPS_29_97)
+    return str(SmpteTimeCode.from_frames(self.get_begin(), fps, is_df)) + "\t" + " ".join(packets)
 
 MAX_LINEWIDTH = 32
 
@@ -398,4 +398,4 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
         chunks.append(edm_chunk)
 
-  return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(lambda e: e.to_string(config.frame_rate.fps), chunks))
+  return "Scenarist_SCC V1.0\n\n" + "\n\n".join(map(lambda e: e.to_string(config.frame_rate.fps, config.frame_rate.df), chunks))

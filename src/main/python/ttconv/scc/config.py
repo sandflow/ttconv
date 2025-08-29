@@ -63,12 +63,14 @@ class TextAlignment(Enum):
 class SCCFrameRate(Enum):
   """SCC Frame Rates"""
 
-  FPS_30 = ("30", Fraction(30))
-  FPS_2997 = ("2997", Fraction(30000, 1001))
+  FPS_30_NDF = ("30NDF", Fraction(30), False)
+  FPS_2997_NDF = ("29.97NDF", Fraction(30000, 1001), False)
+  FPS_2997_DF = ("29.97DF", Fraction(30000, 1001), True)
 
-  def __init__(self, label: str, fps: Fraction):
-    self.label = label
-    self.fps = fps
+  def __init__(self, label: str, fps: Fraction, is_df: bool):
+    self.label : str = label
+    self.fps : Fraction = fps
+    self.df : bool = is_df
 
   @staticmethod
   def from_value(value: str | SCCFrameRate) -> SCCFrameRate:
@@ -124,7 +126,7 @@ class SccWriterConfiguration(ModuleConfiguration):
   )
 
   frame_rate: SCCFrameRate = field(
-    default=SCCFrameRate.FPS_2997,
+    default=SCCFrameRate.FPS_2997_DF,
     metadata={"decoder": SCCFrameRate.from_value}
   )
 

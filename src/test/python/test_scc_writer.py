@@ -52,7 +52,7 @@ class SccWriterConfigurationTest(unittest.TestCase):
 
     self.assertEqual(config.allow_reflow, True)
     self.assertEqual(config.force_popon, False)
-    self.assertEqual(config.frame_rate, SCCFrameRate.FPS_2997)
+    self.assertEqual(config.frame_rate, SCCFrameRate.FPS_2997_DF)
 
   def test_allow_reflow(self):
     config = SccWriterConfiguration.parse(json.loads("""{"allow_reflow": true }"""))
@@ -82,11 +82,17 @@ class SccWriterConfigurationTest(unittest.TestCase):
       config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 5 }"""))
 
   def test_frame_rate(self):
-    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "30" }"""))
+    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "30NDF" }"""))
     self.assertEqual(config.frame_rate.fps, Fraction(30))
+    self.assertFalse(config.frame_rate.df)
 
-    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "2997" }"""))
+    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "29.97NDF" }"""))
     self.assertEqual(config.frame_rate.fps, Fraction(30000, 1001))
+    self.assertFalse(config.frame_rate.df)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "29.97DF" }"""))
+    self.assertEqual(config.frame_rate.fps, Fraction(30000, 1001))
+    self.assertTrue(config.frame_rate.df)
 
     with self.assertRaises(ValueError):
       config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": 30 }"""))
@@ -203,7 +209,7 @@ class SCCWriterTest(unittest.TestCase):
 
 00:00:05:00	942c 942c"""
 
-    config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30)
+    config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF)
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 

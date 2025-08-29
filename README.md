@@ -249,11 +249,12 @@ Default: `4`
 
 #### frame_rate
 
-`"frame_rate" : "30" | "2997"`
+`"frame_rate" : "30NDF" | "29.97NDF" | "29.97DF"`
 
-If `frame_rate` is `"30"`, the output SCC file uses 30 fps non drop frame (NDF) timecode.
-
-If `frame_rate` is `"2997"`, the output SCC file uses 29.97 fps drop frame (DF) timecode.
+If `frame_rate` is:
+* `"30NDF"`, the output SCC file uses 30 fps non drop frame (NDF) timecode.
+* `"29.97NDF"`, the output SCC file uses 29.97 fps non drop frame (NDF) timecode.
+* `"29.97DF"`, the output SCC file uses 29.97 fps drop frame (DF) timecode.
 
 Default: `"2997"`
 
