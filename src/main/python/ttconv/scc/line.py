@@ -46,7 +46,15 @@ from ttconv.time_code import SmpteTimeCode, FPS_30
 
 LOGGER = logging.getLogger(__name__)
 
-SCC_LINE_PATTERN = '((' + SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN + ')|(' + SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN + '))\t.*'
+NDF_PATTERN = ':'.join(['(?P<ndf_h>[0-9]{2})',
+                      '(?P<ndf_m>[0-9]{2})',
+                      '(?P<ndf_s>[0-9]{2})',
+                      '(?P<ndf_f>[0-9]{2})'])
+DF_PATTERN = '(:|;|.|,)'.join(['(?P<df_h>[0-9]{2})',
+                              '(?P<df_m>[0-9]{2})',
+                              '(?P<df_s>[0-9]{2})',
+                              '(?P<df_f>[0-9]{2})'])
+SCC_LINE_PATTERN = '((' + NDF_PATTERN + ')|(' + DF_PATTERN + '))\t.*'
 
 
 class SccLine:

@@ -31,7 +31,7 @@ import re
 from abc import ABC, abstractmethod
 from fractions import Fraction
 from math import floor, ceil
-from typing import Union
+from typing import Optional, Union
 
 
 class _HHMMSSTimeExpression(ABC):
@@ -54,12 +54,6 @@ class _HHMMSSTimeExpression(ABC):
     """Returns time code seconds"""
     return self._seconds
 
-  @abstractmethod
-  def to_seconds(self) -> float:
-    """Converts current time code to seconds"""
-    return float(self._hours * 3600 + self._minutes * 60 + self._seconds)
-
-
 class ClockTime(_HHMMSSTimeExpression):
   """Millisecond-based time code definition"""
 
@@ -77,9 +71,12 @@ class ClockTime(_HHMMSSTimeExpression):
     """Returns time code milliseconds"""
     return self._milliseconds
 
-  def to_seconds(self) -> float:
+  def to_seconds(self) -> Fraction:
     """Converts current time code to seconds"""
-    return super().to_seconds() + self._milliseconds / 1000.0
+    return self.get_hours() * 3600 + \
+           self.get_minutes() * 60 + \
+           self.get_seconds() + \
+           Fraction(self._milliseconds, 1000)
 
   @staticmethod
   def parse(time_code: str) -> ClockTime:
@@ -141,20 +138,31 @@ FPS_60 = Fraction(60, 1)
 class SmpteTimeCode(_HHMMSSTimeExpression):
   """Frame-based time code definition"""
 
-  SMPTE_TIME_CODE_NDF_PATTERN = ':'.join(['(?P<ndf_h>[0-9]{2})',
+  _NDF_TC_PATTERN = ':'.join(['(?P<ndf_h>[0-9]{2})',
                                           '(?P<ndf_m>[0-9]{2})',
                                           '(?P<ndf_s>[0-9]{2})',
                                           '(?P<ndf_f>[0-9]{2})'])
+  
+  _NDF_TC_RE = re.compile(_NDF_TC_PATTERN)
 
-  SMPTE_TIME_CODE_DF_PATTERN = '(:|;|.|,)'.join(['(?P<df_h>[0-9]{2})',
+  _DF_TC_PATTERN = '(:|;|.|,)'.join(['(?P<df_h>[0-9]{2})',
                                                  '(?P<df_m>[0-9]{2})',
                                                  '(?P<df_s>[0-9]{2})',
                                                  '(?P<df_f>[0-9]{2})'])
+  
+  DF_TC_RE = re.compile(_DF_TC_PATTERN)
 
-  def __init__(self, hours: int, minutes: int, seconds: int, frames: int, frame_rate: Fraction):
+  def __init__(self, hours: int, minutes: int, seconds: int, frames: int, frame_rate: Fraction, is_df: Optional[bool] = None):
     super().__init__(hours, minutes, seconds)
     self._frames: int = frames
     self._frame_rate: Fraction = frame_rate
+
+    if is_df is None:
+       self._is_drop_frame = frame_rate.denominator == 1001
+    else:
+      if is_df and frame_rate.denominator != 1001:
+        raise ValueError("The numerator of the frame rate of a drop frame timecode must be 1001")
+      self._is_drop_frame: bool = is_df
 
   def get_frames(self) -> int:
     """Returns time code frames"""
@@ -168,10 +176,10 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     """Converts current time code into a number of frames"""
     dropped_frames = 0
 
-    if self.is_drop_frame():
-      ndf_frame_rate = ceil(self._frame_rate)
+    fps = ceil(self._frame_rate)
 
-      drop_frames_per_minute = round(60 * (ndf_frame_rate - self._frame_rate))  # 2 at 29.97 fps
+    if self.is_drop_frame():
+      drop_frames_per_minute = round(60 * (fps - self._frame_rate))  # 2 at 29.97 fps
 
       nb_of_minute_tens = self._hours * 6 + floor(self._minutes / 10)
       nb_of_drop_frames_in_tens = drop_frames_per_minute * 9 * nb_of_minute_tens
@@ -180,13 +188,15 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
 
       dropped_frames = nb_of_drop_frames_in_tens + nb_of_drop_frames_in_remaining
 
-    frame_rate = self._frame_rate if not self.is_drop_frame() else ceil(self._frame_rate)
+    whole_seconds = self.get_hours() * 3600 + \
+        self.get_minutes() * 60 + \
+        self.get_seconds()
+    
+    return int(whole_seconds * fps) + self._frames - dropped_frames
 
-    return int(super().to_seconds() * frame_rate) + self._frames - dropped_frames
-
-  def to_seconds(self) -> float:
+  def to_seconds(self) -> Fraction:
     """Converts current time code into seconds"""
-    return self.to_frames() / float(self._frame_rate)
+    return self.to_frames() / self._frame_rate
 
   def to_temporal_offset(self) -> Fraction:
     """Converts current time code into a second-based fraction"""
@@ -195,7 +205,7 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
 
   def is_drop_frame(self) -> bool:
     """Returns whether the time code is drop-frame or not"""
-    return self._frame_rate.denominator == 1001
+    return self._is_drop_frame
 
   def add_frames(self, nb_frames=1):
     """Add frames to the current time code"""
@@ -209,48 +219,56 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     self._frames = new_time_code.get_frames()
 
   @staticmethod
-  def parse(time_code: str, base_frame_rate: Fraction) -> SmpteTimeCode:
+  def parse(time_code: str, frame_rate: Fraction) -> SmpteTimeCode:
     """Reads the time code string and converts to a SmpteTimeCode instance"""
-    non_drop_frame_tc_regex = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN)
-    match = non_drop_frame_tc_regex.match(time_code)
+    
+    match = SmpteTimeCode._NDF_TC_RE.match(time_code)
 
     if match is not None:
+      # NDF timecode
       return SmpteTimeCode(int(match.group('ndf_h')),
                            int(match.group('ndf_m')),
                            int(match.group('ndf_s')),
                            int(match.group('ndf_f')),
-                           base_frame_rate)
+                           frame_rate,
+                           False)
 
-    if base_frame_rate.denominator != 1001:
-      base_frame_rate = base_frame_rate * Fraction(1000, 1001)
+    if frame_rate.denominator != 1001:
+      frame_rate = frame_rate * Fraction(1000, 1001)
 
-    drop_frame_tc_regex = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN)
-    match = drop_frame_tc_regex.match(time_code)
+    match = SmpteTimeCode.DF_TC_RE.match(time_code)
 
     if match is not None:
       return SmpteTimeCode(int(match.group('df_h')),
                            int(match.group('df_m')),
                            int(match.group('df_s')),
                            int(match.group('df_f')),
-                           base_frame_rate)
+                           frame_rate,
+                           True)
 
     raise ValueError("Invalid time code format")
 
   @staticmethod
-  def from_frames(nb_frames: Union[int, Fraction], frame_rate: Fraction) -> SmpteTimeCode:
+  def from_frames(nb_frames: Union[int, Fraction], frame_rate: Fraction, is_df: Optional[bool] = None) -> SmpteTimeCode:
     """Creates a time code from a number of frames and a frame rate"""
     if frame_rate is None:
       raise ValueError("Cannot compute time code from frames without frame rate")
 
-    drop_frame = frame_rate.denominator == 1001
+    if is_df is None:
+       drop_frame: bool = frame_rate.denominator == 1001
+    else:
+      if is_df and frame_rate.denominator != 1001:
+        raise ValueError("The numerator of the frame rate of a drop frame timecode must be 1001")
+      drop_frame: bool = is_df
+
+    fps = ceil(frame_rate)
 
     if drop_frame:
       # add two dropped frames every minute, but not when the minute count is divisible by 10
-      ndf_frame_rate = ceil(frame_rate)
 
       nb_frames_in_one_minute = 60 * frame_rate  # 1798 at 29.97 fps
       nb_frames_in_ten_minutes = round(10 * nb_frames_in_one_minute)  # 17982 at 29.97 fps
-      drop_frames_per_minute = round(60 * (ndf_frame_rate - frame_rate))  # 2 at 29.97 fps
+      drop_frames_per_minute = round(60 * (fps - frame_rate))  # 2 at 29.97 fps
 
       nb_of_minute_tens = floor(nb_frames / nb_frames_in_ten_minutes)
       nb_of_remaining_frames = round(nb_frames % nb_frames_in_ten_minutes)
@@ -266,14 +284,12 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
 
       nb_frames += nb_of_drop_frames_in_tens + nb_of_drop_frames_in_minutes
 
-    fps = ceil(frame_rate)
-
     h = floor(nb_frames / (60 * 60 * fps))
     m = floor(nb_frames / (60 * fps)) % 60
     s = floor(nb_frames / fps) % 60
     f = ceil(nb_frames % fps)
 
-    return SmpteTimeCode(h, m, s, f, frame_rate)
+    return SmpteTimeCode(h, m, s, f, frame_rate, drop_frame)
 
   @staticmethod
   def from_seconds(seconds: Union[float, Fraction], frame_rate: Fraction) -> SmpteTimeCode:
@@ -281,9 +297,7 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     if frame_rate is None:
       raise ValueError("Cannot compute SMPTE time code from seconds without frame rate")
 
-    frames = seconds * float(frame_rate)
-
-    return SmpteTimeCode.from_frames(int(frames), frame_rate)
+    return SmpteTimeCode.from_frames(int(seconds * frame_rate), frame_rate)
 
   def __str__(self):
     if self.is_drop_frame():
@@ -299,4 +313,5 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     return self._hours == other.get_hours() and \
            self._minutes == other.get_minutes() and \
            self._seconds == other.get_seconds() and \
-           self._frames == other.get_frames()
+           self._frames == other.get_frames() and \
+           self._is_drop_frame == other.is_drop_frame()
