@@ -36,7 +36,7 @@ from ttconv.time_code import ClockTime
 class TimeCodeTest(unittest.TestCase):
 
   def test_time_code(self):
-    seconds = 123.45
+    seconds = Fraction(2469, 20)
     time_code = ClockTime.from_seconds(seconds)
     self.assertEqual("00:02:03.450", str(time_code))
     time_code.set_separator(",")
