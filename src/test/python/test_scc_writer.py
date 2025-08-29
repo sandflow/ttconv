@@ -183,6 +183,29 @@ class SCCWriterTest(unittest.TestCase):
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
 
+  def test_basic_2997NDF(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml">
+  <body>
+    <div>
+      <p begin="3600s" end="3602s">Hello</p>
+     </div>
+  </body>
+</tt>"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    assert model is not None
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:59:56:03	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
+
+00:59:58:12	942c 942c"""
+
+    config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_2997_NDF)
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
+
   def test_basic_30FPS(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
