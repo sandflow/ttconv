@@ -122,7 +122,7 @@ class SCCWriterTest(unittest.TestCase):
 
 00:00:05;00	942c 942c"""
 
-  def test_basic_centered(self):
+  def test_pop_on_centered(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:tts="http://www.w3.org/ns/ttml#styling"
@@ -147,6 +147,30 @@ class SCCWriterTest(unittest.TestCase):
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 
+  def test_pop_on_right_aligned(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
+  <body>
+    <div>
+      <p begin="30f" end="90f" tts:textAlign="right">Hello</p>
+     </div>
+  </body>
+</tt>"""
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;20	9420 9420 94ae 94ae 94dc 94dc 2020 20c8 e5ec ecef 942f 942f
+
+00:00:03;00	942c 942c"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    assert model is not None
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
 
   def test_rollup(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
