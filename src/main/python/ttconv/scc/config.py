@@ -29,6 +29,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from fractions import Fraction
+import typing
 
 from ttconv.config import ModuleConfiguration
 from ttconv.style_properties import TextAlignType
@@ -58,6 +60,30 @@ class TextAlignment(Enum):
 
     raise ValueError(f"Invalid text align '{value}' value. Expect: 'left', 'center', 'right' or 'auto'.")
 
+class SCCFrameRate(Enum):
+  """SCC Frame Rates"""
+
+  FPS_30_NDF = ("30NDF", Fraction(30), False)
+  FPS_2997_NDF = ("29.97NDF", Fraction(30000, 1001), False)
+  FPS_2997_DF = ("29.97DF", Fraction(30000, 1001), True)
+
+  def __init__(self, label: str, fps: Fraction, is_df: bool):
+    self.label : str = label
+    self.fps : Fraction = fps
+    self.df : bool = is_df
+
+  @staticmethod
+  def from_value(value: str | SCCFrameRate) -> SCCFrameRate:
+    """Create a Frame Rate from a specified value"""
+    if isinstance(value, SCCFrameRate):
+      return value
+
+    if isinstance(value, str):
+      for e in list(SCCFrameRate):
+        if value.lower() == e.label.lower():
+          return e
+
+    raise ValueError(f"Invalid SCC Frame Rate '{value}'. Expect {','.join([e.label for e in list(SCCFrameRate)])}.")
 
 @dataclass
 class SccReaderConfiguration(ModuleConfiguration):
@@ -71,3 +97,39 @@ class SccReaderConfiguration(ModuleConfiguration):
   @classmethod
   def name(cls):
     return "scc_reader"
+
+def _decode_rollup_lines(value: str) -> int:
+  decoded_value = int(value)
+
+  if decoded_value < 2 or decoded_value > 4:
+    raise ValueError(f"Invalid rollup_lines '{value}' value. Expect: 2-4.")
+
+  return decoded_value
+
+@dataclass
+class SccWriterConfiguration(ModuleConfiguration):
+  """SCC writer configuration"""
+
+  allow_reflow: bool = field(
+    default=True,
+    metadata={"decoder": bool}
+  )
+
+  force_popon: bool = field(
+    default=False,
+    metadata={"decoder": bool}
+  )
+
+  rollup_lines: int = field(
+    default=4,
+    metadata={"decoder": _decode_rollup_lines}
+  )
+
+  frame_rate: SCCFrameRate = field(
+    default=SCCFrameRate.FPS_2997_DF,
+    metadata={"decoder": SCCFrameRate.from_value}
+  )
+
+  @classmethod
+  def name(cls):
+    return "scc_writer"

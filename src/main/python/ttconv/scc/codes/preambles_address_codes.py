@@ -51,6 +51,33 @@ _ROW_MAPPING = {
   (0x04, 0x60): 15
 }
 
+_ROW_PAC_MAPPING_CH1 = [
+  (0x01, 0x40),
+  (0x01, 0x60),
+  (0x02, 0x40),
+  (0x02, 0x60),
+  (0x05, 0x40),
+  (0x05, 0x60),
+  (0x06, 0x40),
+  (0x06, 0x60),
+  (0x07, 0x40),
+  (0x07, 0x60),
+  (0x00, 0x40),
+  (0x03, 0x40),
+  (0x03, 0x60),
+  (0x04, 0x40),
+  (0x04, 0x60)
+]
+
+_PAC_COLOR_MAPPING = {
+  NamedColors.white.value: 0,
+  NamedColors.green.value: 2,
+  NamedColors.blue.value: 4,
+  NamedColors.cyan.value: 6,
+  NamedColors.red.value: 8,
+  NamedColors.yellow.value: 10,
+  NamedColors.magenta.value: 12,
+}
 
 class _SccPacDescriptionBits:
   """Helper class for SCC PAC description bits handling"""
@@ -88,22 +115,18 @@ class _SccPacDescriptionBits:
 class SccPreambleAddressCode:
   """SCC PAC definition"""
 
-  def __init__(self, byte_1: int, byte_2: int):
-    row = SccPreambleAddressCode._get_row(byte_1, byte_2)
-    if row is None:
-      raise ValueError("Failed to extract PAC row from specified bytes:", hex(byte_1), hex(byte_2))
-
-    desc_bits = SccPreambleAddressCode._get_description_bits(byte_2)
-    if desc_bits is None:
-      raise ValueError("Failed to extract PAC description from specified bytes:", hex(byte_1), hex(byte_2))
-
+  def __init__(self, channel: SccChannel,
+               row: int,
+               color: ColorType = NamedColors.white,
+               indent: Optional[int] = None,
+               is_italic: bool = False,
+               is_underline: bool = False):
+    self._channel = channel
     self._row = row
-    self._color: Optional[ColorType] = desc_bits.get_color()
-    self._indent: Optional[int] = desc_bits.get_indent()
-    self._font_style: Optional[bool] = FontStyleType.italic if desc_bits.get_italic() else None
-    self._text_decoration: Optional[TextDecorationType] = \
-      TextDecorationType(underline=True) if desc_bits.get_underline() else None
-    self._channel = SccChannel.CHANNEL_2 if byte_1 & 0x08 else SccChannel.CHANNEL_1
+    self._color = color
+    self._indent = indent
+    self._is_italic = is_italic
+    self._is_underline = is_underline
 
   def get_row(self) -> int:
     """Returns the PAC row"""
@@ -117,13 +140,21 @@ class SccPreambleAddressCode:
     """Returns PAC color"""
     return self._color
 
+  def is_underline(self) -> bool:
+    """Returns PAC underline flag"""
+    return self._is_underline
+
+  def is_italic(self) -> bool:
+    """Returns PAC italic flag"""
+    return self._is_italic
+
   def get_font_style(self) -> Optional[FontStyleType]:
     """Returns PAC font style"""
-    return self._font_style
+    return FontStyleType.italic if self._is_italic else None
 
   def get_text_decoration(self) -> Optional[TextDecorationType]:
     """Returns PAC text decoration"""
-    return self._text_decoration
+    return TextDecorationType(underline=True) if self._is_underline else None
 
   def get_channel(self) -> SccChannel:
     """Returns PAC channel"""
@@ -138,13 +169,45 @@ class SccPreambleAddressCode:
            and self.get_font_style() == other.get_font_style() \
            and self.get_text_decoration() == other.get_text_decoration()
 
+  def get_ch1_packet(self):
+    hi, lo = _ROW_PAC_MAPPING_CH1[self.get_row() - 1]
+
+    hi = hi + 0x10 # channel 1
+
+    if self.is_italic():
+      lo = lo + 0x0E
+    elif self.get_indent() is not None:
+      lo = lo + 0x10 + self.get_indent() // 2
+    else:
+      lo = lo + _PAC_COLOR_MAPPING.get(self.get_color(), 0)
+
+    if self.is_underline():
+      lo = lo + 1
+
+    return hi * 256 + lo
+
   @staticmethod
   def find(byte_1: int, byte_2: int) -> Optional[SccPreambleAddressCode]:
     """Find the SCC PAC corresponding to the specified bytes"""
-    try:
-      return SccPreambleAddressCode(byte_1, byte_2)
-    except ValueError as _e:
+
+    row = SccPreambleAddressCode._get_row(byte_1, byte_2)
+    if row is None:
+      # Failed to extract PAC row from specified bytes
       return None
+
+    desc_bits = SccPreambleAddressCode._get_description_bits(byte_2)
+    if desc_bits is None:
+      # Failed to extract PAC description from specified bytes
+      return None
+
+    return SccPreambleAddressCode(
+      SccChannel.CHANNEL_2 if byte_1 & 0x08 else SccChannel.CHANNEL_1,
+      row,
+      desc_bits.get_color(),
+      desc_bits.get_indent(),
+      desc_bits.get_italic(),
+      desc_bits.get_underline()
+    )
 
   @staticmethod
   def _get_row(byte_1: int, byte_2: int) -> Optional[int]:
