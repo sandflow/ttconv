@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-# Copyright (c) 2020, Sandflow Consulting LLC
+# Copyright (c) 2023, Sandflow Consulting LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,26 +23,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""WebVTT configuration"""
+"""Data model filter"""
 
 from __future__ import annotations
+from typing import Optional
 
-from dataclasses import dataclass, field
+from ttconv.model import ContentDocument
 from ttconv.config import ModuleConfiguration
 
-@dataclass
-class VTTWriterConfiguration(ModuleConfiguration):
-  """VTT writer configuration"""
-  
+class DocumentFilter:
+  """Abstract base class for content document filters"""
+
+  _all_filters = dict()
+
+  def __init__(self, config: ModuleConfiguration) -> None:
+    self.config = config
+
+  def process(self, doc: ContentDocument):
+    """Processes the specified document in place."""
+    raise NotImplementedError
+
   @classmethod
-  def name(cls):
-    return "vtt_writer"
+  def get_config_class(cls) -> ModuleConfiguration:
+    """Returns the configuration class for the filter."""
+    raise NotImplementedError
 
-  # outputs `line` and `line alignment` cue settings
-  line_position: bool = field(default=False, metadata={"decoder": bool})
+  @classmethod
+  def get_filter_by_name(cls, name) -> Optional[DocumentFilter]:
+    """Returns a list of all document filters"""
+    return DocumentFilter._all_filters.get(name)
 
-  # outputs `text alignment` cue settings
-  text_align: bool = field(default=False, metadata={"decoder": bool})
+  def __init_subclass__(cls):
+    DocumentFilter._all_filters[cls.get_config_class().name()] = cls
 
-  # outputs cue identifier
-  cue_id: bool = field(default=True, metadata={"decoder": bool})
+from ttconv.filters.doc import *

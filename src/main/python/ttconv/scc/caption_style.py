@@ -23,26 +23,43 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""WebVTT configuration"""
+"""SCC caption style"""
 
-from __future__ import annotations
+from enum import Enum
 
-from dataclasses import dataclass, field
-from ttconv.config import ModuleConfiguration
 
-@dataclass
-class VTTWriterConfiguration(ModuleConfiguration):
-  """VTT writer configuration"""
-  
-  @classmethod
-  def name(cls):
-    return "vtt_writer"
+class SccCaptionStyle(Enum):
+  """SCC caption style"""
+  Unknown = 0
 
-  # outputs `line` and `line alignment` cue settings
-  line_position: bool = field(default=False, metadata={"decoder": bool})
+  # SCC Roll-Up captions are composed with:
+  #  - RU2 or RU3 or RU4 (to select the Roll-Up style and the number of displayed rows)
+  #  - CR (to roll the displayed rows up)
+  #  - PAC (to set row, indent and/or attributes)
+  #  - text
+  RollUp = 1
 
-  # outputs `text alignment` cue settings
-  text_align: bool = field(default=False, metadata={"decoder": bool})
+  # SCC Paint-On captions are composed with:
+  #  - RDC (to select the Paint-On style)
+  #  - PAC (to set row, indent and/or attributes)
+  #  - text
+  #  - PAC (to change row, indent and/or attributes)
+  #  - text or DER (to erase the following text of the current row)
+  PaintOn = 2
 
-  # outputs cue identifier
-  cue_id: bool = field(default=True, metadata={"decoder": bool})
+  # SCC Pop-On captions are composed with:
+  #  - RCL (to select the Pop-On style)
+  #  - ENM (to clear the memory, optional)
+  #  - PAC (to set row, indent and/or attributes)
+  #  - text
+  #  - PAC (to change row, indent and/or attributes)
+  #  - text
+  #  etc.
+  #  - EDM (to erase the displayed caption, optional)
+  #  - EOC (to display the current caption)
+  PopOn = 3
+
+  @staticmethod
+  def default():
+    """Returns the default caption style"""
+    return SccCaptionStyle.PopOn

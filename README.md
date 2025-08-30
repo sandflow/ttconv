@@ -11,22 +11,26 @@
 
 ## Introduction
 
-_ttconv_ is a library and command line application written in pure Python for converting between timed text
-formats used in the presentations of captions, subtitles, karaoke, etc.
+_ttconv_ is a library and command line application written in pure Python for
+converting between timed text formats used in the presentations of captions,
+subtitles, karaoke, etc.
 
-    TTML / IMSC ---                         --- IMSC / TTML
-                    \                     /
-    SCC / CEA 608 ----- Canonical Model -------- WebVTT
-                    /                     \
-    EBU STL -------                         --- SRT
+    TTML / IMSC ---                                       --- IMSC / TTML
+                    \                                   /
+    SCC / CEA 608 ------- 0 or more document filters --------- WebVTT
+                    /        [ Canonical Model ]        \
+    EBU STL -------                                       --- SRT
                   /
     SRT ---------
                 /
     WebVTT ----
 
-_ttconv_ works by mapping the input document, whatever its format, into an internal canonical model, which is then mapped to the
-format of the output document is derived. The canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data model,
-as constrained by the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification.
+_ttconv_ works by mapping the input document, whatever its format, into an
+internal canonical model, which is then optionally transformed by document
+filters, and finally mapped to the format of the output document is derived. The
+canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data
+model, as constrained by the [IMSC 1.1 Text
+Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification.
 
 ## Online demo
 
@@ -69,17 +73,15 @@ tt convert -i <input .scc file> -o <output .ttml file>
 
 * `--itype`: `TTML` | `SCC` | `STL` | `SRT` (extrapolated from the filename, if omitted)
 * `--otype`: `TTML` | `SRT` | `VTT` (extrapolated from the filename, if omitted)
-* `--config` and `--config_file`: JSON dictionaries with the following members:
-  * `"general": JSON object`: General configuration options (see below)
-  * `"imsc_writer": JSON object`: IMSC Writer configuration options (see below)
-  * `"stl_reader": JSON object`: STL Reader configuration options (see below)
-  * `"vtt_writer": JSON object`: WebVTT Writer configuration options (see below)
+* `--filter`: specifies by name a filter to be applied to the content
+* `--config` and `--config_file`: JSON dictionary where each property specifies
+  (optional) configuration parameters for readers, writers and filters.
 
 Example:
 
-`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --config '{"general": {"progress_bar":false, "log_level":"WARN"}}'`
+`tt convert -i <.scc file> -o <.ttml file> --itype SCC --otype TTML --filter lcd --config '{"general": {"progress_bar":false, "log_level":"WARN"}, "lcd": {"bg_color": "transparent", "color": "#FF0000"}}'`
 
-### General configuration
+### General configuration (`"general"`)
 
 #### progress_bar
 
@@ -107,7 +109,7 @@ Example: `"document_lang": "es-419"`
 
 Default: `None`
 
-### IMSC Writer configuration
+### IMSC Writer configuration (`"imsc_writer"`)
 
 ### time_format
 
@@ -129,7 +131,7 @@ Example:
 
 `--config '{"general": {"progress_bar":false, "log_level":"WARN"}, "imsc_writer": {"time_format":"clock_time_with_frames", "fps": "25/1"}}'`
 
-### STL Reader configuration
+### STL Reader configuration (`"stl_reader"`)
 
 #### disable_fill_line_gap
 
@@ -163,7 +165,7 @@ Overrides the font stack
 
 Default: `"Verdana, Arial, Tiresias, sansSerif"`
 
-#### ax_row_count
+#### max_row_count
 
 `"max_row_count" : "MNR" | integer`
 
@@ -171,13 +173,31 @@ Specifies a maximum number of rows for open subtitles, either the MNR field of t
 
 Default: `23`
 
-### VTT Writer configuration
+### SRT Writer configuration (`"srt_writer"`)
+
+#### text_formatting
+
+`"text_formatting" : true | false`
+
+`false` means that the SRT writer does not output any text formatting tags
+
+Default: `true`
+
+### VTT Writer configuration (`"vtt_writer"`)
 
 #### line_position
 
 `"line_position" : true | false`
 
 `true` means that the VTT writer outputs line and line alignment cue settings
+
+Default: `false`
+
+#### text_align
+
+`"text_align" : true | false`
+
+`true` means that the VTT writer outputs text alignment cue settings
 
 Default: `false`
 
@@ -189,7 +209,63 @@ Default: `false`
 
 Default: `true`
 
-### Library
+### SCC Reader configuration
+
+#### text_align
+
+`"text_align" : "auto" | "left" | "center" | "right"`
+
+Specifies the text alignment. `"auto"` means the reader will use heuristics to determine
+text alignment.
+
+Default: `"auto"`
+
+### LCD filter configuration (`"lcd"`)
+
+#### Description
+
+The LCD filter merges regions and removes all text formatting with the exception
+of color and text alignment.
+
+#### safe_area
+
+`"safe_area" : <integer between 0 and 30>`
+
+Specifies the safe area (as a percentage of the height and width of the root container)
+
+Default: `10`
+
+#### color
+
+`"color" : <TTML color> | null`
+
+If not `null`, overrides text color. The syntax of `TTML color` is
+specified at <https://www.w3.org/TR/ttml2/#style-value-color>.
+
+Default: `null`
+
+Examples: `"#FFFFFF"` (white), `"white"`
+
+#### bg_color
+
+`"bg_color" : <TTML color>`
+
+If not `null`, overrides the background color. The syntax of `TTML color` is
+specified at <https://www.w3.org/TR/ttml2/#style-value-color>.
+
+Default: `null`
+
+Examples: `"#FF0000"` (red), `"transparent"`, `"black"`
+
+#### preserve_text_align
+
+`"preserve_text_align" : true | false`
+
+If `true`, text alignment is preserved, otherwise text is centered.
+
+Default: `false`
+
+## Library
 
 The overall architecture of the library is as follows:
 
@@ -263,7 +339,7 @@ Automated testing is provided by the script at `scripts/ci.sh`
 
 #### Local
 
-Run `./scripts/ci.sh`
+Run `PYTHONPATH=src/main/python ./scripts/ci.sh`
 
 #### GitHub actions
 

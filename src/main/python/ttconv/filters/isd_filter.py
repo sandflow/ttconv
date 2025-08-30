@@ -23,26 +23,13 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""WebVTT configuration"""
+"""Data model filter"""
 
-from __future__ import annotations
+from ttconv.isd import ISD
 
-from dataclasses import dataclass, field
-from ttconv.config import ModuleConfiguration
+class ISDFilter:
+  """Abstract base class for filters"""
 
-@dataclass
-class VTTWriterConfiguration(ModuleConfiguration):
-  """VTT writer configuration"""
-  
-  @classmethod
-  def name(cls):
-    return "vtt_writer"
-
-  # outputs `line` and `line alignment` cue settings
-  line_position: bool = field(default=False, metadata={"decoder": bool})
-
-  # outputs `text alignment` cue settings
-  text_align: bool = field(default=False, metadata={"decoder": bool})
-
-  # outputs cue identifier
-  cue_id: bool = field(default=True, metadata={"decoder": bool})
+  def process(self, isd: ISD):
+    """Process the specified ISD and returns it."""
+    raise NotImplementedError

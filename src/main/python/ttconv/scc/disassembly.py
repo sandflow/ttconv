@@ -26,9 +26,17 @@
 """SCC disassembly functions"""
 import logging
 
+from ttconv.scc.codes.attribute_codes import SccAttributeCode
+from ttconv.scc.codes.control_codes import SccControlCode
+from ttconv.scc.codes.extended_characters import SccExtendedCharacter
+from ttconv.scc.codes.mid_row_codes import SccMidRowCode
+from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
+from ttconv.scc.codes.special_characters import SccSpecialCharacter
+from ttconv.scc.word import SccWord
 from ttconv.style_properties import ColorType, NamedColors, FontStyleType, TextDecorationType
 
 LOGGER = logging.getLogger(__name__)
+
 
 def get_color_disassembly(color: ColorType) -> str:
   """Get color disassembly code"""
@@ -81,3 +89,93 @@ def get_text_decoration_disassembly(text_decoration: TextDecorationType) -> str:
   if text_decoration is not None and text_decoration.underline is True:
     return "U"
   return ""
+
+
+def get_scc_word_disassembly(scc_word: SccWord, show_channel = False) -> str:
+  """Returns the disassembly code for specified SCC word"""
+  if scc_word.value == 0x0000:
+    return "{}"
+
+  if scc_word.byte_1 < 0x20:
+
+    pac = SccPreambleAddressCode.find(scc_word.byte_1, scc_word.byte_2)
+
+    if pac is not None:
+      disassembly_code = "{"
+      if show_channel:
+        disassembly_code += str(pac.get_channel()) + "|"
+      disassembly_code += f"{pac.get_row():02}"
+      color = pac.get_color()
+      indent = pac.get_indent()
+      if indent is not None and indent > 0:
+        disassembly_code += f"{indent :02}"
+      elif color is not None:
+        disassembly_code += get_color_disassembly(color)
+        disassembly_code += get_font_style_disassembly(pac.get_font_style())
+        disassembly_code += get_text_decoration_disassembly(pac.get_text_decoration())
+      else:
+        disassembly_code += "00"
+      disassembly_code += "}"
+      return disassembly_code
+
+    attribute_code = SccAttributeCode.find(scc_word.value)
+
+    if attribute_code is not None:
+      disassembly_code = "{"
+      if show_channel:
+        disassembly_code += str(attribute_code.get_channel(scc_word.value)) + "|"
+      disassembly_code += "B" if attribute_code.is_background() else ""
+      disassembly_code += get_color_disassembly(attribute_code.get_color())
+      disassembly_code += get_text_decoration_disassembly(attribute_code.get_text_decoration())
+      disassembly_code += "}"
+      return disassembly_code
+
+    mid_row_code = SccMidRowCode.find(scc_word.value)
+
+    if mid_row_code is not None:
+      disassembly_code = "{"
+      if show_channel:
+        disassembly_code += str(mid_row_code.get_channel(scc_word.value)) + "|"
+      disassembly_code += get_color_disassembly(mid_row_code.get_color())
+      disassembly_code += get_font_style_disassembly(mid_row_code.get_font_style())
+      disassembly_code += get_text_decoration_disassembly(mid_row_code.get_text_decoration())
+      disassembly_code += "}"
+      return disassembly_code
+
+    control_code = SccControlCode.find(scc_word.value)
+
+    if control_code is not None:
+      disassembly_code = "{"
+      if show_channel:
+        disassembly_code += str(control_code.get_channel(scc_word.value)) + "|"
+      disassembly_code += control_code.get_name()
+      disassembly_code += "}"
+      return disassembly_code
+
+    # print(f"{hex(scc_word.byte_1)}{hex(scc_word.byte_2)}")
+    spec_char = SccSpecialCharacter.find(scc_word.value)
+
+    if spec_char is not None:
+      if show_channel:
+        disassembly_code = "["
+        disassembly_code += str(spec_char.get_channel(scc_word.value))
+        disassembly_code += "]"
+        disassembly_code += spec_char.get_unicode_value()
+        return disassembly_code
+      return spec_char.get_unicode_value()
+
+    extended_char = SccExtendedCharacter.find(scc_word.value)
+
+    if extended_char is not None:
+      if show_channel:
+        disassembly_code = "["
+        disassembly_code += str(extended_char.get_channel(scc_word.value))
+        disassembly_code += "]"
+        disassembly_code += extended_char.get_unicode_value()
+        return disassembly_code
+      return extended_char.get_unicode_value()
+
+    LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
+    return "{??}"
+
+  return scc_word.to_text()

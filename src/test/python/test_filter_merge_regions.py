@@ -29,7 +29,7 @@
 
 import unittest
 
-from ttconv.filters.merge_regions import RegionsMergingFilter
+from ttconv.filters.isd.merge_regions import RegionsMergingISDFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement
 
@@ -62,7 +62,7 @@ class RegionsMergingFilterTest(unittest.TestCase):
       return RegionsMergingFilterTest._get_text_from_children(child)
 
   def test_merging_regions(self):
-    regions_merging_filter = RegionsMergingFilter()
+    regions_merging_filter = RegionsMergingISDFilter()
 
     isd = ISD(None)
 

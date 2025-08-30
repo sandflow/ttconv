@@ -641,7 +641,7 @@ class StyleProperties:
 
     @staticmethod
     def make_initial_value():
-      return LengthType(value=1, units=LengthType.Units.c)
+      return LengthType(value=0, units=LengthType.Units.c)
 
     @staticmethod
     def validate(value: LengthType):

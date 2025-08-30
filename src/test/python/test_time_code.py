@@ -36,7 +36,7 @@ from ttconv.time_code import ClockTime
 class TimeCodeTest(unittest.TestCase):
 
   def test_time_code(self):
-    seconds = 123.45
+    seconds = Fraction(2469, 20)
     time_code = ClockTime.from_seconds(seconds)
     self.assertEqual("00:02:03.450", str(time_code))
     time_code.set_separator(",")
@@ -65,6 +65,23 @@ class TimeCodeTest(unittest.TestCase):
     time_code.set_separator(",")
     self.assertEqual("24:00:01,500", str(time_code))
     self.assertEqual(seconds, time_code.to_seconds())
+
+  def test_from_seconds_rounding_up(self):
+      seconds = Fraction(41039999,7500)
+      time_code = ClockTime.from_seconds(seconds)
+      self.assertEqual(time_code.get_hours(), 1)
+      self.assertEqual(time_code.get_minutes(), 31)
+      self.assertEqual(time_code.get_seconds(), 12)
+      self.assertEqual(time_code.get_milliseconds(), 0)
+
+
+  def test_from_seconds_rounding_down(self):
+      seconds = 5471.9994
+      time_code = ClockTime.from_seconds(seconds)
+      self.assertEqual(time_code.get_hours(), 1)
+      self.assertEqual(time_code.get_minutes(), 31)
+      self.assertEqual(time_code.get_seconds(), 11)
+      self.assertEqual(time_code.get_milliseconds(), 999)
 
 if __name__ == '__main__':
   unittest.main()

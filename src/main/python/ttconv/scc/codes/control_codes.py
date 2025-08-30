@@ -28,12 +28,11 @@
 from __future__ import annotations
 
 import typing
-from enum import Enum
 
 from ttconv.scc.codes import SccCode
 
 
-class SccControlCode(SccCode, Enum):
+class SccControlCode(SccCode):
   """SCC Control Code definition"""
   AOF = (0x1422, 0x1C22, 0x1522, 0x1D22)  # Reserved (formerly Alarm Off)
   AON = (0x1423, 0x1C23, 0x1523, 0x1D23)  # Reserved (formerly Alarm On)
@@ -64,7 +63,7 @@ class SccControlCode(SccCode, Enum):
     """Retrieves Control Code name"""
     return self.name
 
-  def get_values(self) -> (int, int, int, int):
+  def get_values(self) -> typing.Tuple[int, int, int, int]:
     """Returns SCC Control Code values"""
     return self._channel_1, self._channel_2, self._channel_1_field_2, self._channel_2_field_2
 
@@ -75,3 +74,7 @@ class SccControlCode(SccCode, Enum):
       if control_code.contains_value(value):
         return control_code
     return None
+
+  def debug(self, value: int) -> str:
+    """Debug representation of the code"""
+    return "[" + str(self.get_channel(value)) + "|CC|" + self.get_name() + "/" + hex(value) + "]"

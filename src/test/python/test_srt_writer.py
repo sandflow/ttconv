@@ -36,6 +36,7 @@ from pathlib import Path
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
+import ttconv.srt.config as srt_config
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
 
@@ -205,6 +206,48 @@ This text must appear at 10 seconds and disappear at 24.4 seconds
 2
 00:00:25,000 --> 00:00:35,000
 This text must appear at 25 seconds and disappear at 35 seconds
+""")
+
+  def test_text_formatting_disabled(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p tts:fontStyle="italic" tts:textDecoration="underline" tts:fontWeight="bold" tts:color="red" begin="00:00:00:00" end="00:00:01:00">Lorem</p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    config = srt_config.SRTWriterConfiguration.parse({"text_formatting": False})
+
+    srt_from_model = srt_writer.from_model(doc, config)
+
+    self.assertEqual(srt_from_model, """1
+00:00:00,000 --> 00:00:01,000
+Lorem
+""")
+
+  def test_text_italic(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p tts:fontStyle="italic" begin="00:00:00:00" end="00:00:01:00">Lorem</p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    srt_from_model = srt_writer.from_model(doc)
+
+    self.assertEqual(srt_from_model, """1
+00:00:00,000 --> 00:00:01,000
+<i>Lorem</i>
 """)
 
 if __name__ == '__main__':

@@ -28,13 +28,12 @@
 from __future__ import annotations
 
 import typing
-from enum import Enum
 
 from ttconv.scc.codes import SccCode, SCC_COLOR_MAPPING
 from ttconv.style_properties import FontStyleType, TextDecorationType, ColorType
 
 
-class SccMidRowCode(SccCode, Enum):
+class SccMidRowCode(SccCode):
   """SCC Mid-Row Code values"""
   WHITE = (0x1120, 0x1920)
   WHITE_UNDERLINE = (0x1121, 0x1921)
@@ -88,3 +87,7 @@ class SccMidRowCode(SccCode, Enum):
       if mid_row_code.contains_value(value):
         return mid_row_code
     return None
+
+  def debug(self, value: int) -> str:
+    """Debug representation of the code"""
+    return "[" + str(self.get_channel(value)) + "|MRC|" + self.get_name() + "/" + hex(value) + "]"

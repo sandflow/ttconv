@@ -34,6 +34,7 @@ import xml.etree.ElementTree as et
 from argparse import ArgumentParser
 from enum import Enum
 from pathlib import Path
+from ttconv.filters.document_filter import DocumentFilter
 
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
@@ -50,6 +51,7 @@ from ttconv.imsc.config import IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
 from ttconv.scc.config import SccReaderConfiguration
 from ttconv.stl.config import STLReaderConfiguration
+from ttconv.srt.config import SRTWriterConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
@@ -256,8 +258,9 @@ def subcommand(args=None, parent=subparsers):
   argument("-o", "--output", help="Output file path", required=True),
   argument("--itype", help="Input file type", required=False),
   argument("--otype", help="Output file type", required=False),
+  argument("--filter", action="append", help="Document filter", required=False, default=[]),
   argument("--config", help="Configuration in json. Overridden by --config_file.", required=False),
-  argument("--config_file", help="Configuration file. Overrides --config_file.", required=False)
+  argument("--config_file", help="Configuration file. Overrides --config.", required=False)
 ])
 def convert(args):
   '''Process input and output through the reader, converter, and writer'''
@@ -361,6 +364,28 @@ def convert(args):
   if general_config is not None and general_config.document_lang is not None:
     model.set_lang(general_config.document_lang)
 
+  #
+  # apply document filter
+  #
+
+  for filter_name in args.filter:
+    doc_filter_class = DocumentFilter.get_filter_by_name(filter_name)
+
+    if doc_filter_class is None:
+      LOGGER.error("Unknown filter: %s", filter_name)
+      continue
+
+    filter_config_class = doc_filter_class.get_config_class()
+
+    filter_config = read_config_from_json(filter_config_class, json_config_data)
+
+    doc_filter: DocumentFilter = doc_filter_class(filter_config or filter_config_class())
+
+    doc_filter.process(model)
+
+  #
+  # Write the output document
+  #
   if writer_type is FileTypes.TTML:
     #
     # Read the config
@@ -381,7 +406,7 @@ def convert(args):
     #
     # Read the config
     #
-    writer_config = read_config_from_json(ISDConfiguration, json_config_data)
+    writer_config = read_config_from_json(SRTWriterConfiguration, json_config_data)
 
     #
     # Construct and configure the writer

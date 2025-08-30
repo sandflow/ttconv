@@ -28,7 +28,7 @@
 import logging
 from typing import Dict, Type, Any
 
-from ttconv.filters import Filter
+from ttconv.filters.isd_filter import ISDFilter
 from ttconv.isd import ISD
 from ttconv.model import ContentElement
 from ttconv.style_properties import StyleProperty
@@ -36,7 +36,7 @@ from ttconv.style_properties import StyleProperty
 LOGGER = logging.getLogger(__name__)
 
 
-class DefaultStylePropertyValuesFilter(Filter):
+class DefaultStylePropertyValuesISDFilter(ISDFilter):
   """Filter that remove default style properties"""
 
   def __init__(self, style_property_default_values: Dict[Type[StyleProperty], Any]):

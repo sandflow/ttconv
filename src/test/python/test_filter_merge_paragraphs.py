@@ -30,7 +30,7 @@
 from typing import List
 import unittest
 
-from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
+from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingISDFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement, Br
 
@@ -66,7 +66,7 @@ class ParagraphsMergingFilterTest(unittest.TestCase):
       return ParagraphsMergingFilterTest._get_text_from_children(child)
 
   def test_merging_regions(self):
-    paragraphs_merging_filter = ParagraphsMergingFilter()
+    paragraphs_merging_filter = ParagraphsMergingISDFilter()
 
     isd = ISD(None)
 

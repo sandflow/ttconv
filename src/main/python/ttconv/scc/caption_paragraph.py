@@ -32,8 +32,9 @@ from math import ceil
 from typing import Optional, List, Dict, Union
 
 from ttconv.model import Region, ContentDocument, P, Br, Span, Text
-from ttconv.scc.content import SccCaptionText, SccCaptionLine
-from ttconv.scc.style import SccCaptionStyle
+from ttconv.scc.caption_line import SccCaptionLine
+from ttconv.scc.caption_style import SccCaptionStyle
+from ttconv.scc.caption_text import SccCaptionText
 from ttconv.scc.utils import get_position_from_offsets, get_extent_from_dimensions, convert_cells_to_percentages
 from ttconv.style_properties import CoordinateType, ExtentType, StyleProperties, LengthType, DisplayAlignType, ShowBackgroundType, \
   TextAlignType, NamedColors
@@ -50,6 +51,11 @@ SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 
 
 class SccCaptionParagraph:
   """Caption paragraph"""
+
+  @staticmethod
+  def default(caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
+    """Initializes a default caption paragraph"""
+    return SccCaptionParagraph(caption_style=caption_style)
 
   def __init__(self, safe_area_x_offset: int = 0, safe_area_y_offset: int = 0,
                caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
@@ -69,6 +75,8 @@ class SccCaptionParagraph:
     self._current_line: Optional[SccCaptionLine] = None
     # Lines per row in the active area (will be separated by line-breaks)
     self._caption_lines: Dict[int, SccCaptionLine] = {}
+    # Initialize first default line
+    self.new_caption_line()
 
     self._caption_style: SccCaptionStyle = caption_style
     self._style_properties = {}
@@ -85,7 +93,7 @@ class SccCaptionParagraph:
     """Sets caption begin time code"""
     self._begin = copy.copy(time_code)
 
-  def get_begin(self) -> SmpteTimeCode:
+  def get_begin(self) -> Optional[SmpteTimeCode]:
     """Returns the caption begin time code"""
     return self._begin
 
@@ -93,7 +101,7 @@ class SccCaptionParagraph:
     """Sets caption end time code"""
     self._end = copy.copy(time_code)
 
-  def get_end(self) -> SmpteTimeCode:
+  def get_end(self) -> Optional[SmpteTimeCode]:
     """Returns the caption end time code"""
     return self._end
 
@@ -105,18 +113,20 @@ class SccCaptionParagraph:
     """Returns the safe area y offset"""
     return self._safe_area_y_offset
 
+  def set_caption_style(self, caption_style: SccCaptionStyle):
+    """Sets the caption style"""
+    self._caption_style = caption_style
+
   def get_caption_style(self) -> SccCaptionStyle:
     """Returns the caption style"""
     return self._caption_style
 
-  def get_current_line(self) -> Optional[SccCaptionLine]:
+  def get_current_line(self) -> SccCaptionLine:
     """Returns the current caption line"""
     return self._current_line
 
-  def get_current_text(self) -> Optional[SccCaptionText]:
+  def get_current_text(self) -> SccCaptionText:
     """Returns the current caption text"""
-    if self._current_line is None:
-      return None
     return self._current_line.get_current_text()
 
   def append_text(self, text: str):
@@ -150,9 +160,14 @@ class SccCaptionParagraph:
   def set_cursor_at(self, row: int, indent: Optional[int] = None):
     """Set cursor position and initialize a new line if necessary"""
 
-    # Remove current line if empty (useless)
-    if self._current_line is not None and self._current_line.is_empty():
-      del self._caption_lines[self._current_line.get_row()]
+    if self._caption_lines.get(self._current_line.get_row()) is not None:
+      # Set current line if necessary
+      if self._caption_lines.get(self._current_line.get_row()) is not self._current_line:
+        self._current_line = self._caption_lines.get(self._current_line.get_row())
+
+      # Remove current line if empty (i.e. useless)
+      if self._current_line.is_empty():
+        del self._caption_lines[self._current_line.get_row()]
 
     self._cursor = (row, indent if indent is not None else 0)
 
@@ -162,7 +177,7 @@ class SccCaptionParagraph:
     self._current_line = self._caption_lines.get(row)
 
     if indent is not None:
-      self._current_line.set_cursor(self._cursor[1] - self._current_line.get_indent())
+      self._update_current_line_cursor()
 
   def get_cursor(self) -> (int, int):
     """Returns cursor coordinates"""
@@ -176,11 +191,28 @@ class SccCaptionParagraph:
       # If the current line is empty, set cursor indent as a line tabulation
       self._current_line.indent(indent)
     else:
-      self._current_line.set_cursor(self._cursor[1] - self._current_line.get_indent())
+      self._update_current_line_cursor()
+
+  def _update_current_line_cursor(self):
+    """Updates cursor position on current line"""
+    new_cursor_position = self._cursor[1] - self._current_line.get_indent()
+
+    if new_cursor_position < 0:
+      self._current_line.indent(new_cursor_position)
+
+    self._current_line.set_cursor(new_cursor_position)
 
   def get_lines(self) -> Dict[int, SccCaptionLine]:
     """Returns the paragraph lines per row"""
     return self._caption_lines
+
+  def is_empty(self) -> bool:
+    """Returns whether the paragraph has no content"""
+    return self._get_length() == 0
+
+  def _get_length(self) -> int:
+    """Returns the total length of contained text"""
+    return sum([line.get_length() for line in self._caption_lines.values()])
 
   def copy_lines(self) -> Dict[int, SccCaptionLine]:
     """Copy paragraph lines (without time attributes)"""
@@ -199,10 +231,6 @@ class SccCaptionParagraph:
 
   def new_caption_text(self):
     """Appends a new caption text content, and keeps reference on it"""
-    if self._current_line is None:
-      LOGGER.warning("Add a new caption line to add new caption text")
-      self.new_caption_line()
-
     self._current_line.add_text(SccCaptionText())
 
   def new_caption_line(self):
@@ -227,7 +255,7 @@ class SccCaptionParagraph:
 
   def get_origin(self) -> CoordinateType:
     """Computes and returns the current paragraph origin, based on its content"""
-    if len(self._caption_lines) > 0:
+    if not self.is_empty():
       x_offsets = [text.get_indent() for text in self._caption_lines.values()]
       y_offsets = [text.get_row() - 1 for text in self._caption_lines.values()]
 
@@ -237,7 +265,7 @@ class SccCaptionParagraph:
 
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
-    if len(self._caption_lines) == 0:
+    if self.is_empty():
       return get_extent_from_dimensions(0, 0)
 
     paragraph_rows = self._caption_lines.keys()
@@ -259,6 +287,9 @@ class SccCaptionParagraph:
 
     def get_line_right_offset(line: SccCaptionLine) -> int:
       return SCC_ROOT_CELL_RESOLUTION_COLUMNS - (line.get_indent() + line.get_length())
+
+    if self.is_empty():
+      return TextAlignType.start
 
     # look for longest line
     longest_line = max(self._caption_lines.values(), key=lambda line: line.get_length())

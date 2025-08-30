@@ -53,6 +53,7 @@ class _TextCueParser:
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
     self.line_num: int = line_number
+    self.paragraph: model.P = paragraph
     self.parent: model.ContentElement = paragraph
 
     # handle the special case of ruby elements where children cannot be added one by one
@@ -73,22 +74,24 @@ class _TextCueParser:
 
   def _handle_ts(self, token: TimestampTagToken):
 
-    span = self._make_span(self.parent)
-    self.parent.push_child(span)
-    self.parent = span
-
     ts = vtt_timestamp_to_secs(token.timestamp)
-    parent_begin = None
-    parent = self.parent
-    while parent is not None:
-      parent_begin = parent.get_begin()
-      if parent_begin is not None:
-        break
-      parent = parent.parent()
-    if ts is not None and parent_begin is not None and parent_begin <= ts:
-      span.set_begin(ts - parent_begin)
-    else:
+    if ts is None:
+      LOGGER.warning("Invalid timestamp tag %s at line %s", token.timestamp, self.line_num)
+      return
+
+    # we handle only top-level timestamp tags
+    if self.parent.get_begin() is None:
+      LOGGER.warning("Nested timestamp tag %s at line %s", token.timestamp, self.line_num)
+      return
+
+    p_begin = self.paragraph.get_begin()
+    if p_begin is None or p_begin >= ts:
       LOGGER.warning("Invalid timestamp tag %s", token.timestamp)
+
+    span = self._make_span(self.paragraph)
+    span.set_begin(ts - p_begin)
+    self.paragraph.push_child(span)
+    self.parent = span
 
   def _handle_starttag(self, token: StartTagToken):
 
@@ -191,7 +194,7 @@ class _TextCueParser:
     return span
 
 
-_EMPTY_RE = re.compile(r"\s+")
+_EMPTY_RE = re.compile(r"[\n\r]*")
 _DEFAULT_FONT_STACK = (styles.GenericFontFamilyType.sansSerif,)
 _DEFAULT_FONT_SIZE = styles.LengthType(15 * 5, styles.LengthType.Units.pct) # 5vh for ttp:cellResolution="32 15"
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
@@ -518,15 +521,20 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       current_p.set_region(_get_or_make_region(doc, cue_params[3:]))
 
       state = _State.TEXT
-
+      subtitle_text = None
       continue
 
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or _EMPTY_RE.fullmatch(line):
-        subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
-
-        _parse_cue_text(subtitle_text, current_p, line_index)
+        if subtitle_text is not None:
+          _parse_cue_text(
+            subtitle_text.strip('\r\n').replace(r"\n\r", "\n"),
+            current_p,
+            line_index
+          )
+        else:
+          LOGGER.warning("Ignoring cue due to a spurious blank line at line %s", line_index)
 
         state = _State.LOOKING
         continue

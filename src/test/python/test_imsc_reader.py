@@ -35,6 +35,7 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
+import ttconv.imsc.style_properties as imsc_styles
 
 class IMSCReaderTest(unittest.TestCase):
 
@@ -240,6 +241,34 @@ class IMSCReaderTest(unittest.TestCase):
       self.assertIsNotNone(imsc_reader.to_model(tree))
       if len(logs.output) != 2:
         self.fail(logs.output)
+
+  def test_text_emphasis(self):
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "dot after")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.filled_dot)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.after)
+
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "dot before")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.filled_dot)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
+
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "filled after")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.filled_circle)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.after)
+
+    value = imsc_styles.StyleProperties.TextEmphasis.extract(None, "open before")
+    self.assertEqual(value.style, styles.TextEmphasisType.Style.open_circle)
+    self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
+
+  def test_cell_resolution(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        ttp:cellResolution="32 15">
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    self.assertEqual(doc.get_cell_resolution().columns, 32)
+    self.assertEqual(doc.get_cell_resolution().rows, 15)
 
 if __name__ == '__main__':
   unittest.main()

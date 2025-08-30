@@ -25,6 +25,8 @@
 
 """SCC Codes"""
 
+from enum import Enum
+from typing import Tuple, Optional
 from ttconv.style_properties import NamedColors
 
 SCC_COLOR_MAPPING = {
@@ -44,8 +46,16 @@ SCC_COLOR_MAPPING = {
   0x0D: NamedColors.magenta.value
 }
 
+class SccChannel(Enum):
+  """SCC Caption Channel"""
+  CHANNEL_1 = 1
+  CHANNEL_2 = 2
 
-class SccCode:
+  def __str__(self):
+    return "CC" + str(self.value)
+
+
+class SccCode(Enum):
   """SCC codes base definition class"""
 
   def __init__(self, channel_1: int, channel_2: int):
@@ -55,9 +65,19 @@ class SccCode:
     self._channel_1 = channel_1
     self._channel_2 = channel_2
 
-  def get_values(self) -> (int, int):
+  def get_values(self) -> Tuple[int, int]:
     """Returns SCC Code values"""
     return self._channel_1, self._channel_2
+
+  def get_channel(self, value: int) -> Optional[SccChannel]:
+    """Returns caption channel corresponding to the specified code value"""
+    if value == self._channel_1:
+      return SccChannel.CHANNEL_1
+
+    if value == self._channel_2:
+      return SccChannel.CHANNEL_2
+
+    return None
 
   def contains_value(self, value: int) -> bool:
     """Returns whether the specified value is contained into the SCC code channels values"""

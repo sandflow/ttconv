@@ -184,6 +184,30 @@ class ISD(model.Document):
 
     return (begin_time, end_time)
 
+  def _region_always_has_background(region: typing.Type[model.Region]) -> bool:
+
+    if region.get_style(styles.StyleProperties.Opacity) == 0:
+      return False
+
+    if region.get_style(styles.StyleProperties.Display) is styles.DisplayType.none:
+      return False
+
+    if region.get_style(styles.StyleProperties.Visibility) is styles.VisibilityType.hidden:
+      return False
+
+    if region.get_style(styles.StyleProperties.ShowBackground) is styles.ShowBackgroundType.whenActive:
+      return False
+
+    bg_color: styles.ColorType = region.get_style(styles.StyleProperties.BackgroundColor)
+    if bg_color is not None:
+      if bg_color.ident is not styles.ColorType.Colorimetry.RGBA8:
+        raise RuntimeError(f"Unsupported colorimetry system: {bg_color.ident}")
+
+      if bg_color.components[3] == 0:
+        return False
+
+    return True
+
   @staticmethod
   def significant_times(doc: model.ContentDocument) -> SignificantTimes:
     '''Returns a list of the temporal offsets at which the document `doc` changes, sorted in
@@ -204,7 +228,8 @@ class ISD(model.Document):
 
       interval_cache[element] = (begin_time, end_time)
 
-      if isinstance(element, (model.Br, model.Span)):
+      if isinstance(element, (model.Br, model.Span)) or \
+          isinstance(element, (model.Region)) and ISD._region_always_has_background(element):
         content_interval[0] = begin_time if content_interval[0] is None else min(begin_time, content_interval[0])
         content_interval[1] = None if end_time is None or content_interval[1] is None else max(end_time, content_interval[1])
 
@@ -249,14 +274,14 @@ class ISD(model.Document):
 
       interval_cache = {}
 
+      content_interval = [None, 0]
+
       # add significant times for regions
 
       for region in cached_doc.iter_regions():
-        compute_sig_times(interval_cache, None, s_times, region, 0, None)
+        compute_sig_times(interval_cache, content_interval, s_times, region, 0, None)
 
       # add significant times for body and its descendents
-
-      content_interval = [None, 0]
 
       if cached_doc.get_body() is not None:
         compute_sig_times(interval_cache, content_interval, s_times, cached_doc.get_body(), 0, None)
@@ -504,6 +529,17 @@ class ISD(model.Document):
 
       styles_to_be_computed.add(spec_style_prop)
       isd_element.set_style(spec_style_prop, element.get_style(spec_style_prop))
+
+    # direction special semantics
+    # https://www.w3.org/TR/ttml2/#style-attribute-direction-special-semantics
+
+    if isinstance(element, model.Region) and \
+        (not element.has_style(styles.StyleProperties.Direction)) and \
+        element.get_style(styles.StyleProperties.WritingMode) in (styles.WritingModeType.lrtb, styles.WritingModeType.rltb):
+      styles_to_be_computed.add(styles.StyleProperties.Direction)
+      direction = styles.DirectionType.ltr if element.get_style(styles.StyleProperties.WritingMode) == styles.WritingModeType.lrtb \
+                  else styles.DirectionType.rtl
+      isd_element.set_style(styles.StyleProperties.Direction, direction)
 
     # inherited styling
 
@@ -770,10 +806,11 @@ def _make_rw_length(value: numbers.Number) -> styles.LengthType:
     units=styles.LengthType.Units.rw
   )
 
-def _get_writing_mode(isd_element: model.ContentElement) -> styles.WritingModeType:
+def _get_writing_mode(isd_parent: model.ContentElement, isd_element: model.ContentElement) -> styles.WritingModeType:
 
-  while not isinstance(isd_element, ISD.Region):
-    isd_element = isd_element.get_parent()
+  while isd_parent is not None:
+    isd_element = isd_parent
+    isd_parent = isd_element.parent()
 
   return isd_element.get_style(styles.StyleProperties.WritingMode)
 
@@ -1227,7 +1264,7 @@ class StyleProcessors:
 
         if value.style is styles.TextEmphasisType.Style.auto:
 
-          wm: styles.WritingModeType = _get_writing_mode(parent)
+          wm: styles.WritingModeType = _get_writing_mode(parent, element)
 
           if wm in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
 

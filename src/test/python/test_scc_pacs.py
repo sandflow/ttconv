@@ -75,7 +75,7 @@ class SCCPreambleAddressCodesTest(unittest.TestCase):
         self.assertIsNone(SccPreambleAddressCode.find(b1, b2))
 
   def check_scc_pac_attributes(self, pac, channel, row, indent, color, font_style, text_decoration):
-    self.assertEqual(channel, pac.get_channel())
+    self.assertEqual(channel, pac.get_channel().value)
     self.assertEqual(row, pac.get_row())
     self.assertEqual(indent, pac.get_indent())
     self.assertEqual(color, pac.get_color())

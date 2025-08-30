@@ -31,13 +31,14 @@ from typing import List, Optional
 
 import ttconv.model as model
 import ttconv.srt.style as style
-from ttconv.filters import Filter
-from ttconv.filters.default_style_properties import DefaultStylePropertyValuesFilter
-from ttconv.filters.merge_paragraphs import ParagraphsMergingFilter
-from ttconv.filters.merge_regions import RegionsMergingFilter
-from ttconv.filters.supported_style_properties import SupportedStylePropertiesFilter
-from ttconv.isd import ISD, ISDConfiguration
+from ttconv.filters.isd_filter import ISDFilter
+from ttconv.filters.isd.default_style_properties import DefaultStylePropertyValuesISDFilter
+from ttconv.filters.isd.merge_paragraphs import ParagraphsMergingISDFilter
+from ttconv.filters.isd.merge_regions import RegionsMergingISDFilter
+from ttconv.filters.isd.supported_style_properties import SupportedStylePropertiesISDFilter
+from ttconv.isd import ISD
 from ttconv.srt.paragraph import SrtParagraph
+from ttconv.srt.config import SRTWriterConfiguration
 from ttconv.style_properties import StyleProperties, FontStyleType, NamedColors, FontWeightType, TextDecorationType
 
 LOGGER = logging.getLogger(__name__)
@@ -46,10 +47,10 @@ LOGGER = logging.getLogger(__name__)
 class SrtContext:
   """SRT writer context"""
 
-  filters: List[Filter] = (
-    RegionsMergingFilter(),
-    ParagraphsMergingFilter(),
-    SupportedStylePropertiesFilter({
+  filters: List[ISDFilter] = (
+    RegionsMergingISDFilter(),
+    ParagraphsMergingISDFilter(),
+    SupportedStylePropertiesISDFilter({
       StyleProperties.FontWeight: [
         # Every values
       ],
@@ -64,18 +65,19 @@ class SrtContext:
         # Every values
       ],
     }),
-    DefaultStylePropertyValuesFilter({
+    DefaultStylePropertyValuesISDFilter({
       StyleProperties.Color: NamedColors.white.value,
       StyleProperties.FontWeight: FontWeightType.normal,
       StyleProperties.FontStyle: FontStyleType.normal,
     })
   )
 
-  def __init__(self):
+  def __init__(self, config: SRTWriterConfiguration):
     self._captions_counter: int = 0
     self._begin: Fraction = Fraction(0)
     self._end: Fraction = Fraction(0)
     self._paragraphs: List[SrtParagraph] = []
+    self._text_formatting = config.text_formatting
 
   def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
     """Converts model element to SRT content"""
@@ -107,27 +109,28 @@ class SrtContext:
       is_underlined = style.is_element_underlined(element)
       font_color = style.get_font_color(element)
 
-      if font_color is not None:
-        self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
-
-      if is_bold:
-        self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
-      if is_italic:
-        self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
-      if is_underlined:
-        self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
+      if self._text_formatting:
+        if font_color is not None:
+          self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
+        if is_bold:
+          self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
+        if is_italic:
+          self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
+        if is_underlined:
+          self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
 
       for elem in list(element):
         self.append_element(elem, begin, end)
 
-      if is_underlined:
-        self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
-      if is_italic:
-        self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
-      if is_bold:
-        self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
-      if font_color is not None:
-        self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_OUT)
+      if self._text_formatting:
+        if is_underlined:
+          self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
+        if is_italic:
+          self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
+        if is_bold:
+          self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
+        if font_color is not None:
+          self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_OUT)
 
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
@@ -183,10 +186,10 @@ class SrtContext:
 #
 
 
-def from_model(doc: model.ContentDocument, isd_config: Optional[ISDConfiguration] = None, progress_callback=lambda _: None) -> str:
+def from_model(doc: model.ContentDocument, config: Optional[SRTWriterConfiguration] = None, progress_callback=lambda _: None) -> str:
   """Converts the data model to a SRT document"""
 
-  srt = SrtContext()
+  srt = SrtContext(config if config is not None else SRTWriterConfiguration())
 
   # split progress between ISD construction and SRT writing
 
@@ -196,7 +199,7 @@ def from_model(doc: model.ContentDocument, isd_config: Optional[ISDConfiguration
   # Compute ISDs
 
   isds = list(
-    ISD.generate_isd_sequence(doc, _isd_progress, is_multithreaded=isd_config.multi_thread if isd_config is not None else True)
+    ISD.generate_isd_sequence(doc, _isd_progress)
   )
 
   # process ISDs

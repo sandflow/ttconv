@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-# Copyright (c) 2020, Sandflow Consulting LLC
+# Copyright (c) 2023, Sandflow Consulting LLC
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,26 +23,62 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""WebVTT configuration"""
+'''Common utilities'''
 
-from __future__ import annotations
+import re
+import ttconv.style_properties as styles
 
-from dataclasses import dataclass, field
-from ttconv.config import ModuleConfiguration
+_HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
+_DEC_COLOR_RE = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
+_DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 
-@dataclass
-class VTTWriterConfiguration(ModuleConfiguration):
-  """VTT writer configuration"""
-  
-  @classmethod
-  def name(cls):
-    return "vtt_writer"
+def parse_color(attr_value: str) -> styles.ColorType:
+  '''Parses the TTML \\<color\\> value contained in `attr_value`
+  '''
 
-  # outputs `line` and `line alignment` cue settings
-  line_position: bool = field(default=False, metadata={"decoder": bool})
+  lower_attr_value = str.lower(attr_value)
 
-  # outputs `text alignment` cue settings
-  text_align: bool = field(default=False, metadata={"decoder": bool})
+  if lower_attr_value in styles.NamedColors.__members__:
 
-  # outputs cue identifier
-  cue_id: bool = field(default=True, metadata={"decoder": bool})
+    return styles.NamedColors[lower_attr_value].value
+
+  m = _HEX_COLOR_RE.match(attr_value)
+
+  if m:
+
+    return styles.ColorType(
+      (
+        int(m.group(1), 16),
+        int(m.group(2), 16),
+        int(m.group(3), 16),
+        int(m.group(4), 16) if m.group(4) else 255
+      )
+    )
+
+  m = _DEC_COLOR_RE.match(attr_value)
+
+  if m:
+
+    return styles.ColorType(
+      (
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        255
+      )
+    )
+
+  m = _DEC_COLORA_RE.match(attr_value)
+
+  if m:
+
+    return styles.ColorType(
+      (
+        int(m.group(1)),
+        int(m.group(2)),
+        int(m.group(3)),
+        int(m.group(4))
+      )
+    )
+
+  raise ValueError("Bad Syntax")

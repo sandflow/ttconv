@@ -36,8 +36,7 @@ import ttconv.style_properties as styles
 from ttconv.imsc import utils
 from ttconv.time_code import SmpteTimeCode
 
-_SMPTE_TIME_CODE_DF_PATTERN = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_DF_PATTERN)
-_SMPTE_TIME_CODE_NDF_PATTERN = re.compile(SmpteTimeCode.SMPTE_TIME_CODE_NDF_PATTERN)
+TC_PATTERN = re.compile(r"\d{2}[:;.,]\d{2}[:;.,]\d{2}[:;.,]\d{2}")
 _MNR_PATTERN = re.compile("^\\d+$")
 
 def _decode_font_stack(value: typing.Optional[str]) -> \
@@ -51,7 +50,7 @@ def _decode_start_tc(value: typing.Optional[str]) -> typing.Optional[str]:
   if value.upper() == "TCP":
     return "TCP"
 
-  if _SMPTE_TIME_CODE_DF_PATTERN.match(value) or _SMPTE_TIME_CODE_NDF_PATTERN.match(value):
+  if TC_PATTERN.match(value):
     return value
 
   raise ValueError(f"Invalid start_tc '{value}' value. Expect: 'TCP' or 'HH:MM:SS:FF'.")

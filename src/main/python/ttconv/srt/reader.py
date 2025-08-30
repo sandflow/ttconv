@@ -35,7 +35,7 @@ from html.parser import HTMLParser
 
 from ttconv import model
 from ttconv import style_properties as styles
-from ttconv.imsc.utils import parse_color
+from ttconv.utils import parse_color
 
 LOGGER = logging.getLogger(__name__)
 
@@ -255,9 +255,6 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       if state is _State.TEXT:
         div.push_child(current_p)
         subtitle_text = ""
-
-      if state is _State.TEXT_MORE:
-        current_p.push_child(model.Br(current_p.get_doc()))
 
       subtitle_text += line
 

@@ -128,7 +128,7 @@ class CellResolutionAttribute:
 
       if m is not None:
 
-        return model.CellResolutionType(int(m.group(1)), int(m.group(2)))
+        return model.CellResolutionType(columns=int(m.group(1)), rows=int(m.group(2)))
 
       LOGGER.error("ttp:cellResolution invalid syntax")
 
@@ -431,13 +431,9 @@ class BeginAttribute:
     begin_raw = xml_element.attrib.get(BeginAttribute.qn)
 
     try:
-
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw) if begin_raw is not None else None
-
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw, False) if begin_raw is not None else None
     except ValueError:
-
-      LOGGER.error("bad begin value")
-
+      LOGGER.error("Bad begin attribute value: %s", begin_raw)
       return None
 
   @staticmethod
@@ -458,13 +454,9 @@ class EndAttribute:
     end_raw = xml_element.attrib.get(EndAttribute.qn)
 
     try:
-
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw) if end_raw is not None else None
-
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw, False) if end_raw is not None else None
     except ValueError:
-
-      LOGGER.error("bad end value")
-
+      LOGGER.error("Bad end attribute value: %s", end_raw)
       return None
 
   @staticmethod
@@ -483,13 +475,9 @@ class DurAttribute:
     dur_raw = xml_element.attrib.get(DurAttribute.qn)
 
     try:
-
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw) if dur_raw is not None else None
-
+      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw, False) if dur_raw is not None else None
     except ValueError:
-
-      LOGGER.error("bad dur value")
-
+      LOGGER.error("Bad dur attribute value: %s", dur_raw)
       return None
 
   @staticmethod
