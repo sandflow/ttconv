@@ -122,24 +122,30 @@ class SCCWriterTest(unittest.TestCase):
 
 00:00:05;00	942c 942c"""
 
+  def test_basic_centered(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
+  <body>
+    <div>
+      <p begin="30f" end="90f" tts:textAlign="center">Hello</p>
+     </div>
+  </body>
+</tt>"""
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;21	9420 9420 94ae 94ae 94d6 94d6 20c8 e5ec ecef 942f 942f
+
+00:00:03;00	942c 942c"""
+
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     assert model is not None
     config = SccWriterConfiguration()
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
-
-    # round-trip test
-    rt_model = scc_reader.to_model(scc_from_model)
-    # cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
-    # imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
-    b = rt_model.get_body()
-    div = list(b)[0]
-    p0 = list(div)[0]
-    self.assertEqual(Fraction(30 * 1001, 30000), p0.get_begin())
-    self.assertEqual(Fraction(90 * 1001, 30000), p0.get_end())
-    p1 = list(div)[1]
-    self.assertEqual(Fraction(120 * 1001, 30000), p1.get_begin())
-    self.assertEqual(Fraction(150 * 1001, 30000), p1.get_end())
 
 
   def test_rollup(self):

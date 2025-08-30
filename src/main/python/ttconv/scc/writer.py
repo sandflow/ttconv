@@ -374,7 +374,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
           indent = None
 
         spaces = indent % 4 if indent is not None else 0
-        indent = indent // 4 if indent is not None else None
+        indent = 4 * (indent // 4) if indent is not None else None
 
         pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
         enm_chunk.push_control_code(pac.get_ch1_packet())
