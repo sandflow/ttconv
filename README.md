@@ -43,7 +43,7 @@ suggestions/contributions are welcome.
 
 ### Input Formats
 
-* [CEA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
+* [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
 * [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
@@ -54,7 +54,7 @@ suggestions/contributions are welcome.
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
 * [WebVTT](https://www.w3.org/TR/webvtt1/)
-* [CEA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
+* [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 
 ## Quick start
 
