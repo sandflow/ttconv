@@ -17,11 +17,11 @@ subtitles, karaoke, etc.
 
     TTML / IMSC ---                                       ---- IMSC / TTML
                     \                                   /
-    SCC / CEA 608 ------- 0 or more document filters --------- WebVTT
+    SCC / CTA 608 ------- 0 or more document filters --------- WebVTT
                     /        [ Canonical Model ]        \
     EBU STL -------                                       ---- SRT
                   /                                        \
-    SRT ---------                                           -- SCC
+    SRT ---------                                           -- SCC / CTA 608
                 /
     WebVTT ----
 
