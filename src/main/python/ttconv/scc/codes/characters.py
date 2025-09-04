@@ -30,26 +30,27 @@ from __future__ import annotations
 from ttconv.scc.codes.special_characters import SccSpecialCharacter
 from ttconv.scc.codes.standard_characters import TO_SCC_BYTES
 
-def unicode_to_scc(s: str) -> bytes:
-  """Convert a Unicode string to an SCC character string"""
+def unicode_to_scc(c: str) -> bytes:
+  """Convert a Unicode character to an SCC character string"""
+
+  if len(c) != 1:
+    raise ValueError("Can only convert a single character")
 
   b = bytearray()
 
-  for c in s:
+  scc_c = TO_SCC_BYTES.get(c, None)
 
-    scc_c = TO_SCC_BYTES.get(c, None)
+  if scc_c is not None:
+    b.append(scc_c)
 
-    if scc_c is not None:
-      b.append(scc_c)
-      continue
-
+  else:
     scc_c = SccSpecialCharacter.from_unicode(c)
 
     if scc_c is not None:
       b.append(scc_c.get_ch1_value() // 256)
       b.append(scc_c.get_ch1_value() % 256)
-      continue
 
-    b.append(0x20)  # Standard
+    else:
+      b.append(0x20)  # Standard
 
   return b
