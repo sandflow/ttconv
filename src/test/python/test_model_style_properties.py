@@ -28,7 +28,8 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-from ttconv.style_properties import StyleProperties
+from ttconv import model
+from ttconv.style_properties import ExtentType, LengthType, StyleProperties
 
 class TestModelStyleProperties(unittest.TestCase):
 
@@ -36,6 +37,19 @@ class TestModelStyleProperties(unittest.TestCase):
     for style in StyleProperties.ALL:
       with self.subTest(style.__name__):
         style.validate(style.make_initial_value())
+
+  def test_extent_c_fail(self):
+    doc = model.ContentDocument()
+
+    r1 = model.Region("r1", doc)
+    with self.assertRaises(ValueError):
+      r1.set_style(
+        StyleProperties.Extent,
+        ExtentType(
+          width=LengthType(10, LengthType.Units.c),
+          height=LengthType(20, LengthType.Units.c)
+        )
+      )
 
 if __name__ == '__main__':
   unittest.main()

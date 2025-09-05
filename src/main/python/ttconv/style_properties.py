@@ -29,6 +29,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 import numbers
+from typing import Optional, SupportsFloat as Numeric
 from enum import Enum
 
 #
@@ -58,11 +59,11 @@ class LengthType:
     c = "c"
     px = "px"
 
-  value: numbers.Number = 0
+  value: Numeric = 0
   units: Units = Units.pct
 
   def __post_init__(self):
-    if not isinstance(self.value, numbers.Number):
+    if not isinstance(self.value, Numeric):
       raise ValueError("The length value must be a number")
 
     if not isinstance(self.units, LengthType.Units):
@@ -215,7 +216,7 @@ class RubyReserveType:
     outside = "outside" 
 
   position: Position = Position.outside
-  length: LengthType = None
+  length: Optional[LengthType] = None
 
   def __post_init__(self):
     if self.length is not None and not isinstance(self.length, LengthType):
@@ -282,7 +283,7 @@ class TextEmphasisType:
     after = "after"
 
   style: Style = Style.auto
-  color: ColorType = None
+  color: Optional[ColorType] = None
   position: Position = Position.outside
 
   def __post_init__(self):
@@ -302,7 +303,7 @@ class TextOutlineType:
   '''
 
   thickness: LengthType
-  color: ColorType = None
+  color: Optional[ColorType] = None
 
   def __post_init__(self):
     if self.thickness is None or not isinstance(self.thickness, LengthType):
@@ -660,8 +661,8 @@ class StyleProperties:
       return 1.0
 
     @staticmethod
-    def validate(value: numbers.Number):
-      return isinstance(value, numbers.Number)
+    def validate(value: Numeric):
+      return isinstance(value, Numeric)
 
 
   class MultiRowAlign(StyleProperty):
@@ -690,8 +691,8 @@ class StyleProperties:
       return 1.0
 
     @staticmethod
-    def validate(value: numbers.Number):
-      return isinstance(value, numbers.Number)
+    def validate(value: Numeric):
+      return isinstance(value, Numeric)
 
 
   class Origin(StyleProperty):
@@ -826,8 +827,8 @@ class StyleProperties:
       return 0.0
 
     @staticmethod
-    def validate(value: numbers.Number):
-      return isinstance(value, numbers.Number)
+    def validate(value: Numeric):
+      return isinstance(value, Numeric)
 
   class ShowBackground(StyleProperty):
     '''Corresponds to tts:showBackground.'''

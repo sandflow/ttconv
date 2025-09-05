@@ -326,32 +326,43 @@ class ComputeStyleTest(unittest.TestCase):
     self.assertAlmostEqual(extent.height.value, 100*25/doc.get_px_resolution().height)
     self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
 
-  @unittest.skip("Removing support for 'c' units other with ebutts:linePadding")
   def test_compute_extent_c(self):
     doc = model.ContentDocument()
 
     r1 = model.Region("r1", doc)
-    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.always)
-    r1.set_style(
-      styles.StyleProperties.Extent,
-      styles.ExtentType(
-        width=styles.LengthType(10, styles.LengthType.Units.c),
-        height=styles.LengthType(20, styles.LengthType.Units.c)
-      )
-    )
+    r1.set_style(styles.StyleProperties.ShowBackground, styles.ShowBackgroundType.whenActive)
     doc.put_region(r1)
+
+    b = model.Body(doc)
+    b.set_region(r1)
+    doc.set_body(b)
+
+    div1 = model.Div(doc)
+    b.push_child(div1)
+
+    p1 = model.P(doc)
+    p1.set_begin(0)
+    p1.set_end(3)
+    p1.set_style(
+      styles.StyleProperties.LinePadding,
+      styles.LengthType(1, styles.LengthType.Units.c)
+    )
+
+    div1.push_child(p1)
+
+    span1 = model.Span(doc)
+    span1.push_child(model.Text(doc, "hello"))
+    p1.push_child(span1)
 
     isd = ISD.from_model(doc, 0)
 
-    region = list(isd.iter_regions())[0]
+    r1 = list(isd.iter_regions())[0]
+    p1 = r1.first_child().first_child().first_child()
 
-    extent: styles.ExtentType = region.get_style(styles.StyleProperties.Extent)
+    l: styles.LengthType = p1.get_style(styles.StyleProperties.LinePadding)
 
-    self.assertAlmostEqual(extent.width.value, 100*10/doc.get_cell_resolution().columns)
-    self.assertEqual(extent.width.units, styles.LengthType.Units.rw)
-
-    self.assertAlmostEqual(extent.height.value, 100*20/doc.get_cell_resolution().rows)
-    self.assertEqual(extent.height.units, styles.LengthType.Units.rh)
+    self.assertAlmostEqual(l.value, 100/doc.get_cell_resolution().rows)
+    self.assertEqual(l.units, styles.LengthType.Units.rh)
 
   def test_compute_extent_em(self):
     doc = model.ContentDocument()
