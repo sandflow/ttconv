@@ -29,6 +29,7 @@ from __future__ import annotations
 import typing
 from dataclasses import dataclass
 import numbers
+from typing import Optional, SupportsFloat as Numeric
 from enum import Enum
 
 #
@@ -58,7 +59,7 @@ class LengthType:
     c = "c"
     px = "px"
 
-  value: numbers.Number = 0
+  value: Numeric = 0
   units: Units = Units.pct
 
   def __post_init__(self):
@@ -135,6 +136,10 @@ class ExtentType:
   height: LengthType = LengthType()
   width: LengthType = LengthType()
 
+  def __post_init__(self):
+    if not isinstance(self.height, LengthType) or not isinstance(self.width, LengthType):
+      raise ValueError("Dimensions must be a length")
+
 class GenericFontFamilyType(Enum):
   '''\\<generic-family-name\\>
   '''
@@ -186,6 +191,10 @@ class PaddingType:
   after: LengthType = LengthType()
   start: LengthType = LengthType()
 
+  def __post_init__(self):
+    if not isinstance(self.before, LengthType) or not isinstance(self.end, LengthType) \
+      or not isinstance(self.after, LengthType) or not isinstance(self.start, LengthType):
+      raise ValueError("Dimensions must be a length")
 
 class RubyAlignType(Enum):
   '''tts:rubyAlign value
@@ -207,7 +216,11 @@ class RubyReserveType:
     outside = "outside" 
 
   position: Position = Position.outside
-  length: LengthType = None
+  length: Optional[LengthType] = None
+
+  def __post_init__(self):
+    if self.length is not None and not isinstance(self.length, LengthType):
+      raise ValueError("Length must be a length")
 
 class ShowBackgroundType(Enum):
   '''tts:showBackground values
@@ -270,7 +283,7 @@ class TextEmphasisType:
     after = "after"
 
   style: Style = Style.auto
-  color: ColorType = None
+  color: Optional[ColorType] = None
   position: Position = Position.outside
 
   def __post_init__(self):
@@ -290,7 +303,7 @@ class TextOutlineType:
   '''
 
   thickness: LengthType
-  color: ColorType = None
+  color: Optional[ColorType] = None
 
   def __post_init__(self):
     if self.thickness is None or not isinstance(self.thickness, LengthType):
@@ -313,8 +326,11 @@ class TextShadowType:
     blur_radius: typing.Optional[LengthType] = None
     color: typing.Optional[ColorType] = None
 
-  shadows: typing.Tuple[TextShadowType.Shadow]
+    def __post_init__(self):
+      if self.blur_radius is not None and not isinstance(self.blur_radius, LengthType):
+        raise ValueError("The blur_radius value must be a length")
 
+  shadows: typing.Tuple[TextShadowType.Shadow]
 
 class UnicodeBidiType(Enum):
   '''tts:unicodeBidi values
@@ -354,6 +370,9 @@ class CoordinateType:
   x: LengthType
   y: LengthType
 
+  def __post_init__(self):
+    if not isinstance(self.x, LengthType) or not isinstance(self.y, LengthType):
+      raise ValueError("Coordinates must be a length")
 
 @dataclass(frozen=True)
 class PositionType:
@@ -371,6 +390,13 @@ class PositionType:
   v_offset: LengthType
   h_edge: HEdge = HEdge.left
   v_edge: VEdge = VEdge.top
+
+  def __post_init__(self):
+    if not isinstance(self.h_offset, LengthType) or not isinstance(self.v_offset, LengthType):
+      raise ValueError("Offset must be a length")
+
+    if LengthType.Units.c in (self.h_offset.units, self.v_offset.units):
+      raise ValueError("Offset must not be in 'c' units")
 
 #
 # Style properties
@@ -465,7 +491,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return isinstance(value, LengthType) 
+      return isinstance(value, LengthType) and value.units != LengthType.Units.c
 
   class Display(StyleProperty):
     '''Corresponds to tts:display.'''
@@ -514,8 +540,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: ExtentType):
       return isinstance(value, ExtentType) \
-        and value.width.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
-        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
+        and value.width.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
+        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
 
 
   class FillLineGap(StyleProperty):
@@ -605,7 +631,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.normal or isinstance(value, LengthType)
+      return value == SpecialValues.normal or (isinstance(value, LengthType) and value.units != LengthType.Units.c)
 
 
   class LinePadding(StyleProperty):
@@ -635,7 +661,7 @@ class StyleProperties:
       return 1.0
 
     @staticmethod
-    def validate(value: numbers.Number):
+    def validate(value: Numeric):
       return isinstance(value, numbers.Number)
 
 
@@ -665,7 +691,7 @@ class StyleProperties:
       return 1.0
 
     @staticmethod
-    def validate(value: numbers.Number):
+    def validate(value: Numeric):
       return isinstance(value, numbers.Number)
 
 
@@ -685,8 +711,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: CoordinateType):
       return isinstance(value, CoordinateType) \
-        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
 
 
   class Overflow(StyleProperty):
@@ -716,8 +742,10 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return isinstance(value, PaddingType)
+      if not isinstance(value, PaddingType):
+        return False
 
+      return LengthType.Units.c not in (value.before.units, value.end.units, value.after.units, value.start.units)
 
   class Position(StyleProperty):
     '''Corresponds to tts:position.'''
@@ -735,8 +763,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
-        and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rw)  \
-        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.c, LengthType.Units.rh)
+        and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
+        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
 
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
@@ -780,8 +808,13 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.none or isinstance(value, RubyReserveType)
+      if value == SpecialValues.none:
+        return True
 
+      if not isinstance(value, RubyReserveType):
+        return False
+
+      return value.length is None or value.length.units != LengthType.Units.c
 
   class Shear(StyleProperty):
     '''Corresponds to tts:shear.'''
@@ -794,7 +827,7 @@ class StyleProperties:
       return 0.0
 
     @staticmethod
-    def validate(value: numbers.Number):
+    def validate(value: Numeric):
       return isinstance(value, numbers.Number)
 
   class ShowBackground(StyleProperty):
@@ -892,7 +925,13 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.none or isinstance(value, TextOutlineType)
+      if value == SpecialValues.none:
+        return True
+
+      if not isinstance(value, TextOutlineType):
+        return False
+
+      return value.thickness.units != LengthType.Units.c
 
 
   class TextShadow(StyleProperty):
@@ -908,7 +947,13 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.none or isinstance(value, TextShadowType)
+      if value == SpecialValues.none:
+        return True
+
+      if not isinstance(value, TextShadowType):
+        return False
+
+      return all(s.blur_radius is None or s.blur_radius.units != LengthType.Units.c for s in value.shadows)
 
 
   class UnicodeBidi(StyleProperty):
