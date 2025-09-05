@@ -63,7 +63,7 @@ class LengthType:
   units: Units = Units.pct
 
   def __post_init__(self):
-    if not isinstance(self.value, Numeric):
+    if not isinstance(self.value, numbers.Number):
       raise ValueError("The length value must be a number")
 
     if not isinstance(self.units, LengthType.Units):
@@ -662,7 +662,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: Numeric):
-      return isinstance(value, Numeric)
+      return isinstance(value, numbers.Number)
 
 
   class MultiRowAlign(StyleProperty):
@@ -692,7 +692,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: Numeric):
-      return isinstance(value, Numeric)
+      return isinstance(value, numbers.Number)
 
 
   class Origin(StyleProperty):
@@ -828,7 +828,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: Numeric):
-      return isinstance(value, Numeric)
+      return isinstance(value, numbers.Number)
 
   class ShowBackground(StyleProperty):
     '''Corresponds to tts:showBackground.'''
