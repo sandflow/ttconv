@@ -132,6 +132,19 @@ Example:
 
 `--config '{"general": {"progress_bar":false, "log_level":"WARN"}, "imsc_writer": {"time_format":"clock_time_with_frames", "fps": "25/1"}}'`
 
+### profile_signaling
+
+`"profile_signaling": "none" | "content_profiles"`
+
+Specifies whether and how the output TTML document signals conformance to profile:
+
+* `"none"`: no profile conformance is signalled
+* `"content_profiles"`: if available, content profile conformance is signaled using the `ttp:contentProfiles` attribute
+
+Default: `"none"`
+
+_NOTE_: Profile conformance signalling is neither required by IMSC not TTML, and is prohibited by some applications, e.g., EBU-TT-D, and some versions of IMSC. Moreover, profile conformance cannot always be determined. As a result, profile conformance should be signaled only when required by the application.
+
 ### STL Reader configuration (`"stl_reader"`)
 
 #### disable_fill_line_gap
