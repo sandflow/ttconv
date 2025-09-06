@@ -143,6 +143,10 @@ Specifies whether and how the output TTML document signals conformance to profil
 
 Default: `"none"`
 
+Example:
+
+`--config '{ "imsc_writer" : { "profile_signaling" : "content_profiles" } }'`
+
 _NOTE_: Profile conformance signalling is neither required by IMSC not TTML, and is prohibited by some applications, e.g., EBU-TT-D, and some versions of IMSC. Moreover, profile conformance cannot always be determined. As a result, profile conformance should be signaled only when required by the application.
 
 ### STL Reader configuration (`"stl_reader"`)
