@@ -28,6 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import os
+import re
 import unittest
 import logging
 import json
@@ -701,6 +702,25 @@ class WriterWithTimeFormattingTest(unittest.TestCase):
     
 
 class ConfigTest(unittest.TestCase):
+
+  def test_profile_signaling(self):
+
+    source_cps = {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"}
+
+    ttml_doc = model.ContentDocument()
+    ttml_doc.set_content_profiles(source_cps)
+
+    config = imsc_config.IMSCWriterConfiguration.parse({"profile_signaling" : "content_profiles"})
+    xml_from_model = imsc_writer.from_model(ttml_doc, config)
+    extracted_cps = {e for e in re.findall(r'\S+', xml_from_model.getroot().get(f"{{{xml_ns.TTP}}}contentProfiles"))}
+    self.assertSetEqual(extracted_cps, source_cps)
+
+    xml_from_model = imsc_writer.from_model(ttml_doc, None)
+    self.assertIsNone(xml_from_model.getroot().get(f"{{{xml_ns.TTP}}}contentProfiles"))
+
+    config = imsc_config.IMSCWriterConfiguration.parse({"profile_signaling" : "none"})
+    xml_from_model = imsc_writer.from_model(ttml_doc, config)
+    self.assertIsNone(xml_from_model.getroot().get(f"{{{xml_ns.TTP}}}contentProfiles"))
 
   def test_clock_time(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>

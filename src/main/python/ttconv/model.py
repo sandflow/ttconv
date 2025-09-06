@@ -1018,6 +1018,7 @@ class ContentDocument(Document):
     self._regions = {}
     self._body = None
     self._initial_values = {}
+    self._content_profiles = set()
     super().__init__()
 
   def copy_to(self, dest: ContentDocument):
@@ -1025,6 +1026,20 @@ class ContentDocument(Document):
 
     for style_prop, style_value in self.iter_initial_values():
       dest.put_initial_value(style_prop, style_value)
+
+  # attributes
+
+  def get_content_profiles(self) -> typing.Optional[typing.Set[str]]:
+    '''Returns the set of content profile designators to which the document conforms. Equivalent to ttp:contentProfiles.'''
+    return self._content_profiles
+
+  def set_content_profiles(self, content_profiles: typing.Optional[typing.Set[str]]):
+    '''Set the set of content profile designators to which the document conforms.'''
+    if content_profiles is not None:
+      if not isinstance(content_profiles, set) or not all(isinstance(e, str) and re.fullmatch(r"\S+", e) for e in content_profiles):
+        raise TypeError("The content profiles must be a set of strings")
+
+    self._content_profiles = content_profiles
 
   # body
 

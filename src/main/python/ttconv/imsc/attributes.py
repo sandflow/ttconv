@@ -109,6 +109,38 @@ class RegionAttribute:
     ttml_element.set(RegionAttribute.qn, region_id)
 
 
+class ContentProfilesAttribute:
+  '''ttp:contentProfiles attribute
+  '''
+
+  qn = f"{{{ns.TTP}}}contentProfiles"
+
+  _CONTENT_PROFILES_RE = re.compile(r"\S+(?:\s+\S+)*")
+
+  @staticmethod
+  def extract(ttml_element) -> typing.Optional[typing.Set[str]]:
+
+    cr = ttml_element.attrib.get(ContentProfilesAttribute.qn)
+
+    if cr is not None:
+
+      m = ContentProfilesAttribute._CONTENT_PROFILES_RE.match(cr)
+
+      if m is not None:
+
+        return set(re.findall(r'\S+', cr))
+
+      LOGGER.error("ttp:contentProfiles invalid syntax")
+
+    # default value in TTML
+
+    return None
+
+  @staticmethod
+  def set(ttml_element, res):
+    if res is not None:
+      ttml_element.set(ContentProfilesAttribute.qn, " ".join(res))
+
 class CellResolutionAttribute:
   '''ttp:cellResolution attribute
   '''

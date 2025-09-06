@@ -270,5 +270,15 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(doc.get_cell_resolution().columns, 32)
     self.assertEqual(doc.get_cell_resolution().rows, 15)
 
+  def test_content_profiles(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text http://www.w3.org/ns/ttml/profile/imsc1/text">
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    self.assertSetEqual(doc.get_content_profiles(), {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"})
+
 if __name__ == '__main__':
   unittest.main()
