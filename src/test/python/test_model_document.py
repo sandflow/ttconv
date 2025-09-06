@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import typing
 import unittest
 from fractions import Fraction
 import ttconv.model as model
@@ -224,6 +225,26 @@ class ContentDocumentTest(unittest.TestCase):
 
     with self.assertRaises(ValueError):
       cr = model.CellResolutionType(rows=0, columns=20)
+
+  def test_content_profiles(self):
+    d = model.ContentDocument()
+
+    cp : typing.Set[str] = {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"}
+
+    d.set_content_profiles(cp)
+
+    self.assertSetEqual(cp, d.get_content_profiles())
+
+    d.set_content_profiles(None)
+
+    self.assertIsNone(d.get_content_profiles())
+
+    with self.assertRaises(TypeError):
+      d.set_content_profiles({"b a", "http://www.w3.org/ns/ttml/profile/imsc1.1/text"})
+
+    with self.assertRaises(TypeError):
+      d.set_content_profiles({1, "http://www.w3.org/ns/ttml/profile/imsc1.1/text"})
+
 
   def test_language(self):
 

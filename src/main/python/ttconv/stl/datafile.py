@@ -34,6 +34,7 @@ from fractions import Fraction
 import sys
 
 from ttconv import model
+from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
 import ttconv.style_properties as styles
 from ttconv.stl import tf
 from ttconv.time_code import SmpteTimeCode
@@ -259,6 +260,9 @@ class DataFile:
     )
 
     self.doc = model.ContentDocument()
+
+    # we are guaranteeing that the result conforms with IMSC 1.1 Text Profile
+    self.doc.set_content_profiles(set([IMSC_11_TEXT_PROFILE_DESIGNATOR]))
 
     self.doc.set_cell_resolution(
       model.CellResolutionType(

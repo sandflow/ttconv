@@ -28,11 +28,36 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from fractions import Fraction
-from typing import Optional
+from typing import Optional, Union
 
 from ttconv.config import ModuleConfiguration
 from ttconv.imsc.attributes import TimeExpressionSyntaxEnum
+
+class ContentProfilesSignaling(Enum):
+  """IMSC profile signaling options"""
+
+  NONE = "none"
+  """No content profile is signaled"""
+
+  CONTENT_PROFILES = "content_profiles"
+  """Content profiles are signaled using the ttp:contentProfiles attribute"""
+
+  def __init__(self, label: str):
+    self.label = label
+
+  @staticmethod
+  def from_value(value: Union[str, ContentProfilesSignaling]) -> ContentProfilesSignaling:
+    """Return the enum corresponding to the specified value"""
+    if isinstance(value, ContentProfilesSignaling):
+      return value
+
+    for ps in list(ContentProfilesSignaling):
+      if value.lower() == ps.label.lower():
+        return ps
+
+    raise ValueError(f"Invalid ContentProfilesSignaling value '{value}'. Expect {','.join([e.value for e in list(ContentProfilesSignaling)])}")
 
 def parse_time_expression_syntax(config_value: str) -> Optional[TimeExpressionSyntaxEnum]:
   """Parse time expression from string value"""
@@ -59,7 +84,7 @@ class IMSCWriterConfiguration(ModuleConfiguration):
       [num, den] = value.split('/')
 
       return Fraction(int(num), int(den))
-  
+
   @classmethod
   def name(cls):
     return "imsc_writer"
@@ -72,3 +97,8 @@ class IMSCWriterConfiguration(ModuleConfiguration):
     default=None,
     metadata={"decoder": FractionDecoder()}
     )
+  profile_signaling: ContentProfilesSignaling = field(
+    default=ContentProfilesSignaling.NONE,
+    metadata={"decoder": ContentProfilesSignaling.from_value}
+    )
+

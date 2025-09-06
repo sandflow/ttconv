@@ -58,16 +58,17 @@ def from_model(
   et.register_namespace("ebutts", xml_ns.EBUTTS)
 
   if config is not None:
-    
+    profile_signaling = config.profile_signaling == imsc_config.ContentProfilesSignaling.CONTENT_PROFILES
+
     fps = config.fps
 
     if config.time_format is not None:
 
       if config.time_format in (TimeExpressionSyntaxEnum.clock_time_with_frames, TimeExpressionSyntaxEnum.frames):
-        
+
         if fps is None:
           raise ValueError("HH:MM:SS:FF and frames time expressions require the `frame_rate` parameter to be set.")
-        
+
         if config.time_format is TimeExpressionSyntaxEnum.clock_time_with_frames and config.fps.denominator != 1:
           raise ValueError("Time expressions cannot be HH:MM:SS:FF if the `frame_rate` parameter is not an integer")
 
@@ -76,22 +77,22 @@ def from_model(
     elif config.fps is not None:
 
       time_format = TimeExpressionSyntaxEnum.frames
-    
+
     else:
 
       time_format = TimeExpressionSyntaxEnum.clock_time
 
   else:
-    
+    profile_signaling = False
     fps = None
     time_format = TimeExpressionSyntaxEnum.clock_time
-  
- 
+
   return et.ElementTree(
     imsc_elements.TTElement.from_model(
       model_doc,
       fps,
       time_format,
-      progress_callback
+      progress_callback,
+      profile_signaling
     )
   )
