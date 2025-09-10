@@ -31,6 +31,7 @@ from fractions import Fraction
 import typing
 import numbers
 import xml.etree.ElementTree as et
+from ttconv.imsc.config import ContentProfilesSignaling
 import ttconv.model as model
 import ttconv.style_properties as model_styles
 import ttconv.imsc.namespaces as xml_ns
@@ -150,6 +151,10 @@ class TTElement(TTMLElement):
       imsc_attr.CellResolutionAttribute.extract(xml_elem)
     )
 
+    tt_ctx.doc.set_content_profiles(
+      imsc_attr.ContentProfilesAttribute.extract(xml_elem)
+    )
+
     px_resolution = imsc_attr.ExtentAttribute.extract(xml_elem)
 
     if px_resolution is not None:
@@ -222,7 +227,8 @@ class TTElement(TTMLElement):
     model_doc: model.ContentDocument,
     frame_rate: typing.Optional[Fraction],
     time_expression_syntax: imsc_attr.TimeExpressionSyntaxEnum,
-    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn]
+    progress_callback: typing.Callable[[numbers.Real], typing.NoReturn],
+    content_profiles_signaling: ContentProfilesSignaling
   ) -> et.Element:
     '''Converts the data model to an IMSC document contained in an ElementTree Element'''
 
@@ -231,9 +237,13 @@ class TTElement(TTMLElement):
     tt_element = et.Element(TTElement.qn)
 
     imsc_attr.XMLLangAttribute.set(tt_element, model_doc.get_lang())
-    
+
     if model_doc.get_cell_resolution() != model.CellResolutionType(rows=15, columns=32):
       imsc_attr.CellResolutionAttribute.set(tt_element, model_doc.get_cell_resolution())
+
+    if content_profiles_signaling == ContentProfilesSignaling.CONTENT_PROFILES and \
+      model_doc.get_content_profiles() is not None:
+      imsc_attr.ContentProfilesAttribute.set(tt_element, model_doc.get_content_profiles())
 
     has_px = False
 

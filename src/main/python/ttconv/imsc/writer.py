@@ -57,41 +57,33 @@ def from_model(
   et.register_namespace("itts", xml_ns.ITTS)
   et.register_namespace("ebutts", xml_ns.EBUTTS)
 
-  if config is not None:
-    
-    fps = config.fps
+  if config is None:
+    config = imsc_config.IMSCWriterConfiguration()
 
-    if config.time_format is not None:
+  if config.time_format is not None:
 
-      if config.time_format in (TimeExpressionSyntaxEnum.clock_time_with_frames, TimeExpressionSyntaxEnum.frames):
-        
-        if fps is None:
-          raise ValueError("HH:MM:SS:FF and frames time expressions require the `frame_rate` parameter to be set.")
-        
-        if config.time_format is TimeExpressionSyntaxEnum.clock_time_with_frames and config.fps.denominator != 1:
-          raise ValueError("Time expressions cannot be HH:MM:SS:FF if the `frame_rate` parameter is not an integer")
+    if config.time_format in (TimeExpressionSyntaxEnum.clock_time_with_frames, TimeExpressionSyntaxEnum.frames):
 
-      time_format = config.time_format
+      if config.fps is None:
+        raise ValueError("HH:MM:SS:FF and frames time expressions require the `frame_rate` parameter to be set.")
 
-    elif config.fps is not None:
+      if config.time_format is TimeExpressionSyntaxEnum.clock_time_with_frames and config.fps.denominator != 1:
+        raise ValueError("Time expressions cannot be HH:MM:SS:FF if the `frame_rate` parameter is not an integer")
 
-      time_format = TimeExpressionSyntaxEnum.frames
-    
-    else:
+    time_format = config.time_format
 
-      time_format = TimeExpressionSyntaxEnum.clock_time
+  elif config.fps is not None:
+    time_format = TimeExpressionSyntaxEnum.frames
 
   else:
-    
-    fps = None
     time_format = TimeExpressionSyntaxEnum.clock_time
-  
- 
+
   return et.ElementTree(
     imsc_elements.TTElement.from_model(
       model_doc,
-      fps,
+      config.fps,
       time_format,
-      progress_callback
+      progress_callback,
+      config.profile_signaling
     )
   )

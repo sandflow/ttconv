@@ -28,6 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
+from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
 from ttconv.model import Br, Span
 import ttconv.stl.reader
 import ttconv.style_properties as styles
@@ -532,6 +533,11 @@ class STLReaderTests(unittest.TestCase):
       doc = ttconv.stl.reader.to_model(f)
       
       self.assertIsNotNone(doc.get_cell_resolution())
+
+  def test_content_profiles_presence(self):
+    with open("src/test/resources/stl/irt/requirement-0056-001_modified.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      self.assertSetEqual({IMSC_11_TEXT_PROFILE_DESIGNATOR}, doc.get_content_profiles())
 
 if __name__ == '__main__':
   unittest.main()
