@@ -155,6 +155,9 @@ class TTElement(TTMLElement):
       imsc_attr.ContentProfilesAttribute.extract(xml_elem)
     )
 
+    tt_ctx.temporal_context.time_base = imsc_attr.TimeBaseAttribute.extract(xml_elem)
+    tt_ctx.temporal_context.drop_mode = imsc_attr.DropModeAttribute.extract(xml_elem)
+
     px_resolution = imsc_attr.ExtentAttribute.extract(xml_elem)
 
     if px_resolution is not None:

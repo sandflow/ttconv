@@ -32,10 +32,13 @@ import xml.etree.ElementTree as et
 import os
 import logging
 from fractions import Fraction
+from ttconv.imsc import namespaces
+from ttconv.imsc.attributes import DropMode, DropModeAttribute, TimeBase, TimeBaseAttribute, TimeContainerAttribute
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.style_properties as imsc_styles
+from ttconv.time_code import SmpteTimeCode
 
 class IMSCReaderTest(unittest.TestCase):
 
@@ -279,6 +282,60 @@ class IMSCReaderTest(unittest.TestCase):
     </tt>"""
     doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
     self.assertSetEqual(doc.get_content_profiles(), {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"})
+
+  def test_timeBase_parameter(self):
+    self.assertEqual(TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "media"})), TimeBase.media)
+    self.assertEqual(TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "smpte"})), TimeBase.smpte)
+    self.assertEqual(TimeBaseAttribute.extract(et.Element("tt")), TimeBase.media)
+
+    with self.assertRaises(ValueError):
+      TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "clock"}))
+
+    with self.assertLogs() as logs:
+      logging.getLogger().info("*****dummy*****") # dummy log
+      self.assertEqual(TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "x"})), TimeBase.media)
+      if len(logs.output) != 2:
+        self.fail(logs.output)
+
+  def test_dropframe_parameter(self):
+    self.assertEqual(DropModeAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}dropMode": "nonDrop"})), DropMode.nonDrop)
+    self.assertEqual(DropModeAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}dropMode": "dropNTSC"})), DropMode.dropNTSC)
+    self.assertEqual(DropModeAttribute.extract(et.Element("tt")), DropMode.nonDrop)
+
+    with self.assertRaises(ValueError):
+      DropModeAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}dropMode": "dropPAL"}))
+
+    with self.assertLogs() as logs:
+      logging.getLogger().info("*****dummy*****") # dummy log
+      self.assertEqual(DropModeAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}dropMode": "x"})), DropMode.nonDrop)
+      if len(logs.output) != 2:
+        self.fail(logs.output)
+
+  def test_smpte_tc_nondrop(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001" ttp:timeBase="smpte"
+    >
+    <body begin="01:02:03:20"/>
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    body = doc.get_body()
+    self.assertEqual(body.get_begin(), (3723 * 30 + 20)/Fraction(30000, 1001))
+
+  def test_smpte_tc_drop(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001" ttp:timeBase="smpte" ttp:dropMode="dropNTSC"
+    >
+    <body begin="01:02:03:20"/>
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    body = doc.get_body()
+    self.assertEqual(body.get_begin(), SmpteTimeCode(1, 2, 3, 20, Fraction(30000, 1001), True).to_temporal_offset())
 
 if __name__ == '__main__':
   unittest.main()
