@@ -29,42 +29,57 @@
 
 import unittest
 from fractions import Fraction
-from ttconv.imsc.utils import parse_time_expression
+
+from ttconv.imsc.attributes import DropMode, TemporalAttributeParsingContext, TimeBase, parse_time_expression
+from ttconv.time_code import SmpteTimeCode
 
 class IMSCTimeExpressionsTest(unittest.TestCase):
 
   tests = [
-    ("1.2s", Fraction(24000, 1001), 60, Fraction(12, 10)),
-    ("1.2m", Fraction(24000, 1001), 60, Fraction(72)),
-    ("1.2h", Fraction(24000, 1001), 60, Fraction(4320)),
-    ("24f", Fraction(24000, 1001), 60, Fraction(1001, 1000)),
-    ("120t", Fraction(24000, 1001), 60, Fraction(2)),
-    ("01:02:03", Fraction(24000, 1001), 60, Fraction(3723)),
-    ("01:02:03.235", Fraction(24000, 1001), 60, Fraction(3723235, 1000)),
-    ("01:02:03.2350", Fraction(24000, 1001), 60, Fraction(3723235, 1000)),
-    ("01:02:03:20", Fraction(24000, 1001), 60, Fraction(3723) + 20/Fraction(24000, 1001)),
-    ("100:00:00.1", Fraction(24000, 1001), 60, 360000 + Fraction(1, 10)),
-    ("100:00:00:10", Fraction(24000, 1001), 60, 360000 + 10/Fraction(24000, 1001)),
-    ("00:00:15:00", Fraction(24000, 1001), 60, Fraction(15, 1))
+    ("1.2s", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(12, 10)),
+    ("1.2m", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(72)),
+    ("1.2h", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(4320)),
+    ("24f", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(1001, 1000)),
+    ("120t", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(2)),
+    ("01:02:03", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(3723)),
+    ("01:02:03.235", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(3723235, 1000)),
+    ("01:02:03.2350", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(3723235, 1000)),
+    ("01:02:03:20", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(3723) + 20/Fraction(24000, 1001)),
+    ("100:00:00.1", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), 360000 + Fraction(1, 10)),
+    ("100:00:00:10", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), 360000 + 10/Fraction(24000, 1001)),
+    ("00:00:15:00", TemporalAttributeParsingContext(Fraction(24000, 1001), 60), Fraction(15, 1)),
+    (
+      "01:02:03:20",
+      TemporalAttributeParsingContext(Fraction(30000, 1001), 60, TimeBase.smpte),
+      (3723 * 30 + 20)/Fraction(30000, 1001)
+    ),
+    (
+      "01:02:03:20",
+      TemporalAttributeParsingContext(Fraction(30000, 1001), 60, TimeBase.smpte, DropMode.dropNTSC),
+      SmpteTimeCode(1, 2, 3, 20, Fraction(30000, 1001), True).to_temporal_offset()
+    ),
   ]
 
   def test_timing_expressions(self):
     for test in self.tests:
       with self.subTest(test[0]):
-        c = parse_time_expression(test[2], test[1], test[0])
-        self.assertEqual(c, test[3])
+        c = parse_time_expression(test[1], test[0])
+        self.assertEqual(c, test[2])
         self.assertTrue(isinstance(c, Fraction))
 
   def test_bad_frame_count(self):
     with self.assertRaises(ValueError):
-      parse_time_expression(None, 24, "100:00:00:100")
+      parse_time_expression(TemporalAttributeParsingContext(), "100:00:00:100")
 
   def test_bad_frame_count_non_strict(self):
-    self.assertEqual(parse_time_expression(None, 24, "100:00:00:100", False), 360000 + 23/24) 
+    self.assertEqual(
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "100:00:00:100", False),
+        360000 + Fraction(23, 24)
+    )
 
   def test_bad_syntax(self):
     with self.assertRaises(ValueError):
-      parse_time_expression(60, 24, "100:00:00;01")
+      parse_time_expression(TemporalAttributeParsingContext(), "100:00:00;01")
 
 
 if __name__ == '__main__':

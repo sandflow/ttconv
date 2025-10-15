@@ -2,9 +2,13 @@
 
 ## Overview
 
-The IMSC reader (`ttconv/imsc/reader.py`) converts [IMSC 1.1 Text
-Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) documents into the [data model](./data-model.md). The objective is to
+The IMSC reader (`ttconv/imsc/reader.py`) converts TTML documents into the [data model](./data-model.md). The objective is to
 preserve rendering fidelity but not necessarily structure, e.g. referential styling is flattened.
+
+## Limitations
+
+The IMSC reader primarily converting TTML documents that conform to the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile), with a few exceptions:
+* `ttp:timeBase="smpte"` is supported with `ttp:dropMode="dropNTSC" | "nonDrop"` (the timecode timestamp are converted to media time in the model)
 
 ## Usage
 

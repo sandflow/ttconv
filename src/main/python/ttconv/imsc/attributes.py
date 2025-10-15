@@ -425,10 +425,22 @@ class FrameRateAttribute:
         f"{fps_multiplier.numerator:g} {fps_multiplier.denominator:g}"
       )
 
+class TimeBase(Enum):
+  clock = "clock"
+  media = "media"
+  smpte = "smpte"
+
+class DropMode(Enum):
+  nonDrop = "nonDrop"
+  dropNTSC = "dropNTSC"
+  dropPAL = "dropPAL"
+
 @dataclass
 class TemporalAttributeParsingContext:
   frame_rate: Fraction = Fraction(30, 1)
   tick_rate: int = 1
+  time_base: TimeBase = TimeBase.media
+  drop_mode: DropMode = DropMode.nonDrop
 
 class TimeExpressionSyntaxEnum(Enum):
   """IMSC time expression configuration values"""
@@ -450,6 +462,81 @@ def to_time_format(context: TemporalAttributeWritingContext, time: Fraction) -> 
 
   return f"{SmpteTimeCode.from_seconds(time, context.frame_rate)}"
 
+_CLOCK_TIME_FRACTION_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d(?:\.\d+)?)$")
+_CLOCK_TIME_FRAMES_RE = re.compile(r"^(\d{2,}):(\d\d):(\d\d):(\d{2,})$")
+_OFFSET_FRAME_RE = re.compile(r"^(\d+(?:\.\d+)?)f")
+_OFFSET_TICK_RE = re.compile(r"^(\d+(?:\.\d+)?)t$")
+_OFFSET_MS_RE = re.compile(r"^(\d+(?:\.\d+)?)ms$")
+_OFFSET_S_RE = re.compile(r"^(\d+(?:\.\d+)?)s$")
+_OFFSET_H_RE = re.compile(r"^(\d+(?:\.\d+)?)h$")
+_OFFSET_M_RE = re.compile(r"^(\d+(?:\.\d+)?)m$")
+
+
+def parse_time_expression(ctx: TemporalAttributeParsingContext, time_expr: str, strict: bool = True) -> Fraction:
+  '''Parse a TTML time expression in a fractional number in seconds
+  '''
+
+  m = _OFFSET_FRAME_RE.match(time_expr)
+
+  if m and ctx.frame_rate is not None:
+    return Fraction(m.group(1)) / ctx.frame_rate
+
+  m = _OFFSET_TICK_RE.match(time_expr)
+
+  if m and ctx.tick_rate is not None:
+    return Fraction(m.group(1)) / ctx.tick_rate
+
+  m = _OFFSET_MS_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) / 1000
+
+  m = _OFFSET_S_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1))
+
+  m = _OFFSET_M_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) * 60
+
+  m = _OFFSET_H_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) * 3600
+
+  m = _CLOCK_TIME_FRACTION_RE.match(time_expr)
+
+  if m:
+    return Fraction(m.group(1)) * 3600 + \
+            Fraction(m.group(2)) * 60 + \
+            Fraction(m.group(3))
+
+  m = _CLOCK_TIME_FRAMES_RE.match(time_expr)
+
+  if m and ctx.frame_rate is not None:
+    frames = int(m.group(4)) if m.group(4) else 0
+
+    if frames >= ctx.frame_rate:
+      if strict:
+        raise ValueError("Frame count exceeds frame rate")
+      else:
+        LOGGER.error("Frame count %s exceeds frame rate %s, rounding to frame rate minus 1", frames, ctx.frame_rate)
+        frames = round(ctx.frame_rate) - 1
+
+    hh = int(m.group(1))
+    mm = int(m.group(2))
+    ss = int(m.group(3))
+
+    if ctx.time_base is TimeBase.smpte:
+      tc = SmpteTimeCode(hh, mm, ss, frames, ctx.frame_rate, ctx.drop_mode != DropMode.nonDrop)
+      return tc.to_temporal_offset()
+    else:
+      return Fraction(hh * 3600 + mm * 60 + ss) + Fraction(frames) / ctx.frame_rate
+
+  raise ValueError("Syntax error")
+
 class BeginAttribute:
   '''begin attribute
   '''
@@ -463,7 +550,7 @@ class BeginAttribute:
     begin_raw = xml_element.attrib.get(BeginAttribute.qn)
 
     try:
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, begin_raw, False) if begin_raw is not None else None
+      return parse_time_expression(context, begin_raw, False) if begin_raw is not None else None
     except ValueError:
       LOGGER.error("Bad begin attribute value: %s", begin_raw)
       return None
@@ -486,7 +573,7 @@ class EndAttribute:
     end_raw = xml_element.attrib.get(EndAttribute.qn)
 
     try:
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, end_raw, False) if end_raw is not None else None
+      return parse_time_expression(context, end_raw, False) if end_raw is not None else None
     except ValueError:
       LOGGER.error("Bad end attribute value: %s", end_raw)
       return None
@@ -507,7 +594,7 @@ class DurAttribute:
     dur_raw = xml_element.attrib.get(DurAttribute.qn)
 
     try:
-      return utils.parse_time_expression(context.tick_rate, context.frame_rate, dur_raw, False) if dur_raw is not None else None
+      return parse_time_expression(context, dur_raw, False) if dur_raw is not None else None
     except ValueError:
       LOGGER.error("Bad dur attribute value: %s", dur_raw)
       return None
@@ -559,3 +646,57 @@ class StyleAttribute:
     raw_value = xml_element.attrib.get(StyleAttribute.qn)
 
     return raw_value.split(" ") if raw_value is not None else []
+
+class TimeBaseAttribute:
+  '''ttp:timeBase attribute
+  '''
+
+  qn = f"{{{ns.TTP}}}timeBase"
+
+  @staticmethod
+  def extract(ttml_element) -> TimeBase:
+
+    cr = ttml_element.attrib.get(TimeBaseAttribute.qn)
+
+    if cr is None:
+      return TimeBase.media
+
+    try:
+      tb = TimeBase[cr]
+    except KeyError:
+      LOGGER.error(f"Bad ttp:timeBase value '{cr}', using 'media' instead")
+      return TimeBase.media
+
+    if tb is TimeBase.clock:
+      raise ValueError("Clock timebase not supported")
+
+    return tb
+
+  # We do not support writing ttp:timeBase since all model values are always in media timebase
+
+class DropModeAttribute:
+  '''ttp:dropMode attribute
+  '''
+
+  qn = f"{{{ns.TTP}}}dropMode"
+
+  @staticmethod
+  def extract(ttml_element) -> DropMode:
+
+    cr = ttml_element.attrib.get(DropModeAttribute.qn)
+
+    if cr is None:
+      return DropMode.nonDrop
+
+    try:
+      dm = DropMode[cr]
+    except KeyError:
+      LOGGER.error(f"Bad ttp:dropMode value '{cr}', using 'nonDrop' instead")
+      return DropMode.nonDrop
+
+    if dm is DropMode.dropPAL:
+      raise ValueError("PAL drop frame timecode not supported")
+
+    return dm
+
+  # We do not support writing ttp:dropMode since all model values are always in media timebase
