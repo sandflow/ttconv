@@ -92,7 +92,7 @@ A progress bar is displayed if `progress_bar` is `true` and `log_level` is `"INF
 
 Default: `true`
 
-### log_level
+#### log_level
 
 `"log_level": "INFO" | "WARN" | "ERROR"`
 
@@ -100,7 +100,7 @@ Logging verbosity
 
 Default: `"INFO"`
 
-### document_lang
+#### document_lang
 
 `"document_lang": <RFC 5646 language tag>`
 
@@ -112,7 +112,7 @@ Default: `None`
 
 ### IMSC Writer configuration (`"imsc_writer"`)
 
-### time_format
+#### time_format
 
 `"time_format": "frames" | "clock_time" | "clock_time_with_frames"`
 
@@ -120,7 +120,7 @@ Specifies whether the TTML time expressions are in frames (`f`), `HH:MM:SS.mmm` 
 
 Default: `"frames"` if `"fps"` is specified, `"clock_time"` otherwise
 
-### fps
+#### fps
 
 `"fps": "<num>/<denom>"`
 
@@ -132,7 +132,7 @@ Example:
 
 `--config '{"general": {"progress_bar":false, "log_level":"WARN"}, "imsc_writer": {"time_format":"clock_time_with_frames", "fps": "25/1"}}'`
 
-### profile_signaling
+#### profile_signaling
 
 `"profile_signaling": "none" | "content_profiles"`
 
