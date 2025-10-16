@@ -30,6 +30,6 @@ from ttconv.isd import ISD
 class ISDFilter:
   """Abstract base class for filters"""
 
-  def process(self, isd: ISD):
+  def process(self, isd: ISD): # pragma: no cover
     """Process the specified ISD and returns it."""
     raise NotImplementedError
