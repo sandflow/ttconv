@@ -25,7 +25,8 @@ jobs:
         submodules : true
 
     - name: Install python environment
-      run: pipenv install --dev --python ${{ matrix.python_version }}
+      run: |
+        pipenv install --dev --skip-lock --python ${{ matrix.python_version }}
 
     - name: Run CI
       env:
