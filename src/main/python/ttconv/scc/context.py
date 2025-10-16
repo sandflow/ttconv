@@ -161,9 +161,13 @@ class SccContext:
 
   def backspace(self):
     """Move the cursors in a column to the left"""
-    self.get_caption_to_process().get_current_text().backspace()
-    (row, indent) = self.get_caption_to_process().get_cursor()
-    self.get_caption_to_process().set_cursor_at(row, max(indent - 1, 0))
+    processed_caption = self.get_caption_to_process()
+    if processed_caption is not None:
+      processed_caption.get_current_text().backspace()
+      (row, indent) = processed_caption.get_cursor()
+      processed_caption.set_cursor_at(row, max(indent - 1, 0))
+    else:
+      LOGGER.warning("Backspace ignored: no current caption style defined")
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
     """Initialize active caption for paint-on style"""
@@ -375,13 +379,25 @@ class SccContext:
       self.new_buffered_caption()
 
     elif control_code is SccControlCode.TO1:
-      self.get_caption_to_process().indent_cursor(1)
+      processed_caption = self.get_caption_to_process()
+      if processed_caption is not None:
+        processed_caption.indent_cursor(1)
+      else:
+        LOGGER.warning("Tab Offset 1 ignored: no current caption style defined at %s", time_code)
 
     elif control_code is SccControlCode.TO2:
-      self.get_caption_to_process().indent_cursor(2)
+      processed_caption = self.get_caption_to_process()
+      if processed_caption is not None:
+        processed_caption.indent_cursor(2)
+      else:
+        LOGGER.warning("Tab Offset 2 ignored: no current caption style defined at %s", time_code)
 
     elif control_code is SccControlCode.TO3:
-      self.get_caption_to_process().indent_cursor(3)
+      processed_caption = self.get_caption_to_process()
+      if processed_caption is not None:
+        processed_caption.indent_cursor(3)
+      else:
+        LOGGER.warning("Tab Offset 3 ignored: no current caption style defined at %s", time_code)
 
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
