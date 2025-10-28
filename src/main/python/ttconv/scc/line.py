@@ -150,7 +150,7 @@ class SccLine:
 
         elif isinstance(scc_code, SccAttributeCode):
           debug += scc_code.debug(scc_word.value)
-          context.process_attribute_code(scc_code)
+          context.process_attribute_code(scc_code, self.time_code)
           context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccMidRowCode):
@@ -170,7 +170,7 @@ class SccLine:
           context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccExtendedCharacter):
-          context.backspace()
+          context.backspace(self.time_code)
 
           word = scc_code.get_unicode_value()
           debug += word
