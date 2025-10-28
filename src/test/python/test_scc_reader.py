@@ -1271,13 +1271,26 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[0], "caption1", "00:00:01:16", "00:00:02:00", "Scary!  Eeech!")
     self.assertEqual(region_1, p_list[0].get_region())
 
+  def test_scc_content_starting_with_tab(self):
+    scc_content = """Scenarist_SCC V1.0
+00:42:41;20	942C 9429 97A2 5BF7
+"""
+    print(to_disassembly(scc_content))
+    self.assertIsNotNone(to_model(scc_content))
+
+  def test_scc_content_starting_with_bs(self):
+    scc_content = """Scenarist_SCC V1.0
+00:42:41;20	942C 9429 94A1 5BF7
+"""
+    self.assertIsNotNone(to_model(scc_content))
+
   def test_scc_content_starting_with_backspace(self):
     scc_content = """Scenarist_SCC V1.0
-10:01:44;17	94AE 9420 9470 9723 946E 80C1 92B0 20ec 6120 e6e9 6e20 64e5 7320 616e 6edc e573 2031 38b0 b02c 942C 8080 8080 942F
+10:01:44;17	94AE 9420 9470 9723 946E 94A1 92B0 20ec 6120 e6e9 6e20 64e5 7320 616e 6edc e573 2031 38b0 b02c 942C 8080 8080 942F
 """
 
     expected_scc_disassembly = """\
-10:01:44;17	{ENM}{RCL}{1500}{TO3}{15WhI}{??}À la fin des années 1800,{EDM}{}{}{EOC}
+10:01:44;17	{ENM}{RCL}{1500}{TO3}{15WhI}{BS}À la fin des années 1800,{EDM}{}{}{EOC}
 """
 
     scc_disassembly = to_disassembly(scc_content)
