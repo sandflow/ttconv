@@ -273,7 +273,7 @@ If `frame_rate` is:
 * `"29.97NDF"`, the output SCC file uses 29.97 fps non drop frame (NDF) timecode.
 * `"29.97DF"`, the output SCC file uses 29.97 fps drop frame (DF) timecode.
 
-Default: `"2997"`
+Default: `"2997DF"`
 
 ### LCD filter configuration (`"lcd"`)
 
