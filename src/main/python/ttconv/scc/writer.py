@@ -259,7 +259,9 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
     if len(captions) > 0 and captions[-1].get_end() is None:
       captions[-1].set_end(begin)
 
-    if len(isd) == 0:
+    non_empty_region_cnt = sum((1 for r in isd.iter_regions() if len(r) > 0), 0)
+
+    if non_empty_region_cnt == 0:
       # skip empty ISD
       is_last_empty = True
       continue
@@ -267,9 +269,8 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
     is_last_empty = False
 
     # SCC can only handle one region at a time
-    if len(isd) > 1:
-      LOGGER.warning("Merging multiple regions exist at %ss; errors may result", float(begin))
-      continue
+    if non_empty_region_cnt > 1:
+      LOGGER.warning("Merging multiple regions at %ss; errors may result", float(begin))
 
     caption: _Caption = _Caption.from_regions(list(isd.iter_regions()))
     caption.set_begin(begin)

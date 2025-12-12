@@ -266,5 +266,37 @@ class SCCWriterTest(unittest.TestCase):
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 
+  def test_multi_regions(self):
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;22	9420 9420 94ae 94ae 9440 9440 6180 942f 942f
+
+00:00:01;29	942c 942c
+
+00:00:02;22	9420 9420 94ae 94ae 9440 9440 6280 942f 942f
+
+00:00:03;29	942c 942c"""
+
+    SAMPLE = """<tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
+	<head>
+		<layout>
+			<region xml:id="r_a" tts:origin="0% 0%" tts:extent="50% 50%" />
+			<region xml:id="r_b" tts:origin="50% 50%" tts:extent="50% 50%" />
+		</layout>
+	</head>
+	<body>
+		<div>
+			<p region="r_a" begin="00:00:01.000" end="00:00:02.000">a</p>
+			<p region="r_b" begin="00:00:03.000" end="00:00:04.000">b</p>
+		</div>
+	</body>
+</tt>
+
+"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(SAMPLE)))
+    scc_from_model = scc_writer.from_model(model)
+    self.assertEqual(scc_from_model, expected_scc)
+
 if __name__ == '__main__':
   unittest.main()
