@@ -64,14 +64,6 @@ class InlinePositionFilterConfig(ModuleConfiguration):
   def name(cls):
     return "inline_position"
 
-
-  def _replace_regions(element: ContentElement, region_aliases: typing.Mapping[Region, Region]):
-    merged_region = region_aliases.get(element.get_region())
-    if merged_region is not None:
-      element.set_region(merged_region)
-    for child in element:
-      _replace_regions(child, region_aliases)
-
 def _apply_bg_color(element: ContentElement, bg_color: ColorType):
   if isinstance(element, P):
     element.set_style(StyleProperties.BackgroundColor, bg_color)
