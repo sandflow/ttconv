@@ -132,7 +132,7 @@ class SccWriterConfiguration(ModuleConfiguration):
   )
 
   start_tc: typing.Optional[str] = field(
-    default="00:00:00:00",
+    default=None,
     metadata={"decoder": lambda y: str(y) if y is not None else None}
   )
 
