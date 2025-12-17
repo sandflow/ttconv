@@ -275,6 +275,15 @@ If `frame_rate` is:
 
 Default: `"2997DF"`
 
+#### start_tc
+
+`"start_tc" : null | "HH:MM:SS:FF" | "HH;MM;SS;FF"`
+
+If not `null`, specifies the starting timecode for the SCC file. The timecode
+must be consistent with the value of the `frame_rate` parameter.
+
+Default: `null`
+
 ### LCD filter configuration (`"lcd"`)
 
 #### Description

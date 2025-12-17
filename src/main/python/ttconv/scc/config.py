@@ -34,6 +34,7 @@ import typing
 
 from ttconv.config import ModuleConfiguration
 from ttconv.style_properties import TextAlignType
+from ttconv.time_code import SmpteTimeCode
 
 
 class TextAlignment(Enum):
@@ -128,6 +129,11 @@ class SccWriterConfiguration(ModuleConfiguration):
   frame_rate: SCCFrameRate = field(
     default=SCCFrameRate.FPS_2997_DF,
     metadata={"decoder": SCCFrameRate.from_value}
+  )
+
+  start_tc: typing.Optional[str] = field(
+    default=None,
+    metadata={"decoder": lambda y: str(y) if y is not None else None}
   )
 
   @classmethod

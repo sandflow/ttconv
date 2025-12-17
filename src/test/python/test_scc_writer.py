@@ -266,6 +266,39 @@ class SCCWriterTest(unittest.TestCase):
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 
+  def test_zero_start(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30">
+  <body>
+    <div>
+      <p begin="0f" end="90f">Hello</p>
+     </div>
+  </body>
+</tt>"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+
+    with self.assertRaises(RuntimeError):
+      scc_writer.from_model(model)
+
+    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration(start_tc="01:00:00;00"))
+    expected_scc="""Scenarist_SCC V1.0
+
+00:59:59;21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
+
+01:00:02;29	942c 942c"""
+    self.assertEqual(scc_from_model, expected_scc)
+
+    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF, start_tc="01:00:00:00"))
+    expected_scc="""Scenarist_SCC V1.0
+
+00:59:59:21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
+
+01:00:03:00	942c 942c"""
+    self.assertEqual(scc_from_model, expected_scc)
+
   def test_multi_regions(self):
     expected_scc="""Scenarist_SCC V1.0
 

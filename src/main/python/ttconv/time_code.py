@@ -254,6 +254,9 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     if frame_rate is None:
       raise ValueError("Cannot compute time code from frames without frame rate")
 
+    if nb_frames is None or nb_frames < 0:
+      raise ValueError("Number of frames must not None and must not be less than zero")
+
     if is_df is None:
        drop_frame: bool = frame_rate.denominator == 1001
     else:
