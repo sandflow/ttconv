@@ -319,6 +319,30 @@ Red or green?
     self.assertIsNotNone(to_model(f))
 
 
+  def test_line_origin_extent(self):
+    f = io.StringIO(r"""WEBVTT
+
+00:00:00.000 --> 00:00:02.000 line:1
+Line 1 starting from top
+
+00:00:03.000 --> 00:00:05.000 line:45%
+Line in percentage
+
+00:00:07.000 --> 00:00:09.000 line:-1
+Line 1 starting from bottom
+""")
+    doc = to_model(f)
+    regions = list(doc.iter_regions())
+    # line 1 starting from top
+    self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Origin).y.value), 4)
+    self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Extent).height.value), 96)
+    # line in percentage
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 45)
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 55)
+    # line 1 starting from bottom
+    self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Origin).y.value), 96)
+    self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Extent).height.value), 4)
+
 
 
 if __name__ == '__main__':

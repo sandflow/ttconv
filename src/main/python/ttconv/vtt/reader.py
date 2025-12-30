@@ -292,9 +292,9 @@ def _get_or_make_region(
       line_num = parse_vtt_int(value[0])
       if line_num is not None:
         if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          line_offset = 100 * line_num/_DEFAULT_ROWS if line_num > 0 else 100 - 100 * line_num/_DEFAULT_ROWS
+          line_offset = 100 * line_num/_DEFAULT_ROWS if line_num > 0 else 100 + 100 * line_num/_DEFAULT_ROWS
         else:
-          line_offset = 100 * line_num/_DEFAULT_COLS if line_num > 0 else 100 - 100 * line_num/_DEFAULT_COLS
+          line_offset = 100 * line_num/_DEFAULT_COLS if line_num > 0 else 100 + 100 * line_num/_DEFAULT_COLS
 
     if line_offset is not None:
       if line_align == "center":
