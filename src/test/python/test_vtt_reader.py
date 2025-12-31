@@ -322,26 +322,36 @@ Red or green?
   def test_line_origin_extent(self):
     f = io.StringIO(r"""WEBVTT
 
-00:00:00.000 --> 00:00:02.000 line:1
-Line 1 starting from top
+1
+00:00:00.000 --> 00:00:02.000 line:0
+Line 0 starting from top
 
-00:00:03.000 --> 00:00:05.000 line:45%
+2
+00:00:03.000 --> 00:00:05.000 line:5
+Line 5 starting from top
+
+3
+00:00:06.000 --> 00:00:08.000 line:45%
 Line in percentage
 
-00:00:07.000 --> 00:00:09.000 line:-1
+4
+00:00:09.000 --> 00:00:11.000 line:-1
 Line 1 starting from bottom
 """)
     doc = to_model(f)
     regions = list(doc.iter_regions())
-    # line 1 starting from top
-    self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Origin).y.value), 4)
-    self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Extent).height.value), 96)
+    # line 0 starting from top
+    self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Origin).y.value), 0)
+    self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Extent).height.value), 100)
+    # line 5 starting from top
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 22)
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 78)
     # line in percentage
-    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 45)
-    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 55)
+    self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Origin).y.value), 45)
+    self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Extent).height.value), 55)
     # line 1 starting from bottom
-    self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Origin).y.value), 96)
-    self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Extent).height.value), 4)
+    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 96)
+    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 4)
 
 
 
