@@ -46,3 +46,6 @@ class VTTWriterConfiguration(ModuleConfiguration):
 
   # outputs cue identifier
   cue_id: bool = field(default=True, metadata={"decoder": bool})
+
+  # vertical positioning
+  vertical_position: bool = field(default=False, metadata={"decoder": bool})

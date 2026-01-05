@@ -40,7 +40,7 @@ from ttconv.isd import ISD
 from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
 from ttconv.style_properties import DirectionType, ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, \
-                                    FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType
+                                    FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType, WritingModeType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +90,11 @@ class VttContext:
       supported_styles.update({
         StyleProperties.TextAlign: [],
         StyleProperties.Direction: [],
+      })
+
+    if self._config.vertical_position:
+        supported_styles.update({
+          StyleProperties.WritingMode: []
       })
 
     self._filters.append(SupportedStylePropertiesISDFilter(supported_styles))
@@ -167,7 +172,74 @@ class VttContext:
     cue.set_begin(begin)
     cue.set_end(end)
 
-    if self._config.line_position:
+    # add vertical position config
+    if self._config.vertical_position:
+      vertical = region.get_style(StyleProperties.WritingMode)
+      display_align = region.get_style(StyleProperties.DisplayAlign)
+      position: PositionType = region.get_style(StyleProperties.Position)
+      extent: ExtentType = region.get_style(StyleProperties.Extent)
+      text_align = element.get_style(StyleProperties.TextAlign)
+    
+      if vertical == WritingModeType.tbrl:
+        cue.set_vertical(VttCue.Vertical.rl)
+        if display_align == DisplayAlignType.after:
+          # vertical subtitle should be on the left side
+          cue.set_line(round(position.v_offset.value))
+          if text_align == TextAlignType.start:
+            # vertical subtitle should be on the top
+            cue.set_textalign(VttCue.TextAlignment.start)
+            cue.set_position(round(position.h_offset.value))
+          elif text_align == TextAlignType.end:
+            # vertical subtitle should be on the bottom
+            cue.set_textalign(VttCue.TextAlignment.end)
+            cue.set_position(round(position.h_offset.value + extent.height.value))
+          else:
+            cue.set_position(round(position.h_offset.value))
+            cue.set_textalign(VttCue.TextAlignment.start)
+        elif display_align == DisplayAlignType.before:
+          # vertical subtitle should be on the right side
+          cue.set_line(round(position.v_offset.value + extent.height.value))
+          if text_align == TextAlignType.start:
+            # vertical subtitle should be on the top
+            cue.set_textalign(VttCue.TextAlignment.start)
+            cue.set_position(round(position.h_offset.value))
+          elif text_align == TextAlignType.end:
+            # vertical subtitle should be on the bottom
+            cue.set_textalign(VttCue.TextAlignment.end)
+            cue.set_position(round(position.h_offset.value + extent.height.value))
+          else:
+            cue.set_position(round(position.h_offset.value))
+            cue.set_textalign(VttCue.TextAlignment.start)
+        cue.set_size(round(extent.width.value - position.v_offset.value - position.h_offset.value))
+      elif vertical ==  WritingModeType.tblr:
+        cue.set_vertical(VttCue.Vertical.lr)
+        if display_align == DisplayAlignType.after:
+          # vertical subtitle should be on the right side
+          cue.set_line(round(position.v_offset.value))
+          if text_align == TextAlignType.start:
+            # vertical subtitle should be on the top
+            cue.set_textalign(VttCue.TextAlignment.start)
+            cue.set_position(round(position.h_offset.value))
+          elif text_align == TextAlignType.end:
+            # vertical subtitle should be on the bottom
+            cue.set_textalign(VttCue.TextAlignment.end)
+            cue.set_position(round(position.h_offset.value + extent.height.value))
+        elif display_align == DisplayAlignType.before:
+          # vertical subtitle should be on the left side
+          cue.set_line(round(position.v_offset.value + extent.width.value))
+          if text_align == TextAlignType.start:
+            # vertical subtitle should be on the start
+            cue.set_textalign(VttCue.TextAlignment.start)
+            cue.set_position(round(position.h_offset.value))
+          elif text_align == TextAlignType.end:
+            # vertical subtitle should be on the top
+            cue.set_textalign(VttCue.TextAlignment.end)
+            cue.set_position(round(position.h_offset.value + extent.height.value))
+        cue.set_size(round(extent.width.value - position.v_offset.value - position.h_offset.value))
+      else:
+        cue.set_vertical(None)
+
+    if self._config.line_position and cue.get_vertical() is None:
       display_align = region.get_style(StyleProperties.DisplayAlign)
       position: PositionType = region.get_style(StyleProperties.Position)
       extent: ExtentType = region.get_style(StyleProperties.Extent)
@@ -182,7 +254,7 @@ class VttContext:
         cue.set_line(round(position.v_offset.value + extent.height.value / 2))
         cue.set_align(VttCue.LineAlignment.center)
 
-    if self._config.text_align:
+    if self._config.text_align and cue.get_vertical() is None:
       direction = element.get_style(StyleProperties.Direction)
       text_align = element.get_style(StyleProperties.TextAlign)
       if text_align == TextAlignType.center:
