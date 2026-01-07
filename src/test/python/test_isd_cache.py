@@ -64,7 +64,15 @@ class ISDCacheTests(unittest.TestCase):
     sig_times = ISD.significant_times(doc)
 
     for t in sig_times:
-      ISD.from_model(doc, t, sig_times)
+      isd = ISD.from_model(doc, t, sig_times)
+      regions = list(isd.iter_regions())
+      if t % 2 == 0:
+        self.assertEqual(len(regions), 1)
+        region = list(regions)[0]
+        body = list(region)[0]
+        div = list(body)[0]
+        self.assertEqual(len(div), 1)
+        self.assertIsInstance(list(div)[0], model.P)
 
   def test_regions_with_many_p(self):
     doc = model.ContentDocument()
@@ -93,7 +101,10 @@ class ISDCacheTests(unittest.TestCase):
     sig_times = ISD.significant_times(doc)
 
     for t in sig_times:
-      ISD.from_model(doc, t, sig_times)
+      isd = ISD.from_model(doc, t, sig_times)
+      regions = list(isd.iter_regions())
+      self.assertTrue(len(regions) in (0, 1))
+
 
   def test_show_background(self):
     ttml_doc = """<tt xml:lang="en"

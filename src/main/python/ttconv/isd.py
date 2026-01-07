@@ -77,9 +77,15 @@ class SignificantTimes:
 
 @dataclass(frozen=True)
 class _SingleRegionDocumentCache:
+  """Cache for a single region document.
+
+  `interval_cache`: maps every element in the document to its absolute temporal interval
+  `doc`: document containing a single region
+  `content_intervals`: set of temporal intervals during which the document is active
+  """
   interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]
   doc: model.ContentDocument
-  content_intervals: typing.Optional[typing.Set[Typing.Tuple[Fraction, Fraction]]]
+  content_intervals: typing.Optional[typing.Set[typing.Tuple[Fraction, Fraction]]]
 
 ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
@@ -186,21 +192,33 @@ class ISD(model.Document):
 
   def _region_always_has_background(region: typing.Type[model.Region]) -> bool:
 
-    if region.get_style(styles.StyleProperties.Opacity) == 0:
+    bg_opacity: numbers.Number = region.get_style(styles.StyleProperties.Opacity)
+    if bg_opacity is None:
+      bg_opacity = region.get_doc().get_initial_value(styles.StyleProperties.Opacity)
+    if bg_opacity == 0:
       return False
 
-    if region.get_style(styles.StyleProperties.Display) is styles.DisplayType.none:
+    bg_display: styles.DisplayType = region.get_style(styles.StyleProperties.Display)
+    if bg_display is None:
+      bg_display = region.get_doc().get_initial_value(styles.StyleProperties.Display)
+    if bg_display is styles.DisplayType.none:
       return False
 
-    if region.get_style(styles.StyleProperties.Visibility) is styles.VisibilityType.hidden:
+    bg_visibility: styles.VisibilityType = region.get_style(styles.StyleProperties.Visibility)
+    if bg_visibility is None:
+      bg_visibility = region.get_doc().get_initial_value(styles.StyleProperties.Visibility)
+    if bg_visibility is styles.VisibilityType.hidden:
       return False
 
-    if region.get_style(styles.StyleProperties.ShowBackground) is styles.ShowBackgroundType.whenActive:
+    bg_active = region.get_style(styles.StyleProperties.ShowBackground)
+    if bg_active is None:
+      bg_active = region.get_doc().get_initial_value(styles.StyleProperties.ShowBackground)
+    if bg_active is styles.ShowBackgroundType.whenActive:
       return False
 
     bg_color: styles.ColorType = region.get_style(styles.StyleProperties.BackgroundColor)
     if bg_color is None:
-      bg_color = region.get_doc().get_initial_value(styles.StyleProperties.BackgroundColor);
+      bg_color = region.get_doc().get_initial_value(styles.StyleProperties.BackgroundColor)
     if bg_color is not None:
       if bg_color.ident is not styles.ColorType.Colorimetry.RGBA8:
         raise RuntimeError(f"Unsupported colorimetry system: {bg_color.ident}")
