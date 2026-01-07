@@ -199,12 +199,17 @@ class ISD(model.Document):
       return False
 
     bg_color: styles.ColorType = region.get_style(styles.StyleProperties.BackgroundColor)
+    if bg_color is None:
+      bg_color = region.get_doc().get_initial_value(styles.StyleProperties.BackgroundColor);
     if bg_color is not None:
       if bg_color.ident is not styles.ColorType.Colorimetry.RGBA8:
         raise RuntimeError(f"Unsupported colorimetry system: {bg_color.ident}")
 
       if bg_color.components[3] == 0:
         return False
+    else:
+      # no background color specified, so transparent
+      return False
 
     return True
 

@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+from fractions import Fraction
 import unittest
 from ttconv.isd import ISD
 import ttconv.model as model
@@ -36,6 +37,34 @@ import ttconv.imsc.reader as imsc_reader
 
 
 class ISDCacheTests(unittest.TestCase):
+
+  def test_large_number_of_regions(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+
+    for i in range(1000):
+      r_id = "r" + str(i)
+      r = model.Region(r_id, doc)
+      doc.put_region(r)
+
+      div = model.Div(doc)
+      div.set_region(r)
+      body.push_child(div)
+
+      p = model.P(doc)
+      p.set_begin(Fraction(2*i))
+      p.set_end(Fraction(2*i + 1))
+      div.push_child(p)
+
+      span = model.Span(doc)
+      span.push_child(model.Text(doc, f"div {i} content"))
+      p.push_child(span)
+
+    sig_times = ISD.significant_times(doc)
+
+    for t in sig_times:
+      ISD.from_model(doc, t, sig_times)
 
   def test_show_background(self):
     ttml_doc = """<tt xml:lang="en"
