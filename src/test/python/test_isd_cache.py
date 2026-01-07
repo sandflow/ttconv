@@ -66,6 +66,35 @@ class ISDCacheTests(unittest.TestCase):
     for t in sig_times:
       ISD.from_model(doc, t, sig_times)
 
+  def test_regions_with_many_p(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+
+    for i in range(100):
+      r_id = "r" + str(i)
+      r = model.Region(r_id, doc)
+      doc.put_region(r)
+
+      div = model.Div(doc)
+      div.set_region(r)
+      body.push_child(div)
+
+      for j in range(20):
+        p = model.P(doc)
+        p.set_begin(Fraction(20 * i + j))
+        p.set_end(Fraction(20 * i + j + 1))
+        div.push_child(p)
+
+        span = model.Span(doc)
+        span.push_child(model.Text(doc, f"div {i} p {j} content"))
+        p.push_child(span)
+
+    sig_times = ISD.significant_times(doc)
+
+    for t in sig_times:
+      ISD.from_model(doc, t, sig_times)
+
   def test_show_background(self):
     ttml_doc = """<tt xml:lang="en"
     xmlns="http://www.w3.org/ns/ttml"
@@ -99,7 +128,11 @@ class ISDCacheTests(unittest.TestCase):
     sig_times = ISD.significant_times(doc)
 
     isd = ISD.from_model(doc, 0.2, sig_times)
+    # only regions r1, r2, r3 should be visible at 0.2s since r4 has no background
+    self.assertEqual(len(list(isd.iter_regions())), 3)
 
+    isd = ISD.from_model(doc, 0.1, sig_times)
+    # all regions should be visible at 0.1s since "ABCDEF" is shown in r4
     self.assertEqual(len(list(isd.iter_regions())), 4)
 
 if __name__ == '__main__':
