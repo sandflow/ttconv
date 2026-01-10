@@ -40,6 +40,7 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.config import ModuleConfiguration
+from ttconv.utils import DisjointIntervals
 
 
 class SignificantTimes:
@@ -85,7 +86,7 @@ class _SingleRegionDocumentCache:
   """
   interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]
   doc: model.ContentDocument
-  content_intervals: typing.Optional[typing.Set[typing.Tuple[Fraction, Fraction]]]
+  content_intervals: typing.Optional[DisjointIntervals]
 
 ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
@@ -238,7 +239,7 @@ class ISD(model.Document):
 
     def compute_sig_times(
       interval_cache,
-      content_intervals: typing.Set[typing.Tuple[Fraction, Fraction]],
+      content_intervals: DisjointIntervals,
       s_times,
       element: model.ContentElement,
       parent_begin: Fraction,
@@ -251,9 +252,12 @@ class ISD(model.Document):
 
       interval_cache[element] = (begin_time, end_time)
 
+      if end_time is not None and end_time <= begin_time:
+        return
+
       if isinstance(element, (model.Br, model.Span)) or \
           isinstance(element, (model.Region)) and ISD._region_always_has_background(element):
-        content_intervals.add((begin_time, end_time))
+        content_intervals.add(begin_time, end_time)
 
       # add significant times for the element
 
@@ -266,6 +270,9 @@ class ISD(model.Document):
 
       for anim_step in element.iter_animation_steps():
         anim_begin_time, anim_end_time = ISD._make_absolute(anim_step.begin, anim_step.end, parent_begin, parent_end)
+
+        if anim_end_time is not None and anim_end_time <= anim_begin_time:
+          continue
 
         s_times.add(anim_begin_time)
 
@@ -296,7 +303,7 @@ class ISD(model.Document):
 
       interval_cache = {}
 
-      content_intervals = set()
+      content_intervals = DisjointIntervals()
 
       # add significant times for regions
 
@@ -311,7 +318,7 @@ class ISD(model.Document):
       cache.append(_SingleRegionDocumentCache(
         interval_cache,
         cached_doc,
-        content_intervals if len(content_intervals) is not None else None
+        content_intervals
         ))
 
     return SignificantTimes(sorted(s_times), tuple(cache))
@@ -330,13 +337,7 @@ class ISD(model.Document):
 
     for cached_doc in cache:
       if cached_doc.content_intervals is not None:
-        is_active = False
-        for begin_time, end_time in cached_doc.content_intervals:
-          if begin_time <= offset and (end_time is None or end_time > offset):
-            is_active = True
-            break
-
-        if not is_active:
+        if not cached_doc.content_intervals.contains(offset):
           continue
 
       regions = tuple(cached_doc.doc.iter_regions())
@@ -473,6 +474,9 @@ class ISD(model.Document):
 
     begin_time, end_time = element_interval
 
+    if end_time is not None and end_time <= begin_time:
+      return None
+
     # update the activity cache if the element was not present
       
     if is_active is None:
@@ -539,6 +543,9 @@ class ISD(model.Document):
         continue
 
       if anim_end_time is not None and anim_end_time <= absolute_offset:
+        continue
+
+      if anim_end_time is not None and anim_end_time <= begin_time:
         continue
 
       styles_to_be_computed.add(anim_step.style_property)

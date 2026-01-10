@@ -26,6 +26,9 @@
 '''Common utilities'''
 
 import re
+import typing
+from fractions import Fraction
+import bisect
 import ttconv.style_properties as styles
 
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
@@ -82,3 +85,66 @@ def parse_color(attr_value: str) -> styles.ColorType:
     )
 
   raise ValueError("Bad Syntax")
+
+
+class DisjointIntervals:
+  """A set of disjoint intervals"""
+
+  def __init__(self):
+    self._intervals: typing.List[typing.Tuple[Fraction, typing.Optional[Fraction]]] = []
+
+  @staticmethod
+  def _within_interval(x: Fraction, interval: typing.Tuple[Fraction, typing.Optional[Fraction]]) -> bool:
+    start, end = interval
+    return (x >= start) and (end is None or x < end)
+
+  def add(self, start: Fraction, end: typing.Optional[Fraction]):
+    """Adds an interval to the set, merging overlapping intervals"""
+
+    if start is None:
+      raise ValueError("Interval start must be specified")
+
+    if end is not None and start >= end:
+      raise ValueError("Interval start must be strictly less than end")
+
+    # look for lower bound
+    low = bisect.bisect_left(self._intervals, (start,))
+
+    if low > 0:
+      prev_end = self._intervals[low - 1][1]
+      if prev_end is None or prev_end >= start:
+        low -= 1
+        start = self._intervals[low][0]
+
+    # look for upper bound
+    if end is None:
+      hi = len(self._intervals)
+    else:
+      hi = bisect.bisect_right(self._intervals, (end,), lo=low)
+      if hi < len(self._intervals) and self._intervals[hi][0] == end:
+        hi += 1
+
+    if hi > low:
+      last_end = self._intervals[hi - 1][1]
+      if last_end is None or (end is not None and last_end > end):
+        end = last_end
+
+    self._intervals[low : hi] = [(start, end)]
+
+  def contains(self, x: Fraction) -> bool:
+    """Returns whether the point is contained in one of the intervals"""
+    idx = bisect.bisect_left(self._intervals, (x,))
+
+    if idx < len(self._intervals) and DisjointIntervals._within_interval(x, self._intervals[idx]):
+      return True
+
+    if idx > 0 and DisjointIntervals._within_interval(x, self._intervals[idx - 1]):
+      return True
+
+    return False
+
+  def __len__(self):
+    return len(self._intervals)
+
+  def __iter__(self):
+    return iter(self._intervals)
