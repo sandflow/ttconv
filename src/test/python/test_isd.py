@@ -27,7 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116
 
-from glob import glob
+import glob
 import typing
 import unittest
 import os
@@ -739,3 +739,5 @@ class TestISDReferences(unittest.TestCase):
         generated_content = ISDReferenceFiles.generate_reference_file(ttml_path)
 
         self.assertEqual(generated_content.replace("\r\n", "\n"), reference_content.replace("\r\n", "\n"), f"Content mismatch for {ttml_path}")
+
+    ISDReferenceFiles.walk(check_isd_reference)
