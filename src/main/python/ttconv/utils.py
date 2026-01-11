@@ -143,6 +143,10 @@ class DisjointIntervals:
 
     if end is not None and start >= end:
       raise ValueError("Interval start must be strictly less than end")
+    
+    if len(self._intervals) == 0:
+      self._intervals.append((start, end))
+      return
 
     # look for lower bound
     low = DisjointIntervals._bisect_left(self._intervals, start, key=lambda x: x[1])
@@ -165,7 +169,12 @@ class DisjointIntervals:
 
   def contains(self, x: Fraction) -> bool:
     """Returns whether the point is contained in one of the intervals"""
-    idx = DisjointIntervals._bisect_right(self._intervals, x, key=lambda i: i[0])
+    if len(self._intervals) == 0:
+      idx = 0
+    if len(self._intervals) == 1:
+      idx = 1
+    else:
+      idx = DisjointIntervals._bisect_right(self._intervals, x, key=lambda i: i[0])
 
     return idx > 0 and DisjointIntervals._within_interval(x, self._intervals[idx - 1])
 
