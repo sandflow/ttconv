@@ -94,6 +94,7 @@ class DisjointIntervals:
 
   @staticmethod
   def _bisect_left(a, x, lo=0, key=None):
+    """Polyfill for bisect.bisect_left with key argument"""
     if lo < 0:
       raise ValueError('lo must be non-negative')
     
@@ -113,6 +114,7 @@ class DisjointIntervals:
 
   @staticmethod
   def _bisect_right(a, x, lo=0, key=None):
+    """Polyfill for bisect.bisect_right with key argument"""
     if lo < 0:
       raise ValueError('lo must be non-negative')
     hi = len(a)
