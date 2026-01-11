@@ -40,6 +40,7 @@ from fractions import Fraction
 import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.config import ModuleConfiguration
+from ttconv.utils import DisjointIntervals
 
 
 class SignificantTimes:
@@ -77,9 +78,15 @@ class SignificantTimes:
 
 @dataclass(frozen=True)
 class _SingleRegionDocumentCache:
+  """Cache for a single region document.
+
+  `interval_cache`: maps every element in the document to its absolute temporal interval
+  `doc`: document containing a single region
+  `content_intervals`: set of temporal intervals during which the document is active
+  """
   interval_cache: typing.Mapping[model.ContentElement, typing.Tuple[Fraction, Fraction]]
   doc: model.ContentDocument
-  content_interval: typing.Optional[typing.Tuple[Fraction, typing.Optional[Fraction]]]
+  content_intervals: typing.Optional[DisjointIntervals]
 
 ISD_NO_MULTIPROC_ENV = "ISD_NO_MULTIPROC"
 
@@ -186,25 +193,42 @@ class ISD(model.Document):
 
   def _region_always_has_background(region: typing.Type[model.Region]) -> bool:
 
-    if region.get_style(styles.StyleProperties.Opacity) == 0:
+    bg_opacity: numbers.Number = region.get_style(styles.StyleProperties.Opacity)
+    if bg_opacity is None:
+      bg_opacity = region.get_doc().get_initial_value(styles.StyleProperties.Opacity)
+    if bg_opacity == 0:
       return False
 
-    if region.get_style(styles.StyleProperties.Display) is styles.DisplayType.none:
+    bg_display: styles.DisplayType = region.get_style(styles.StyleProperties.Display)
+    if bg_display is None:
+      bg_display = region.get_doc().get_initial_value(styles.StyleProperties.Display)
+    if bg_display is styles.DisplayType.none:
       return False
 
-    if region.get_style(styles.StyleProperties.Visibility) is styles.VisibilityType.hidden:
+    bg_visibility: styles.VisibilityType = region.get_style(styles.StyleProperties.Visibility)
+    if bg_visibility is None:
+      bg_visibility = region.get_doc().get_initial_value(styles.StyleProperties.Visibility)
+    if bg_visibility is styles.VisibilityType.hidden:
       return False
 
-    if region.get_style(styles.StyleProperties.ShowBackground) is styles.ShowBackgroundType.whenActive:
+    bg_active = region.get_style(styles.StyleProperties.ShowBackground)
+    if bg_active is None:
+      bg_active = region.get_doc().get_initial_value(styles.StyleProperties.ShowBackground)
+    if bg_active is styles.ShowBackgroundType.whenActive:
       return False
 
     bg_color: styles.ColorType = region.get_style(styles.StyleProperties.BackgroundColor)
+    if bg_color is None:
+      bg_color = region.get_doc().get_initial_value(styles.StyleProperties.BackgroundColor)
     if bg_color is not None:
       if bg_color.ident is not styles.ColorType.Colorimetry.RGBA8:
         raise RuntimeError(f"Unsupported colorimetry system: {bg_color.ident}")
 
       if bg_color.components[3] == 0:
         return False
+    else:
+      # no background color specified, so transparent
+      return False
 
     return True
 
@@ -215,7 +239,7 @@ class ISD(model.Document):
 
     def compute_sig_times(
       interval_cache,
-      content_interval,
+      content_intervals: DisjointIntervals,
       s_times,
       element: model.ContentElement,
       parent_begin: Fraction,
@@ -228,10 +252,12 @@ class ISD(model.Document):
 
       interval_cache[element] = (begin_time, end_time)
 
+      if end_time is not None and end_time <= begin_time:
+        return
+
       if isinstance(element, (model.Br, model.Span)) or \
           isinstance(element, (model.Region)) and ISD._region_always_has_background(element):
-        content_interval[0] = begin_time if content_interval[0] is None else min(begin_time, content_interval[0])
-        content_interval[1] = None if end_time is None or content_interval[1] is None else max(end_time, content_interval[1])
+        content_intervals.add(begin_time, end_time)
 
       # add significant times for the element
 
@@ -245,6 +271,9 @@ class ISD(model.Document):
       for anim_step in element.iter_animation_steps():
         anim_begin_time, anim_end_time = ISD._make_absolute(anim_step.begin, anim_step.end, parent_begin, parent_end)
 
+        if anim_end_time is not None and anim_end_time <= anim_begin_time:
+          continue
+
         s_times.add(anim_begin_time)
 
         if anim_end_time is not None:
@@ -253,7 +282,7 @@ class ISD(model.Document):
       # add signficant times for the children of the element 
 
       for child_element in iter(element):
-        compute_sig_times(interval_cache, content_interval, s_times, child_element, begin_time, end_time)
+        compute_sig_times(interval_cache, content_intervals, s_times, child_element, begin_time, end_time)
 
     single_regions_docs = []
 
@@ -274,22 +303,22 @@ class ISD(model.Document):
 
       interval_cache = {}
 
-      content_interval = [None, 0]
+      content_intervals = DisjointIntervals()
 
       # add significant times for regions
 
       for region in cached_doc.iter_regions():
-        compute_sig_times(interval_cache, content_interval, s_times, region, 0, None)
+        compute_sig_times(interval_cache, content_intervals, s_times, region, 0, None)
 
       # add significant times for body and its descendents
 
       if cached_doc.get_body() is not None:
-        compute_sig_times(interval_cache, content_interval, s_times, cached_doc.get_body(), 0, None)
+        compute_sig_times(interval_cache, content_intervals, s_times, cached_doc.get_body(), 0, None)
 
       cache.append(_SingleRegionDocumentCache(
         interval_cache,
         cached_doc,
-        tuple(content_interval) if content_interval[0] is not None else None
+        content_intervals
         ))
 
     return SignificantTimes(sorted(s_times), tuple(cache))
@@ -307,11 +336,8 @@ class ISD(model.Document):
     cache = (_SingleRegionDocumentCache({}, doc, None),) if sig_times is None else sig_times.cache()
 
     for cached_doc in cache:
-      if cached_doc.content_interval is not None:
-        if (
-          cached_doc.content_interval[0] > offset or 
-          (cached_doc.content_interval[1] is not None and cached_doc.content_interval[1] <= offset)
-        ):
+      if cached_doc.content_intervals is not None:
+        if not cached_doc.content_intervals.contains(offset):
           continue
 
       regions = tuple(cached_doc.doc.iter_regions())
@@ -448,6 +474,9 @@ class ISD(model.Document):
 
     begin_time, end_time = element_interval
 
+    if end_time is not None and end_time <= begin_time:
+      return None
+
     # update the activity cache if the element was not present
       
     if is_active is None:
@@ -514,6 +543,9 @@ class ISD(model.Document):
         continue
 
       if anim_end_time is not None and anim_end_time <= absolute_offset:
+        continue
+
+      if anim_end_time is not None and anim_end_time <= begin_time:
         continue
 
       styles_to_be_computed.add(anim_step.style_property)
