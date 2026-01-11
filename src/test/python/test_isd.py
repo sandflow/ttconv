@@ -733,10 +733,10 @@ class TestISDReferences(unittest.TestCase):
         if not os.path.exists(reference_path):
            self.fail(f"Reference file {reference_path} does not exist for {ttml_path}")
 
+        generated_content = ISDReferenceFiles.generate_reference_file(ttml_path)
+
         with open(reference_path, "r", encoding="utf-8") as f:
           reference_content = f.read()
-
-        generated_content = ISDReferenceFiles.generate_reference_file(ttml_path)
 
         self.assertEqual(generated_content.replace("\r\n", "\n"), reference_content.replace("\r\n", "\n"), f"Content mismatch for {ttml_path}")
 
