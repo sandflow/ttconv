@@ -149,22 +149,27 @@ class DisjointIntervals:
       return
 
     # look for lower bound
+    # find the first interval that ends at or after the new interval starts
     low = DisjointIntervals._bisect_left(self._intervals, start, key=lambda x: x[1])
 
     if low < len(self._intervals):
+      # if such an interval exists, the new start is the minimum of the new start and the start of that interval
       start = min(start, self._intervals[low][0])
 
     # look for upper bound
     if end is None:
       hi = len(self._intervals)
     else:
+      # find the first interval that starts after the new interval ends
       hi = DisjointIntervals._bisect_right(self._intervals, end, lo=low, key=lambda x: x[0])
 
     if hi > low:
+      # if such an interval exists, the new end is the maximum of the new end and the end of the last merged interval
       last_end = self._intervals[hi - 1][1]
       if last_end is None or (end is not None and last_end > end):
         end = last_end
 
+    # replace the range of overlapping intervals with the merged interval
     self._intervals[low : hi] = [(start, end)]
 
   def contains(self, x: Fraction) -> bool:
