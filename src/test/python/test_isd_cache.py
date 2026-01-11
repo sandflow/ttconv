@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+from fractions import Fraction
 import unittest
 from ttconv.isd import ISD
 import ttconv.model as model
@@ -36,6 +37,74 @@ import ttconv.imsc.reader as imsc_reader
 
 
 class ISDCacheTests(unittest.TestCase):
+
+  def test_large_number_of_regions(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+
+    for i in range(1000):
+      r_id = "r" + str(i)
+      r = model.Region(r_id, doc)
+      doc.put_region(r)
+
+      div = model.Div(doc)
+      div.set_region(r)
+      body.push_child(div)
+
+      p = model.P(doc)
+      p.set_begin(Fraction(2*i))
+      p.set_end(Fraction(2*i + 1))
+      div.push_child(p)
+
+      span = model.Span(doc)
+      span.push_child(model.Text(doc, f"div {i} content"))
+      p.push_child(span)
+
+    sig_times = ISD.significant_times(doc)
+
+    for t in sig_times:
+      isd = ISD.from_model(doc, t, sig_times)
+      regions = list(isd.iter_regions())
+      if t % 2 == 0:
+        self.assertEqual(len(regions), 1)
+        region = list(regions)[0]
+        body = list(region)[0]
+        div = list(body)[0]
+        self.assertEqual(len(div), 1)
+        self.assertIsInstance(list(div)[0], model.P)
+
+  def test_regions_with_many_p(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+
+    for i in range(100):
+      r_id = "r" + str(i)
+      r = model.Region(r_id, doc)
+      doc.put_region(r)
+
+      div = model.Div(doc)
+      div.set_region(r)
+      body.push_child(div)
+
+      for j in range(20):
+        p = model.P(doc)
+        p.set_begin(Fraction(20 * i + j))
+        p.set_end(Fraction(20 * i + j + 1))
+        div.push_child(p)
+
+        span = model.Span(doc)
+        span.push_child(model.Text(doc, f"div {i} p {j} content"))
+        p.push_child(span)
+
+    sig_times = ISD.significant_times(doc)
+
+    for t in sig_times:
+      isd = ISD.from_model(doc, t, sig_times)
+      regions = list(isd.iter_regions())
+      self.assertTrue(len(regions) in (0, 1))
+
 
   def test_show_background(self):
     ttml_doc = """<tt xml:lang="en"
@@ -70,7 +139,11 @@ class ISDCacheTests(unittest.TestCase):
     sig_times = ISD.significant_times(doc)
 
     isd = ISD.from_model(doc, 0.2, sig_times)
+    # only regions r1, r2, r3 should be visible at 0.2s since r4 has no background
+    self.assertEqual(len(list(isd.iter_regions())), 3)
 
+    isd = ISD.from_model(doc, 0.1, sig_times)
+    # all regions should be visible at 0.1s since "ABCDEF" is shown in r4
     self.assertEqual(len(list(isd.iter_regions())), 4)
 
 if __name__ == '__main__':
