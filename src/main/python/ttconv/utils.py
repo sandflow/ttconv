@@ -28,7 +28,6 @@
 import re
 import typing
 from fractions import Fraction
-import bisect
 import ttconv.style_properties as styles
 
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
@@ -94,6 +93,44 @@ class DisjointIntervals:
     self._intervals: typing.List[typing.Tuple[Fraction, typing.Optional[Fraction]]] = []
 
   @staticmethod
+  def _bisect_left(a, x, lo=0, key=None):
+    if lo < 0:
+      raise ValueError('lo must be non-negative')
+    
+    hi = len(a)
+
+    if key is None:
+      key = lambda v: v
+    
+    while lo < hi:
+      mid = (lo + hi) // 2
+      v = key(a[mid])
+      if v is not None and v < x:
+        lo = mid + 1
+      else:
+        hi = mid
+    return lo
+
+  @staticmethod
+  def _bisect_right(a, x, lo=0, key=None):
+    if lo < 0:
+      raise ValueError('lo must be non-negative')
+    hi = len(a)
+
+    if key is None:
+      key = lambda v: v
+
+    while lo < hi:
+      mid = (lo + hi) // 2
+      v = key(a[mid])
+      if v is None or x < v:
+        hi = mid
+      else:
+        lo = mid + 1
+
+    return lo
+
+  @staticmethod
   def _within_interval(x: Fraction, interval: typing.Tuple[Fraction, typing.Optional[Fraction]]) -> bool:
     start, end = interval
     return (x >= start) and (end is None or x < end)
@@ -108,21 +145,16 @@ class DisjointIntervals:
       raise ValueError("Interval start must be strictly less than end")
 
     # look for lower bound
-    low = bisect.bisect_left(self._intervals, (start,))
+    low = DisjointIntervals._bisect_left(self._intervals, start, key=lambda x: x[1])
 
-    if low > 0:
-      prev_end = self._intervals[low - 1][1]
-      if prev_end is None or prev_end >= start:
-        low -= 1
-        start = self._intervals[low][0]
+    if low < len(self._intervals):
+      start = min(start, self._intervals[low][0])
 
     # look for upper bound
     if end is None:
       hi = len(self._intervals)
     else:
-      hi = bisect.bisect_right(self._intervals, (end,), lo=low)
-      if hi < len(self._intervals) and self._intervals[hi][0] == end:
-        hi += 1
+      hi = DisjointIntervals._bisect_right(self._intervals, end, lo=low, key=lambda x: x[0])
 
     if hi > low:
       last_end = self._intervals[hi - 1][1]
@@ -133,15 +165,9 @@ class DisjointIntervals:
 
   def contains(self, x: Fraction) -> bool:
     """Returns whether the point is contained in one of the intervals"""
-    idx = bisect.bisect_left(self._intervals, (x,))
+    idx = DisjointIntervals._bisect_right(self._intervals, x, key=lambda i: i[0])
 
-    if idx < len(self._intervals) and DisjointIntervals._within_interval(x, self._intervals[idx]):
-      return True
-
-    if idx > 0 and DisjointIntervals._within_interval(x, self._intervals[idx - 1]):
-      return True
-
-    return False
+    return idx > 0 and DisjointIntervals._within_interval(x, self._intervals[idx - 1])
 
   def __len__(self):
     return len(self._intervals)
