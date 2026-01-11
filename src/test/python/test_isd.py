@@ -27,6 +27,8 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import glob
+import typing
 import unittest
 import os
 import logging
@@ -691,3 +693,51 @@ class DefaultRegion(unittest.TestCase):
 
 if __name__ == '__main__':
   unittest.main()
+
+
+class ISDReferenceFiles:
+  input_dir = os.path.join("src", "test", "resources", "ttml", "imsc-tests")
+  output_dir = os.path.join("src", "test", "resources", "isd-references")
+
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+  @staticmethod
+  def walk(func: typing.Callable[[str, str], None]) -> None:
+    in_files = glob.glob(os.path.join(ISDReferenceFiles.input_dir, "**", "*.ttml"), recursive=True)
+    for in_file in in_files:
+      in_rel_path = os.path.relpath(in_file, ISDReferenceFiles.input_dir)
+      out_fn = os.path.splitext(in_rel_path)[0].replace(os.sep, "_") + ".txt"
+      out_path = os.path.join(ISDReferenceFiles.output_dir, out_fn)
+      func(in_file, out_path)
+
+  @staticmethod
+  def generate_reference_file(ttml_path) -> str:
+    tree = et.parse(ttml_path)
+    doc = imsc_reader.to_model(tree)
+    sig_times = ISD.significant_times(doc)
+
+    output_lines = []
+    for time in sig_times:
+      isd = ISD.from_model(doc, time)
+      output_lines.append(f"{float(time)} {'+' if any(len(r) > 0 for r in isd.iter_regions()) else '-'}")
+    return "\n".join(output_lines) + "\n"
+
+
+class TestISDReferences(unittest.TestCase):
+
+  def test_isd_references(self):
+    def check_isd_reference(ttml_path: str, reference_path: str):
+      with self.subTest(ttml_file=ttml_path):
+
+        if not os.path.exists(reference_path):
+           self.fail(f"Reference file {reference_path} does not exist for {ttml_path}")
+
+        generated_content = ISDReferenceFiles.generate_reference_file(ttml_path)
+
+        with open(reference_path, "r", encoding="utf-8") as f:
+          reference_content = f.read()
+
+        self.assertEqual(generated_content.replace("\r\n", "\n"), reference_content.replace("\r\n", "\n"), f"Content mismatch for {ttml_path}")
+
+    ISDReferenceFiles.walk(check_isd_reference)
