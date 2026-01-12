@@ -357,14 +357,18 @@ class ISD(model.Document):
 
     return isd
 
+  # TODO: remove is_multithreaded
   @staticmethod
   def generate_isd_sequence(
     doc: model.ContentDocument,
-    progress_callback=lambda _: None) -> typing.List[typing.Tuple[Fraction, ISD]]:
+    progress_callback=lambda _: None,
+    is_multithreaded: bool = True       # pylint: disable=unused-argument
+    ) -> typing.List[typing.Tuple[Fraction, ISD]]:
     """ Returns a list of duples, each consisting of a significant time in the ContentDocument `doc`
     and the corresponding `ISD` instance. The duples are sorted in order of increasing significant time.
+    The `is_multithreaded` flag is not used and is kept for backwards compatibility only.
     """
-
+  
     sig_times = ISD.significant_times(doc)
 
     progress_callback(0.1)
