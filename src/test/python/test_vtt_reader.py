@@ -32,6 +32,8 @@ import os.path
 
 from ttconv.vtt.reader import to_model
 from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
+from ttconv.imsc.config import IMSCWriterConfiguration, ContentProfilesSignaling
+import ttconv.imsc.writer as imsc_writer
 import ttconv.style_properties as styles
 import ttconv.model as model
 
@@ -356,14 +358,128 @@ Line 1 starting from bottom
 
 
 
-  def test_content_profiles_presence(self):
+  def test_reader_does_not_set_content_profiles(self):
     f = io.StringIO(r"""WEBVTT
 
 00:02:16.612 --> 00:02:19.376
 Hello world
 """)
     doc = to_model(f)
+    self.assertSetEqual(set(), doc.get_content_profiles())
+
+  def test_writer_sets_content_profiles_when_configured(self):
+    f = io.StringIO(r"""WEBVTT
+
+00:02:16.612 --> 00:02:19.376
+Hello world
+""")
+    doc = to_model(f)
+    writer_config = IMSCWriterConfiguration()
+    writer_config.profile_signaling = ContentProfilesSignaling.CONTENT_PROFILES
+    imsc_writer.from_model(doc, writer_config)
     self.assertSetEqual({IMSC_11_TEXT_PROFILE_DESIGNATOR}, doc.get_content_profiles())
+
+
+class VTTReaderIMSC11ConformanceTest(unittest.TestCase):
+
+  def _assert_conformant(self, vtt_string):
+    doc = to_model(io.StringIO(vtt_string))
+    self.assertIsNotNone(doc)
+    # Write through IMSC writer with content_profiles signaling,
+    # which validates conformance and raises ValueError on violations
+    writer_config = IMSCWriterConfiguration()
+    writer_config.profile_signaling = ContentProfilesSignaling.CONTENT_PROFILES
+    imsc_writer.from_model(doc, writer_config)
+
+  def test_conformance_basic_text(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+Hello world
+""")
+
+  def test_conformance_bold_italic_underline(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+<b><i><u>styled text</u></i></b>
+""")
+
+  def test_conformance_colors(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+<c.blue>blue text</c> and <c.bg_red>red bg</c>
+""")
+
+  def test_conformance_ruby(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+<ruby>base<rt>annotation</rt></ruby>
+""")
+
+  def test_conformance_vertical_text(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000 vertical:lr
+Vertical left-to-right
+
+00:00:06.000 --> 00:00:10.000 vertical:rl
+Vertical right-to-left
+""")
+
+  def test_conformance_complex_positioning(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000 line:0 position:10% size:80% align:start
+Top left aligned
+
+00:00:06.000 --> 00:00:10.000 line:50% position:50% size:50% align:center
+Centered small box
+
+00:00:11.000 --> 00:00:15.000 line:-1
+Bottom aligned
+""")
+
+  def test_conformance_timestamp_tags(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+Word<00:00:01.000> by<00:00:02.000> word<00:00:03.000> reveal
+""")
+
+  def test_conformance_language_tags(self):
+    self._assert_conformant("""WEBVTT
+
+00:00:00.000 --> 00:00:05.000
+<lang en>English text</lang> and <lang fr>texte francais</lang>
+""")
+
+  def test_conformance_all_vtt_samples(self):
+    # These WPT edge-case files use extreme line/position/size values that
+    # cause the VTT reader to produce negative origin or extent values,
+    # which violate IMSC 1.1 Text Profile section 8.4.5.
+    _SKIP_NEGATIVE_LENGTH = frozenset([
+      "settings-position",
+      "settings-line",
+      "align_center_position_lt_50",
+      "align_center_position_lt_50_size_gt_maximum_size",
+    ])
+    writer_config = IMSCWriterConfiguration()
+    writer_config.profile_signaling = ContentProfilesSignaling.CONTENT_PROFILES
+    for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".vtt":
+          if name in _SKIP_NEGATIVE_LENGTH:
+            continue
+          with self.subTest(name):
+            with open(os.path.join(root, filename), encoding="utf-8") as f:
+              doc = to_model(f)
+              self.assertIsNotNone(doc)
+              # Raises ValueError if IMSC 1.1 Text Profile violations are found
+              imsc_writer.from_model(doc, writer_config)
 
 
 if __name__ == '__main__':

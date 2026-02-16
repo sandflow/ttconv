@@ -34,7 +34,6 @@ from enum import Enum
 
 from ttconv import model
 from ttconv import style_properties as styles
-from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
 from ttconv.vtt.tokenizer import EndTagToken, StartTagToken, StringToken, CueTextTokenizer, TimestampTagToken, Token
 
 LOGGER = logging.getLogger(__name__)
@@ -444,8 +443,6 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
 
 
   doc = model.ContentDocument()
-
-  doc.set_content_profiles(set([IMSC_11_TEXT_PROFILE_DESIGNATOR]))
 
   body = model.Body(doc)
   doc.set_body(body)
