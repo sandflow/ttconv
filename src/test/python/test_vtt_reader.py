@@ -31,6 +31,7 @@ import io
 import os.path
 
 from ttconv.vtt.reader import to_model
+from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
 import ttconv.style_properties as styles
 import ttconv.model as model
 
@@ -353,6 +354,16 @@ Line 1 starting from bottom
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 96)
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 4)
 
+
+
+  def test_content_profiles_presence(self):
+    f = io.StringIO(r"""WEBVTT
+
+00:02:16.612 --> 00:02:19.376
+Hello world
+""")
+    doc = to_model(f)
+    self.assertSetEqual({IMSC_11_TEXT_PROFILE_DESIGNATOR}, doc.get_content_profiles())
 
 
 if __name__ == '__main__':
