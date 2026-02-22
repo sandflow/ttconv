@@ -31,8 +31,8 @@ import io
 import os.path
 
 from ttconv.vtt.reader import to_model
+from ttconv.filters.doc.imsc11text import IMSC11TextFilter
 from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
-from ttconv.imsc.config import IMSCWriterConfiguration, ContentProfilesSignaling
 import ttconv.imsc.writer as imsc_writer
 import ttconv.style_properties as styles
 import ttconv.model as model
@@ -367,16 +367,14 @@ Hello world
     doc = to_model(f)
     self.assertSetEqual(set(), doc.get_content_profiles())
 
-  def test_writer_sets_content_profiles_when_configured(self):
+  def test_filter_sets_content_profiles(self):
     f = io.StringIO(r"""WEBVTT
 
 00:02:16.612 --> 00:02:19.376
 Hello world
 """)
     doc = to_model(f)
-    writer_config = IMSCWriterConfiguration()
-    writer_config.profile_signaling = ContentProfilesSignaling.CONTENT_PROFILES
-    imsc_writer.from_model(doc, writer_config)
+    IMSC11TextFilter().process(doc)
     self.assertSetEqual({IMSC_11_TEXT_PROFILE_DESIGNATOR}, doc.get_content_profiles())
 
 
@@ -385,11 +383,8 @@ class VTTReaderIMSC11ConformanceTest(unittest.TestCase):
   def _assert_conformant(self, vtt_string):
     doc = to_model(io.StringIO(vtt_string))
     self.assertIsNotNone(doc)
-    # Write through IMSC writer with content_profiles signaling,
-    # which validates conformance and raises ValueError on violations
-    writer_config = IMSCWriterConfiguration()
-    writer_config.profile_signaling = ContentProfilesSignaling.CONTENT_PROFILES
-    imsc_writer.from_model(doc, writer_config)
+    IMSC11TextFilter().process(doc)
+    imsc_writer.from_model(doc)
 
   def test_conformance_basic_text(self):
     self._assert_conformant("""WEBVTT
@@ -466,8 +461,6 @@ Word<00:00:01.000> by<00:00:02.000> word<00:00:03.000> reveal
       "align_center_position_lt_50",
       "align_center_position_lt_50_size_gt_maximum_size",
     ])
-    writer_config = IMSCWriterConfiguration()
-    writer_config.profile_signaling = ContentProfilesSignaling.CONTENT_PROFILES
     for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
@@ -478,8 +471,8 @@ Word<00:00:01.000> by<00:00:02.000> word<00:00:03.000> reveal
             with open(os.path.join(root, filename), encoding="utf-8") as f:
               doc = to_model(f)
               self.assertIsNotNone(doc)
-              # Raises ValueError if IMSC 1.1 Text Profile violations are found
-              imsc_writer.from_model(doc, writer_config)
+              IMSC11TextFilter().process(doc)
+              imsc_writer.from_model(doc)
 
 
 if __name__ == '__main__':

@@ -32,8 +32,6 @@ import typing
 import numbers
 import xml.etree.ElementTree as et
 from ttconv.imsc.config import ContentProfilesSignaling
-from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
-from ttconv.imsc.imsc_11_text_profile_validator import validate_imsc_11_text_profile
 import ttconv.model as model
 import ttconv.style_properties as model_styles
 import ttconv.imsc.namespaces as xml_ns
@@ -246,17 +244,9 @@ class TTElement(TTMLElement):
     if model_doc.get_cell_resolution() != model.CellResolutionType(rows=15, columns=32):
       imsc_attr.CellResolutionAttribute.set(tt_element, model_doc.get_cell_resolution())
 
-    if content_profiles_signaling == ContentProfilesSignaling.CONTENT_PROFILES:
-      violations = validate_imsc_11_text_profile(model_doc)
-      if violations:
-        raise ValueError(
-          "Document does not conform to signaled content profiles:\n" +
-          "\n".join(f"  - {v}" for v in violations)
-        )
-      content_profiles = model_doc.get_content_profiles() or set()
-      content_profiles.add(IMSC_11_TEXT_PROFILE_DESIGNATOR)
-      model_doc.set_content_profiles(content_profiles)
-      imsc_attr.ContentProfilesAttribute.set(tt_element, content_profiles)
+    if content_profiles_signaling == ContentProfilesSignaling.CONTENT_PROFILES and \
+      model_doc.get_content_profiles() is not None:
+      imsc_attr.ContentProfilesAttribute.set(tt_element, model_doc.get_content_profiles())
 
     has_px = False
 
