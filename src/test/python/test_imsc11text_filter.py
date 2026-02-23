@@ -30,10 +30,14 @@ Based on https://www.w3.org/TR/ttml-imsc1.1/ sections 6, 7.12, and 8.4.
 
 # pylint: disable=R0201,C0115,C0116
 
+import logging
+import os
 import unittest
 import io
 from fractions import Fraction
+import xml.etree.ElementTree as et
 
+import ttconv.imsc.reader as imsc_reader
 import ttconv.model as model
 import ttconv.style_properties as styles
 from ttconv.filters.doc.imsc11text import IMSC11TextFilter, IMSC11TextFilterConfig
@@ -409,6 +413,33 @@ class IMSC11TextFilterTest(unittest.TestCase):
   def test_filter_registered_by_name(self):
     filt_cls = DocumentFilter.get_filter_by_name("imsc11text")
     self.assertIs(filt_cls, IMSC11TextFilter)
+
+  def test_imsc_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+            with self.subTest(name):
+              logging.getLogger().info("*****dummy*****") # dummy log
+              tree = et.parse(os.path.join(root, filename))
+              model = imsc_reader.to_model(tree)
+              self.assertIsNotNone(model)
+              filt = IMSC11TextFilter()
+              filt.process(model)
+
+
+  def test_imsc_1_1_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+            with self.subTest(name):
+              logging.getLogger().info("*****dummy*****") # dummy log
+              tree = et.parse(os.path.join(root, filename))
+              model = imsc_reader.to_model(tree)
+              self.assertIsNotNone(model)
+              filt = IMSC11TextFilter()
+              filt.process(model)
 
 
 if __name__ == "__main__":
