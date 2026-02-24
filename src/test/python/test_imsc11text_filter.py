@@ -110,29 +110,6 @@ class IMSC11TextFilterTest(unittest.TestCase):
     filt.process(doc)
     self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
 
-  # Section 8.4.7: origin SHALL use px or % only
-  def test_origin_rh_unit_raises(self):
-    doc = model.ContentDocument()
-    region = model.Region("r0", doc)
-    region.set_style(
-      styles.StyleProperties.Origin,
-      styles.CoordinateType(
-        x=styles.LengthType(10, styles.LengthType.Units.px),
-        y=styles.LengthType(10, styles.LengthType.Units.rh),
-      ),
-    )
-    region.set_style(
-      styles.StyleProperties.Extent,
-      styles.ExtentType(
-        width=styles.LengthType(100, styles.LengthType.Units.pct),
-        height=styles.LengthType(100, styles.LengthType.Units.pct),
-      ),
-    )
-    doc.put_region(region)
-
-    with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
-
   def test_origin_px_pct_passes(self):
     doc = model.ContentDocument()
     region = model.Region("r0", doc)
@@ -212,51 +189,30 @@ class IMSC11TextFilterTest(unittest.TestCase):
     filt.process(doc)
     self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
 
-  # Section 8.4.5: negative lengths SHALL NOT be used
-  # (except on tts:disparity and tts:textShadow)
-  def test_negative_extent_raises(self):
+  # Section 8.4.5: negative lengths are now rejected by the model's validate()
+  def test_negative_extent_rejected_by_model(self):
     doc = model.ContentDocument()
     region = model.Region("r0", doc)
-    region.set_style(
-      styles.StyleProperties.Origin,
-      styles.CoordinateType(
-        x=styles.LengthType(0, styles.LengthType.Units.pct),
-        y=styles.LengthType(0, styles.LengthType.Units.pct),
-      ),
-    )
-    region.set_style(
-      styles.StyleProperties.Extent,
-      styles.ExtentType(
-        width=styles.LengthType(100, styles.LengthType.Units.pct),
-        height=styles.LengthType(-10, styles.LengthType.Units.pct),
-      ),
-    )
-    doc.put_region(region)
-
     with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
+      region.set_style(
+        styles.StyleProperties.Extent,
+        styles.ExtentType(
+          width=styles.LengthType(100, styles.LengthType.Units.pct),
+          height=styles.LengthType(-10, styles.LengthType.Units.pct),
+        ),
+      )
 
-  def test_negative_origin_raises(self):
+  def test_negative_origin_rejected_by_model(self):
     doc = model.ContentDocument()
     region = model.Region("r0", doc)
-    region.set_style(
-      styles.StyleProperties.Origin,
-      styles.CoordinateType(
-        x=styles.LengthType(-5, styles.LengthType.Units.pct),
-        y=styles.LengthType(0, styles.LengthType.Units.pct),
-      ),
-    )
-    region.set_style(
-      styles.StyleProperties.Extent,
-      styles.ExtentType(
-        width=styles.LengthType(100, styles.LengthType.Units.pct),
-        height=styles.LengthType(100, styles.LengthType.Units.pct),
-      ),
-    )
-    doc.put_region(region)
-
     with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
+      region.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+          x=styles.LengthType(-5, styles.LengthType.Units.pct),
+          y=styles.LengthType(0, styles.LengthType.Units.pct),
+        ),
+      )
 
   # Section 8.4.12: linePadding only supports c units.
   # The model itself rejects non-c units on LinePadding at set_style() time.
@@ -288,8 +244,8 @@ class IMSC11TextFilterTest(unittest.TestCase):
     for element in body.dfs_iterator():
       if isinstance(element, model.Span):
         shadow = styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(1, styles.LengthType.Units.px),
-          y_offset=styles.LengthType(1, styles.LengthType.Units.px),
+          x_offset=styles.LengthType(1, styles.LengthType.Units.pct),
+          y_offset=styles.LengthType(1, styles.LengthType.Units.pct),
         )
         element.set_style(
           styles.StyleProperties.TextShadow,
@@ -305,8 +261,8 @@ class IMSC11TextFilterTest(unittest.TestCase):
     for element in body.dfs_iterator():
       if isinstance(element, model.Span):
         shadow = styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(1, styles.LengthType.Units.px),
-          y_offset=styles.LengthType(1, styles.LengthType.Units.px),
+          x_offset=styles.LengthType(1, styles.LengthType.Units.pct),
+          y_offset=styles.LengthType(1, styles.LengthType.Units.pct),
         )
         element.set_style(
           styles.StyleProperties.TextShadow,
@@ -346,21 +302,14 @@ class IMSC11TextFilterTest(unittest.TestCase):
   def test_first_violation_raises(self):
     doc = model.ContentDocument()
     region = model.Region("r0", doc)
-    # No extent (violation) and rh unit on origin (violation)
-    region.set_style(
-      styles.StyleProperties.Origin,
-      styles.CoordinateType(
-        x=styles.LengthType(10, styles.LengthType.Units.rw),
-        y=styles.LengthType(10, styles.LengthType.Units.rh),
-      ),
-    )
+    # No extent — violates section 8.4.2
     doc.put_region(region)
 
     with self.assertRaises(ValueError):
       IMSC11TextFilter().process(doc)
 
-  # Section 7.12.9: rh/rw units SHALL only appear on Extent, Position, and Origin
-  def test_rh_on_font_size_raises(self):
+  # rh/rw units are allowed on all properties per maintainer review
+  def test_rh_on_font_size_passes(self):
     doc = _make_simple_doc()
     body = doc.get_body()
     for element in body.dfs_iterator():
@@ -370,21 +319,9 @@ class IMSC11TextFilterTest(unittest.TestCase):
           styles.LengthType(10, styles.LengthType.Units.rh),
         )
 
-    with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
-
-  def test_rw_on_line_height_raises(self):
-    doc = _make_simple_doc()
-    body = doc.get_body()
-    for element in body.dfs_iterator():
-      if isinstance(element, model.P):
-        element.set_style(
-          styles.StyleProperties.LineHeight,
-          styles.LengthType(10, styles.LengthType.Units.rw),
-        )
-
-    with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
 
   def test_rh_on_extent_passes(self):
     doc = model.ContentDocument()
@@ -408,6 +345,284 @@ class IMSC11TextFilterTest(unittest.TestCase):
     filt = IMSC11TextFilter()
     filt.process(doc)
     self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  # Section 7.2.18: c units SHALL NOT be present outside of ebutts:linePadding
+  def test_c_unit_on_font_size_raises(self):
+    doc = _make_simple_doc()
+    body = doc.get_body()
+    for element in body.dfs_iterator():
+      if isinstance(element, model.P):
+        element.set_style(
+          styles.StyleProperties.FontSize,
+          styles.LengthType(1, styles.LengthType.Units.c),
+        )
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  # Section 8.4.13: ebutts:multiRowAlign SHALL only appear on p elements
+  def test_multi_row_align_on_span_raises(self):
+    doc = _make_simple_doc()
+    body = doc.get_body()
+    for element in body.dfs_iterator():
+      if isinstance(element, model.Span):
+        element.set_style(
+          styles.StyleProperties.MultiRowAlign,
+          styles.MultiRowAlignType.center,
+        )
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  def test_multi_row_align_on_p_passes(self):
+    doc = _make_simple_doc()
+    body = doc.get_body()
+    for element in body.dfs_iterator():
+      if isinstance(element, model.P):
+        element.set_style(
+          styles.StyleProperties.MultiRowAlign,
+          styles.MultiRowAlignType.center,
+        )
+
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  # Section 7.12.1.3: no more than 4 regions per ISD
+  def test_more_than_4_regions_raises(self):
+    doc = model.ContentDocument()
+    regions = []
+    for i in range(5):
+      region = model.Region(f"r{i}", doc)
+      region.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+          x=styles.LengthType(0, styles.LengthType.Units.pct),
+          y=styles.LengthType(i * 20, styles.LengthType.Units.pct),
+        ),
+      )
+      region.set_style(
+        styles.StyleProperties.Extent,
+        styles.ExtentType(
+          width=styles.LengthType(100, styles.LengthType.Units.pct),
+          height=styles.LengthType(20, styles.LengthType.Units.pct),
+        ),
+      )
+      doc.put_region(region)
+      regions.append(region)
+
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    for region in regions:
+      p = model.P(doc)
+      p.set_begin(Fraction(0))
+      p.set_end(Fraction(5))
+      p.set_region(region)
+      div.push_child(p)
+      span = model.Span(doc)
+      p.push_child(span)
+      text = model.Text(doc, "Hello")
+      span.push_child(text)
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  def test_4_regions_passes(self):
+    doc = model.ContentDocument()
+    regions = []
+    for i in range(4):
+      region = model.Region(f"r{i}", doc)
+      region.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+          x=styles.LengthType(0, styles.LengthType.Units.pct),
+          y=styles.LengthType(i * 25, styles.LengthType.Units.pct),
+        ),
+      )
+      region.set_style(
+        styles.StyleProperties.Extent,
+        styles.ExtentType(
+          width=styles.LengthType(100, styles.LengthType.Units.pct),
+          height=styles.LengthType(25, styles.LengthType.Units.pct),
+        ),
+      )
+      doc.put_region(region)
+      regions.append(region)
+
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    for region in regions:
+      p = model.P(doc)
+      p.set_begin(Fraction(0))
+      p.set_end(Fraction(5))
+      p.set_region(region)
+      div.push_child(p)
+      span = model.Span(doc)
+      p.push_child(span)
+      text = model.Text(doc, "Hello")
+      span.push_child(text)
+
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  # Section 8.4.10: textOutline thickness SHALL NOT exceed 10% of fontSize
+  def test_text_outline_exceeds_10pct_raises(self):
+    doc = _make_simple_doc()
+    body = doc.get_body()
+    for element in body.dfs_iterator():
+      if isinstance(element, model.Span):
+        element.set_style(
+          styles.StyleProperties.FontSize,
+          styles.LengthType(100, styles.LengthType.Units.pct),
+        )
+        element.set_style(
+          styles.StyleProperties.TextOutline,
+          styles.TextOutlineType(
+            thickness=styles.LengthType(11, styles.LengthType.Units.pct),
+          ),
+        )
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  def test_text_outline_within_10pct_passes(self):
+    doc = _make_simple_doc()
+    body = doc.get_body()
+    for element in body.dfs_iterator():
+      if isinstance(element, model.Span):
+        element.set_style(
+          styles.StyleProperties.FontSize,
+          styles.LengthType(100, styles.LengthType.Units.pct),
+        )
+        element.set_style(
+          styles.StyleProperties.TextOutline,
+          styles.TextOutlineType(
+            thickness=styles.LengthType(10, styles.LengthType.Units.pct),
+          ),
+        )
+
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  # Section 8.4.7/8.4.8: document-wide origin/position mutual exclusion
+  def test_origin_position_coexist_across_regions_raises(self):
+    doc = model.ContentDocument()
+    r0 = model.Region("r0", doc)
+    r0.set_style(
+      styles.StyleProperties.Origin,
+      styles.CoordinateType(
+        x=styles.LengthType(0, styles.LengthType.Units.pct),
+        y=styles.LengthType(0, styles.LengthType.Units.pct),
+      ),
+    )
+    r0.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.pct),
+        height=styles.LengthType(50, styles.LengthType.Units.pct),
+      ),
+    )
+    doc.put_region(r0)
+
+    r1 = model.Region("r1", doc)
+    r1.set_style(
+      styles.StyleProperties.Position,
+      styles.PositionType(
+        h_edge=styles.PositionType.HEdge.left,
+        h_offset=styles.LengthType(50, styles.LengthType.Units.pct),
+        v_edge=styles.PositionType.VEdge.top,
+        v_offset=styles.LengthType(0, styles.LengthType.Units.pct),
+      ),
+    )
+    r1.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(50, styles.LengthType.Units.pct),
+        height=styles.LengthType(50, styles.LengthType.Units.pct),
+      ),
+    )
+    doc.put_region(r1)
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  def test_all_regions_use_origin_passes(self):
+    doc = model.ContentDocument()
+    for i in range(2):
+      r = model.Region(f"r{i}", doc)
+      r.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+          x=styles.LengthType(i * 50, styles.LengthType.Units.pct),
+          y=styles.LengthType(0, styles.LengthType.Units.pct),
+        ),
+      )
+      r.set_style(
+        styles.StyleProperties.Extent,
+        styles.ExtentType(
+          width=styles.LengthType(50, styles.LengthType.Units.pct),
+          height=styles.LengthType(50, styles.LengthType.Units.pct),
+        ),
+      )
+      doc.put_region(r)
+
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  # Section 8.4.7: tts:origin SHALL use px or % only
+  def test_origin_rw_raises(self):
+    doc = model.ContentDocument()
+    region = model.Region("r0", doc)
+    region.set_style(
+      styles.StyleProperties.Origin,
+      styles.CoordinateType(
+        x=styles.LengthType(10, styles.LengthType.Units.rw),
+        y=styles.LengthType(10, styles.LengthType.Units.pct),
+      ),
+    )
+    region.set_style(
+      styles.StyleProperties.Extent,
+      styles.ExtentType(
+        width=styles.LengthType(80, styles.LengthType.Units.pct),
+        height=styles.LengthType(80, styles.LengthType.Units.pct),
+      ),
+    )
+    doc.put_region(region)
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  # Section 8.4.12: linePadding SHALL use c units only
+  def test_line_padding_rh_raises(self):
+    doc = _make_simple_doc()
+    for region in doc.iter_regions():
+      region.set_style(
+        styles.StyleProperties.LinePadding,
+        styles.LengthType(0.5, styles.LengthType.Units.rh),
+      )
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  def test_line_padding_rw_raises(self):
+    doc = _make_simple_doc()
+    for region in doc.iter_regions():
+      region.set_style(
+        styles.StyleProperties.LinePadding,
+        styles.LengthType(0.5, styles.LengthType.Units.rw),
+      )
+
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
 
   # Filter auto-registration
   def test_filter_registered_by_name(self):

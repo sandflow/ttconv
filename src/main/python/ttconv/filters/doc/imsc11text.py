@@ -100,181 +100,85 @@ _IMSC_11_TEXT_STYLE_PROPS = frozenset([
   styles.StyleProperties.WritingMode,
 ])
 
-# Section 8.4.7: tts:origin SHALL use px units or percentage values.
-_ORIGIN_ALLOWED_UNITS = frozenset([
-  styles.LengthType.Units.pct,
-  styles.LengthType.Units.px,
-])
 
-# Section 8.4.2: tts:extent SHALL use px units, percentage values,
-# or root container relative units.
-_EXTENT_ALLOWED_UNITS = frozenset([
-  styles.LengthType.Units.pct,
-  styles.LengthType.Units.px,
-  styles.LengthType.Units.rh,
-  styles.LengthType.Units.rw,
-])
-
-# Section 8.4.8: tts:position SHALL use px units, percentage values
-# or root container relative units.
-_POSITION_ALLOWED_UNITS = frozenset([
-  styles.LengthType.Units.pct,
-  styles.LengthType.Units.px,
-  styles.LengthType.Units.rh,
-  styles.LengthType.Units.rw,
-])
-
-# Section 8.4.12: ebutts:linePadding only supports c length units.
-_LINE_PADDING_ALLOWED_UNITS = frozenset([
-  styles.LengthType.Units.c,
-])
-
-# Section 8.4.5: properties that allow negative lengths.
-_NEGATIVE_LENGTH_ALLOWED_PROPS = frozenset([
-  styles.StyleProperties.Disparity,
-  styles.StyleProperties.TextShadow,
-])
-
-# Section 7.12.9: rh and rw units SHALL only appear on these properties.
-_RH_RW_ALLOWED_PROPS = frozenset([
-  styles.StyleProperties.Extent,
-  styles.StyleProperties.Position,
-  styles.StyleProperties.Origin,
-])
+def _iter_lengths(value):
+  """Yields all LengthType values embedded in a style value."""
+  if isinstance(value, styles.LengthType):
+    yield value
+  elif isinstance(value, styles.ExtentType):
+    yield value.width
+    yield value.height
+  elif isinstance(value, styles.CoordinateType):
+    yield value.x
+    yield value.y
+  elif isinstance(value, styles.PositionType):
+    yield value.h_offset
+    yield value.v_offset
+  elif isinstance(value, styles.PaddingType):
+    yield value.before
+    yield value.end
+    yield value.after
+    yield value.start
+  elif isinstance(value, styles.TextOutlineType):
+    yield value.thickness
+  elif isinstance(value, styles.RubyReserveType):
+    if value.length is not None:
+      yield value.length
+  elif isinstance(value, styles.TextShadowType):
+    for shadow in value.shadows:
+      yield shadow.x_offset
+      yield shadow.y_offset
+      if shadow.blur_radius is not None:
+        yield shadow.blur_radius
 
 
-def _check_negative(style_prop, length, context):
-  """Section 8.4.5: negative lengths SHALL NOT be used except on
-  tts:disparity and tts:textShadow."""
-  if style_prop not in _NEGATIVE_LENGTH_ALLOWED_PROPS and length.value < 0:
-    raise ValueError(
-      f"{context} has negative value ({length.value}), "
-      f"not allowed per section 8.4.5"
-    )
+def _validate_regions(doc):
+  """Validates region-specific structural constraints across the document."""
 
+  has_any_origin = False
+  has_any_position = False
 
-def _check_rh_rw(style_prop, length, context):
-  """Section 7.12.9: rh/rw units SHALL only appear on Extent, Position,
-  and Origin."""
-  if style_prop not in _RH_RW_ALLOWED_PROPS and \
-    length.units in (styles.LengthType.Units.rh, styles.LengthType.Units.rw):
-    raise ValueError(
-      f"{context} uses '{length.units.value}' unit, "
-      f"rh/rw only allowed on Extent, Position, Origin (section 7.12.9)"
-    )
-
-
-def _check_length_constraints(element, style_prop, value):
-  """Checks length unit and value constraints per IMSC 1.1 Text Profile."""
-  elem_name = type(element).__name__
-
-  if style_prop is styles.StyleProperties.Origin:
-    for axis, length in (("x", value.x), ("y", value.y)):
-      ctx = f"{elem_name}: Origin.{axis}"
-      if length.units not in _ORIGIN_ALLOWED_UNITS:
-        raise ValueError(
-          f"{ctx} uses unit '{length.units.value}', "
-          f"allowed: pct, px (section 8.4.7)"
-        )
-      _check_negative(style_prop, length, ctx)
-
-  elif style_prop is styles.StyleProperties.Extent:
-    for axis, length in (("width", value.width), ("height", value.height)):
-      ctx = f"{elem_name}: Extent.{axis}"
-      if length.units not in _EXTENT_ALLOWED_UNITS:
-        raise ValueError(
-          f"{ctx} uses unit '{length.units.value}', "
-          f"allowed: pct, px, rh, rw (section 8.4.2)"
-        )
-      _check_negative(style_prop, length, ctx)
-
-  elif style_prop is styles.StyleProperties.Position:
-    for axis, length in (("h_offset", value.h_offset), ("v_offset", value.v_offset)):
-      ctx = f"{elem_name}: Position.{axis}"
-      if length.units not in _POSITION_ALLOWED_UNITS:
-        raise ValueError(
-          f"{ctx} uses unit '{length.units.value}', "
-          f"allowed: pct, px, rh, rw (section 8.4.8)"
-        )
-      _check_negative(style_prop, length, ctx)
-
-  elif style_prop is styles.StyleProperties.FontSize:
-    ctx = f"{elem_name}: FontSize"
-    _check_negative(style_prop, value, ctx)
-    _check_rh_rw(style_prop, value, ctx)
-
-  elif style_prop is styles.StyleProperties.LineHeight:
-    if value is not styles.SpecialValues.normal:
-      ctx = f"{elem_name}: LineHeight"
-      _check_negative(style_prop, value, ctx)
-      _check_rh_rw(style_prop, value, ctx)
-
-  elif style_prop is styles.StyleProperties.LinePadding:
-    ctx = f"{elem_name}: LinePadding"
-    if value.units not in _LINE_PADDING_ALLOWED_UNITS:
+  for region in doc.iter_regions():
+    # Section 8.4.2: tts:extent SHALL be present on all region elements.
+    # Check both specified style and document initial value.
+    extent = region.get_style(styles.StyleProperties.Extent)
+    if extent is None:
+      extent = doc.get_initial_value(styles.StyleProperties.Extent)
+    if extent is None:
       raise ValueError(
-        f"{ctx} uses unit '{value.units.value}', "
-        f"allowed: c (section 8.4.12)"
+        f"Region '{region.get_id()}': tts:extent SHALL be present "
+        f"on all region elements (section 8.4.2)"
       )
-    _check_negative(style_prop, value, ctx)
 
-  elif style_prop is styles.StyleProperties.Padding:
-    for side, length in (
-      ("before", value.before), ("end", value.end),
-      ("after", value.after), ("start", value.start),
-    ):
-      ctx = f"{elem_name}: Padding.{side}"
-      _check_negative(style_prop, length, ctx)
-      _check_rh_rw(style_prop, length, ctx)
+    # Section 8.4.7/8.4.8: origin and position SHALL NOT coexist on same region
+    has_origin = region.has_style(styles.StyleProperties.Origin)
+    has_position = region.has_style(styles.StyleProperties.Position)
+    if has_origin and has_position:
+      raise ValueError(
+        f"Region '{region.get_id()}': tts:origin and tts:position "
+        f"SHALL NOT both be present (section 8.4.7)"
+      )
 
-  elif style_prop is styles.StyleProperties.TextOutline:
-    if value is not None and value is not styles.SpecialValues.none:
-      ctx = f"{elem_name}: TextOutline.thickness"
-      _check_negative(style_prop, value.thickness, ctx)
-      _check_rh_rw(style_prop, value.thickness, ctx)
+    # Section 8.4.7: tts:origin SHALL use px units or percentage values
+    if has_origin:
+      has_any_origin = True
+      origin = region.get_style(styles.StyleProperties.Origin)
+      if origin is not None:
+        for length in (origin.x, origin.y):
+          if length.units not in (styles.LengthType.Units.pct, styles.LengthType.Units.px):
+            raise ValueError(
+              f"Region '{region.get_id()}': tts:origin SHALL use px or % "
+              f"units only, found '{length.units}' (section 8.4.7)"
+            )
 
-  elif style_prop is styles.StyleProperties.TextShadow:
-    if value is not None and value is not styles.SpecialValues.none:
-      if len(value.shadows) > 4:
-        raise ValueError(
-          f"{elem_name}: TextShadow has {len(value.shadows)} shadows, "
-          f"maximum 4 allowed (section 8.4.11)"
-        )
+    if has_position:
+      has_any_position = True
 
-  elif style_prop is styles.StyleProperties.Disparity:
-    if isinstance(value, styles.LengthType):
-      ctx = f"{elem_name}: Disparity"
-      _check_rh_rw(style_prop, value, ctx)
-
-  elif style_prop is styles.StyleProperties.RubyReserve:
-    if value is not styles.SpecialValues.none and hasattr(value, 'length') and value.length is not None:
-      ctx = f"{elem_name}: RubyReserve.length"
-      _check_negative(style_prop, value.length, ctx)
-      _check_rh_rw(style_prop, value.length, ctx)
-
-
-def _validate_region(region):
-  """Validates region-specific structural constraints."""
-
-  # Section 8.4.2: tts:extent SHALL be present on all region elements.
-  # Check both specified style and document initial value.
-  extent = region.get_style(styles.StyleProperties.Extent)
-  if extent is None:
-    doc = region.get_doc()
-    extent = doc.get_initial_value(styles.StyleProperties.Extent)
-  if extent is None:
+  # Section 8.4.7/8.4.8: document-wide mutual exclusion
+  if has_any_origin and has_any_position:
     raise ValueError(
-      f"Region '{region.get_id()}': tts:extent SHALL be present "
-      f"on all region elements (section 8.4.2)"
-    )
-
-  # Section 8.4.7/8.4.8: origin and position SHALL NOT coexist
-  has_origin = region.has_style(styles.StyleProperties.Origin)
-  has_position = region.has_style(styles.StyleProperties.Position)
-  if has_origin and has_position:
-    raise ValueError(
-      f"Region '{region.get_id()}': tts:origin and tts:position "
-      f"SHALL NOT both be present (section 8.4.7)"
+      "tts:origin and tts:position SHALL NOT both be present "
+      "in a Document Instance (section 8.4.7/8.4.8)"
     )
 
 
@@ -284,24 +188,50 @@ def _validate_element_styles(element):
   if not isinstance(element, _ALLOWED_ELEMENT_TYPES):
     raise ValueError(f"Unsupported element type: {type(element).__name__}")
 
+  elem_name = type(element).__name__
+
   for style_prop in element.iter_styles():
     if style_prop not in _IMSC_11_TEXT_STYLE_PROPS:
       raise ValueError(
-        f"{type(element).__name__}: style property "
+        f"{elem_name}: style property "
         f"'{style_prop.__name__}' is not in the IMSC 1.1 Text Profile"
       )
 
     value = element.get_style(style_prop)
-    _check_length_constraints(element, style_prop, value)
 
+    # Section 8.4.12: linePadding SHALL use c units only
+    if style_prop is styles.StyleProperties.LinePadding \
+        and value.units != styles.LengthType.Units.c:
+      raise ValueError(
+        f"{elem_name}: LinePadding SHALL use c units only, "
+        f"found '{value.units}' (section 8.4.12)"
+      )
 
-def _check_isd_negative(elem_name, value, context):
-  """Checks a single resolved length for negative value."""
-  if isinstance(value, styles.LengthType) and value.value < 0:
-    raise ValueError(
-      f"{elem_name}: resolved {context} is negative "
-      f"({value.value}), not allowed per section 8.4.5"
-    )
+    # Section 7.2.18: c units SHALL NOT be present outside of ebutts:linePadding
+    if style_prop is not styles.StyleProperties.LinePadding:
+      for length in _iter_lengths(value):
+        if length.units == styles.LengthType.Units.c:
+          raise ValueError(
+            f"{elem_name}: {style_prop.__name__} uses 'c' unit, "
+            f"only allowed on LinePadding (section 7.2.18)"
+          )
+
+    # Section 8.4.13: ebutts:multiRowAlign SHALL only appear on p elements
+    if style_prop is styles.StyleProperties.MultiRowAlign \
+        and not isinstance(element, model.P):
+      raise ValueError(
+        f"{elem_name}: MultiRowAlign SHALL only appear on p elements "
+        f"(section 8.4.13)"
+      )
+
+    # Section 8.4.11: textShadow SHALL NOT have more than 4 shadows
+    if style_prop is styles.StyleProperties.TextShadow \
+        and value is not styles.SpecialValues.none \
+        and len(value.shadows) > 4:
+      raise ValueError(
+        f"{elem_name}: TextShadow has {len(value.shadows)} shadows, "
+        f"maximum 4 allowed (section 8.4.11)"
+      )
 
 
 def _validate_isd_element(element):
@@ -321,42 +251,29 @@ def _validate_isd_element(element):
         f"shadows, maximum 4 allowed (section 8.4.11)"
       )
 
-  # Section 8.4.5: negative lengths SHALL NOT be used
-  # (except on tts:disparity and tts:textShadow).
-  # Checking on resolved ISD values catches inherited/initial negatives.
+  # Section 8.4.9: tts:rubyAlign SHALL be "center" or "spaceAround"
+  # (defense-in-depth; model enum already constrains this)
+  ruby_align = element.get_style(styles.StyleProperties.RubyAlign)
+  if ruby_align is not None and \
+      ruby_align not in (styles.RubyAlignType.center, styles.RubyAlignType.spaceAround):
+    raise ValueError(
+      f"{elem_name}: RubyAlign value '{ruby_align}' not allowed, "
+      f"must be center or spaceAround (section 8.4.9)"
+    )
 
-  extent = element.get_style(styles.StyleProperties.Extent)
-  if extent is not None:
-    _check_isd_negative(elem_name, extent.width, "Extent.width")
-    _check_isd_negative(elem_name, extent.height, "Extent.height")
-
-  origin = element.get_style(styles.StyleProperties.Origin)
-  if origin is not None:
-    _check_isd_negative(elem_name, origin.x, "Origin.x")
-    _check_isd_negative(elem_name, origin.y, "Origin.y")
-
-  font_size = element.get_style(styles.StyleProperties.FontSize)
-  if font_size is not None:
-    _check_isd_negative(elem_name, font_size, "FontSize")
-
-  line_height = element.get_style(styles.StyleProperties.LineHeight)
-  if line_height is not None and line_height is not styles.SpecialValues.normal:
-    _check_isd_negative(elem_name, line_height, "LineHeight")
-
-  padding = element.get_style(styles.StyleProperties.Padding)
-  if padding is not None:
-    _check_isd_negative(elem_name, padding.before, "Padding.before")
-    _check_isd_negative(elem_name, padding.end, "Padding.end")
-    _check_isd_negative(elem_name, padding.after, "Padding.after")
-    _check_isd_negative(elem_name, padding.start, "Padding.start")
-
+  # Section 8.4.10: textOutline thickness SHALL NOT exceed 10% of fontSize
   text_outline = element.get_style(styles.StyleProperties.TextOutline)
   if text_outline is not None and text_outline is not styles.SpecialValues.none:
-    _check_isd_negative(elem_name, text_outline.thickness, "TextOutline.thickness")
+    font_size = element.get_style(styles.StyleProperties.FontSize)
+    if font_size is not None and isinstance(font_size, styles.LengthType) \
+        and text_outline.thickness.units == font_size.units:
+      if text_outline.thickness.value > 0.1 * font_size.value:
+        raise ValueError(
+          f"{elem_name}: TextOutline thickness ({text_outline.thickness.value}) "
+          f"exceeds 10% of fontSize ({font_size.value}) (section 8.4.10)"
+        )
 
-  line_padding = element.get_style(styles.StyleProperties.LinePadding)
-  if line_padding is not None:
-    _check_isd_negative(elem_name, line_padding, "LinePadding")
+
 
 
 @dataclass
@@ -385,8 +302,7 @@ class IMSC11TextFilter(DocumentFilter):
   def process(self, doc: model.ContentDocument):
 
     # ContentDocument structural checks on regions
-    for region in doc.iter_regions():
-      _validate_region(region)
+    _validate_regions(doc)
 
     # ContentDocument specified-style checks on regions
     for region in doc.iter_regions():
@@ -398,10 +314,34 @@ class IMSC11TextFilter(DocumentFilter):
       for element in body.dfs_iterator():
         _validate_element_styles(element)
 
+    # Section 7.12.6: px requires tts:extent on tt is not implementable at filter
+    # level because the model stores tts:extent on tt as px_resolution (with a
+    # default of 1920x1080), making it impossible to distinguish "explicitly set"
+    # from "not present". The IMSC reader enforces this at parse time.
+
+    # Section 7.12.7: ttp:frameRate constraints are not implementable at filter
+    # level because the model stores timing as Fraction offsets and does not
+    # preserve the original format or frameRate attribute.
+
     # ISD-based resolved style checks
     isd_sequence = ISD.generate_isd_sequence(doc)
     for _, isd in isd_sequence:
-      for isd_region in isd.iter_regions():
+      # Section 7.12.1.3: no more than 4 regions per ISD
+      regions = list(isd.iter_regions())
+      if len(regions) > 4:
+        raise ValueError(
+          f"ISD has {len(regions)} regions, "
+          f"maximum 4 allowed (section 7.12.1.3)"
+        )
+
+      # Section 7.12.1.2: RCR bounds and overlap checks are not implementable
+      # at filter level. The RCR check rejects valid IMSC test suite documents
+      # where regions extend beyond the RCR (renderers clip them). The overlap
+      # check requires full "presented region" semantics (section 7.12.1.1:
+      # opacity, display, visibility, content) which the ISD model does not
+      # expose in a simple way.
+
+      for isd_region in regions:
         for element in isd_region.dfs_iterator():
           _validate_isd_element(element)
 

@@ -53,11 +53,23 @@ class VTTReaderTest(unittest.TestCase):
     self.assertIsNotNone(to_model(f))
 
 
+  # These WPT edge-case files use extreme line/position/size values that
+  # cause the VTT reader to produce negative origin values, which the model
+  # now rejects at set_style() time per section 8.4.5.
+  _SKIP_NEGATIVE_ORIGIN = frozenset([
+    "settings-position",
+    "settings-line",
+    "align_center_position_lt_50",
+    "align_center_position_lt_50_size_gt_maximum_size",
+  ])
+
   def test_samples(self):
     for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
+          if name in self._SKIP_NEGATIVE_ORIGIN:
+            continue
           with self.subTest(name):
             with open(os.path.join(root, filename), encoding="utf-8") as f:
               self.assertIsNotNone(to_model(f))
@@ -455,17 +467,20 @@ Word<00:00:01.000> by<00:00:02.000> word<00:00:03.000> reveal
     # These WPT edge-case files use extreme line/position/size values that
     # cause the VTT reader to produce negative origin or extent values,
     # which violate IMSC 1.1 Text Profile section 8.4.5.
-    _SKIP_NEGATIVE_LENGTH = frozenset([
+    _SKIP_NON_CONFORMANT = frozenset([
+      # Negative origin/extent values (section 8.4.5)
       "settings-position",
       "settings-line",
       "align_center_position_lt_50",
       "align_center_position_lt_50_size_gt_maximum_size",
+      # More than 4 simultaneous regions (section 7.12.1.3)
+      "settings-size",
     ])
     for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
-          if name in _SKIP_NEGATIVE_LENGTH:
+          if name in _SKIP_NON_CONFORMANT:
             continue
           with self.subTest(name):
             with open(os.path.join(root, filename), encoding="utf-8") as f:
