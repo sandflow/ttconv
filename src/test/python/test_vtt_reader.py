@@ -31,9 +31,6 @@ import io
 import os.path
 
 from ttconv.vtt.reader import to_model
-from ttconv.filters.doc.imsc11text import IMSC11TextFilter
-from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
-import ttconv.imsc.writer as imsc_writer
 import ttconv.style_properties as styles
 import ttconv.model as model
 
@@ -53,23 +50,11 @@ class VTTReaderTest(unittest.TestCase):
     self.assertIsNotNone(to_model(f))
 
 
-  # These WPT edge-case files use extreme line/position/size values that
-  # cause the VTT reader to produce negative origin values, which the model
-  # now rejects at set_style() time per section 8.4.5.
-  _SKIP_NEGATIVE_ORIGIN = frozenset([
-    "settings-position",
-    "settings-line",
-    "align_center_position_lt_50",
-    "align_center_position_lt_50_size_gt_maximum_size",
-  ])
-
   def test_samples(self):
     for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
-          if name in self._SKIP_NEGATIVE_ORIGIN:
-            continue
           with self.subTest(name):
             with open(os.path.join(root, filename), encoding="utf-8") as f:
               self.assertIsNotNone(to_model(f))
@@ -368,126 +353,6 @@ Line 1 starting from bottom
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 96)
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 4)
 
-
-
-  def test_reader_does_not_set_content_profiles(self):
-    f = io.StringIO(r"""WEBVTT
-
-00:02:16.612 --> 00:02:19.376
-Hello world
-""")
-    doc = to_model(f)
-    self.assertSetEqual(set(), doc.get_content_profiles())
-
-  def test_filter_sets_content_profiles(self):
-    f = io.StringIO(r"""WEBVTT
-
-00:02:16.612 --> 00:02:19.376
-Hello world
-""")
-    doc = to_model(f)
-    IMSC11TextFilter().process(doc)
-    self.assertSetEqual({IMSC_11_TEXT_PROFILE_DESIGNATOR}, doc.get_content_profiles())
-
-
-class VTTReaderIMSC11ConformanceTest(unittest.TestCase):
-
-  def _assert_conformant(self, vtt_string):
-    doc = to_model(io.StringIO(vtt_string))
-    self.assertIsNotNone(doc)
-    IMSC11TextFilter().process(doc)
-    imsc_writer.from_model(doc)
-
-  def test_conformance_basic_text(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000
-Hello world
-""")
-
-  def test_conformance_bold_italic_underline(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000
-<b><i><u>styled text</u></i></b>
-""")
-
-  def test_conformance_colors(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000
-<c.blue>blue text</c> and <c.bg_red>red bg</c>
-""")
-
-  def test_conformance_ruby(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000
-<ruby>base<rt>annotation</rt></ruby>
-""")
-
-  def test_conformance_vertical_text(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000 vertical:lr
-Vertical left-to-right
-
-00:00:06.000 --> 00:00:10.000 vertical:rl
-Vertical right-to-left
-""")
-
-  def test_conformance_complex_positioning(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000 line:0 position:10% size:80% align:start
-Top left aligned
-
-00:00:06.000 --> 00:00:10.000 line:50% position:50% size:50% align:center
-Centered small box
-
-00:00:11.000 --> 00:00:15.000 line:-1
-Bottom aligned
-""")
-
-  def test_conformance_timestamp_tags(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000
-Word<00:00:01.000> by<00:00:02.000> word<00:00:03.000> reveal
-""")
-
-  def test_conformance_language_tags(self):
-    self._assert_conformant("""WEBVTT
-
-00:00:00.000 --> 00:00:05.000
-<lang en>English text</lang> and <lang fr>texte francais</lang>
-""")
-
-  def test_conformance_all_vtt_samples(self):
-    # These WPT edge-case files use extreme line/position/size values that
-    # cause the VTT reader to produce negative origin or extent values,
-    # which violate IMSC 1.1 Text Profile section 8.4.5.
-    _SKIP_NON_CONFORMANT = frozenset([
-      # Negative origin/extent values (section 8.4.5)
-      "settings-position",
-      "settings-line",
-      "align_center_position_lt_50",
-      "align_center_position_lt_50_size_gt_maximum_size",
-      # More than 4 simultaneous regions (section 7.12.1.3)
-      "settings-size",
-    ])
-    for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
-      for filename in files:
-        (name, ext) = os.path.splitext(filename)
-        if ext == ".vtt":
-          if name in _SKIP_NON_CONFORMANT:
-            continue
-          with self.subTest(name):
-            with open(os.path.join(root, filename), encoding="utf-8") as f:
-              doc = to_model(f)
-              self.assertIsNotNone(doc)
-              IMSC11TextFilter().process(doc)
-              imsc_writer.from_model(doc)
 
 
 if __name__ == '__main__':

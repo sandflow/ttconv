@@ -541,9 +541,7 @@ class StyleProperties:
     def validate(value: ExtentType):
       return isinstance(value, ExtentType) \
         and value.width.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
-        and value.width.value >= 0 \
-        and value.height.value >= 0
+        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
 
 
   class FillLineGap(StyleProperty):
@@ -588,7 +586,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return isinstance(value, LengthType) and value.value >= 0
+      return isinstance(value, LengthType)
 
 
   class FontStyle(StyleProperty):
@@ -633,8 +631,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.normal or \
-        (isinstance(value, LengthType) and value.units != LengthType.Units.c and value.value >= 0)
+      return value == SpecialValues.normal or (isinstance(value, LengthType) and value.units != LengthType.Units.c)
 
 
   class LinePadding(StyleProperty):
@@ -650,8 +647,7 @@ class StyleProperties:
     @staticmethod
     def validate(value: LengthType):
       return isinstance(value, LengthType) and \
-        value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw) and \
-        value.value >= 0
+        value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw)
 
 
   class LuminanceGain(StyleProperty):
@@ -716,9 +712,7 @@ class StyleProperties:
     def validate(value: CoordinateType):
       return isinstance(value, CoordinateType) \
         and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
-        and value.x.value >= 0 \
-        and value.y.value >= 0
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
 
 
   class Overflow(StyleProperty):
@@ -751,11 +745,7 @@ class StyleProperties:
       if not isinstance(value, PaddingType):
         return False
 
-      return LengthType.Units.c not in (value.before.units, value.end.units, value.after.units, value.start.units) \
-        and value.before.value >= 0 \
-        and value.end.value >= 0 \
-        and value.after.value >= 0 \
-        and value.start.value >= 0
+      return LengthType.Units.c not in (value.before.units, value.end.units, value.after.units, value.start.units)
 
   class Position(StyleProperty):
     '''Corresponds to tts:position.'''
@@ -774,9 +764,7 @@ class StyleProperties:
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
         and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
-        and value.h_offset.value >= 0 \
-        and value.v_offset.value >= 0
+        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
 
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
@@ -826,10 +814,7 @@ class StyleProperties:
       if not isinstance(value, RubyReserveType):
         return False
 
-      if value.length is None:
-        return True
-
-      return value.length.units != LengthType.Units.c and value.length.value >= 0
+      return value.length is None or value.length.units != LengthType.Units.c
 
   class Shear(StyleProperty):
     '''Corresponds to tts:shear.'''
@@ -946,8 +931,7 @@ class StyleProperties:
       if not isinstance(value, TextOutlineType):
         return False
 
-      return value.thickness.units != LengthType.Units.c \
-        and value.thickness.value >= 0
+      return value.thickness.units != LengthType.Units.c
 
 
   class TextShadow(StyleProperty):

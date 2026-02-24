@@ -189,31 +189,6 @@ class IMSC11TextFilterTest(unittest.TestCase):
     filt.process(doc)
     self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
 
-  # Section 8.4.5: negative lengths are now rejected by the model's validate()
-  def test_negative_extent_rejected_by_model(self):
-    doc = model.ContentDocument()
-    region = model.Region("r0", doc)
-    with self.assertRaises(ValueError):
-      region.set_style(
-        styles.StyleProperties.Extent,
-        styles.ExtentType(
-          width=styles.LengthType(100, styles.LengthType.Units.pct),
-          height=styles.LengthType(-10, styles.LengthType.Units.pct),
-        ),
-      )
-
-  def test_negative_origin_rejected_by_model(self):
-    doc = model.ContentDocument()
-    region = model.Region("r0", doc)
-    with self.assertRaises(ValueError):
-      region.set_style(
-        styles.StyleProperties.Origin,
-        styles.CoordinateType(
-          x=styles.LengthType(-5, styles.LengthType.Units.pct),
-          y=styles.LengthType(0, styles.LengthType.Units.pct),
-        ),
-      )
-
   # Section 8.4.12: linePadding only supports c units.
   # The model itself rejects non-c units on LinePadding at set_style() time.
   def test_line_padding_pct_rejected_by_model(self):

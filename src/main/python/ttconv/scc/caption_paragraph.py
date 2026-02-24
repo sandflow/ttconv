@@ -497,17 +497,12 @@ class _SccParagraphRegion:
     # Convert origin cells to percentages
     if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
       # The region origin x offset
-      region_origin = get_position_from_offsets(paragraph_origin.x.value, max(0, self._top))
+      region_origin = get_position_from_offsets(paragraph_origin.x.value, self._top)
       region_origin_pct = convert_cells_to_percentages(region_origin, self._doc.get_cell_resolution())
     else:
       # The region origin matches with paragraph origin
       region_origin_pct = convert_cells_to_percentages(paragraph_origin, self._doc.get_cell_resolution())
 
-    # Clamp to non-negative values (section 8.4.5)
-    region_origin_pct = CoordinateType(
-      x=LengthType(value=max(0, region_origin_pct.x.value), units=region_origin_pct.x.units),
-      y=LengthType(value=max(0, region_origin_pct.y.value), units=region_origin_pct.y.units),
-    )
     region.set_style(StyleProperties.Origin, region_origin_pct)
 
     # The region width is initialized with he paragraph width (up to the right of the safe area)
