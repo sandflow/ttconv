@@ -231,5 +231,15 @@ class IMSCAppTest(unittest.TestCase):
       '--config', '{"lcd": {"bg_color":"red"}}'
       ])
 
+  def test_imsc11filter(self):
+    out_path = "build/imsc11filter.ttml"
+    in_path = "src/test/resources/ttml/referential_styling.ttml"
+
+    tt.main(['convert',
+      '-i', in_path,
+      '-o', out_path,
+      '--filter', 'imsc11filter'
+      ])
+
 if __name__ == '__main__':
   unittest.main()

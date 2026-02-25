@@ -333,13 +333,15 @@ Default: `false`
 
 #### Description
 
-The IMSC 1.1 Text Profile filter validates a document against the constraints
-defined in the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile).
-If the document is conformant, the IMSC 1.1 Text Profile designator is added to
-the document content profiles. If the document is not conformant, the filter
-raises an exception on the first constraint violation.
+The IMSC 1.1 Text Profile filter checks the document against major deviations
+from the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile).
+Any deviation results in the filter raising an exception. The absence of deviation
+results in the [IMSC 1.1 Text Profile designator](https://www.w3.org/TR/ttml-imsc1.1/#text-profile-designator)
+being added to the `ttp:contentProfiles` parameter.
 
 This filter has no configuration parameters.
+
+_NOTE_: This filter is not currently intended as substitute for a full IMSC 1.1 validator.
 
 #### Example
 
