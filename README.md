@@ -329,6 +329,22 @@ If `true`, text alignment is preserved, otherwise text is centered.
 
 Default: `false`
 
+### IMSC 1.1 Text Profile filter configuration (`"imsc11text"`)
+
+#### Description
+
+The IMSC 1.1 Text Profile filter validates a document against the constraints
+defined in the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile).
+If the document is conformant, the IMSC 1.1 Text Profile designator is added to
+the document content profiles. If the document is not conformant, the filter
+raises an exception on the first constraint violation.
+
+This filter has no configuration parameters.
+
+#### Example
+
+    tt convert -i input.vtt -o output.ttml --filter imsc11text
+
 ## Library
 
 The overall architecture of the library is as follows:
