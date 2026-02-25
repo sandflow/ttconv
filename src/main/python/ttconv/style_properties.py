@@ -69,6 +69,11 @@ class LengthType:
     if not isinstance(self.units, LengthType.Units):
       raise ValueError("Invalid units")
 
+  def is_positive(self):
+    '''True if the length value is positive
+    '''
+    return self.value >= 0
+
 @dataclass(frozen=True)
 class ColorType:
   '''<color> type as defined in TTML
@@ -541,7 +546,8 @@ class StyleProperties:
     def validate(value: ExtentType):
       return isinstance(value, ExtentType) \
         and value.width.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
+        and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
+        and value.width.is_positive() and value.height.is_positive()
 
 
   class FillLineGap(StyleProperty):
@@ -586,7 +592,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return isinstance(value, LengthType)
+      return isinstance(value, LengthType) and value.is_positive()
 
 
   class FontStyle(StyleProperty):
@@ -631,7 +637,8 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return value == SpecialValues.normal or (isinstance(value, LengthType) and value.units != LengthType.Units.c)
+      return value == SpecialValues.normal or \
+        (isinstance(value, LengthType) and value.units != LengthType.Units.c and value.is_positive())
 
 
   class LinePadding(StyleProperty):
@@ -647,8 +654,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: LengthType):
       return isinstance(value, LengthType) and \
-        value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw)
-
+        value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw) and \
+        value.is_positive()
 
   class LuminanceGain(StyleProperty):
     '''Corresponds to tts:luminanceGain.'''
@@ -662,8 +669,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: Numeric):
-      return isinstance(value, numbers.Number)
-
+      return isinstance(value, numbers.Number) and value > 0.0
 
   class MultiRowAlign(StyleProperty):
     '''Corresponds to ebutts:multiRowAlign.'''
@@ -712,7 +718,8 @@ class StyleProperties:
     def validate(value: CoordinateType):
       return isinstance(value, CoordinateType) \
         and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
+        and value.x.is_positive() and value.y.is_positive()
 
 
   class Overflow(StyleProperty):
@@ -745,7 +752,8 @@ class StyleProperties:
       if not isinstance(value, PaddingType):
         return False
 
-      return LengthType.Units.c not in (value.before.units, value.end.units, value.after.units, value.start.units)
+      return LengthType.Units.c not in (value.before.units, value.end.units, value.after.units, value.start.units) and \
+        value.before.is_positive() and value.end.is_positive() and value.after.is_positive() and value.start.is_positive()
 
   class Position(StyleProperty):
     '''Corresponds to tts:position.'''
@@ -764,7 +772,8 @@ class StyleProperties:
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
         and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh)
+        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
+        and value.h_offset.is_positive() and value.v_offset.is_positive()
 
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
@@ -814,7 +823,7 @@ class StyleProperties:
       if not isinstance(value, RubyReserveType):
         return False
 
-      return value.length is None or value.length.units != LengthType.Units.c
+      return value.length is None or (value.length.units != LengthType.Units.c and value.length.is_positive())
 
   class Shear(StyleProperty):
     '''Corresponds to tts:shear.'''
@@ -828,7 +837,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: Numeric):
-      return isinstance(value, numbers.Number)
+      return isinstance(value, numbers.Number) and value >= -100.0 and value <= 100.0
 
   class ShowBackground(StyleProperty):
     '''Corresponds to tts:showBackground.'''
@@ -931,7 +940,7 @@ class StyleProperties:
       if not isinstance(value, TextOutlineType):
         return False
 
-      return value.thickness.units != LengthType.Units.c
+      return value.thickness.units != LengthType.Units.c and value.thickness.is_positive()
 
 
   class TextShadow(StyleProperty):
@@ -953,7 +962,7 @@ class StyleProperties:
       if not isinstance(value, TextShadowType):
         return False
 
-      return all(s.blur_radius is None or s.blur_radius.units != LengthType.Units.c for s in value.shadows)
+      return len(value.shadows) <= 4 and all(s.blur_radius is None or s.blur_radius.units != LengthType.Units.c for s in value.shadows)
 
 
   class UnicodeBidi(StyleProperty):
