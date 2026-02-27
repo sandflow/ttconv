@@ -407,7 +407,9 @@ def _get_or_make_region(
     display_align = styles.DisplayAlignType.after
   elif line_align == "start":
     display_align = styles.DisplayAlignType.before
-  elif line_align is not None:
+  elif line_align is None:
+    pass
+  else:
     raise RuntimeError("Invalid line alignment setting")
 
 
