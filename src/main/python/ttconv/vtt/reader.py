@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+from turtle import width
 import typing
 import re
 import logging
@@ -231,17 +232,11 @@ def _get_or_make_region(
   """Returns a matching region from `doc` or creates one
   """
 
-  writing_mode = styles.WritingModeType.lrtb
-  text_align = styles.TextAlignType.center
-  display_align = styles.DisplayAlignType.after
-  extent_height = 100 - 200/_DEFAULT_ROWS
-  extent_width = 100 - 200/_DEFAULT_COLS
-  origin_x = 100/_DEFAULT_COLS
-  origin_y = 100/_DEFAULT_ROWS
-
   cue_settings = dict(filter(lambda x: len(x) == 2, [x.split(":") for x in cue_settings_list]))
 
-  # writing direction
+  # writing direction and writing_mode
+
+  writing_mode = styles.WritingModeType.lrtb
 
   value = cue_settings.get("vertical")
   if value == "lr":
@@ -251,124 +246,175 @@ def _get_or_make_region(
   elif value is not None:
     LOGGER.warning("Bad vertical setting value: %s", value)
 
-
   # size
+
+  cue_size = 100
 
   value = cue_settings.get("size")
   if value is not None:
-    pct = parse_vtt_pct(value)
-    if pct is not None:
-      if writing_mode in (styles.WritingModeType.tblr, styles.WritingModeType.tbrl):
-        extent_height = pct
-      else:
-        extent_width = pct
+    value = parse_vtt_pct(value)
+    if value is not None:
+      cue_size = value
     else:
       LOGGER.warning("Bad size setting value: %s", value)
 
-  # text align
+  # align setting
+
+  cue_text_align = "center"
 
   value = cue_settings.get("align")
-  if value == "left":
-    text_align = styles.TextAlignType.end if writing_mode == styles.WritingModeType.rltb else styles.TextAlignType.start
-  elif value == "right":
-    text_align = styles.TextAlignType.start if writing_mode == styles.WritingModeType.rltb else styles.TextAlignType.end
-  elif value == "start":
-    text_align = styles.TextAlignType.start
-  elif value == "center":
-    text_align = styles.TextAlignType.center
-  elif value == "end":
-    text_align = styles.TextAlignType.end
-  elif value is not None:
-    LOGGER.warning("Bad alignment setting value: %s", value)
+  if value in ("left", "right", "start", "center", "end"):
+    cue_text_align = value
+  else:
+    LOGGER.warning("Bad align setting value: %s", cue_text_align)
 
-  # line
+  # line setting
+
+  line_align = None
+  snap_to_lines = True
+  line_number = None #auto
 
   value = cue_settings.get("line")
   if value is not None:
     value = value.split(",")
-    line_align = value[1] if len(value) > 1 else "start"
 
-    line_offset = parse_vtt_pct(value[0])
-    if line_offset is None:
-      line_num = parse_vtt_int(value[0])
-      if line_num is not None:
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          line_offset = min(100, 100 * abs(line_num)/_DEFAULT_ROWS)
-        else:
-          line_offset = min(100, 100 * abs(line_num)/_DEFAULT_COLS)
-        if line_num <= 0:
-            line_offset = 100 - line_offset
-
-    if line_offset is not None:
-      if line_align == "center":
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          extent_height = min(line_offset, 100 - line_offset) * 2
-          origin_y = line_offset - extent_height / 2
-        else:
-          extent_width = min(line_offset, 100 - line_offset) * 2
-          origin_x = line_offset - extent_height / 2
-        display_align = styles.DisplayAlignType.center
-      elif line_align == "start":
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          extent_height = 100 - line_offset
-          origin_y = line_offset
-        else:
-          extent_width = 100 - line_offset
-          origin_x = line_offset
-        display_align = styles.DisplayAlignType.before
-      elif line_align == "end":
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          extent_height = line_offset
-          origin_y = 0
-        else:
-          extent_width = line_offset
-          origin_x = 0
-        display_align = styles.DisplayAlignType.after
-      else:
-        LOGGER.warning("Bad line alignment setting value: %s", line_align)
-
+    line_number = parse_vtt_pct(value[0])
+    if line_number is not None:
+      snap_to_lines = False
     else:
-      LOGGER.warning("Bad line setting value: %s", cue_settings.get("line"))
+      line_num = parse_vtt_int(value[0])
+      if line_num is None:
+        LOGGER.warning("Bad line setting value: %s", value)
+        line_num = -1
+
+    if len(value) == 2:
+        if value[1] in ("start", "center", "end"):
+          line_align = value[1]
+        else:
+          LOGGER.warning("Bad line alignment setting value: %s", value[1])
 
   # position
+
+  position = None # auto
+  position_align = None
 
   value = cue_settings.get("position")
   if value is not None:
     value = value.split(",")
 
-    if len(value) > 1 and value[1] in ("center", "line-left", "line-right"):
-      line_align = value[1]
-    else:
-      if text_align == styles.TextAlignType.start:
-        line_align = "line-right" if writing_mode == styles.WritingModeType.rltb else "line-left"
-      elif text_align == styles.TextAlignType.end:
-        line_align = "line-left" if writing_mode == styles.WritingModeType.rltb else "line-right"
-      else:
-        line_align = "center"
-
+    # position value
     position = parse_vtt_pct(value[0])
-    if position is not None:
-      if line_align == "center":
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          origin_x = position - extent_width / 2
-        else:
-          origin_y = position - extent_height / 2
-      elif line_align == "line-left":
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          origin_x = position
-        else:
-          origin_y = position
-      elif line_align == "line-right":
-        if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-          origin_x = position - extent_width
-        else:
-          origin_y = position - extent_height
-      else:
-        LOGGER.warning("Bad position alignment setting value: %s", line_align)
-
+    if position is None:
+      LOGGER.warning("Bad position alignment setting value: %s", position_align)
     else:
-      LOGGER.warning("Bad position setting value: %s", cue_settings.get("position"))
+      # position alignment
+      if len(value) > 1:
+        if value[1] in ("center", "line-left", "line-right"):
+          position_align = value[1]
+        else:
+          LOGGER.warning("Bad position alignment setting value: %s", value[1])
 
+  if position_align is None:
+    if cue_text_align == "start":
+      position_align = "line-right" if writing_mode == styles.WritingModeType.rltb else "line-left"
+    elif cue_text_align == "end":
+      position_align = "line-left" if writing_mode == styles.WritingModeType.rltb else "line-right"
+    elif cue_text_align == "left":
+      position_align = "line-left"
+    elif cue_text_align == "right":
+      position_align = "line-right"
+    elif cue_text_align == "center":
+      position_align = "center"
+    else:
+      raise RuntimeError("Invalid cue text alignment setting")  
+
+  if position is None or not (0 <= position <= 100):
+    if cue_text_align == "left":
+      position = 0
+    elif cue_text_align == "right":
+      position = 100
+    else:
+      position = 50
+
+  # text_align
+
+  if cue_text_align == "left":
+    text_align = styles.TextAlignType.end if writing_mode == styles.WritingModeType.rltb else styles.TextAlignType.start
+  elif cue_text_align == "right":
+    text_align = styles.TextAlignType.start if writing_mode == styles.WritingModeType.rltb else styles.TextAlignType.end
+  elif cue_text_align == "start":
+    text_align = styles.TextAlignType.start
+  elif cue_text_align == "center":
+    text_align = styles.TextAlignType.center
+  elif cue_text_align == "end":
+    text_align = styles.TextAlignType.end
+  else:
+    raise RuntimeError("Invalid cue text alignment setting")
+
+  # compute region origin and extent
+
+  if position_align == "line-left":
+    max_cue_size = 100 - position
+  elif position_align == "line-right":
+    max_cue_size = position
+  elif position_align == "center":
+    if position <= 50:
+      max_cue_size = position * 2
+    else:
+      max_cue_size = (100 - position) * 2
+  else:
+    raise RuntimeError("Invalid position alignment")
+
+  actual_cue_size = min(cue_size, max_cue_size)
+
+  if writing_mode in (styles.WritingModeType.lrtb, styles.WritingModeType.rltb):
+    # horizontal writing mode
+    extent_width = cue_size
+
+    if position_align == "line-left":
+      origin_x = position
+    elif position_align == "line-right":
+      origin_x = position - actual_cue_size
+    elif position_align == "center":
+      origin_x = position - actual_cue_size / 2
+    else:
+      raise RuntimeError("Invalid position alignment")
+
+    if snap_to_lines:
+      if writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
+        origin_y = 100 * line_num/_DEFAULT_ROWS if line_num >= 0 else 100 + 100 * line_num/_DEFAULT_ROWS
+      else:
+        origin_y = 100 * line_num/_DEFAULT_COLS if line_num >= 0 else 100 + 100 * line_num/_DEFAULT_COLS
+
+  else:
+    # vertical writing mode
+    extent_height = cue_size
+
+    if position_align == "line-left":
+      origin_y = position
+    elif position_align == "line-right":
+      origin_y = position - actual_cue_size
+    elif position_align == "center":
+      origin_y = position - actual_cue_size / 2
+    else:
+      raise RuntimeError("Invalid position alignment")
+
+  # display_align
+
+  if line_align == "center":
+    display_align = styles.DisplayAlignType.center
+  elif line_align == "end":
+    display_align = styles.DisplayAlignType.after
+  elif line_align == "start":
+    display_align = styles.DisplayAlignType.before
+  elif line_align is not None:
+    raise RuntimeError("Invalid line alignment setting")
+
+
+  extent_height = 100 - 200/_DEFAULT_ROWS
+  extent_width = 100 - 200/_DEFAULT_COLS
+  origin_x = 100/_DEFAULT_COLS
+  origin_y = 100/_DEFAULT_ROWS
 
   extent = styles.ExtentType(
     height=styles.LengthType(extent_height),
@@ -378,6 +424,8 @@ def _get_or_make_region(
     x=styles.LengthType(origin_x),
     y=styles.LengthType(origin_y)
   )
+
+  # look for a matching region
 
   found_region = None
   regions = list(doc.iter_regions())
