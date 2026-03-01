@@ -373,6 +373,27 @@ Line 0 starting from top
     self.assertEqual(o.x.value, 0)
     self.assertEqual(e.width.value, 40)
 
+  def test_pos_90_center(self):
+    r = self._cue_settings_to_region("position:90%")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 80)
+    self.assertEqual(e.width.value, 20)
+
+  def test_pos_90_left(self):
+    r = self._cue_settings_to_region("position:90%,line-left")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 90)
+    self.assertEqual(e.width.value, 10)
+
+  def test_pos_90_right(self):
+    r = self._cue_settings_to_region("position:90%,line-right")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 0)
+    self.assertEqual(e.width.value, 90)
+
   def test_pos_99_left_10(self):
     r = self._cue_settings_to_region("position:99%,line-left size:10")
     o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
