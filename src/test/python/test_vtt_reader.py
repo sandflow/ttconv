@@ -408,6 +408,27 @@ Line 0 starting from top
     self.assertEqual(o.y.value, 93.75)
     self.assertEqual(e.height.value, 6.25)
 
+  def test_line_minus_3(self):
+    r = self._cue_settings_to_region("line:-3")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 81.25)
+    self.assertEqual(e.height.value, 18.75)
+
+  def test_line_minus_3_after(self):
+    r = self._cue_settings_to_region("line:-3,end")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 0)
+    self.assertEqual(e.height.value, 81.25)
+
+  def test_line_99_vertical(self):
+    r = self._cue_settings_to_region("line:99% vertical:lr")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 93.75)
+    self.assertEqual(e.width.value, 6.25)
+
   def test_default_positioning(self):
     r = self._cue_settings_to_region("")
     o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
