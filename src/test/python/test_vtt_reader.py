@@ -353,7 +353,25 @@ Line 1 starting from bottom
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 94)
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 6)
 
+  def _cue_settings_to_region(self, settings: str) -> model.Region:
+    f = io.StringIO(f"""WEBVTT
 
+1
+00:00:00.000 --> 00:00:02.000 {settings}
+Line 0 starting from top
+
+""")
+    doc = to_model(f)
+    regions = list(doc.iter_regions())
+    self.assertTrue(len(regions), 1)
+    return regions[0]
+
+  def test_positioning(self):
+    r = self._cue_settings_to_region("position:20%,center")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 0)
+    self.assertEqual(e.width.value, 40)
 
 if __name__ == '__main__':
   unittest.main()
