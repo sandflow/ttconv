@@ -366,12 +366,35 @@ Line 0 starting from top
     self.assertTrue(len(regions), 1)
     return regions[0]
 
-  def test_positioning(self):
+  def test_pos_20_center(self):
     r = self._cue_settings_to_region("position:20%,center")
     o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
     e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
     self.assertEqual(o.x.value, 0)
     self.assertEqual(e.width.value, 40)
+
+  def test_pos_99_left_10(self):
+    r = self._cue_settings_to_region("position:99%,line-left size:10")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 95)
+    self.assertEqual(e.width.value, 5)
+
+  def test_line_99(self):
+    r = self._cue_settings_to_region("line:99%")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 93.75)
+    self.assertEqual(e.height.value, 6.25)
+
+  def test_default_positioning(self):
+    r = self._cue_settings_to_region("")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 100*1/23)
+    self.assertEqual(e.height.value, 100 - 2*100*1/23)
+    self.assertEqual(o.x.value, 100*1/40)
+    self.assertEqual(e.width.value, 100 - 2*100*1/40)
 
 if __name__ == '__main__':
   unittest.main()
