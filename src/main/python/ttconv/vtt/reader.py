@@ -197,15 +197,15 @@ class _TextCueParser:
 
 _EMPTY_RE = re.compile(r"[\n\r]*")
 _DEFAULT_FONT_STACK = (styles.GenericFontFamilyType.sansSerif,)
-_DEFAULT_FONT_SIZE = styles.LengthType(15 * 5, styles.LengthType.Units.pct) # 5vh for ttp:cellResolution="32 15"
+_DEFAULT_FONT_SIZE_PCT = 5
+_DEFAULT_FONT_SIZE = styles.LengthType(15 * _DEFAULT_FONT_SIZE_PCT, styles.LengthType.Units.pct) # 5vh for ttp:cellResolution="32 15"
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
 _DEFAULT_LINE_PADDING = styles.LengthType(0.5, styles.LengthType.Units.c)
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
+_DEFAULT_LINE_HEIGHT_PCT = _DEFAULT_FONT_SIZE_PCT *_DEFAULT_LINE_HEIGHT.value/100
 _DEFAULT_BG_COLOR = styles.ColorType((0, 0, 0, 204))
 _DEFAULT_ROWS = 23
 _DEFAULT_COLS = 40
-_MIN_CUE_IPD_SIZE_PCT = 10
-_MIN_CUE_BPD_SIZE_PCT = 10
 
 _VTT_PCT_RE = re.compile(r"(\d+\.?\d*)%")
 
@@ -229,17 +229,11 @@ def parse_vtt_int(value: str):
 
 @dataclass
 class _RegionParams:
-  extent : styles.ExtentType = styles.ExtentType(
-    height=styles.LengthType(100),
-    width=styles.LengthType(100)
-  )
-  origin : styles.CoordinateType = styles.CoordinateType(
-    x=styles.LengthType(0),
-    y=styles.LengthType(0)
-  )
-  writing_mode : styles.WritingModeType
-  text_align : styles.TextAlignType
-  display_align : styles.DisplayAlignType
+  extent : typing.Optional[styles.ExtentType] = None
+  origin : typing.Optional[styles.CoordinateType] = None
+  writing_mode : typing.Optional[styles.WritingModeType] = None
+  text_align : typing.Optional[styles.TextAlignType] = None
+  display_align : typing.Optional[styles.DisplayAlignType] = None
   
 def make_region_params(cue_settings: dict[str, str]) -> _RegionParams:
   """Compute region style parameters from cue settings
@@ -362,7 +356,7 @@ def make_region_params(cue_settings: dict[str, str]) -> _RegionParams:
     raise RuntimeError("Invalid cue text alignment setting")
   
   # display_align
-  
+
   if cue_line_align == "center":
     r.display_align = styles.DisplayAlignType.center
   elif cue_line_align == "end":
@@ -375,36 +369,70 @@ def make_region_params(cue_settings: dict[str, str]) -> _RegionParams:
   # compute region origin and extent
 
   if cue_position_align == "line-left":
-    max_cue_size = 100 - cue_position
+    max_ipd_size = 100 - cue_position
   elif cue_position_align == "line-right":
-    max_cue_size = cue_position
+    max_ipd_size = cue_position
   elif cue_position_align == "center":
     if cue_position <= 50:
-      max_cue_size = cue_position * 2
+      max_ipd_size = cue_position * 2
     else:
-      max_cue_size = (100 - cue_position) * 2
+      max_ipd_size = (100 - cue_position) * 2
   else:
     raise RuntimeError("Invalid position alignment")
 
-  # minimum cue size is 10%
-  actual_cue_size = max(_MIN_CUE_IPD_SIZE_PCT, min(cue_size, max_cue_size))
+  ipd_size = max(_DEFAULT_FONT_SIZE_PCT, min(cue_size, max_ipd_size))
 
   if cue_position_align == "line-left":
-    ipd_origin = min(cue_position, 100 - actual_cue_size)
+    ipd_origin = min(cue_position, 100 - ipd_size)
   elif cue_position_align == "line-right":
-    ipd_origin = max(0, cue_position - actual_cue_size)
+    ipd_origin = max(0, cue_position - ipd_size)
   elif cue_position_align == "center":
-    ipd_origin = cue_position - actual_cue_size / 2
+    ipd_origin = max(min(cue_position - ipd_size / 2, 100 - ipd_size), 0)
   else:
     raise RuntimeError("Invalid position alignment")
 
   if cue_snap_to_lines:
-    if r.writing_mode in (styles.WritingModeType.rltb, styles.WritingModeType.lrtb):
-      actual_y = 100 * cue_line_num/_DEFAULT_ROWS if cue_line_num >= 0 else 100 + 100 * cue_line_num/_DEFAULT_ROWS
+    if cue_line_num >= 0:
+      bpd_origin = _DEFAULT_LINE_HEIGHT_PCT * cue_line_num
     else:
-      actual_y = 100 * cue_line_num/_DEFAULT_COLS if cue_line_num >= 0 else 100 + 100 * cue_line_num/_DEFAULT_COLS
+      bpd_origin = 100 + cue_line_num * _DEFAULT_LINE_HEIGHT_PCT
   else:
-    actual_y = cue_line_num
+    bpd_origin = cue_line_num
+
+  if cue_line_align == "center":
+    bpd_size = max(_DEFAULT_LINE_HEIGHT_PCT, min(bpd_origin * 2, (100 - bpd_origin) * 2))
+  elif cue_line_align == "end":
+    bpd_size = bpd_origin
+  elif cue_line_align == "start":
+    bpd_size = 100 - bpd_origin
+  
+  bpd_size = max(_DEFAULT_LINE_HEIGHT_PCT, bpd_size)
+
+  if cue_line_align == "center":
+    bpd_origin = max(min(bpd_origin - bpd_size / 2, 100 - bpd_size), 0)
+  elif cue_line_align == "end":
+    bpd_origin = max(0, bpd_origin - bpd_size)
+  elif cue_line_align == "start":
+    bpd_origin = min(bpd_origin, 100 - bpd_size)
+
+  if r.writing_mode in (styles.WritingModeType.lrtb, styles.WritingModeType.rltb):
+    r.extent = styles.ExtentType(
+      height=styles.LengthType(bpd_size),
+      width=styles.LengthType(ipd_size)
+    )
+    r.origin = styles.CoordinateType(
+      x=styles.LengthType(ipd_origin),
+      y=styles.LengthType(bpd_origin)
+    )
+  else:
+    r.extent = styles.ExtentType(
+      height=styles.LengthType(ipd_size),
+      width=styles.LengthType(bpd_size)
+    )
+    r.origin = styles.CoordinateType(
+      x=styles.LengthType(bpd_origin),
+      y=styles.LengthType(ipd_origin)
+    )
   
   return r
 

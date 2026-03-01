@@ -344,14 +344,14 @@ Line 1 starting from bottom
     self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Origin).y.value), 0)
     self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Extent).height.value), 100)
     # line 5 starting from top
-    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 22)
-    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 78)
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 31)
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 69)
     # line in percentage
     self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Origin).y.value), 45)
     self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Extent).height.value), 55)
     # line 1 starting from bottom
-    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 96)
-    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 4)
+    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 94)
+    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 6)
 
 
 
