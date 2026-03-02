@@ -344,16 +344,99 @@ Line 1 starting from bottom
     self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Origin).y.value), 0)
     self.assertEqual(round(regions[0].get_style(styles.StyleProperties.Extent).height.value), 100)
     # line 5 starting from top
-    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 22)
-    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 78)
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Origin).y.value), 31)
+    self.assertEqual(round(regions[1].get_style(styles.StyleProperties.Extent).height.value), 69)
     # line in percentage
     self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Origin).y.value), 45)
     self.assertEqual(round(regions[2].get_style(styles.StyleProperties.Extent).height.value), 55)
     # line 1 starting from bottom
-    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 96)
-    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 4)
+    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Origin).y.value), 94)
+    self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 6)
 
+  def _cue_settings_to_region(self, settings: str) -> model.Region:
+    f = io.StringIO(f"""WEBVTT
 
+1
+00:00:00.000 --> 00:00:02.000 {settings}
+Line 0 starting from top
+
+""")
+    doc = to_model(f)
+    regions = list(doc.iter_regions())
+    self.assertTrue(len(regions), 1)
+    return regions[0]
+
+  def test_pos_20_center(self):
+    r = self._cue_settings_to_region("position:20%,center")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 0)
+    self.assertEqual(e.width.value, 40)
+
+  def test_pos_90_center(self):
+    r = self._cue_settings_to_region("position:90%")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 80)
+    self.assertEqual(e.width.value, 20)
+
+  def test_pos_90_left(self):
+    r = self._cue_settings_to_region("position:90%,line-left")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 90)
+    self.assertEqual(e.width.value, 10)
+
+  def test_pos_90_right(self):
+    r = self._cue_settings_to_region("position:90%,line-right")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 0)
+    self.assertEqual(e.width.value, 90)
+
+  def test_pos_99_left_10(self):
+    r = self._cue_settings_to_region("position:99%,line-left size:10")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 95)
+    self.assertEqual(e.width.value, 5)
+
+  def test_line_99(self):
+    r = self._cue_settings_to_region("line:99%")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 93.75)
+    self.assertEqual(e.height.value, 6.25)
+
+  def test_line_minus_3(self):
+    r = self._cue_settings_to_region("line:-3")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 81.25)
+    self.assertEqual(e.height.value, 18.75)
+
+  def test_line_minus_3_after(self):
+    r = self._cue_settings_to_region("line:-3,end")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 0)
+    self.assertEqual(e.height.value, 81.25)
+
+  def test_line_99_vertical(self):
+    r = self._cue_settings_to_region("line:99% vertical:lr")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.x.value, 93.75)
+    self.assertEqual(e.width.value, 6.25)
+
+  def test_default_positioning(self):
+    r = self._cue_settings_to_region("")
+    o : styles.CoordinateType = r.get_style(styles.StyleProperties.Origin)
+    e : styles.ExtentType = r.get_style(styles.StyleProperties.Extent)
+    self.assertEqual(o.y.value, 100*1/23)
+    self.assertEqual(e.height.value, 100 - 2*100*1/23)
+    self.assertEqual(o.x.value, 100*1/40)
+    self.assertEqual(e.width.value, 100 - 2*100*1/40)
 
 if __name__ == '__main__':
   unittest.main()

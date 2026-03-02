@@ -289,10 +289,10 @@ class SccCaptionParagraphTest(unittest.TestCase):
     caption_paragraph.set_begin(SmpteTimeCode.parse("00:01:02:03", FPS_30))
     caption_paragraph.set_end(SmpteTimeCode.parse("00:02:03:04", FPS_30))
 
-    caption_paragraph.set_cursor_at(0)
+    caption_paragraph.set_cursor_at(1)
     caption_paragraph.new_caption_text()
     caption_paragraph.append_text("Hello")
-    caption_paragraph.set_cursor_at(1)
+    caption_paragraph.set_cursor_at(2)
     caption_paragraph.new_caption_text()
     caption_paragraph.append_text("World")
 
