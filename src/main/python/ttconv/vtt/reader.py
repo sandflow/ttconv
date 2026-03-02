@@ -214,7 +214,7 @@ def parse_vtt_pct(value: str):
   m = _VTT_PCT_RE.fullmatch(value)
   if m:
     v = round(float(m.group(1)))
-    return v if 0 <= v <= 100 else 100
+    return v if 0 <= v <= 100 else None
   return None
 
 # integer has at most 20 digits
@@ -255,7 +255,7 @@ def make_region_params(cue_settings: dict[str, str]) -> _RegionParams:
   value = cue_settings.get("align")
   if value in ("left", "right", "start", "center", "end"):
     cue_text_align = value
-  else:
+  elif value is not None:
     LOGGER.warning("Bad align setting value: %s", cue_text_align)
 
   # cue size
@@ -308,7 +308,7 @@ def make_region_params(cue_settings: dict[str, str]) -> _RegionParams:
     # position value
     cue_position = parse_vtt_pct(value[0])
     if cue_position is None:
-      LOGGER.warning("Bad position alignment setting value: %s", cue_position_align)
+      LOGGER.warning("Bad position alignment setting value: %s", cue_position)
     else:
       # position alignment
       if len(value) > 1:

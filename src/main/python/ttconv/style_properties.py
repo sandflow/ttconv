@@ -69,7 +69,7 @@ class LengthType:
     if not isinstance(self.units, LengthType.Units):
       raise ValueError("Invalid units")
 
-  def is_positive(self):
+  def is_non_negative(self):
     '''True if the length value is positive
     '''
     return self.value >= 0
@@ -547,7 +547,7 @@ class StyleProperties:
       return isinstance(value, ExtentType) \
         and value.width.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
         and value.height.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
-        and value.width.is_positive() and value.height.is_positive()
+        and value.width.is_non_negative() and value.height.is_non_negative()
 
 
   class FillLineGap(StyleProperty):
@@ -592,7 +592,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value):
-      return isinstance(value, LengthType) and value.is_positive()
+      return isinstance(value, LengthType) and value.is_non_negative()
 
 
   class FontStyle(StyleProperty):
@@ -638,7 +638,7 @@ class StyleProperties:
     @staticmethod
     def validate(value):
       return value == SpecialValues.normal or \
-        (isinstance(value, LengthType) and value.units != LengthType.Units.c and value.is_positive())
+        (isinstance(value, LengthType) and value.units != LengthType.Units.c and value.is_non_negative())
 
 
   class LinePadding(StyleProperty):
@@ -655,7 +655,7 @@ class StyleProperties:
     def validate(value: LengthType):
       return isinstance(value, LengthType) and \
         value.units in (LengthType.Units.c, LengthType.Units.rh, LengthType.Units.rw) and \
-        value.is_positive()
+        value.is_non_negative()
 
   class LuminanceGain(StyleProperty):
     '''Corresponds to tts:luminanceGain.'''
@@ -669,7 +669,7 @@ class StyleProperties:
 
     @staticmethod
     def validate(value: Numeric):
-      return isinstance(value, numbers.Number) and value > 0.0
+      return isinstance(value, numbers.Number) and value >= 0
 
   class MultiRowAlign(StyleProperty):
     '''Corresponds to ebutts:multiRowAlign.'''
@@ -719,7 +719,7 @@ class StyleProperties:
       return isinstance(value, CoordinateType) \
         and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
         and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
-        and value.x.is_positive() and value.y.is_positive()
+        and value.x.is_non_negative() and value.y.is_non_negative()
 
 
   class Overflow(StyleProperty):
@@ -753,7 +753,7 @@ class StyleProperties:
         return False
 
       return LengthType.Units.c not in (value.before.units, value.end.units, value.after.units, value.start.units) and \
-        value.before.is_positive() and value.end.is_positive() and value.after.is_positive() and value.start.is_positive()
+        value.before.is_non_negative() and value.end.is_non_negative() and value.after.is_non_negative() and value.start.is_non_negative()
 
   class Position(StyleProperty):
     '''Corresponds to tts:position.'''
@@ -773,7 +773,7 @@ class StyleProperties:
       return isinstance(value, PositionType) \
         and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
         and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
-        and value.h_offset.is_positive() and value.v_offset.is_positive()
+        and value.h_offset.is_non_negative() and value.v_offset.is_non_negative()
 
   class RubyAlign(StyleProperty):
     '''Corresponds to tts:rubyAlign.'''
@@ -823,7 +823,7 @@ class StyleProperties:
       if not isinstance(value, RubyReserveType):
         return False
 
-      return value.length is None or (value.length.units != LengthType.Units.c and value.length.is_positive())
+      return value.length is None or (value.length.units != LengthType.Units.c and value.length.is_non_negative())
 
   class Shear(StyleProperty):
     '''Corresponds to tts:shear.'''
@@ -940,7 +940,7 @@ class StyleProperties:
       if not isinstance(value, TextOutlineType):
         return False
 
-      return value.thickness.units != LengthType.Units.c and value.thickness.is_positive()
+      return value.thickness.units != LengthType.Units.c and value.thickness.is_non_negative()
 
 
   class TextShadow(StyleProperty):
