@@ -216,19 +216,18 @@ class IMSC11TextFilterTest(unittest.TestCase):
   def test_text_shadow_5_shadows_raises(self):
     doc = _make_simple_doc()
     body = doc.get_body()
-    for element in body.dfs_iterator():
-      if isinstance(element, model.Span):
-        shadow = styles.TextShadowType.Shadow(
-          x_offset=styles.LengthType(1, styles.LengthType.Units.pct),
-          y_offset=styles.LengthType(1, styles.LengthType.Units.pct),
-        )
-        element.set_style(
-          styles.StyleProperties.TextShadow,
-          styles.TextShadowType(shadows=(shadow, shadow, shadow, shadow, shadow)),
-        )
-
     with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
+      for element in body.dfs_iterator():
+        if isinstance(element, model.Span):
+          shadow = styles.TextShadowType.Shadow(
+            x_offset=styles.LengthType(1, styles.LengthType.Units.pct),
+            y_offset=styles.LengthType(1, styles.LengthType.Units.pct),
+          )
+          element.set_style(
+            styles.StyleProperties.TextShadow,
+            styles.TextShadowType(shadows=(shadow, shadow, shadow, shadow, shadow)),
+          )
+        IMSC11TextFilter().process(doc)
 
   def test_text_shadow_4_shadows_passes(self):
     doc = _make_simple_doc()
