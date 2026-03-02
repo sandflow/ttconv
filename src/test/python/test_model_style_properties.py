@@ -29,7 +29,7 @@
 
 import unittest
 from ttconv import model
-from ttconv.style_properties import ExtentType, LengthType, StyleProperties
+from ttconv.style_properties import ExtentType, LengthType, StyleProperties, TextShadowType
 
 class TestModelStyleProperties(unittest.TestCase):
 
@@ -37,6 +37,18 @@ class TestModelStyleProperties(unittest.TestCase):
     for style in StyleProperties.ALL:
       with self.subTest(style.__name__):
         style.validate(style.make_initial_value())
+
+  def test_text_shadow_5_shadows_raises(self):
+    span = model.Span()
+    with self.assertRaises(ValueError):
+      shadow = TextShadowType.Shadow(
+        x_offset=LengthType(1, LengthType.Units.pct),
+        y_offset=LengthType(1, LengthType.Units.pct),
+      )
+      span.set_style(
+        StyleProperties.TextShadow,
+        TextShadowType(shadows=(shadow, shadow, shadow, shadow, shadow)),
+      )
 
   def test_extent_c_fail(self):
     doc = model.ContentDocument()
