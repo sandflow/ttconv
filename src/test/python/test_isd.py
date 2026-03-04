@@ -273,6 +273,23 @@ class IMSCTestSuiteTest(unittest.TestCase):
               self.assertIsNotNone(isd)
             if len(logs.output) > 1:
               self.fail(logs.output)
+  
+  def test_imsc_1_3_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            m = imsc_reader.to_model(tree)
+            self.assertIsNotNone(m)
+            sig_times = ISD.significant_times(m)
+            for t in sig_times:
+              isd = ISD.from_model(m, t)
+              self.assertIsNotNone(isd)
+            if len(logs.output) > 1:
+              self.fail(logs.output)
 
 class ComputeStyleTest(unittest.TestCase):
 

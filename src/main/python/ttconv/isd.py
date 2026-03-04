@@ -958,6 +958,9 @@ class StyleProcessors:
   class FontStyle(StyleProcessor):
     style_prop = styles.StyleProperties.FontStyle
 
+  class FontVariant(StyleProcessor):
+    style_prop = styles.StyleProperties.FontVariant
+
   class FontWeight(StyleProcessor):
     style_prop = styles.StyleProperties.FontWeight
 

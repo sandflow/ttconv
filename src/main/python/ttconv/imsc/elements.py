@@ -610,9 +610,9 @@ class StyleElement(TTMLElement):
         model_prop, model_value = prop.to_model(style_ctx, xml_elem)
         style_ctx.styles[model_prop] = model_value
 
-      except ValueError:
+      except ValueError as e:
 
-        LOGGER.error("Error reading style property: %s", prop.__name__)
+        LOGGER.error("Error reading style property %s with %s", prop.__name__, str(e))
 
     # merge nested style attributes if the parent is a region element
 
@@ -683,9 +683,9 @@ class InitialElement(TTMLElement):
 
         initial_ctx.doc.put_initial_value(model_prop, model_value)
 
-      except (ValueError, TypeError):
+      except (ValueError, TypeError) as e:
 
-        LOGGER.error("Error reading style property: %s", prop.__name__)
+        LOGGER.error("Error reading style property %s with %s", prop.__name__, str(e))
 
     return initial_ctx
 
@@ -767,9 +767,9 @@ class ContentElement(TTMLElement):
 
           self.model_element.set_style(model_prop, model_value)
 
-        except ValueError:
+        except ValueError as e:
 
-          LOGGER.error("Error reading style property: %s", prop.__name__)
+          LOGGER.error("Error reading style property %s with %s", prop.__name__, str(e))
 
     def process_set_style_properties(self, parent_ctx: ContentElement.ParsingContext, xml_elem):
       '''Processes style properties on `<set>` element
@@ -796,8 +796,8 @@ class ContentElement(TTMLElement):
               )
             )
             break
-          except ValueError:
-            LOGGER.error("Error reading style property: %s", prop.__name__)
+          except ValueError as e:
+            LOGGER.error("Error reading style property %s with %s", prop.__name__, str(e))
 
     def process_lang_attribute(self, parent_ctx: TTMLElement.ParsingContext, xml_elem):
       super().process_lang_attribute(parent_ctx, xml_elem)

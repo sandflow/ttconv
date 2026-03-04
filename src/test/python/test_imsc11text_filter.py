@@ -630,6 +630,18 @@ class IMSC11TextFilterTest(unittest.TestCase):
               filt = IMSC11TextFilter()
               filt.process(model)
 
+  def test_imsc_1_3_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+            with self.subTest(name):
+              tree = et.parse(os.path.join(root, filename))
+              model = imsc_reader.to_model(tree)
+              self.assertIsNotNone(model)
+              filt = IMSC11TextFilter()
+              with self.assertRaises(ValueError):
+                filt.process(model)
 
 if __name__ == "__main__":
   unittest.main()

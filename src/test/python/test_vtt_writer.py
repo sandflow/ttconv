@@ -312,6 +312,18 @@ Cool, got it, will do it by end of next week.
             vtt_from_model =vtt_writer.from_model(test_model, None)
             self._check_output_vtt(test_model, vtt_from_model, path)
 
+  @unittest.skip("IMSC 1.3 is not supported")
+  def test_imsc_1_3_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            path = os.path.join(root, filename)
+            tree = et.parse(path)
+            test_model = imsc_reader.to_model(tree)
+            vtt_from_model =vtt_writer.from_model(test_model, None)
+            self._check_output_vtt(test_model, vtt_from_model, path)
   #
   # Utility functions
   #
