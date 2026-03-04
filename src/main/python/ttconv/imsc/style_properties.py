@@ -317,6 +317,22 @@ class StyleProperties:
       xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
 
 
+  class FontVariant(StyleProperty):
+    '''Corresponds to tts:fontVariant.'''
+
+    ns = xml_ns.TTS
+    local_name = "fontVariant"
+    model_prop = styles.StyleProperties.FontVariant
+
+    @classmethod
+    def extract(cls, context: StyleParsingContext, xml_attrib: str):
+      return styles.FontVariantType(xml_attrib)
+
+    @classmethod
+    def from_model(cls, xml_element, model_value: styles.FontVariantType):
+      xml_element.set(f"{{{cls.ns}}}{cls.local_name}", model_value.value)
+
+
   class FontWeight(StyleProperty):
     '''Corresponds to tts:fontWeight.'''
 
