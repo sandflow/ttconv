@@ -140,6 +140,11 @@ class ContentDocument0Test(unittest.TestCase):
     t1 = model.Text(self.doc, "hello")
     span1.push_child(t1)
 
+  def test_iter(self):
+    isd = ISD.from_model(self.doc, 2)
+    r_ids = sorted(r.get_id() for r in isd)
+    self.assertSequenceEqual(r_ids, sorted(("r1", "r2")))
+
   def test_significant_times(self):
     self.assertSequenceEqual(ISD.significant_times(self.doc), sorted((0, 2, 3, 9, 1, 10, 4)))
 

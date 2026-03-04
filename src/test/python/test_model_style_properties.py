@@ -27,11 +27,52 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+from fractions import Fraction
 import unittest
 from ttconv import model
-from ttconv.style_properties import ExtentType, LengthType, StyleProperties, TextShadowType
+from ttconv.isd import ISD
+from ttconv.style_properties import ExtentType, FontVariantType, LengthType, NamedColors, StyleProperties, TextShadowType
 
 class TestModelStyleProperties(unittest.TestCase):
+
+  def setUp(self):
+    self.doc = model.ContentDocument()
+
+    self.r1 = model.Region("r1", self.doc)
+    self.doc.put_region(self.r1)
+
+    self.b = model.Body(self.doc)
+    self.doc.set_body(self.b)
+
+    self.div1 = model.Div(self.doc)
+    self.div1.set_region(self.r1)
+    self.b.push_child(self.div1)
+
+    self.p1 = model.P(self.doc)
+    self.div1.push_child(self.p1)
+
+    self.span1 = model.Span(self.doc)
+    self.p1.push_child(self.span1)
+
+    self.text1 = model.Text(self.doc, "span1")
+    self.span1.push_child(self.text1)
+
+  def test_fontVariant(self):
+    self.b.set_style(StyleProperties.FontVariant, FontVariantType.subscript)
+    self.assertFalse(self.b.is_style_applicable(StyleProperties.FontVariant))
+
+    a = model.DiscreteAnimationStep(StyleProperties.FontVariant, 1, None, FontVariantType.superscript)
+    self.p1.add_animation_step(a)
+
+    isd = ISD.from_model(self.doc, 0)
+    r = list(isd)[0]
+    self.assertIsNone(r[0][0].get_style(StyleProperties.FontVariant))
+    self.assertEqual(r[0][0][0][0].get_style(StyleProperties.FontVariant), FontVariantType.subscript)
+
+    isd = ISD.from_model(self.doc, 1)
+    r = list(isd)[0]
+    self.assertIsNone(r[0][0].get_style(StyleProperties.FontVariant))
+    self.assertEqual(r[0][0][0][0].get_style(StyleProperties.FontVariant), FontVariantType.superscript)
 
   def test_make_initial(self):
     for style in StyleProperties.ALL:

@@ -161,7 +161,11 @@ class ISD(model.Document):
 
   def iter_regions(self) -> typing.Iterator[ISD.Region]:
     '''Returns an iterator over regions.'''
-    return self._regions.values()
+    return iter(self._regions.values())
+  
+  def __iter__(self) -> typing.Iterator[ISD.Region]:
+    '''Returns an iterator over the children of the element.'''
+    return iter(self.iter_regions())
 
   def __len__(self) -> int:
     '''Returns the number of regions of the ISD.'''
