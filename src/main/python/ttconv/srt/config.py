@@ -39,7 +39,7 @@ class SRTReaderConfiguration(ModuleConfiguration):
     return "srt_reader"
 
   # enables support for extended tags: {b}, {bold}, <bold> (and italic/underline equivalents)
-  extended_tag: bool = field(default=False, metadata={"decoder": bool})
+  extended_tags: bool = field(default=False, metadata={"decoder": bool})
 
 @dataclass
 class SRTWriterConfiguration(ModuleConfiguration):

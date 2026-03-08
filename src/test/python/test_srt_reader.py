@@ -29,6 +29,7 @@
 import unittest
 import io
 
+from ttconv.srt.config import SRTReaderConfiguration
 from ttconv.srt.reader import to_model
 import ttconv.style_properties as styles
 import ttconv.model as model
@@ -67,7 +68,7 @@ There was no danger at all."""
   def test_bold(self):
     f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
-Hello <bold>my</bold> name is Bob
+Hello <b>my</b> name is Bob
 """)
     doc = to_model(f)
     for e in doc.get_body().dfs_iterator():
@@ -107,17 +108,53 @@ There was no danger at all.
 00:02:16,612 --> 00:02:19,376
 Hello {bold}my{/bold} name is Bob
 """)
-    doc = to_model(f)
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
     for e in doc.get_body().dfs_iterator():
       if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
         break
     else:
       self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        self.fail()
+  
+  def test_bold_alt2(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello <bold>my</bold> name is Bob
+""")
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        break
+    else:
+      self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        self.fail()
+
+  def test_bold_alt3(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello {b}my{/b} name is Bob
+""")
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        break
+    else:
+      self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontWeight) == styles.FontWeightType.bold:
+        self.fail()
 
   def test_italic(self):
     f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
-Hello <italic>my</italic> name is Bob
+Hello <i>my</i> name is Bob
 """)
     doc = to_model(f)
     for e in doc.get_body().dfs_iterator():
@@ -131,17 +168,53 @@ Hello <italic>my</italic> name is Bob
 00:02:16,612 --> 00:02:19,376
 Hello {italic}my{/italic} name is Bob
 """)
-    doc = to_model(f)
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
     for e in doc.get_body().dfs_iterator():
       if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
         break
     else:
       self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        self.fail()
+
+  def test_italic_alt1(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello {i}my{/i} name is Bob
+""")
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        break
+    else:
+      self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        self.fail()
+
+  def test_italic_alt2(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello <italic>my</italic> name is Bob
+""")
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        break
+    else:
+      self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      if e.get_style(styles.StyleProperties.FontStyle) == styles.FontStyleType.italic:
+        self.fail()
 
   def test_underline(self):
     f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
-Hello <underline>my</underline> name is Bob
+Hello <u>my</u> name is Bob
 """)
     doc = to_model(f)
     for e in doc.get_body().dfs_iterator():
@@ -156,13 +229,54 @@ Hello <underline>my</underline> name is Bob
 00:02:16,612 --> 00:02:19,376
 Hello {underline}my{/underline} name is Bob
 """)
-    doc = to_model(f)
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
     for e in doc.get_body().dfs_iterator():
       text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
       if text_decoration is not None and text_decoration.underline:
         break
     else:
       self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        self.fail()
+
+  def test_underline_alt1(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello {u}my{/u} name is Bob
+""")
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        break
+    else:
+      self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        self.fail()
+
+  def test_underline_alt2(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello <underline>my</underline> name is Bob
+""")
+    doc = to_model(f, SRTReaderConfiguration(extended_tags=True))
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        break
+    else:
+      self.fail()
+    doc = to_model(f)
+    for e in doc.get_body().dfs_iterator():
+      text_decoration = e.get_style(styles.StyleProperties.TextDecoration)
+      if text_decoration is not None and text_decoration.underline:
+        self.fail()
 
   def test_blue(self):
     f = io.StringIO(r"""1
@@ -180,8 +294,8 @@ Hello <font color='blue'>my</font> name is Bob
   def test_multiline_tags(self):
     f = io.StringIO(r"""1
 00:02:16,612 --> 00:02:19,376
-Hello <bold>my
-</bold> name is Bob
+Hello <b>my
+</b> name is Bob
 """)
     doc = to_model(f)
     for e in doc.get_body().dfs_iterator():

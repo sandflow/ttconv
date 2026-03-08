@@ -120,7 +120,7 @@ _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
 def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
 
-  extended_tag = _config.extended_tag if isinstance(_config, SRTReaderConfiguration) else False
+  extended_tags = _config.extended_tags if isinstance(_config, SRTReaderConfiguration) else False
 
   doc = model.ContentDocument()
 
@@ -241,7 +241,7 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
       if line is None or _EMPTY_RE.fullmatch(line):
         subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
 
-        if extended_tag:
+        if extended_tags:
           subtitle_text = subtitle_text\
             .replace(r"{b}", r"<b>")\
             .replace(r"{/b}", r"</b>")\
