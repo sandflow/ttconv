@@ -201,6 +201,18 @@ Default: `23`
 
 Default: `true`
 
+### SRT Reader configuration (`"srt_reader"`)
+
+#### extended_tags
+
+`"extended_tag" : true | false`
+
+If `true`, the following extended formatting tags are supported: `{bold}`,
+`<bold>`, `{b}`, `{italic}`, `<italic>`, `{i}`, `{underline}`, `<underline>` and
+`{u}`.
+
+Default: `false`
+
 ### VTT Writer configuration (`"vtt_writer"`)
 
 #### line_position

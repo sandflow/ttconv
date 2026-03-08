@@ -36,6 +36,7 @@ from html.parser import HTMLParser
 from ttconv import model
 from ttconv import style_properties as styles
 from ttconv.utils import parse_color
+from ttconv.srt.config import SRTReaderConfiguration
 
 LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +62,11 @@ class _TextParser(HTMLParser):
     self.parent.push_child(span)
     self.parent = span
 
-    if tag.lower() in ("b", "bold"):
+    if tag.lower() in ("b"):
       span.set_style(styles.StyleProperties.FontWeight, styles.FontWeightType.bold)
-    elif tag.lower() in ("i", "italic"):
+    elif tag.lower() in ("i"):
       span.set_style(styles.StyleProperties.FontStyle, styles.FontStyleType.italic)
-    elif tag.lower() in ("u", "underline"):
+    elif tag.lower() in ("u"):
       span.set_style(styles.StyleProperties.TextDecoration, styles.TextDecorationType(underline=True))
     elif tag.lower() == "font":
       for attr in attrs:
@@ -116,8 +117,10 @@ _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
 _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
 
-def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None):
+def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
+
+  extended_tags = _config.extended_tags if isinstance(_config, SRTReaderConfiguration) else False
 
   doc = model.ContentDocument()
 
@@ -236,14 +239,28 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or _EMPTY_RE.fullmatch(line):
-        subtitle_text = subtitle_text.strip('\r\n')\
-          .replace(r"\n\r", "\n")\
-          .replace(r"{bold}", r"<bold>")\
-          .replace(r"{/bold}", r"</bold>")\
-          .replace(r"{italic}", r"<italic>")\
-          .replace(r"{/italic}", r"</italic>")\
-          .replace(r"{underline}", r"<underline>")\
-          .replace(r"{/underline}", r"</underline>")
+        subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
+
+        if extended_tags:
+          subtitle_text = subtitle_text\
+            .replace(r"{b}", r"<b>")\
+            .replace(r"{/b}", r"</b>")\
+            .replace(r"{bold}", r"<b>")\
+            .replace(r"{/bold}", r"</b>")\
+            .replace(r"<bold>", r"<b>")\
+            .replace(r"</bold>", r"</b>")\
+            .replace(r"{i}", r"<i>")\
+            .replace(r"{/i}", r"</i>")\
+            .replace(r"{italic}", r"<i>")\
+            .replace(r"{/italic}", r"</i>")\
+            .replace(r"<italic>", r"<i>")\
+            .replace(r"</italic>", r"</i>")\
+            .replace(r"{u}", r"<u>")\
+            .replace(r"{/u}", r"</u>")\
+            .replace(r"{underline}", r"<u>")\
+            .replace(r"{/underline}", r"</u>")\
+            .replace(r"<underline>", r"<u>")\
+            .replace(r"</underline>", r"</u>")
 
         parser = _TextParser(current_p, line_index)
         parser.feed(subtitle_text)
