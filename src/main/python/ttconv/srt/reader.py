@@ -49,6 +49,90 @@ def _none_terminated(iterator):
     yield item
   yield None
 
+# Alignment tag regex for ASS/SSA style tags {\an1} through {\an9}
+_ALIGNMENT_TAG_RE = re.compile(r"\{\\an([1-9])\}")
+
+# Alignment map: code -> (DisplayAlignType, TextAlignType)
+# Numpad layout:
+# 7=top-left    8=top-center    9=top-right
+# 4=mid-left    5=mid-center    6=mid-right
+# 1=bot-left    2=bot-center    3=bot-right
+_ALIGNMENT_MAP = {
+  1: (styles.DisplayAlignType.after, styles.TextAlignType.start),
+  2: (styles.DisplayAlignType.after, styles.TextAlignType.center),
+  3: (styles.DisplayAlignType.after, styles.TextAlignType.end),
+  4: (styles.DisplayAlignType.center, styles.TextAlignType.start),
+  5: (styles.DisplayAlignType.center, styles.TextAlignType.center),
+  6: (styles.DisplayAlignType.center, styles.TextAlignType.end),
+  7: (styles.DisplayAlignType.before, styles.TextAlignType.start),
+  8: (styles.DisplayAlignType.before, styles.TextAlignType.center),
+  9: (styles.DisplayAlignType.before, styles.TextAlignType.end),
+}
+
+def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[int], str]:
+  """Extract alignment code from text and return (alignment_code, cleaned_text).
+  
+  Returns (None, original_text) if no alignment tag found.
+  """
+  match = _ALIGNMENT_TAG_RE.search(text)
+  if match:
+    alignment_code = int(match.group(1))
+    # Remove the alignment tag from text
+    cleaned_text = _ALIGNMENT_TAG_RE.sub("", text)
+    return alignment_code, cleaned_text
+  return None, text
+
+def _get_region_for_alignment(
+    doc: model.ContentDocument,
+    alignment_code: int,
+    regions_cache: typing.Dict[int, model.Region]
+) -> model.Region:
+  """Get or create a region for the given alignment code.
+  
+  Regions are cached by alignment code to avoid creating duplicates.
+  A fixed safe area margin is applied (defined by _DEFAULT_SAFE_AREA_PCT).
+  """
+  if alignment_code in regions_cache:
+    return regions_cache[alignment_code]
+  
+  display_align, text_align = _ALIGNMENT_MAP[alignment_code]
+  
+  region_id = f"r_an{alignment_code}"
+  region = model.Region(region_id, doc)
+  
+  # Apply safe area margin
+  region.set_style(
+    styles.StyleProperties.Origin,
+    styles.CoordinateType(
+      x=styles.LengthType(_DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct),
+      y=styles.LengthType(_DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct)
+    )
+  )
+  region.set_style(
+    styles.StyleProperties.Extent,
+    styles.ExtentType(
+      height=styles.LengthType(100 - 2 * _DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct),
+      width=styles.LengthType(100 - 2 * _DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct)
+    )
+  )
+  region.set_style(styles.StyleProperties.DisplayAlign, display_align)
+  region.set_style(styles.StyleProperties.TextAlign, text_align)
+  
+  # Apply default styling (same as default region)
+  region.set_style(styles.StyleProperties.LineHeight, _DEFAULT_LINE_HEIGHT)
+  region.set_style(styles.StyleProperties.FontFamily, _DEFAULT_FONT_STACK)
+  region.set_style(styles.StyleProperties.FontSize, _DEFAULT_FONT_SIZE)
+  region.set_style(styles.StyleProperties.Color, _DEFAULT_TEXT_COLOR)
+  region.set_style(
+    styles.StyleProperties.TextOutline,
+    styles.TextOutlineType(_DEFAULT_OUTLINE_THICKNESS, _DEFAULT_OUTLINE_COLOR)
+  )
+  
+  doc.put_region(region)
+  regions_cache[alignment_code] = region
+  
+  return region
+
 class _TextParser(HTMLParser):
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
@@ -116,11 +200,16 @@ _DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
 _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
+_DEFAULT_SAFE_AREA_PCT = 10
 
 def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
 
   extended_tags = _config.extended_tags if isinstance(_config, SRTReaderConfiguration) else False
+  alignment_tags = _config.alignment_tags if isinstance(_config, SRTReaderConfiguration) else False
+
+  # Cache for alignment-based regions (keyed by alignment code 1-9)
+  alignment_regions_cache: typing.Dict[int, model.Region] = {}
 
   doc = model.ContentDocument()
 
@@ -174,7 +263,11 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
   doc.put_region(region)
 
   body = model.Body(doc)
-  body.set_region(region)
+  # Only set body region if not using alignment_tags
+  # When alignment_tags is enabled, paragraphs have their own regions and body
+  # must not have a region set, otherwise ISD generation will prune content
+  if not alignment_tags:
+    body.set_region(region)
 
   doc.set_body(body)
 
@@ -240,6 +333,15 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
 
       if line is None or _EMPTY_RE.fullmatch(line):
         subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
+
+        # Extract and handle alignment tags if enabled
+        if alignment_tags:
+          alignment_code, subtitle_text = _extract_alignment(subtitle_text)
+          if alignment_code is not None:
+            aligned_region = _get_region_for_alignment(
+              doc, alignment_code, alignment_regions_cache
+            )
+            current_p.set_region(aligned_region)
 
         if extended_tags:
           subtitle_text = subtitle_text\

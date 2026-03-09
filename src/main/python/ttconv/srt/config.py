@@ -41,6 +41,9 @@ class SRTReaderConfiguration(ModuleConfiguration):
   # enables support for extended tags: {b}, {bold}, <bold> (and italic/underline equivalents)
   extended_tags: bool = field(default=False, metadata={"decoder": bool})
 
+  # enables support for alignment tags: {\an1} through {\an9}
+  alignment_tags: bool = field(default=False, metadata={"decoder": bool})
+
 @dataclass
 class SRTWriterConfiguration(ModuleConfiguration):
   """SRT writer configuration"""
