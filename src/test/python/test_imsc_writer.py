@@ -157,6 +157,37 @@ class ReaderWriterTest(unittest.TestCase):
     with open(os.path.join(base_path, "tests.json"), "w", encoding="utf8") as fp:
       json.dump(manifest, fp)
 
+  def test_imsc_1_3_test_suite(self):
+    manifest = []
+    base_path = "build/imsc1_3"
+
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            test_model = imsc_reader.to_model(tree)
+            tree_from_model = imsc_writer.from_model(test_model)
+
+            test_dir_relative_path = os.path.basename(root)
+
+            test_relative_path = os.path.join(test_dir_relative_path, filename)
+
+            os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
+
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
+              f.write(et.tostring(tree_from_model.getroot(), 'utf-8'))
+
+            manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
+
+            if len(logs.output) > 1:
+              self.fail(logs.output)
+
+    with open(os.path.join(base_path, "tests.json"), "w", encoding="utf8") as fp:
+      json.dump(manifest, fp)
+
 
 class FromModelBodyWriterTest(unittest.TestCase):
 

@@ -140,6 +140,11 @@ class ContentDocument0Test(unittest.TestCase):
     t1 = model.Text(self.doc, "hello")
     span1.push_child(t1)
 
+  def test_iter(self):
+    isd = ISD.from_model(self.doc, 2)
+    r_ids = sorted(r.get_id() for r in isd)
+    self.assertSequenceEqual(r_ids, sorted(("r1", "r2")))
+
   def test_significant_times(self):
     self.assertSequenceEqual(ISD.significant_times(self.doc), sorted((0, 2, 3, 9, 1, 10, 4)))
 
@@ -259,6 +264,23 @@ class IMSCTestSuiteTest(unittest.TestCase):
 
   def test_imsc_1_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_1/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name), self.assertLogs() as logs:
+            logging.getLogger().info("*****dummy*****") # dummy log
+            tree = et.parse(os.path.join(root, filename))
+            m = imsc_reader.to_model(tree)
+            self.assertIsNotNone(m)
+            sig_times = ISD.significant_times(m)
+            for t in sig_times:
+              isd = ISD.from_model(m, t)
+              self.assertIsNotNone(isd)
+            if len(logs.output) > 1:
+              self.fail(logs.output)
+  
+  def test_imsc_1_3_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".ttml":
