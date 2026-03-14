@@ -211,6 +211,10 @@ If `true`, the following extended formatting tags are supported: `{bold}`,
 `<bold>`, `{b}`, `{italic}`, `<italic>`, `{i}`, `{underline}`, `<underline>` and
 `{u}`.
 
+Default: `false`
+
+#### alignment_tags
+
 `"alignment_tags" : true | false`
 
 If `true`, ASS/SSA-style alignment tags (`{\anN}`) are supported, where N is a
