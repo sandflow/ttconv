@@ -356,10 +356,10 @@ World
 {\an1} Bottom Left
 """)
     doc = to_model(f)
-    # Should only have the default region
+    # Should only have the default region (r_an2)
     regions = list(doc.iter_regions())
     self.assertEqual(len(regions), 1)
-    self.assertEqual(regions[0].get_id(), "r1")
+    self.assertEqual(regions[0].get_id(), "r_an2")
     # The alignment tag should remain in the text
     p = doc.get_body().first_child().first_child()
     text_content = ""
@@ -408,9 +408,9 @@ World
 """)
     doc = to_model(f, SRTReaderConfiguration(alignment_tags=True))
     
-    # Should have default region + 9 alignment regions
+    # Should have 9 alignment regions (r_an2 is shared as default)
     regions = list(doc.iter_regions())
-    self.assertEqual(len(regions), 10)  # r1 + r_an1 through r_an9
+    self.assertEqual(len(regions), 9)  # r_an1 through r_an9
     
     # Check alignment regions exist with correct properties
     expected_alignments = {
@@ -522,7 +522,7 @@ Also no alignment tag
     # Third paragraph should have different region
     self.assertEqual(paragraphs[2].get_region().get_id(), "r_an9")
     
-    # Total alignment regions should be 2 (r_an1 and r_an9) + default r1
+    # Total alignment regions should be 2 (r_an1 and r_an9) + default r_an2
     regions = list(doc.iter_regions())
     self.assertEqual(len(regions), 3)
 

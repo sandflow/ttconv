@@ -52,7 +52,7 @@ def _none_terminated(iterator):
 # Alignment tag regex for ASS/SSA style tags {\an1} through {\an9}
 _ALIGNMENT_TAG_RE = re.compile(r"\{\\an([1-9])\}")
 
-class SSAAlignment(Enum):
+class _SSAAlignment(Enum):
   """ASS/SSA alignment position codes ({\\anN} format).
   
   Numpad layout:
@@ -71,11 +71,11 @@ class SSAAlignment(Enum):
   an9 = (styles.DisplayAlignType.before, styles.TextAlignType.end)
 
   @classmethod
-  def from_code(cls, code: int) -> "SSAAlignment":
+  def from_code(cls, code: int) -> "_SSAAlignment":
     """Get alignment by numeric code (1-9)."""
     return cls[f"an{code}"]
 
-def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[SSAAlignment], str]:
+def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[_SSAAlignment], str]:
   """Extract alignment from text and return (alignment, cleaned_text).
   
   If multiple alignment tags are present, uses the first one and removes all.
@@ -83,7 +83,7 @@ def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[SSAAlignment],
   """
   match = _ALIGNMENT_TAG_RE.search(text)
   if match:
-    alignment = SSAAlignment.from_code(int(match.group(1)))
+    alignment = _SSAAlignment.from_code(int(match.group(1)))
     # Remove all alignment tags from text
     cleaned_text = _ALIGNMENT_TAG_RE.sub("", text)
     return alignment, cleaned_text
@@ -91,8 +91,8 @@ def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[SSAAlignment],
 
 def _get_region_for_alignment(
     doc: model.ContentDocument,
-    alignment: SSAAlignment,
-    regions_cache: typing.Dict[SSAAlignment, model.Region]
+    alignment: _SSAAlignment,
+    regions_cache: typing.Dict[_SSAAlignment, model.Region]
 ) -> model.Region:
   """Get or create a region for the given alignment.
   
@@ -200,7 +200,6 @@ class _State(Enum):
 _EMPTY_RE = re.compile(r"\s+")
 _COUNTER_RE = re.compile(r"\d+")
 _TIMECODE_RE = re.compile(r"(?P<begin_h>[0-9]{2,3}):(?P<begin_m>[0-9]{2}):(?P<begin_s>[0-9]{2}),(?P<begin_ms>[0-9]{3})\s+-->\s+(?P<end_h>[0-9]{2,3}):(?P<end_m>[0-9]{2}):(?P<end_s>[0-9]{2}),(?P<end_ms>[0-9]{3})")
-_DEFAULT_REGION_ID = "r1"
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
 _DEFAULT_FONT_SIZE = styles.LengthType(80, styles.LengthType.Units.pct)
 _DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
@@ -216,58 +215,12 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
   alignment_tags = _config.alignment_tags if isinstance(_config, SRTReaderConfiguration) else False
 
   # Cache for alignment-based regions
-  alignment_regions_cache: typing.Dict[SSAAlignment, model.Region] = {}
+  alignment_regions_cache: typing.Dict[_SSAAlignment, model.Region] = {}
 
   doc = model.ContentDocument()
 
-  region = model.Region(_DEFAULT_REGION_ID, doc)
-  region.set_style(
-    styles.StyleProperties.Origin,
-    styles.CoordinateType(
-      x=styles.LengthType(5, styles.LengthType.Units.pct),
-      y=styles.LengthType(5, styles.LengthType.Units.pct)
-    )
-  )
-  region.set_style(
-    styles.StyleProperties.Extent,
-    styles.ExtentType(
-      height=styles.LengthType(90, styles.LengthType.Units.pct),
-      width=styles.LengthType(90, styles.LengthType.Units.pct)
-    )
-  )
-  region.set_style(
-    styles.StyleProperties.DisplayAlign,
-    styles.DisplayAlignType.after
-  )
-  region.set_style(
-    styles.StyleProperties.TextAlign,
-    styles.TextAlignType.center
-  )
-  region.set_style(
-    styles.StyleProperties.LineHeight,
-    _DEFAULT_LINE_HEIGHT
-  )
-  region.set_style(
-    styles.StyleProperties.FontFamily,
-    _DEFAULT_FONT_STACK
-  )
-  region.set_style(
-    styles.StyleProperties.FontSize,
-    _DEFAULT_FONT_SIZE
-  )
-  region.set_style(
-    styles.StyleProperties.Color,
-    _DEFAULT_TEXT_COLOR
-  )
-  region.set_style(
-    styles.StyleProperties.TextOutline,
-    styles.TextOutlineType(
-      _DEFAULT_OUTLINE_THICKNESS,
-      _DEFAULT_OUTLINE_COLOR
-    )
-  )
-
-  doc.put_region(region)
+  # Create default region using an2 alignment (bottom, horizontal-center)
+  region = _get_region_for_alignment(doc, _SSAAlignment.an2, alignment_regions_cache)
 
   body = model.Body(doc)
   # Only set body region if not using alignment_tags
