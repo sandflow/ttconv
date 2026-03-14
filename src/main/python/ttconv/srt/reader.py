@@ -52,52 +52,59 @@ def _none_terminated(iterator):
 # Alignment tag regex for ASS/SSA style tags {\an1} through {\an9}
 _ALIGNMENT_TAG_RE = re.compile(r"\{\\an([1-9])\}")
 
-# Alignment map: code -> (DisplayAlignType, TextAlignType)
-# Numpad layout:
-# 7=top-left    8=top-center    9=top-right
-# 4=mid-left    5=mid-center    6=mid-right
-# 1=bot-left    2=bot-center    3=bot-right
-_ALIGNMENT_MAP = {
-  1: (styles.DisplayAlignType.after, styles.TextAlignType.start),
-  2: (styles.DisplayAlignType.after, styles.TextAlignType.center),
-  3: (styles.DisplayAlignType.after, styles.TextAlignType.end),
-  4: (styles.DisplayAlignType.center, styles.TextAlignType.start),
-  5: (styles.DisplayAlignType.center, styles.TextAlignType.center),
-  6: (styles.DisplayAlignType.center, styles.TextAlignType.end),
-  7: (styles.DisplayAlignType.before, styles.TextAlignType.start),
-  8: (styles.DisplayAlignType.before, styles.TextAlignType.center),
-  9: (styles.DisplayAlignType.before, styles.TextAlignType.end),
-}
-
-def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[int], str]:
-  """Extract alignment code from text and return (alignment_code, cleaned_text).
+class SSAAlignment(Enum):
+  """ASS/SSA alignment position codes ({\\anN} format).
   
+  Numpad layout:
+  7=top-left    8=top-center    9=top-right
+  4=mid-left    5=mid-center    6=mid-right
+  1=bot-left    2=bot-center    3=bot-right
+  """
+  an1 = (styles.DisplayAlignType.after, styles.TextAlignType.start)
+  an2 = (styles.DisplayAlignType.after, styles.TextAlignType.center)
+  an3 = (styles.DisplayAlignType.after, styles.TextAlignType.end)
+  an4 = (styles.DisplayAlignType.center, styles.TextAlignType.start)
+  an5 = (styles.DisplayAlignType.center, styles.TextAlignType.center)
+  an6 = (styles.DisplayAlignType.center, styles.TextAlignType.end)
+  an7 = (styles.DisplayAlignType.before, styles.TextAlignType.start)
+  an8 = (styles.DisplayAlignType.before, styles.TextAlignType.center)
+  an9 = (styles.DisplayAlignType.before, styles.TextAlignType.end)
+
+  @classmethod
+  def from_code(cls, code: int) -> "SSAAlignment":
+    """Get alignment by numeric code (1-9)."""
+    return cls[f"an{code}"]
+
+def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[SSAAlignment], str]:
+  """Extract alignment from text and return (alignment, cleaned_text).
+  
+  If multiple alignment tags are present, uses the first one and removes all.
   Returns (None, original_text) if no alignment tag found.
   """
   match = _ALIGNMENT_TAG_RE.search(text)
   if match:
-    alignment_code = int(match.group(1))
-    # Remove the alignment tag from text
+    alignment = SSAAlignment.from_code(int(match.group(1)))
+    # Remove all alignment tags from text
     cleaned_text = _ALIGNMENT_TAG_RE.sub("", text)
-    return alignment_code, cleaned_text
+    return alignment, cleaned_text
   return None, text
 
 def _get_region_for_alignment(
     doc: model.ContentDocument,
-    alignment_code: int,
-    regions_cache: typing.Dict[int, model.Region]
+    alignment: SSAAlignment,
+    regions_cache: typing.Dict[SSAAlignment, model.Region]
 ) -> model.Region:
-  """Get or create a region for the given alignment code.
+  """Get or create a region for the given alignment.
   
-  Regions are cached by alignment code to avoid creating duplicates.
+  Regions are cached to avoid creating duplicates.
   A fixed safe area margin is applied (defined by _DEFAULT_SAFE_AREA_PCT).
   """
-  if alignment_code in regions_cache:
-    return regions_cache[alignment_code]
+  if alignment in regions_cache:
+    return regions_cache[alignment]
   
-  display_align, text_align = _ALIGNMENT_MAP[alignment_code]
+  display_align, text_align = alignment.value
   
-  region_id = f"r_an{alignment_code}"
+  region_id = f"r_{alignment.name}"
   region = model.Region(region_id, doc)
   
   # Apply safe area margin
@@ -129,7 +136,7 @@ def _get_region_for_alignment(
   )
   
   doc.put_region(region)
-  regions_cache[alignment_code] = region
+  regions_cache[alignment] = region
   
   return region
 
@@ -208,8 +215,8 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
   extended_tags = _config.extended_tags if isinstance(_config, SRTReaderConfiguration) else False
   alignment_tags = _config.alignment_tags if isinstance(_config, SRTReaderConfiguration) else False
 
-  # Cache for alignment-based regions (keyed by alignment code 1-9)
-  alignment_regions_cache: typing.Dict[int, model.Region] = {}
+  # Cache for alignment-based regions
+  alignment_regions_cache: typing.Dict[SSAAlignment, model.Region] = {}
 
   doc = model.ContentDocument()
 
@@ -336,10 +343,10 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
 
         # Extract and handle alignment tags if enabled
         if alignment_tags:
-          alignment_code, subtitle_text = _extract_alignment(subtitle_text)
-          if alignment_code is not None:
+          alignment, subtitle_text = _extract_alignment(subtitle_text)
+          if alignment is not None:
             aligned_region = _get_region_for_alignment(
-              doc, alignment_code, alignment_regions_cache
+              doc, alignment, alignment_regions_cache
             )
             current_p.set_region(aligned_region)
 

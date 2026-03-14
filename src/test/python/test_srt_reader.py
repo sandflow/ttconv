@@ -526,6 +526,26 @@ Also no alignment tag
     regions = list(doc.iter_regions())
     self.assertEqual(len(regions), 3)
 
+  def test_alignment_multiple_tags_uses_first(self):
+    """Multiple alignment tags in same caption: uses first, removes all"""
+    f = io.StringIO(r"""1
+00:00:00,000 --> 00:00:01,000
+{\an1}{\an9} Multiple tags here
+""")
+    doc = to_model(f, SRTReaderConfiguration(alignment_tags=True))
+    p = doc.get_body().first_child().first_child()
+    
+    # Should use first alignment (an1 = bottom-left)
+    self.assertEqual(p.get_region().get_id(), "r_an1")
+    
+    # Both tags should be removed from text
+    text_content = ""
+    for e in p.dfs_iterator():
+      if isinstance(e, model.Text):
+        text_content += e.get_text()
+    self.assertNotIn("{\\an", text_content)
+    self.assertIn("Multiple tags here", text_content)
+
 
 if __name__ == '__main__':
   unittest.main()
