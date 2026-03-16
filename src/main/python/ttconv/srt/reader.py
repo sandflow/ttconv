@@ -49,6 +49,97 @@ def _none_terminated(iterator):
     yield item
   yield None
 
+# Alignment tag regex for ASS/SSA style tags {\an1} through {\an9}
+_ALIGNMENT_TAG_RE = re.compile(r"\{\\an([1-9])\}")
+
+class _SSAAlignment(Enum):
+  """ASS/SSA alignment position codes ({\\anN} format).
+  
+  Numpad layout:
+  7=top-left    8=top-center    9=top-right
+  4=mid-left    5=mid-center    6=mid-right
+  1=bot-left    2=bot-center    3=bot-right
+  """
+  an1 = (styles.DisplayAlignType.after, styles.TextAlignType.start)
+  an2 = (styles.DisplayAlignType.after, styles.TextAlignType.center)
+  an3 = (styles.DisplayAlignType.after, styles.TextAlignType.end)
+  an4 = (styles.DisplayAlignType.center, styles.TextAlignType.start)
+  an5 = (styles.DisplayAlignType.center, styles.TextAlignType.center)
+  an6 = (styles.DisplayAlignType.center, styles.TextAlignType.end)
+  an7 = (styles.DisplayAlignType.before, styles.TextAlignType.start)
+  an8 = (styles.DisplayAlignType.before, styles.TextAlignType.center)
+  an9 = (styles.DisplayAlignType.before, styles.TextAlignType.end)
+
+  @classmethod
+  def from_code(cls, code: int) -> "_SSAAlignment":
+    """Get alignment by numeric code (1-9)."""
+    return cls[f"an{code}"]
+
+def _extract_alignment(text: str) -> typing.Tuple[typing.Optional[_SSAAlignment], str]:
+  """Extract alignment from text and return (alignment, cleaned_text).
+  
+  If multiple alignment tags are present, uses the first one and removes all.
+  Returns (None, original_text) if no alignment tag found.
+  """
+  match = _ALIGNMENT_TAG_RE.search(text)
+  if match:
+    alignment = _SSAAlignment.from_code(int(match.group(1)))
+    # Remove all alignment tags from text
+    cleaned_text = _ALIGNMENT_TAG_RE.sub("", text)
+    return alignment, cleaned_text
+  return None, text
+
+def _get_region_for_alignment(
+    doc: model.ContentDocument,
+    alignment: _SSAAlignment,
+    regions_cache: typing.Dict[_SSAAlignment, model.Region]
+) -> model.Region:
+  """Get or create a region for the given alignment.
+  
+  Regions are cached to avoid creating duplicates.
+  A fixed safe area margin is applied (defined by _DEFAULT_SAFE_AREA_PCT).
+  """
+  if alignment in regions_cache:
+    return regions_cache[alignment]
+  
+  display_align, text_align = alignment.value
+  
+  region_id = f"r_{alignment.name}"
+  region = model.Region(region_id, doc)
+  
+  # Apply safe area margin
+  region.set_style(
+    styles.StyleProperties.Origin,
+    styles.CoordinateType(
+      x=styles.LengthType(_DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct),
+      y=styles.LengthType(_DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct)
+    )
+  )
+  region.set_style(
+    styles.StyleProperties.Extent,
+    styles.ExtentType(
+      height=styles.LengthType(100 - 2 * _DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct),
+      width=styles.LengthType(100 - 2 * _DEFAULT_SAFE_AREA_PCT, styles.LengthType.Units.pct)
+    )
+  )
+  region.set_style(styles.StyleProperties.DisplayAlign, display_align)
+  region.set_style(styles.StyleProperties.TextAlign, text_align)
+  
+  # Apply default styling (same as default region)
+  region.set_style(styles.StyleProperties.LineHeight, _DEFAULT_LINE_HEIGHT)
+  region.set_style(styles.StyleProperties.FontFamily, _DEFAULT_FONT_STACK)
+  region.set_style(styles.StyleProperties.FontSize, _DEFAULT_FONT_SIZE)
+  region.set_style(styles.StyleProperties.Color, _DEFAULT_TEXT_COLOR)
+  region.set_style(
+    styles.StyleProperties.TextOutline,
+    styles.TextOutlineType(_DEFAULT_OUTLINE_THICKNESS, _DEFAULT_OUTLINE_COLOR)
+  )
+  
+  doc.put_region(region)
+  regions_cache[alignment] = region
+  
+  return region
+
 class _TextParser(HTMLParser):
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
@@ -109,72 +200,34 @@ class _State(Enum):
 _EMPTY_RE = re.compile(r"\s+")
 _COUNTER_RE = re.compile(r"\d+")
 _TIMECODE_RE = re.compile(r"(?P<begin_h>[0-9]{2,3}):(?P<begin_m>[0-9]{2}):(?P<begin_s>[0-9]{2}),(?P<begin_ms>[0-9]{3})\s+-->\s+(?P<end_h>[0-9]{2,3}):(?P<end_m>[0-9]{2}):(?P<end_s>[0-9]{2}),(?P<end_ms>[0-9]{3})")
-_DEFAULT_REGION_ID = "r1"
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
 _DEFAULT_FONT_SIZE = styles.LengthType(80, styles.LengthType.Units.pct)
 _DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
 _DEFAULT_TEXT_COLOR = styles.NamedColors.white.value
 _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
+_DEFAULT_SAFE_AREA_PCT = 10
 
 def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
 
   extended_tags = _config.extended_tags if isinstance(_config, SRTReaderConfiguration) else False
+  alignment_tags = _config.alignment_tags if isinstance(_config, SRTReaderConfiguration) else False
+
+  # Cache for alignment-based regions
+  alignment_regions_cache: typing.Dict[_SSAAlignment, model.Region] = {}
 
   doc = model.ContentDocument()
 
-  region = model.Region(_DEFAULT_REGION_ID, doc)
-  region.set_style(
-    styles.StyleProperties.Origin,
-    styles.CoordinateType(
-      x=styles.LengthType(5, styles.LengthType.Units.pct),
-      y=styles.LengthType(5, styles.LengthType.Units.pct)
-    )
-  )
-  region.set_style(
-    styles.StyleProperties.Extent,
-    styles.ExtentType(
-      height=styles.LengthType(90, styles.LengthType.Units.pct),
-      width=styles.LengthType(90, styles.LengthType.Units.pct)
-    )
-  )
-  region.set_style(
-    styles.StyleProperties.DisplayAlign,
-    styles.DisplayAlignType.after
-  )
-  region.set_style(
-    styles.StyleProperties.TextAlign,
-    styles.TextAlignType.center
-  )
-  region.set_style(
-    styles.StyleProperties.LineHeight,
-    _DEFAULT_LINE_HEIGHT
-  )
-  region.set_style(
-    styles.StyleProperties.FontFamily,
-    _DEFAULT_FONT_STACK
-  )
-  region.set_style(
-    styles.StyleProperties.FontSize,
-    _DEFAULT_FONT_SIZE
-  )
-  region.set_style(
-    styles.StyleProperties.Color,
-    _DEFAULT_TEXT_COLOR
-  )
-  region.set_style(
-    styles.StyleProperties.TextOutline,
-    styles.TextOutlineType(
-      _DEFAULT_OUTLINE_THICKNESS,
-      _DEFAULT_OUTLINE_COLOR
-    )
-  )
-
-  doc.put_region(region)
+  # Create default region using an2 alignment (bottom, horizontal-center)
+  region = _get_region_for_alignment(doc, _SSAAlignment.an2, alignment_regions_cache)
 
   body = model.Body(doc)
-  body.set_region(region)
+  # Only set body region if not using alignment_tags
+  # When alignment_tags is enabled, paragraphs have their own regions and body
+  # must not have a region set, otherwise ISD generation will prune content
+  if not alignment_tags:
+    body.set_region(region)
 
   doc.set_body(body)
 
@@ -240,6 +293,15 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
 
       if line is None or _EMPTY_RE.fullmatch(line):
         subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
+
+        # Extract and handle alignment tags if enabled
+        if alignment_tags:
+          alignment, subtitle_text = _extract_alignment(subtitle_text)
+          if alignment is not None:
+            aligned_region = _get_region_for_alignment(
+              doc, alignment, alignment_regions_cache
+            )
+            current_p.set_region(aligned_region)
 
         if extended_tags:
           subtitle_text = subtitle_text\
