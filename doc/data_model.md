@@ -2,7 +2,8 @@
 
 ## Overall
 
-The canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data model, as constrained by the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification. This includes both the static structure of the model as well as temporal, layout and style processing. The objective is for a valid IMSC 1.1 Text Profile document to be mapped into a canonical model instance such that presenting instance results in the same outout as the input IMSC document.
+The canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data model, as constrained by the [IMSC 1.3 Text
+Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles) specification. This includes both the static structure of the model as well as temporal, layout and style processing. The objective is for a valid IMSC 1.3 Text Profile document to be mapped into a canonical model instance such that presenting instance results in the same outout as the input IMSC document.
 
 The canonical model is specified in `ttconv.model`.
 
