@@ -52,7 +52,7 @@ from ttconv.imsc.config import IMSCWriterConfiguration
 from ttconv.isd import ISDConfiguration
 from ttconv.scc.config import SccReaderConfiguration, SccWriterConfiguration
 from ttconv.stl.config import STLReaderConfiguration
-from ttconv.srt.config import SRTWriterConfiguration
+from ttconv.srt.config import SRTReaderConfiguration, SRTWriterConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
@@ -60,7 +60,8 @@ CONFIGURATIONS = [
   GeneralConfiguration,
   IMSCWriterConfiguration,
   ISDConfiguration,
-  SccReaderConfiguration
+  SccReaderConfiguration,
+  SRTReaderConfiguration,
 ]
 
 
@@ -335,12 +336,16 @@ def convert(args):
       model = stl_reader.to_model(f, reader_config, progress_callback_read)
 
   elif reader_type is FileTypes.SRT:
+    #
+    # Read the config
+    #
+    reader_config = read_config_from_json(SRTReaderConfiguration, json_config_data)
 
     #
     # Open the file and pass it to the reader
     #
     with open(inputfile, "r", encoding="utf-8") as f:
-      model = srt_reader.to_model(f, None, progress_callback_read)
+      model = srt_reader.to_model(f, reader_config, progress_callback_read)
 
   elif reader_type is FileTypes.VTT:
 

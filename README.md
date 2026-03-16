@@ -201,6 +201,31 @@ Default: `23`
 
 Default: `true`
 
+### SRT Reader configuration (`"srt_reader"`)
+
+#### extended_tags
+
+`"extended_tag" : true | false`
+
+If `true`, the following extended formatting tags are supported: `{bold}`,
+`<bold>`, `{b}`, `{italic}`, `<italic>`, `{i}`, `{underline}`, `<underline>` and
+`{u}`.
+
+Default: `false`
+
+#### alignment_tags
+
+`"alignment_tags" : true | false`
+
+If `true`, ASS/SSA-style alignment tags (`{\anN}`) are supported, where N is a
+number from 1-9 corresponding to positions on a numpad:
+
+* 1-3: bottom (left, center, right)
+* 4-6: middle (left, center, right)
+* 7-9: top (left, center, right)
+
+Default: `false`
+
 ### VTT Writer configuration (`"vtt_writer"`)
 
 #### line_position

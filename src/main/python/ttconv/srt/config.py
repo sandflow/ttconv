@@ -31,6 +31,20 @@ from dataclasses import dataclass, field
 from ttconv.config import ModuleConfiguration
 
 @dataclass
+class SRTReaderConfiguration(ModuleConfiguration):
+  """SRT reader configuration"""
+
+  @classmethod
+  def name(cls):
+    return "srt_reader"
+
+  # enables support for extended tags: {b}, {bold}, <bold> (and italic/underline equivalents)
+  extended_tags: bool = field(default=False, metadata={"decoder": bool})
+
+  # enables support for alignment tags: {\an1} through {\an9}
+  alignment_tags: bool = field(default=False, metadata={"decoder": bool})
+
+@dataclass
 class SRTWriterConfiguration(ModuleConfiguration):
   """SRT writer configuration"""
 

@@ -230,6 +230,26 @@ class IMSCAppTest(unittest.TestCase):
       '--filter', 'lcd',
       '--config', '{"lcd": {"bg_color":"red"}}'
       ])
+    
+  def test_srt_reader_extended_tags(self):
+    in_path = "src/test/resources/srt/extended-tags.srt"
+
+    out_path = "build/extended_tags.ttml"
+    tt.main(['convert',
+      '-i', in_path,
+      '-o', out_path,
+      '--config', '{"srt_reader": {"extended_tags": true}}'
+      ])
+    with open(out_path, encoding="utf-8") as f:
+      self.assertRegex(f.read(), "fontWeight")
+    
+    out_path = "build/no-extended_tags.ttml"
+    tt.main(['convert',
+      '-i', in_path,
+      '-o', out_path
+      ])
+    with open(out_path, encoding="utf-8") as f:
+      self.assertNotRegex(f.read(), "fontWeight")
 
   def test_imsc11filter(self):
     out_path = "build/imsc11filter.ttml"
