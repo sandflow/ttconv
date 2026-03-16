@@ -189,6 +189,15 @@ class IMSCReaderTest(unittest.TestCase):
             tree = et.parse(os.path.join(root, filename))
             self.assertIsNotNone(imsc_reader.to_model(tree))
 
+  def test_imsc_1_3_test_suite(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            tree = et.parse(os.path.join(root, filename))
+            self.assertIsNotNone(imsc_reader.to_model(tree))
+
   def test_referential_styling(self):
     tree = et.parse('src/test/resources/ttml/referential_styling.ttml')
     doc = imsc_reader.to_model(tree)

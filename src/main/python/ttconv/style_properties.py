@@ -165,6 +165,14 @@ class FontStyleType(Enum):
   oblique = "oblique" 
 
 
+class FontVariantType(Enum):
+  '''tts:fontVariant value
+  '''
+  normal = "normal"
+  superscript = "super"
+  subscript = "sub" 
+
+
 class FontWeightType(Enum):
   '''tts:fontWeight value
   '''
@@ -610,6 +618,21 @@ class StyleProperties:
       return isinstance(value, FontStyleType)
 
 
+  class FontVariant(StyleProperty):
+    '''Corresponds to tts:fontVariant.'''
+
+    is_inherited = True
+    is_animatable = True
+
+    @staticmethod
+    def make_initial_value():
+      return FontVariantType.normal
+
+    @staticmethod
+    def validate(value):
+      return isinstance(value, FontVariantType)
+
+
   class FontWeight(StyleProperty):
     '''Corresponds to tts:fontWeight.'''
 
@@ -717,8 +740,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: CoordinateType):
       return isinstance(value, CoordinateType) \
-        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
+        and value.x.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh, LengthType.Units.rw)  \
+        and value.y.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh, LengthType.Units.rw) \
         and value.x.is_non_negative() and value.y.is_non_negative()
 
 
@@ -771,8 +794,8 @@ class StyleProperties:
     @staticmethod
     def validate(value: PositionType):
       return isinstance(value, PositionType) \
-        and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rw)  \
-        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh) \
+        and value.h_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh, LengthType.Units.rw)  \
+        and value.v_offset.units in (LengthType.Units.pct, LengthType.Units.px, LengthType.Units.rh, LengthType.Units.rw) \
         and value.h_offset.is_non_negative() and value.v_offset.is_non_negative()
 
   class RubyAlign(StyleProperty):
