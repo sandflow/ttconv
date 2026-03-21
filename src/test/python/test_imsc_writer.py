@@ -73,9 +73,9 @@ class ReaderWriterTest(unittest.TestCase):
   def test_default_ns(self):
     """Confirm that the tt ns is the default namespace"""
     file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/animation/Animation001.ttml"
-    tree = et.parse(file_to_parse)
-    test_model = imsc_reader.to_model(tree)
-    buf = io.StringIO()
+    with open(file_to_parse, 'rb') as f:
+      test_model = imsc_reader.to_model(f)
+    buf = io.BytesIO()
     imsc_writer.from_model(test_model, buf)
     tree_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     rough_string = et.tostring(tree_from_model.getroot(), 'unicode')
@@ -87,13 +87,12 @@ class ReaderWriterTest(unittest.TestCase):
   def test_animation_001(self):
     file_to_parse = "src/test/resources/ttml/imsc-tests/imsc1/ttml/animation/Animation001.ttml"
 
-    tree = et.parse(file_to_parse)
-
     # create the model
-    test_model = imsc_reader.to_model(tree)
+    with open(file_to_parse, 'rb') as f:
+      test_model = imsc_reader.to_model(f)
 
     # convert from a model to a ttml document
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(test_model, buf)
     tree_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
 
@@ -110,8 +109,8 @@ class ReaderWriterTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            test_model = imsc_reader.to_model(tree)
+            with open(os.path.join(root, filename), 'rb') as f:
+              test_model = imsc_reader.to_model(f)
 
             test_dir_relative_path = os.path.basename(root)
 
@@ -119,7 +118,7 @@ class ReaderWriterTest(unittest.TestCase):
 
             os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
 
-            with open(os.path.join(base_path, "ttml", test_relative_path), "w", encoding="utf-8") as f:
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
               imsc_writer.from_model(test_model, f)
 
             manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
@@ -140,8 +139,8 @@ class ReaderWriterTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            test_model = imsc_reader.to_model(tree)
+            with open(os.path.join(root, filename), 'rb') as f:
+              test_model = imsc_reader.to_model(f)
 
             test_dir_relative_path = os.path.basename(root)
 
@@ -149,7 +148,7 @@ class ReaderWriterTest(unittest.TestCase):
 
             os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
 
-            with open(os.path.join(base_path, "ttml", test_relative_path), "w", encoding="utf-8") as f:
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
               imsc_writer.from_model(test_model, f)
 
             manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
@@ -170,8 +169,8 @@ class ReaderWriterTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            test_model = imsc_reader.to_model(tree)
+            with open(os.path.join(root, filename), 'rb') as f:
+              test_model = imsc_reader.to_model(f)
 
             test_dir_relative_path = os.path.basename(root)
 
@@ -179,7 +178,7 @@ class ReaderWriterTest(unittest.TestCase):
 
             os.makedirs(os.path.join(base_path, "ttml", test_dir_relative_path), exist_ok=True)
 
-            with open(os.path.join(base_path, "ttml", test_relative_path), "w", encoding="utf-8") as f:
+            with open(os.path.join(base_path, "ttml", test_relative_path), "wb") as f:
               imsc_writer.from_model(test_model, f)
 
             manifest.append({"path" : str(test_relative_path).replace('\\', '/')})
@@ -220,7 +219,7 @@ class FromModelBodyWriterTest(unittest.TestCase):
     doc.set_body(body)
 
     # write the document out to a file
-    with open('build/BodyElement.out.ttml', 'w', encoding='utf-8') as f:
+    with open('build/BodyElement.out.ttml', 'wb') as f:
       imsc_writer.from_model(doc, f)
 
 class StylePropertyWriterTest(unittest.TestCase):
@@ -443,7 +442,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
     d = model.ContentDocument()
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(d, buf)
     tree_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
 
@@ -468,7 +467,7 @@ class StylePropertyWriterTest(unittest.TestCase):
     body.push_child(div)
     doc.set_body(body)
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(doc, buf)
     tree_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
 
@@ -503,7 +502,7 @@ class StylePropertyWriterTest(unittest.TestCase):
 
     doc.put_region(r)
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(doc, buf)
     tree_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
 
@@ -751,19 +750,19 @@ class ConfigTest(unittest.TestCase):
     ttml_doc.set_content_profiles(source_cps)
 
     config = imsc_config.IMSCWriterConfiguration.parse({"profile_signaling" : "content_profiles"})
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(ttml_doc, buf, config)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     extracted_cps = {e for e in re.findall(r'\S+', xml_from_model.getroot().get(f"{{{xml_ns.TTP}}}contentProfiles"))}
     self.assertSetEqual(extracted_cps, source_cps)
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(ttml_doc, buf, None)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     self.assertIsNone(xml_from_model.getroot().get(f"{{{xml_ns.TTP}}}contentProfiles"))
 
     config = imsc_config.IMSCWriterConfiguration.parse({"profile_signaling" : "none"})
-    buf = io.StringIO()
+    buf = io.BytesIO()
     imsc_writer.from_model(ttml_doc, buf, config)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     self.assertIsNone(xml_from_model.getroot().get(f"{{{xml_ns.TTP}}}contentProfiles"))
@@ -775,17 +774,15 @@ class ConfigTest(unittest.TestCase):
     </tt>
     """
 
-    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
-    
     config = imsc_config.IMSCWriterConfiguration.parse({"time_format" : "clock_time"})
-    buf = io.StringIO()
-    imsc_writer.from_model(imsc_reader.to_model(ttml_doc), buf, config)
+    buf = io.BytesIO()
+    imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), buf, config)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "00:00:02.300")
 
-    buf = io.StringIO()
-    imsc_writer.from_model(imsc_reader.to_model(ttml_doc), buf)
+    buf = io.BytesIO()
+    imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), buf)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "00:00:02.300")
@@ -798,25 +795,23 @@ class ConfigTest(unittest.TestCase):
     </tt>
     """
 
-    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
-    
     config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "frames", "fps": "30/1"})
-    buf = io.StringIO()
-    imsc_writer.from_model(imsc_reader.to_model(ttml_doc), buf, config)
+    buf = io.BytesIO()
+    imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), buf, config)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "150f")
 
     config = imsc_config.IMSCWriterConfiguration.parse({"fps": "30/1"})
-    buf = io.StringIO()
-    imsc_writer.from_model(imsc_reader.to_model(ttml_doc), buf, config)
+    buf = io.BytesIO()
+    imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), buf, config)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "150f")
 
     config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "frames"})
     with self.assertRaises(ValueError):
-      imsc_writer.from_model(imsc_reader.to_model(ttml_doc), io.StringIO(), config)
+      imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), io.BytesIO(), config)
     
   def test_clock_time_with_frames(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
@@ -825,18 +820,16 @@ class ConfigTest(unittest.TestCase):
     </tt>
     """
 
-    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
-    
     config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "clock_time_with_frames", "fps": "30/1"})
-    buf = io.StringIO()
-    imsc_writer.from_model(imsc_reader.to_model(ttml_doc), buf, config)
+    buf = io.BytesIO()
+    imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), buf, config)
     xml_from_model = et.ElementTree(et.fromstring(buf.getvalue()))
     body_element = xml_from_model.find("tt:body", {"tt": xml_ns.TTML})
     self.assertEqual(body_element.get("begin"), "00:00:02:03")
 
     config = imsc_config.IMSCWriterConfiguration.parse({"time_format": "clock_time_with_frames"})
     with self.assertRaises(ValueError):
-      imsc_writer.from_model(imsc_reader.to_model(ttml_doc), io.StringIO(), config)
+      imsc_writer.from_model(imsc_reader.to_model(io.BytesIO(ttml_doc_str.encode())), io.BytesIO(), config)
 
 if __name__ == '__main__':
   unittest.main()

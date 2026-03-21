@@ -30,10 +30,7 @@
 import io
 import os
 import unittest
-import xml.etree.ElementTree as et
 from fractions import Fraction
-from pathlib import Path
-
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
@@ -88,7 +85,7 @@ class SrtWriterTest(unittest.TestCase):
     span.push_child(Text(doc, "Pellentesque interdum lacinia sollicitudin."))
     p.push_child(span)
 
-    expected_srt = """1
+    expected_srt = b"""1
 00:00:00,000 --> 00:00:02,000
 Lorem ipsum dolor sit amet,
 
@@ -101,7 +98,7 @@ consectetur adipiscing elit.
 Pellentesque interdum lacinia sollicitudin.
 """
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     srt_writer.from_model(doc, buf)
     srt_from_model = buf.getvalue()
 
@@ -114,9 +111,9 @@ Pellentesque interdum lacinia sollicitudin.
         if ext == ".scc":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            scc_content = Path(path).read_text()
-            test_model = scc_reader.to_model(scc_content)
-            buf = io.StringIO()
+            with open(path, 'rb') as f:
+              test_model = scc_reader.to_model(f)
+            buf = io.BytesIO()
             srt_writer.from_model(test_model, buf)
             srt_from_model = buf.getvalue()
             self.assertTrue(len(srt_from_model) > 0, msg=f"Could not convert {path}")
@@ -129,9 +126,9 @@ Pellentesque interdum lacinia sollicitudin.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            buf = io.StringIO()
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
             srt_writer.from_model(test_model, buf)
             self._check_output_srt(test_model, buf.getvalue(), path)
 
@@ -143,9 +140,9 @@ Pellentesque interdum lacinia sollicitudin.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            buf = io.StringIO()
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
             srt_writer.from_model(test_model, buf)
             self._check_output_srt(test_model, buf.getvalue(), path)
 
@@ -157,9 +154,9 @@ Pellentesque interdum lacinia sollicitudin.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            buf = io.StringIO()
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
             srt_writer.from_model(test_model, buf)
             self._check_output_srt(test_model, buf.getvalue(), path)
 
@@ -171,9 +168,9 @@ Pellentesque interdum lacinia sollicitudin.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            buf = io.StringIO()
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
             srt_writer.from_model(test_model, buf)
             self._check_output_srt(test_model, buf.getvalue(), path)
 
@@ -218,13 +215,13 @@ Pellentesque interdum lacinia sollicitudin.
       self.assertEqual(0, len(srt), msg=f"Could not convert {path}")
 
   def test_empty_isds(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml')
-    doc = imsc_reader.to_model(tree)
-    buf = io.StringIO()
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
+    buf = io.BytesIO()
     srt_writer.from_model(doc, buf)
     srt_from_model = buf.getvalue()
 
-    self.assertEqual(srt_from_model, """1
+    self.assertEqual(srt_from_model, b"""1
 00:00:10,000 --> 00:00:24,400
 This text must appear at 10 seconds and disappear at 24.4 seconds
 
@@ -234,7 +231,7 @@ This text must appear at 25 seconds and disappear at 35 seconds
 """)
 
   def test_text_formatting_disabled(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
   <body>
     <div>
@@ -243,22 +240,21 @@ This text must appear at 25 seconds and disappear at 35 seconds
   </body>
 </tt>"""
 
-    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
-    doc = imsc_reader.to_model(ttml_doc)
+    doc = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
 
     config = srt_config.SRTWriterConfiguration.parse({"text_formatting": False})
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     srt_writer.from_model(doc, buf, config)
     srt_from_model = buf.getvalue()
 
-    self.assertEqual(srt_from_model, """1
+    self.assertEqual(srt_from_model, b"""1
 00:00:00,000 --> 00:00:01,000
 Lorem
 """)
 
   def test_text_italic(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
   <body>
     <div>
@@ -267,14 +263,13 @@ Lorem
   </body>
 </tt>"""
 
-    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
-    doc = imsc_reader.to_model(ttml_doc)
+    doc = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
 
-    buf = io.StringIO()
+    buf = io.BytesIO()
     srt_writer.from_model(doc, buf)
     srt_from_model = buf.getvalue()
 
-    self.assertEqual(srt_from_model, """1
+    self.assertEqual(srt_from_model, b"""1
 00:00:00,000 --> 00:00:01,000
 <i>Lorem</i>
 """)

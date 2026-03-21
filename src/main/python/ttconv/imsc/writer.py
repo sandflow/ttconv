@@ -43,7 +43,7 @@ LOGGER = logging.getLogger(__name__)
 
 def from_model(
   model_doc: model.ContentDocument,
-  output: typing.IO,
+  output: typing.BinaryIO,
   config: typing.Optional[imsc_config.IMSCWriterConfiguration] = None,
   progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = lambda _: None
   ):

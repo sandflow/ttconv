@@ -270,7 +270,7 @@ class VttContext:
 #
 
 
-def from_model(doc: model.ContentDocument, output: typing.IO, config=None, progress_callback=lambda _: None):
+def from_model(doc: model.ContentDocument, output: typing.BinaryIO, config=None, progress_callback=lambda _: None):
   """Converts the data model to a VTT document"""
 
   # split progress between ISD construction and VTT writing
@@ -294,4 +294,4 @@ def from_model(doc: model.ContentDocument, output: typing.IO, config=None, progr
 
   vtt.finish()
 
-  output.write(str(vtt))
+  output.write(str(vtt).encode("utf-8"))

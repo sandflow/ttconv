@@ -187,7 +187,7 @@ class SrtContext:
 #
 
 
-def from_model(doc: model.ContentDocument, output: typing.IO, config: Optional[SRTWriterConfiguration] = None, progress_callback=lambda _: None):
+def from_model(doc: model.ContentDocument, output: typing.BinaryIO, config: Optional[SRTWriterConfiguration] = None, progress_callback=lambda _: None):
   """Converts the data model to a SRT document, writing the result to `output`."""
 
   srt = SrtContext(config if config is not None else SRTWriterConfiguration())
@@ -218,4 +218,4 @@ def from_model(doc: model.ContentDocument, output: typing.IO, config: Optional[S
 
   srt.finish()
 
-  output.write(str(srt))
+  output.write(str(srt).encode("utf-8"))

@@ -237,7 +237,7 @@ MAX_LINEWIDTH = 32
 #
 # scc writer
 #
-def from_model(doc: model.ContentDocument, output: typing.IO, config: Optional[SccWriterConfiguration] = None, progress_callback=lambda _: None):
+def from_model(doc: model.ContentDocument, output: typing.BinaryIO, config: Optional[SccWriterConfiguration] = None, progress_callback=lambda _: None):
   """Converts the data model to an SCC document"""
 
   # split progress between ISD construction and SCC writing
@@ -421,4 +421,4 @@ def from_model(doc: model.ContentDocument, output: typing.IO, config: Optional[S
     if start_offset + chunk.get_begin() < 0:
       raise RuntimeError("The SCC stream would start earlier than the specified start timecode")
 
-  output.write("Scenarist_SCC V1.0\n\n" + "\n\n".join(map(lambda e: e.to_string(config.frame_rate.fps, config.frame_rate.df, start_offset), chunks)))
+  output.write(b"Scenarist_SCC V1.0\n\n" + b"\n\n".join(map(lambda e: e.to_string(config.frame_rate.fps, config.frame_rate.df, start_offset).encode("utf-8"), chunks)))
