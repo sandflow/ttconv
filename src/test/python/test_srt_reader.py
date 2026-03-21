@@ -66,7 +66,7 @@ There was no danger at all."""
     self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <b>my</b> name is Bob
 """)
@@ -136,7 +136,7 @@ Hello <bold>my</bold> name is Bob
         self.fail()
 
   def test_bold_alt3(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello {b}my{/b} name is Bob
 """
@@ -152,7 +152,7 @@ Hello {b}my{/b} name is Bob
         self.fail()
 
   def test_italic(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <i>my</i> name is Bob
 """)
@@ -164,7 +164,7 @@ Hello <i>my</i> name is Bob
       self.fail()
 
   def test_italic_alt(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello {italic}my{/italic} name is Bob
 """
@@ -180,7 +180,7 @@ Hello {italic}my{/italic} name is Bob
         self.fail()
 
   def test_italic_alt1(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello {i}my{/i} name is Bob
 """
@@ -196,7 +196,7 @@ Hello {i}my{/i} name is Bob
         self.fail()
 
   def test_italic_alt2(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <italic>my</italic> name is Bob
 """
@@ -212,7 +212,7 @@ Hello <italic>my</italic> name is Bob
         self.fail()
 
   def test_underline(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <u>my</u> name is Bob
 """)
@@ -225,7 +225,7 @@ Hello <u>my</u> name is Bob
       self.fail()
 
   def test_underline_alt(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello {underline}my{/underline} name is Bob
 """
@@ -243,7 +243,7 @@ Hello {underline}my{/underline} name is Bob
         self.fail()
 
   def test_underline_alt1(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello {u}my{/u} name is Bob
 """
@@ -261,7 +261,7 @@ Hello {u}my{/u} name is Bob
         self.fail()
 
   def test_underline_alt2(self):
-    srt_data = rb"""1
+    srt_data = b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <underline>my</underline> name is Bob
 """
@@ -279,7 +279,7 @@ Hello <underline>my</underline> name is Bob
         self.fail()
 
   def test_blue(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <font color='blue'>my</font> name is Bob
 """)
@@ -292,7 +292,7 @@ Hello <font color='blue'>my</font> name is Bob
       self.fail()
 
   def test_multiline_tags(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 00:02:16,612 --> 00:02:19,376
 Hello <b>my
 </b> name is Bob
@@ -305,7 +305,7 @@ Hello <b>my
       self.fail()
 
   def test_long_hours(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 101:00:00,000 --> 101:00:01,000
 Hello <bold>my</bold> name is Bob
 """)
@@ -322,7 +322,7 @@ Hello <bold>my</bold> name is Bob
     )
 
   def test_single_line_text(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 101:00:00,000 --> 101:00:01,000
 Hello
 """)
@@ -334,7 +334,7 @@ Hello
     self.assertEqual(p_children[0].first_child().get_text(), "Hello")
 
   def test_multiline_text(self):
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 101:00:00,000 --> 101:00:01,000
 Hello
 World
@@ -441,7 +441,7 @@ World
 
   def test_alignment_tag_stripped_from_text(self):
     """Alignment tag should be removed from displayed text"""
-    f = io.BytesIO(rb"""1
+    f = io.BytesIO(b"""1
 00:00:00,000 --> 00:00:01,000
 {\an7} Top Left Text
 """)
