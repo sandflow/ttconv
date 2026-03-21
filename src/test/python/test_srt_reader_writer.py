@@ -46,8 +46,9 @@ class SrtReaderWriterTest(unittest.TestCase):
           with self.subTest(name):
             tree = et.parse(os.path.join(root, filename))
             doc = imsc_reader.to_model(tree)
-            srt_file = srt_writer.from_model(doc)
-            srt_reader.to_model(io.StringIO(srt_file))
+            buf = io.StringIO()
+            srt_writer.from_model(doc, buf)
+            srt_reader.to_model(io.StringIO(buf.getvalue()))
 
 if __name__ == '__main__':
   unittest.main()

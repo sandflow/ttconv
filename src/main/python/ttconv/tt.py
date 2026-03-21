@@ -401,12 +401,11 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, writer_config, progress_callback_write)
-
     #
     # Write out the converted file
     #
-    tree_from_model.write(outputfile, encoding="utf-8")
+    with open(outputfile, "w", encoding="utf-8") as f:
+      imsc_writer.from_model(model, f, writer_config, progress_callback_write)
 
   elif writer_type is FileTypes.SRT:
     #
@@ -417,13 +416,8 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, writer_config, progress_callback_write)
-
-    #
-    # Write out the converted file
-    #
     with open(outputfile, "w", encoding="utf-8") as srt_file:
-      srt_file.write(srt_document)
+      srt_writer.from_model(model, srt_file, writer_config, progress_callback_write)
 
   elif writer_type is FileTypes.VTT:
     #
@@ -434,13 +428,11 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    vtt_document = vtt_writer.from_model(model, writer_config, progress_callback_write)
-
     #
     # Write out the converted file
     #
     with open(outputfile, "w", encoding="utf-8") as vtt_file:
-      vtt_file.write(vtt_document)
+      vtt_writer.from_model(model, vtt_file, writer_config, progress_callback_write)
 
   elif writer_type is FileTypes.SCC:
     #
@@ -451,13 +443,11 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    scc_document = scc_writer.from_model(model, writer_config, progress_callback_write)
-
     #
     # Write out the converted file
     #
     with open(outputfile, "w", encoding="utf-8") as scc_file:
-      scc_file.write(scc_document)
+      scc_writer.from_model(model, scc_file, writer_config, progress_callback_write)
 
 
   else:

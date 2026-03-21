@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+import io
 import json
 import os
 import unittest
@@ -144,7 +145,9 @@ class SCCWriterTest(unittest.TestCase):
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     assert model is not None
     config = SccWriterConfiguration()
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_pop_on_right_aligned(self):
@@ -169,7 +172,9 @@ class SCCWriterTest(unittest.TestCase):
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     assert model is not None
     config = SccWriterConfiguration()
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_rollup(self):
@@ -198,7 +203,9 @@ class SCCWriterTest(unittest.TestCase):
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = SccWriterConfiguration()
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
     # round-trip test
@@ -233,7 +240,9 @@ class SCCWriterTest(unittest.TestCase):
 00:59:58:12	942c 942c"""
 
     config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_2997_NDF)
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_basic_30FPS(self):
@@ -263,7 +272,9 @@ class SCCWriterTest(unittest.TestCase):
 00:00:05:00	942c 942c"""
 
     config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF)
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_zero_start(self):
@@ -281,9 +292,11 @@ class SCCWriterTest(unittest.TestCase):
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
 
     with self.assertRaises(RuntimeError):
-      scc_writer.from_model(model)
+      scc_writer.from_model(model, io.StringIO())
 
-    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration(start_tc="01:00:00;00"))
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, SccWriterConfiguration(start_tc="01:00:00;00"))
+    scc_from_model = buf.getvalue()
     expected_scc="""Scenarist_SCC V1.0
 
 00:59:59;21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
@@ -291,7 +304,9 @@ class SCCWriterTest(unittest.TestCase):
 01:00:02;29	942c 942c"""
     self.assertEqual(scc_from_model, expected_scc)
 
-    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF, start_tc="01:00:00:00"))
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf, SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF, start_tc="01:00:00:00"))
+    scc_from_model = buf.getvalue()
     expected_scc="""Scenarist_SCC V1.0
 
 00:59:59:21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
@@ -328,7 +343,9 @@ class SCCWriterTest(unittest.TestCase):
 """
 
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(SAMPLE)))
-    scc_from_model = scc_writer.from_model(model)
+    buf = io.StringIO()
+    scc_writer.from_model(model, buf)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
 if __name__ == '__main__':

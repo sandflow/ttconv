@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+import io
 import os
 import unittest
 import xml.etree.ElementTree as et
@@ -100,7 +101,9 @@ consectetur adipiscing elit.
 Pellentesque interdum lacinia sollicitudin.
 """
 
-    srt_from_model = srt_writer.from_model(doc)
+    buf = io.StringIO()
+    srt_writer.from_model(doc, buf)
+    srt_from_model = buf.getvalue()
 
     self.assertEqual(expected_srt, srt_from_model)
 
@@ -113,7 +116,9 @@ Pellentesque interdum lacinia sollicitudin.
             path = os.path.join(root, filename)
             scc_content = Path(path).read_text()
             test_model = scc_reader.to_model(scc_content)
-            srt_from_model = srt_writer.from_model(test_model)
+            buf = io.StringIO()
+            srt_writer.from_model(test_model, buf)
+            srt_from_model = buf.getvalue()
             self.assertTrue(len(srt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_srt(test_model, srt_from_model, path)
 
@@ -126,8 +131,9 @@ Pellentesque interdum lacinia sollicitudin.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            srt_from_model = srt_writer.from_model(test_model)
-            self._check_output_srt(test_model, srt_from_model, path)
+            buf = io.StringIO()
+            srt_writer.from_model(test_model, buf)
+            self._check_output_srt(test_model, buf.getvalue(), path)
 
   @unittest.skip("Too long to process")
   def test_imsc_1_1_test_suite(self):
@@ -139,8 +145,9 @@ Pellentesque interdum lacinia sollicitudin.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            srt_from_model = srt_writer.from_model(test_model)
-            self._check_output_srt(test_model, srt_from_model, path)
+            buf = io.StringIO()
+            srt_writer.from_model(test_model, buf)
+            self._check_output_srt(test_model, buf.getvalue(), path)
 
   @unittest.skip("IMSC 1.2 is not supported")
   def test_imsc_1_2_test_suite(self):
@@ -152,8 +159,9 @@ Pellentesque interdum lacinia sollicitudin.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            srt_from_model = srt_writer.from_model(test_model)
-            self._check_output_srt(test_model, srt_from_model, path)
+            buf = io.StringIO()
+            srt_writer.from_model(test_model, buf)
+            self._check_output_srt(test_model, buf.getvalue(), path)
 
   @unittest.skip("IMSC 1.3 is not supported")
   def test_imsc_1_3_test_suite(self):
@@ -165,8 +173,9 @@ Pellentesque interdum lacinia sollicitudin.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            srt_from_model = srt_writer.from_model(test_model)
-            self._check_output_srt(test_model, srt_from_model, path)
+            buf = io.StringIO()
+            srt_writer.from_model(test_model, buf)
+            self._check_output_srt(test_model, buf.getvalue(), path)
 
 
   #
@@ -211,7 +220,9 @@ Pellentesque interdum lacinia sollicitudin.
   def test_empty_isds(self):
     tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml')
     doc = imsc_reader.to_model(tree)
-    srt_from_model = srt_writer.from_model(doc)
+    buf = io.StringIO()
+    srt_writer.from_model(doc, buf)
+    srt_from_model = buf.getvalue()
 
     self.assertEqual(srt_from_model, """1
 00:00:10,000 --> 00:00:24,400
@@ -237,7 +248,9 @@ This text must appear at 25 seconds and disappear at 35 seconds
 
     config = srt_config.SRTWriterConfiguration.parse({"text_formatting": False})
 
-    srt_from_model = srt_writer.from_model(doc, config)
+    buf = io.StringIO()
+    srt_writer.from_model(doc, buf, config)
+    srt_from_model = buf.getvalue()
 
     self.assertEqual(srt_from_model, """1
 00:00:00,000 --> 00:00:01,000
@@ -257,7 +270,9 @@ Lorem
     ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
     doc = imsc_reader.to_model(ttml_doc)
 
-    srt_from_model = srt_writer.from_model(doc)
+    buf = io.StringIO()
+    srt_writer.from_model(doc, buf)
+    srt_from_model = buf.getvalue()
 
     self.assertEqual(srt_from_model, """1
 00:00:00,000 --> 00:00:01,000

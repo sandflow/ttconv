@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+import io
 import json
 import os
 import unittest
@@ -104,7 +105,9 @@ consectetur adipiscing elit.
 Pellentesque interdum lacinia sollicitudin.
 """
 
-    vtt_from_model = vtt_writer.from_model(doc, None)
+    buf = io.StringIO()
+    vtt_writer.from_model(doc, buf)
+    vtt_from_model = buf.getvalue()
 
     self.assertEqual(expected_vtt, vtt_from_model)
 
@@ -143,11 +146,15 @@ Cool, got it, will do it by end of next week.
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = VTTWriterConfiguration()
     config.line_position = True
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.StringIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
     config = VTTWriterConfiguration.parse(json.loads('{"line_position":true}'))
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.StringIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_align(self):
@@ -197,11 +204,15 @@ Good.
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = VTTWriterConfiguration()
     config.text_align = True
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.StringIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
     config = VTTWriterConfiguration.parse(json.loads('{"text_align":true}'))
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.StringIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_cue_id(self):
@@ -228,11 +239,15 @@ Cool, got it, will do it by end of next week.
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
     config = VTTWriterConfiguration()
     config.cue_id = False
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.StringIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
     config = VTTWriterConfiguration.parse(json.loads('{"cue_id":false}'))
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.StringIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_scc_test_suite(self):
@@ -244,7 +259,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             scc_content = Path(path).read_text()
             test_model = scc_reader.to_model(scc_content)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
@@ -257,7 +274,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             with open(path, "rb") as stl_content:
               test_model = stl_reader.to_model(stl_content)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
@@ -270,7 +289,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             with open(path, "rb") as stl_content:
               test_model = stl_reader.to_model(stl_content)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
@@ -283,7 +304,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
 
   @unittest.skip("Too long to process")
@@ -296,7 +319,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
 
   @unittest.skip("IMSC 1.2 is not supported")
@@ -309,7 +334,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            vtt_from_model =vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
 
   @unittest.skip("IMSC 1.3 is not supported")
@@ -322,7 +349,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             tree = et.parse(path)
             test_model = imsc_reader.to_model(tree)
-            vtt_from_model =vtt_writer.from_model(test_model, None)
+            buf = io.StringIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
   #
   # Utility functions
@@ -366,7 +395,9 @@ Cool, got it, will do it by end of next week.
   def test_empty_isds(self):
     tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml')
     doc = imsc_reader.to_model(tree)
-    srt_from_model = vtt_writer.from_model(doc)
+    buf = io.StringIO()
+    vtt_writer.from_model(doc, buf)
+    srt_from_model = buf.getvalue()
 
     self.assertEqual(srt_from_model, """WEBVTT
 
