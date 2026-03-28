@@ -170,6 +170,14 @@ class IMSCAppTest(unittest.TestCase):
       '-o', 'build/body_only.out.ttml', 
       '--config', '{"general": {"progress_bar":false, "log_level":"WARN"}}'])
 
+  def test_log_levels(self):
+    log_level = ["DEBUG", "INFO", "WARN", "ERROR"]
+    for l in log_level:
+      tt.main(['convert',
+        '-i', 'src/test/resources/ttml/body_only.ttml',
+        '-o', 'build/body_only.out.ttml',
+        '--config', f'{{"general": {{"progress_bar": false, "log_level": "{l}"}} }}'])
+
   def test_with_config_file(self):
     tt.main(["convert", 
       "-i", "src/test/resources/ttml/body_only.ttml", 

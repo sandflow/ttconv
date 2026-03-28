@@ -94,7 +94,7 @@ Default: `true`
 
 #### log_level
 
-`"log_level": "INFO" | "WARN" | "ERROR"`
+`"log_level": "DEBUG" | "INFO" | "WARN" | "ERROR"`
 
 Logging verbosity
 
