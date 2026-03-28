@@ -530,9 +530,9 @@ class STLReaderTests(unittest.TestCase):
       p1 = div.first_child()
       p2 = p1.next_sibling()
       self.assertEqual(p1.get_begin(), SmpteTimeCode.parse("00:00:01:00", FPS_25).to_temporal_offset())
-      self.assertEqual(p1.get_end(),   SmpteTimeCode.parse("00:00:05:00", FPS_25).to_temporal_offset())
+      self.assertEqual(p1.get_end(), SmpteTimeCode.parse("00:00:05:00", FPS_25).to_temporal_offset())
       self.assertEqual(p2.get_begin(), SmpteTimeCode.parse("00:00:05:00", FPS_25).to_temporal_offset())
-      self.assertEqual(p2.get_end(),   SmpteTimeCode.parse("00:00:07:00", FPS_25).to_temporal_offset())
+      self.assertEqual(p2.get_end(), SmpteTimeCode.parse("00:00:07:00", FPS_25).to_temporal_offset())
       self.assertEqual(p1.first_child().first_child().get_text(), "Subtitle One")
       self.assertEqual(p2.first_child().first_child().get_text(), "Subtitle Two")
 
@@ -544,7 +544,7 @@ class STLReaderTests(unittest.TestCase):
       ps = list(div)
       self.assertEqual(len(ps), 1)
       self.assertEqual(ps[0].get_begin(), SmpteTimeCode.parse("00:00:01:00", FPS_25).to_temporal_offset())
-      self.assertEqual(ps[0].get_end(),   SmpteTimeCode.parse("00:00:07:00", FPS_25).to_temporal_offset())
+      self.assertEqual(ps[0].get_end(), SmpteTimeCode.parse("00:00:07:00", FPS_25).to_temporal_offset())
       self.assertEqual(ps[0].first_child().first_child().get_text(), "Subtitle One")
 
   def test_active_area_presence(self):
