@@ -366,6 +366,7 @@ class DataFile:
         LOGGER.error("Invalid start_tc value")
         raise
 
+    LOGGER.debug("GSI DSC: %s", self.gsi.DSC)
     if max_row_count is None or self.is_teletext():
       self.max_row_count = DEFAULT_TELETEXT_ROWS
     elif isinstance(max_row_count, str) and max_row_count == "MNR":
@@ -377,6 +378,9 @@ class DataFile:
         self.start_offset = DEFAULT_TELETEXT_ROWS
     else:
       self.max_row_count = max_row_count
+
+    # keep track of the end time of the last tti block
+    self.last_end_time: typing.Optional[Fraction] = None
 
     # p_element for use across cumulative subtitles 
     self.cur_p_element = None
@@ -467,12 +471,19 @@ class DataFile:
     if begin_time < 0:
       LOGGER.debug("Skipping subtitle because TCI is less than start time")
       return
-    LOGGER.debug("  Time in: %s", tci)
 
     end_time = tco.to_temporal_offset() - self.start_offset
+    if self.last_end_time is not None:
+      if begin_time < self.last_end_time:
+        LOGGER.warning("Subtitle TCI is less than previous TCO; adjusting the former to be equal to the latter")
+        begin_time = self.last_end_time
+    self.last_end_time = end_time
+    
     if end_time < begin_time:
       LOGGER.error("Subtitle TCO is less than TCI")
       return
+    
+    LOGGER.debug("  Time in: %s", tci)
     LOGGER.debug("  Time out: %s", tco)
 
     # create a new subtitle if SN changes and we are not in cumulative mode
