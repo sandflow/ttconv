@@ -29,8 +29,8 @@ _ttconv_ works by mapping the input document, whatever its format, into an
 internal canonical model, which is then optionally transformed by document
 filters, and finally mapped to the format of the output document is derived. The
 canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data
-model, as constrained by the [IMSC 1.1 Text
-Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile) specification.
+model, as constrained by the [IMSC 1.3 Text
+Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles) specification.
 
 ## Online demo
 
@@ -44,7 +44,7 @@ suggestions/contributions are welcome.
 ### Input Formats
 
 * [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
-* [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
+* [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
 * [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [WebVTT](https://www.w3.org/TR/webvtt1/)
@@ -52,7 +52,7 @@ suggestions/contributions are welcome.
 ### Output Formats
 
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
-* [IMSC 1.1 Text Profile/.ttml](https://www.w3.org/TR/ttml-imsc1.1/#text-profile)
+* [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
 * [WebVTT](https://www.w3.org/TR/webvtt1/)
 * [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 

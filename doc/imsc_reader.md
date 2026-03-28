@@ -7,8 +7,10 @@ preserve rendering fidelity but not necessarily structure, e.g. referential styl
 
 ## Limitations
 
-The IMSC reader primarily converting TTML documents that conform to the [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#text-profile), with a few exceptions:
+The IMSC reader primarily converting TTML documents that conform to the [IMSC 1.3 Text
+Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles), with a few exceptions:
 * `ttp:timeBase="smpte"` is supported with `ttp:dropMode="dropNTSC" | "nonDrop"` (the timecode timestamp are converted to media time in the model)
+* the following features introduced in IMSC 1.2 are not supported: `#font`, `#resources` and `#source`.
 
 ## Usage
 
@@ -27,7 +29,7 @@ doc = imsc_reader.to_model(xml_doc)
 
 The input XML document is traversed using depth-first search (DFS). Each XML element encountered is processed using the `from_xml()`
 method of the corresponding class in `ttconv/imsc/elements.py`. For example,
-`ttconv.imsc.elements.PElement.from_xml()` is applied to each `<p>` element. Since the data model is a subset of the IMSC 1.1 model,
+`ttconv.imsc.elements.PElement.from_xml()` is applied to each `<p>` element. Since the data model is a subset of the IMSC 1.3 model,
 additional parsing state is preserved across calls to `from_xml()` by associating each parsed XML element in an instance of the
 `ttconv.imsc.elements.TTMLElement.ParsingContext` structure and its subclasses.
 
