@@ -467,6 +467,8 @@ class DataFile:
       LOGGER.error("Invalid TTI timecode")
       return
 
+    # compute begin and end time and adjust to avoid overlap
+
     begin_time = tci.to_temporal_offset() - self.start_offset
     if begin_time < 0:
       LOGGER.debug("Skipping subtitle because TCI is less than start time")
@@ -476,13 +478,14 @@ class DataFile:
     if self.last_end_time is not None:
       if begin_time < self.last_end_time:
         LOGGER.warning("Subtitle TCI is less than previous TCO; adjusting the former to be equal to the latter")
-        begin_time = self.last_end_time
-    self.last_end_time = end_time
-    
+        begin_time = self.last_end_time    
+
     if end_time < begin_time:
       LOGGER.error("Subtitle TCO is less than TCI")
       return
-    
+
+    self.last_end_time = end_time
+
     LOGGER.debug("  Time in: %s", tci)
     LOGGER.debug("  Time out: %s", tco)
 
