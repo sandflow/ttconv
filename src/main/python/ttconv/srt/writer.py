@@ -26,6 +26,7 @@
 """SRT writer"""
 
 import logging
+import typing
 from fractions import Fraction
 from typing import List, Optional
 
@@ -186,8 +187,8 @@ class SrtContext:
 #
 
 
-def from_model(doc: model.ContentDocument, config: Optional[SRTWriterConfiguration] = None, progress_callback=lambda _: None) -> str:
-  """Converts the data model to a SRT document"""
+def from_model(doc: model.ContentDocument, output: typing.BinaryIO, config: Optional[SRTWriterConfiguration] = None, progress_callback=lambda _: None):
+  """Converts the data model to a SRT document, writing the result to `output`."""
 
   srt = SrtContext(config if config is not None else SRTWriterConfiguration())
 
@@ -217,4 +218,4 @@ def from_model(doc: model.ContentDocument, config: Optional[SRTWriterConfigurati
 
   srt.finish()
 
-  return str(srt)
+  output.write(str(srt).encode("utf-8"))

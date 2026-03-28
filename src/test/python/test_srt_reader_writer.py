@@ -29,8 +29,6 @@
 import unittest
 import io
 import os
-import xml.etree.ElementTree as et
-
 import ttconv.srt.reader as srt_reader
 import ttconv.srt.writer as srt_writer
 import ttconv.imsc.reader as imsc_reader
@@ -44,10 +42,11 @@ class SrtReaderWriterTest(unittest.TestCase):
         (name, ext) = os.path.splitext(filename)
         if ext == ".ttml":
           with self.subTest(name):
-            tree = et.parse(os.path.join(root, filename))
-            doc = imsc_reader.to_model(tree)
-            srt_file = srt_writer.from_model(doc)
-            srt_reader.to_model(io.StringIO(srt_file))
+            with open(os.path.join(root, filename), 'rb') as f:
+              doc = imsc_reader.to_model(f)
+            buf = io.BytesIO()
+            srt_writer.from_model(doc, buf)
+            srt_reader.to_model(io.BytesIO(buf.getvalue()))
 
 if __name__ == '__main__':
   unittest.main()
