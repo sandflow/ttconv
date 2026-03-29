@@ -1040,7 +1040,7 @@ class StyleProperties:
     '''Corresponds to tts:writingMode
     '''
 
-    is_inherited = False
+    is_inherited = True
     is_animatable = True
 
     @staticmethod

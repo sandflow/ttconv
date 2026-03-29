@@ -398,7 +398,8 @@ class ISD(model.Document):
     styles.StyleProperties.TextOutline,
     styles.StyleProperties.TextShadow,
     styles.StyleProperties.TextEmphasis,
-    styles.StyleProperties.Padding
+    styles.StyleProperties.Padding,
+    styles.StyleProperties.WritingMode
   )
 
   @staticmethod
