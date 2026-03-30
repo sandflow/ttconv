@@ -478,9 +478,9 @@ class DataFile:
     end_time = tco.to_temporal_offset() - self.start_offset
 
     # adjust to avoid overlap unless we are in cumulative mode
-    if self.last_end_time is not None and tti.CS not in (0x01, 0x02, 0x03):
+    if self.last_end_time is not None and tti.CS == 0x00:
       if begin_time < self.last_end_time:
-        LOGGER.warning("Subtitle TCI is less than previous TCO; adjusting the former to be equal to the latter")
+        LOGGER.warning("Subtitle TCI is less than previous TCO and cumulative mode is inactive; adjusting the former to be equal to the latter")
         begin_time = self.last_end_time
 
     if end_time <= begin_time:
