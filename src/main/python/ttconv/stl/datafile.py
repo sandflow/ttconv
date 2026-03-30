@@ -480,7 +480,7 @@ class DataFile:
         LOGGER.warning("Subtitle TCI is less than previous TCO; adjusting the former to be equal to the latter")
         begin_time = self.last_end_time    
 
-    if end_time < begin_time:
+    if end_time <= begin_time:
       LOGGER.error("Subtitle TCO is less than TCI")
       return
 
