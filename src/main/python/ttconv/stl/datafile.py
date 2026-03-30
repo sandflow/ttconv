@@ -458,8 +458,7 @@ class DataFile:
 
     self.is_in_extension = False
 
-    # apply program offset
-
+    # read TCI and TCO
     try:
       tci = SmpteTimeCode(tti.TCIh, tti.TCIm, tti.TCIs, tti.TCIf, self.get_fps())
       tco = SmpteTimeCode(tti.TCOh, tti.TCOm, tti.TCOs, tti.TCOf, self.get_fps())
@@ -467,27 +466,29 @@ class DataFile:
       LOGGER.error("Invalid TTI timecode")
       return
 
-    # compute begin and end time and adjust to avoid overlap
+    LOGGER.debug("  Time in: %s", tci)
+    LOGGER.debug("  Time out: %s", tco)
 
+    # compute begin and end time, including program start offset
     begin_time = tci.to_temporal_offset() - self.start_offset
     if begin_time < 0:
       LOGGER.debug("Skipping subtitle because TCI is less than start time")
       return
 
     end_time = tco.to_temporal_offset() - self.start_offset
-    if self.last_end_time is not None:
+
+    # adjust to avoid overlap unless we are in cumulative mode
+    if self.last_end_time is not None and tti.CS not in (0x01, 0x02, 0x03):
       if begin_time < self.last_end_time:
         LOGGER.warning("Subtitle TCI is less than previous TCO; adjusting the former to be equal to the latter")
-        begin_time = self.last_end_time    
+        begin_time = self.last_end_time
 
     if end_time <= begin_time:
-      LOGGER.error("Subtitle TCO is less than or equal to TCI")
+      LOGGER.error("Subtitle TCO is less than or equal to TCI; omitting subtitle")
       return
 
     self.last_end_time = end_time
 
-    LOGGER.debug("  Time in: %s", tci)
-    LOGGER.debug("  Time out: %s", tco)
 
     # create a new subtitle if SN changes and we are not in cumulative mode
 

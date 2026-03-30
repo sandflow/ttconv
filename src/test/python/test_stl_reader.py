@@ -60,22 +60,20 @@ class STLReaderTests(unittest.TestCase):
       p = doc.get_body().first_child().first_child()
       self.assertEqual(p.get_begin(),
                       SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
-   
+
   def test_irt_requirement_0061_004_modified(self):
     '''Testing Time Code In with value media 25 frames upperbounds'''
     with open("src/test/resources/stl/irt/requirement-0061-004_modified.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
-      p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_begin(),
-                      SmpteTimeCode.parse("23:59:59:24",FPS_25).to_temporal_offset())
+      # both TCI and TCO are set to 23:59:59:24, so we expect the subtitle to be omitted and thus the body to be empty
+      self.assertIsNone(doc.get_body().first_child())
 
   def test_irt_requirement_0062_001(self):
     '''Testing Time Code Out with value media 25 frames lower bound'''
     with open("src/test/resources/stl/irt/requirement-0062-001.stl", "rb") as f:
       doc = ttconv.stl.reader.to_model(f)
-      p = doc.get_body().first_child().first_child()
-      self.assertEqual(p.get_end(),
-                      SmpteTimeCode.parse("00:00:00:00",FPS_25).to_temporal_offset())
+      # both TCI and TCO are set to 00:00:00:00, so we expect the subtitle to be omitted and thus the body to be empty
+      self.assertIsNone(doc.get_body().first_child())
 
   def test_irt_requirement_0062_002_modified(self):
     '''Testing Time Code Out with value media 25 frames upper bound'''
@@ -545,6 +543,17 @@ class STLReaderTests(unittest.TestCase):
       self.assertEqual(len(ps), 1)
       self.assertEqual(ps[0].get_begin(), SmpteTimeCode.parse("00:00:01:00", FPS_25).to_temporal_offset())
       self.assertEqual(ps[0].get_end(), SmpteTimeCode.parse("00:00:07:00", FPS_25).to_temporal_offset())
+      self.assertEqual(ps[0].first_child().first_child().get_text(), "Subtitle One")
+
+  def test_two_contained_tti(self):
+    '''Two TTI blocks with active periods contained within a third: both inner subtitles are dropped'''
+    with open("src/test/resources/stl/sandflow/two_contained_tti.stl", "rb") as f:
+      doc = ttconv.stl.reader.to_model(f)
+      div = doc.get_body().first_child()
+      ps = list(div)
+      self.assertEqual(len(ps), 1)
+      self.assertEqual(ps[0].get_begin(), SmpteTimeCode.parse("00:00:01:00", FPS_25).to_temporal_offset())
+      self.assertEqual(ps[0].get_end(), SmpteTimeCode.parse("00:00:09:00", FPS_25).to_temporal_offset())
       self.assertEqual(ps[0].first_child().first_child().get_text(), "Subtitle One")
 
   def test_active_area_presence(self):
