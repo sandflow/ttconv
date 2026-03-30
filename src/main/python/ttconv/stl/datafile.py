@@ -481,7 +481,7 @@ class DataFile:
         begin_time = self.last_end_time    
 
     if end_time <= begin_time:
-      LOGGER.error("Subtitle TCO is less than TCI")
+      LOGGER.error("Subtitle TCO is less than or equal to TCI")
       return
 
     self.last_end_time = end_time
