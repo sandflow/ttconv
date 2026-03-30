@@ -366,6 +366,7 @@ class DataFile:
         LOGGER.error("Invalid start_tc value")
         raise
 
+    LOGGER.debug("GSI DSC: %s", self.gsi.DSC)
     if max_row_count is None or self.is_teletext():
       self.max_row_count = DEFAULT_TELETEXT_ROWS
     elif isinstance(max_row_count, str) and max_row_count == "MNR":
@@ -377,6 +378,9 @@ class DataFile:
         self.start_offset = DEFAULT_TELETEXT_ROWS
     else:
       self.max_row_count = max_row_count
+
+    # keep track of the end time of the last tti block
+    self.last_end_time: typing.Optional[Fraction] = None
 
     # p_element for use across cumulative subtitles 
     self.cur_p_element = None
@@ -454,8 +458,7 @@ class DataFile:
 
     self.is_in_extension = False
 
-    # apply program offset
-
+    # read TCI and TCO
     try:
       tci = SmpteTimeCode(tti.TCIh, tti.TCIm, tti.TCIs, tti.TCIf, self.get_fps())
       tco = SmpteTimeCode(tti.TCOh, tti.TCOm, tti.TCOs, tti.TCOf, self.get_fps())
@@ -463,17 +466,29 @@ class DataFile:
       LOGGER.error("Invalid TTI timecode")
       return
 
+    LOGGER.debug("  Time in: %s", tci)
+    LOGGER.debug("  Time out: %s", tco)
+
+    # compute begin and end time, including program start offset
     begin_time = tci.to_temporal_offset() - self.start_offset
     if begin_time < 0:
       LOGGER.debug("Skipping subtitle because TCI is less than start time")
       return
-    LOGGER.debug("  Time in: %s", tci)
 
     end_time = tco.to_temporal_offset() - self.start_offset
-    if end_time < begin_time:
-      LOGGER.error("Subtitle TCO is less than TCI")
+
+    # adjust to avoid overlap unless we are in cumulative mode
+    if self.last_end_time is not None and tti.CS == 0x00:
+      if begin_time < self.last_end_time:
+        LOGGER.warning("Subtitle TCI is less than previous TCO and cumulative mode is inactive; adjusting the former to be equal to the latter")
+        begin_time = self.last_end_time
+
+    if end_time <= begin_time:
+      LOGGER.error("Subtitle TCO is less than or equal to TCI; omitting subtitle")
       return
-    LOGGER.debug("  Time out: %s", tco)
+
+    self.last_end_time = end_time
+
 
     # create a new subtitle if SN changes and we are not in cumulative mode
 
