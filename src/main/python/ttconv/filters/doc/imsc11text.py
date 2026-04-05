@@ -241,6 +241,11 @@ def _regions_overlap(r1: ISD.Region, r2: ISD.Region) -> bool:
   After ISD computation both properties use rw (x-axis) and rh (y-axis)
   units, so the values are directly comparable.
   """
+
+  # both regions must have content to be considered overlapping
+  if not (r1.has_children() and r2.has_children()):
+    return False
+
   o1 = r1.get_style(styles.StyleProperties.Origin)
   e1 = r1.get_style(styles.StyleProperties.Extent)
   o2 = r2.get_style(styles.StyleProperties.Origin)
