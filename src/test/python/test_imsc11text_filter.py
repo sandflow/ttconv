@@ -40,6 +40,7 @@ import xml.etree.ElementTree as et
 import ttconv.imsc.reader as imsc_reader
 import ttconv.model as model
 import ttconv.style_properties as styles
+import ttconv.stl.reader as stl_reader
 from ttconv.filters.doc.imsc11text import IMSC11TextFilter, IMSC11TextFilterConfig
 from ttconv.filters.document_filter import DocumentFilter
 from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
@@ -602,6 +603,18 @@ class IMSC11TextFilterTest(unittest.TestCase):
   def test_filter_registered_by_name(self):
     filt_cls = DocumentFilter.get_filter_by_name("imsc11text")
     self.assertIs(filt_cls, IMSC11TextFilter)
+
+  def test_stl_docs(self):
+    for root, _subdirs, files in os.walk("src/test/resources/stl"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".stl":
+            with self.subTest(name):
+              with open(os.path.join(root, filename), "rb") as i_file:
+                model = stl_reader.to_model(i_file)
+                self.assertIsNotNone(model)
+                filt = IMSC11TextFilter()
+                filt.process(model)
 
   def test_imsc_1_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1/ttml"):
