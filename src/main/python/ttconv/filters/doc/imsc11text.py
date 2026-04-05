@@ -255,14 +255,18 @@ def _regions_overlap(r1: ISD.Region, r2: ISD.Region) -> bool:
     return False
 
   # r1 bounding box
-  x1, y1 = o1.x.value, o1.y.value
-  x2, y2 = x1 + e1.width.value, y1 + e1.height.value
+  left1 = o1.x.value
+  top1 = o1.y.value
+  right1 = left1 + e1.width.value
+  bottom1 = top1 + e1.height.value
 
   # r2 bounding box
-  ax1, ay1 = o2.x.value, o2.y.value
-  ax2, ay2 = ax1 + e2.width.value, ay1 + e2.height.value
+  left2 = o2.x.value
+  top2 = o2.y.value
+  right2 = left2 + e2.width.value
+  bottom2 = top2 + e2.height.value
 
-  return not (x2 <= ax1 or ax2 <= x1 or y2 <= ay1 or ay2 <= y1)
+  return not (right1 <= left2 or right2 <= left1 or bottom1 <= top2 or bottom2 <= top1)
 
 
 def _validate_isd_element(element):
