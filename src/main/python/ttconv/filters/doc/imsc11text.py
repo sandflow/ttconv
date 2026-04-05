@@ -242,8 +242,8 @@ def _regions_overlap(r1: ISD.Region, r2: ISD.Region) -> bool:
   units, so the values are directly comparable.
   """
 
-  # both regions must have content to be considered overlapping
-  if not (r1.has_children() and r2.has_children()):
+  # both regions must be "presented", as specified in IMSC, to be considered for overlap
+  if not (r1.is_presented() and r2.is_presented()):
     return False
 
   o1 = r1.get_style(styles.StyleProperties.Origin)
@@ -362,7 +362,7 @@ class IMSC11TextFilter(DocumentFilter):
       if len(regions) > 4:
         raise ValueError(
           f"ISD has {len(regions)} regions, "
-          f"maximum 4 allowed (section 7.12.1.3)"
+          f"maximum 4 allowed"
         )
 
       for i in range(0, len(regions)):
@@ -370,7 +370,7 @@ class IMSC11TextFilter(DocumentFilter):
           if _regions_overlap(regions[i], regions[j]):
             raise ValueError(
               f"Regions '{regions[i].get_id()}' and '{regions[j].get_id()}' "
-              f"spatially overlap (section 7.12.1.3)"
+              f"spatially overlap"
             )
 
       for isd_region in regions:
