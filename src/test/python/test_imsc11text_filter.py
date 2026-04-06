@@ -598,6 +598,78 @@ class IMSC11TextFilterTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       IMSC11TextFilter().process(doc)
 
+  # Spatial overlap checks
+
+  def _make_two_region_doc(self, ox1, oy1, ew1, eh1, ox2, oy2, ew2, eh2):
+    """Builds a doc with two regions each containing active content.
+
+    All coordinates and sizes are in percent units.
+    """
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    for idx, (ox, oy, ew, eh) in enumerate(
+        [(ox1, oy1, ew1, eh1), (ox2, oy2, ew2, eh2)]
+    ):
+      region = model.Region(f"r{idx}", doc)
+      region.set_style(
+        styles.StyleProperties.Origin,
+        styles.CoordinateType(
+          x=styles.LengthType(ox, styles.LengthType.Units.pct),
+          y=styles.LengthType(oy, styles.LengthType.Units.pct),
+        ),
+      )
+      region.set_style(
+        styles.StyleProperties.Extent,
+        styles.ExtentType(
+          width=styles.LengthType(ew, styles.LengthType.Units.pct),
+          height=styles.LengthType(eh, styles.LengthType.Units.pct),
+        ),
+      )
+      doc.put_region(region)
+
+      p = model.P(doc)
+      p.set_begin(Fraction(0))
+      p.set_end(Fraction(5))
+      p.set_region(region)
+      div.push_child(p)
+      span = model.Span(doc)
+      p.push_child(span)
+      text = model.Text(doc, "Hello")
+      span.push_child(text)
+
+    return doc
+
+  def test_overlapping_regions_raises(self):
+    # r0: x=[0,60], y=[0,50]   r1: x=[40,100], y=[0,50]  → overlap at x=[40,60]
+    doc = self._make_two_region_doc(0, 0, 60, 50, 40, 0, 60, 50)
+    with self.assertRaises(ValueError):
+      IMSC11TextFilter().process(doc)
+
+  def test_abutting_regions_horizontal_passes(self):
+    # r0: x=[0,50], y=[0,100]   r1: x=[50,100], y=[0,100]  → share edge, no overlap
+    doc = self._make_two_region_doc(0, 0, 50, 100, 50, 0, 50, 100)
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  def test_abutting_regions_vertical_passes(self):
+    # r0: x=[0,100], y=[0,50]   r1: x=[0,100], y=[50,100]  → share edge, no overlap
+    doc = self._make_two_region_doc(0, 0, 100, 50, 0, 50, 100, 50)
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
+  def test_non_overlapping_regions_with_gap_passes(self):
+    # r0: x=[0,40], y=[0,100]   r1: x=[60,100], y=[0,100]  → gap at x=[40,60]
+    doc = self._make_two_region_doc(0, 0, 40, 100, 60, 0, 40, 100)
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
+
   # Filter auto-registration
   def test_filter_registered_by_name(self):
     filt_cls = DocumentFilter.get_filter_by_name("imsc11text")

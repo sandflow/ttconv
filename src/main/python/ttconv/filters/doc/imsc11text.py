@@ -234,6 +234,41 @@ def _validate_element_styles(element):
       )
 
 
+def _regions_overlap(r1: ISD.Region, r2: ISD.Region) -> bool:
+  """Returns True if two ISD regions spatially overlap.
+
+  Compares bounding rectangles defined by tts:origin and tts:extent.
+  After ISD computation both properties use rw (x-axis) and rh (y-axis)
+  units, so the values are directly comparable.
+  """
+
+  # both regions must be "presented", as specified in IMSC, to be considered for overlap
+  if not (r1.is_presented() and r2.is_presented()):
+    return False
+
+  o1 = r1.get_style(styles.StyleProperties.Origin)
+  e1 = r1.get_style(styles.StyleProperties.Extent)
+  o2 = r2.get_style(styles.StyleProperties.Origin)
+  e2 = r2.get_style(styles.StyleProperties.Extent)
+
+  if o1 is None or e1 is None or o2 is None or e2 is None:
+    return False
+
+  # r1 bounding box
+  left1 = o1.x.value
+  top1 = o1.y.value
+  right1 = left1 + e1.width.value
+  bottom1 = top1 + e1.height.value
+
+  # r2 bounding box
+  left2 = o2.x.value
+  top2 = o2.y.value
+  right2 = left2 + e2.width.value
+  bottom2 = top2 + e2.height.value
+
+  return not (right1 <= left2 or right2 <= left1 or bottom1 <= top2 or bottom2 <= top1)
+
+
 def _validate_isd_element(element):
   """Validates resolved style values on an ISD element.
 
@@ -331,15 +366,16 @@ class IMSC11TextFilter(DocumentFilter):
       if len(regions) > 4:
         raise ValueError(
           f"ISD has {len(regions)} regions, "
-          f"maximum 4 allowed (section 7.12.1.3)"
+          f"maximum 4 allowed"
         )
 
-      # Section 7.12.1.2: RCR bounds and overlap checks are not implementable
-      # at filter level. The RCR check rejects valid IMSC test suite documents
-      # where regions extend beyond the RCR (renderers clip them). The overlap
-      # check requires full "presented region" semantics (section 7.12.1.1:
-      # opacity, display, visibility, content) which the ISD model does not
-      # expose in a simple way.
+      for i in range(0, len(regions)):
+        for j in range(i + 1, len(regions)):
+          if _regions_overlap(regions[i], regions[j]):
+            raise ValueError(
+              f"Regions '{regions[i].get_id()}' and '{regions[j].get_id()}' "
+              f"spatially overlap"
+            )
 
       for isd_region in regions:
         for element in isd_region.dfs_iterator():
