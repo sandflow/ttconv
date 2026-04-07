@@ -118,11 +118,43 @@ class ISD(model.Document):
     def push_child(self, child):
       if not isinstance(child, model.Body):
         raise TypeError("Children of ISD regions must be body instances")
-      
+
       if self.has_children():
         raise ValueError("ISD regions must contain at most one body instance")
 
       model.ContentElement.push_child(self, child)
+
+    def is_presented(self) -> bool:
+      '''Returns true if the region is presented, as specified in the IMSC specification'''
+      bg_opacity: numbers.Number = self.get_style(styles.StyleProperties.Opacity)
+      if bg_opacity == 0:
+        return False
+
+      bg_display: styles.DisplayType = self.get_style(styles.StyleProperties.Display)
+      if bg_display is styles.DisplayType.none:
+        return False
+
+      bg_visibility: styles.VisibilityType = self.get_style(styles.StyleProperties.Visibility)
+      if bg_visibility is styles.VisibilityType.hidden:
+        return False
+
+      if self.has_children():
+        return True
+
+      bg_active = self.get_style(styles.StyleProperties.ShowBackground)
+      if bg_active is styles.ShowBackgroundType.whenActive:
+        return False
+
+      bg_color: styles.ColorType = self.get_style(styles.StyleProperties.BackgroundColor)
+      if bg_color is None:
+        return False
+      if bg_color.ident is not styles.ColorType.Colorimetry.RGBA8:
+        raise RuntimeError(f"Unsupported colorimetry system: {bg_color.ident}")
+      # test if the background color is transparent
+      if bg_color.components[3] == 0:
+        return False
+
+      return True
 
   DEFAULT_REGION_ID = "default_region"
 
