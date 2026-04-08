@@ -25,8 +25,10 @@
 
 '''IMSC reader'''
 
+import io
 import logging
 import typing
+import xml.etree.ElementTree as et
 
 import ttconv.imsc.elements as imsc_elements
 import ttconv.model as model
@@ -34,10 +36,11 @@ import ttconv.model as model
 LOGGER = logging.getLogger(__name__)
 
 
-def to_model(xml_tree, progress_callback=lambda _: None) -> typing.Optional[model.ContentDocument]:
+def to_model(data_file: typing.BinaryIO, _config=None, progress_callback=lambda _: None) -> typing.Optional[model.ContentDocument]:
   '''Convers an IMSC document to the data model'''
 
-  xml_element = xml_tree.getroot()
+  text_stream = io.TextIOWrapper(data_file, encoding='utf-8')
+  xml_element = et.parse(text_stream).getroot()
 
   if not imsc_elements.TTElement.is_instance(xml_element):
     LOGGER.fatal("A tt element is not the root element")

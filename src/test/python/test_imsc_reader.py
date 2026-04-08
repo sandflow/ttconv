@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import io
 import unittest
 import xml.etree.ElementTree as et
 import os
@@ -44,7 +45,7 @@ class IMSCReaderTest(unittest.TestCase):
 
   def test_reader_tt_element_not_root_element(self):
 
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="UTF-8"?>
       <not_tt xml:lang="en"
           xmlns="http://www.w3.org/ns/ttml"
           xmlns:ttm="http://www.w3.org/ns/ttml#metadata" 
@@ -56,16 +57,15 @@ class IMSCReaderTest(unittest.TestCase):
           ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text">
       </not_tt>"""
 
-    tt_not_root = et.ElementTree(et.fromstring(xml_str))
-    self.assertIsNone(imsc_reader.to_model(tt_not_root))
+    self.assertIsNone(imsc_reader.to_model(io.BytesIO(xml_str)))
 
   def test_body_only(self):
-    tree = et.parse('src/test/resources/ttml/body_only.ttml')
-    imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/body_only.ttml', 'rb') as f:
+      imsc_reader.to_model(f)
 
   def test_basic_time_containment_001(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment001.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment001.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     body = doc.get_body()
 
@@ -91,8 +91,8 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(span_children[1].get_end(), Fraction(10))
 
   def test_basic_time_containment_002(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment002.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment002.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     body = doc.get_body()
 
@@ -113,8 +113,8 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(p_children[1].get_end(), Fraction(20))
 
   def test_basic_time_containment_003(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment003.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTimeContainment003.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     body = doc.get_body()
 
@@ -143,8 +143,8 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(span_children[1].get_end(), Fraction(15))
 
   def test_basic_timing_007(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming007.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming007.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     body = doc.get_body()
 
@@ -175,8 +175,8 @@ class IMSCReaderTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            self.assertIsNotNone(imsc_reader.to_model(tree))
+            with open(os.path.join(root, filename), 'rb') as f:
+              self.assertIsNotNone(imsc_reader.to_model(f))
             if len(logs.output) > 1:
               self.fail(logs.output)
 
@@ -186,8 +186,8 @@ class IMSCReaderTest(unittest.TestCase):
         (name, ext) = os.path.splitext(filename)
         if ext == ".ttml":
           with self.subTest(name):
-            tree = et.parse(os.path.join(root, filename))
-            self.assertIsNotNone(imsc_reader.to_model(tree))
+            with open(os.path.join(root, filename), 'rb') as f:
+              self.assertIsNotNone(imsc_reader.to_model(f))
 
   def test_imsc_1_3_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/ttml/imsc-tests/imsc1_3/ttml"):
@@ -195,12 +195,12 @@ class IMSCReaderTest(unittest.TestCase):
         (name, ext) = os.path.splitext(filename)
         if ext == ".ttml":
           with self.subTest(name):
-            tree = et.parse(os.path.join(root, filename))
-            self.assertIsNotNone(imsc_reader.to_model(tree))
+            with open(os.path.join(root, filename), 'rb') as f:
+              self.assertIsNotNone(imsc_reader.to_model(f))
 
   def test_referential_styling(self):
-    tree = et.parse('src/test/resources/ttml/referential_styling.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/referential_styling.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     divs = list(doc.get_body())
 
@@ -219,15 +219,15 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(regions[1].get_style(styles.StyleProperties.BackgroundColor), styles.NamedColors.yellow.value)
   
   def test_initial(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1_1/ttml/initial/initial002.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/imsc-tests/imsc1_1/ttml/initial/initial002.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     self.assertEqual(doc.get_initial_value(styles.StyleProperties.Color), styles.NamedColors.green.value)
     self.assertEqual(doc.get_initial_value(styles.StyleProperties.FontStyle), styles.FontStyleType.italic)
 
   def test_frame_rate(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/TimeExpressions001.ttml')
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/TimeExpressions001.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     # <p begin="0s" end="24f">24f = 1.001s</p>
     p = list(list(doc.get_body())[0])[3]
@@ -235,7 +235,7 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(p.get_end(), Fraction(4394201, 1000))
 
   def test_ooo_set_element(self):
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="UTF-8"?>
       <tt xml:lang="en"
           xmlns="http://www.w3.org/ns/ttml"
           xmlns:tts="http://www.w3.org/ns/ttml#styling">
@@ -246,11 +246,9 @@ class IMSCReaderTest(unittest.TestCase):
       </body>
       </tt>"""
 
-    tree = et.ElementTree(et.fromstring(xml_str))
-
     with self.assertLogs() as logs:
       logging.getLogger().info("*****dummy*****") # dummy log
-      self.assertIsNotNone(imsc_reader.to_model(tree))
+      self.assertIsNotNone(imsc_reader.to_model(io.BytesIO(xml_str)))
       if len(logs.output) != 2:
         self.fail(logs.output)
 
@@ -272,24 +270,24 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
 
   def test_cell_resolution(self):
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"
         xmlns="http://www.w3.org/ns/ttml"
         xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
         ttp:cellResolution="32 15">
     </tt>"""
-    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    doc = imsc_reader.to_model(io.BytesIO(xml_str))
     self.assertEqual(doc.get_cell_resolution().columns, 32)
     self.assertEqual(doc.get_cell_resolution().rows, 15)
 
   def test_content_profiles(self):
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"
         xmlns="http://www.w3.org/ns/ttml"
         xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
         ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text http://www.w3.org/ns/ttml/profile/imsc1/text">
     </tt>"""
-    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    doc = imsc_reader.to_model(io.BytesIO(xml_str))
     self.assertSetEqual(doc.get_content_profiles(), {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"})
 
   def test_timeBase_parameter(self):
@@ -321,7 +319,7 @@ class IMSCReaderTest(unittest.TestCase):
         self.fail(logs.output)
 
   def test_smpte_tc_nondrop(self):
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"
         xmlns="http://www.w3.org/ns/ttml"
         xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
@@ -329,12 +327,12 @@ class IMSCReaderTest(unittest.TestCase):
     >
     <body begin="01:02:03:20"/>
     </tt>"""
-    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    doc = imsc_reader.to_model(io.BytesIO(xml_str))
     body = doc.get_body()
     self.assertEqual(body.get_begin(), (3723 * 30 + 20)/Fraction(30000, 1001))
 
   def test_smpte_tc_drop(self):
-    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"
         xmlns="http://www.w3.org/ns/ttml"
         xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
@@ -342,7 +340,7 @@ class IMSCReaderTest(unittest.TestCase):
     >
     <body begin="01:02:03:20"/>
     </tt>"""
-    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    doc = imsc_reader.to_model(io.BytesIO(xml_str))
     body = doc.get_body()
     self.assertEqual(body.get_begin(), SmpteTimeCode(1, 2, 3, 20, Fraction(30000, 1001), True).to_temporal_offset())
 
