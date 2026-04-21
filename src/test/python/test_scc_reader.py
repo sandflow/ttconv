@@ -38,7 +38,7 @@ from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.reader import to_model, to_disassembly
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
-from ttconv.time_code import FPS_29_97, SmpteTimeCode, FPS_30
+from ttconv.time_code import FPS_29_97, SmpteTimeCode
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -70,7 +70,7 @@ class SccReaderTest(unittest.TestCase):
         self.assertEqual(expected_child, Br)
 
   def check_element_timecode(self, timecode: Fraction, expected_timecode: str):
-    self.assertEqual(SmpteTimeCode.parse(expected_timecode, FPS_30).to_temporal_offset(), timecode)
+    self.assertEqual(SmpteTimeCode.parse(expected_timecode, FPS_29_97).to_temporal_offset(), timecode)
 
   def check_element_style(self, elem: ContentElement, style_property: Type[StyleProperty], expected_value):
     self.assertEqual(expected_value, elem.get_style(style_property))
@@ -805,10 +805,10 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, paragraph.get_region())
 
     self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertAlmostEqual(1/30 * 4, float(list(paragraph)[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 7, float(list(paragraph)[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 10, float(list(paragraph)[3].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 12, float(list(paragraph)[4].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 4, float(list(paragraph)[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 7, float(list(paragraph)[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 10, float(list(paragraph)[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 12, float(list(paragraph)[4].get_begin()), delta=0.0001)
 
     paragraph = p_list[1]
     self.check_caption(paragraph, "caption2", "00:02:54:02", "00:02:56:02", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,", Br,
@@ -821,8 +821,8 @@ Scenarist_SCC V1.0
     self.assertIsNone(list(paragraph)[3].get_begin())
     self.assertIsNone(list(paragraph)[4].get_begin())
     self.assertIsNone(list(paragraph)[6].get_begin())
-    self.assertAlmostEqual(1/30 * 7, float(list(paragraph)[7].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 13, float(list(paragraph)[8].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 7, float(list(paragraph)[7].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 13, float(list(paragraph)[8].get_begin()), delta=0.0001)
 
     paragraph = p_list[2]
     self.check_caption(paragraph, "caption3", "00:02:56:02", "00:02:56:27", "Pellentesque", " interdum ", "lacinia ",
@@ -830,9 +830,9 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, paragraph.get_region())
 
     self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertAlmostEqual(1/30 * 8, float(list(paragraph)[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 12, float(list(paragraph)[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 16, float(list(paragraph)[3].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 8, float(list(paragraph)[1].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 12, float(list(paragraph)[2].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 16, float(list(paragraph)[3].get_begin()), delta=0.0001)
     self.assertIsNone(list(paragraph)[5].get_begin())
     self.assertIsNone(list(paragraph)[6].get_begin())
     self.assertIsNone(list(paragraph)[7].get_begin())
@@ -848,11 +848,11 @@ Scenarist_SCC V1.0
     self.assertIsNone(list(paragraph)[2].get_begin())
     self.assertIsNone(list(paragraph)[3].get_begin())
     self.assertIsNone(list(paragraph)[5].get_begin())
-    self.assertAlmostEqual(1/30 * 5, float(list(paragraph)[6].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 9, float(list(paragraph)[7].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 10, float(list(paragraph)[8].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 14, float(list(paragraph)[9].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/30 * 15, float(list(paragraph)[10].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 5, float(list(paragraph)[6].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 9, float(list(paragraph)[7].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 10, float(list(paragraph)[8].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 14, float(list(paragraph)[9].get_begin()), delta=0.0001)
+    self.assertAlmostEqual(1/29.97 * 15, float(list(paragraph)[10].get_begin()), delta=0.0001)
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:

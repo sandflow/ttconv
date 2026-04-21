@@ -211,7 +211,7 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     """Add frames to the current time code"""
     frames = self.to_frames() + nb_frames
 
-    new_time_code = SmpteTimeCode.from_frames(frames, self._frame_rate)
+    new_time_code = SmpteTimeCode.from_frames(frames, self._frame_rate, self._is_drop_frame)
 
     self._hours = new_time_code.get_hours()
     self._minutes = new_time_code.get_minutes()
