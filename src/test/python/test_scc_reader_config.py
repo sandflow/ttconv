@@ -29,7 +29,7 @@
 import json
 import unittest
 
-from ttconv.scc.config import SccReaderConfiguration, SccWriterConfiguration, TextAlignment
+from ttconv.scc.config import SccReaderConfiguration, SccWriterConfiguration, TextAlignment, SCCReaderFrameRate
 
 
 class SccReaderConfigurationTest(unittest.TestCase):
@@ -49,6 +49,7 @@ class SccReaderConfigurationTest(unittest.TestCase):
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
     self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.AUTO))
+    self.assertIsNone(scc_reader_configuration.frame_rate)
 
   def test_scc_reader_config_parsing_right_value(self):
     config_json = """{"text_align": "right" }"""
@@ -81,6 +82,34 @@ class SccReaderConfigurationTest(unittest.TestCase):
     scc_reader_configuration = SccReaderConfiguration.parse(config_dict)
 
     self.assertEqual(scc_reader_configuration, SccReaderConfiguration(text_align=TextAlignment.AUTO))
+
+  def test_scc_reader_config_parsing_frame_rate_values(self):
+    for label, expected in [("30", SCCReaderFrameRate.FPS_30),
+                             ("29.97", SCCReaderFrameRate.FPS_2997),
+                             ("25", SCCReaderFrameRate.FPS_25),
+                             ("23.976", SCCReaderFrameRate.FPS_2398)]:
+      with self.subTest(label=label):
+        config = SccReaderConfiguration.parse(json.loads(f'{{"frame_rate": "{label}"}}'))
+        self.assertEqual(expected, config.frame_rate)
+
+  def test_scc_reader_config_parsing_invalid_frame_rate_raises(self):
+    self.assertRaises(ValueError, SccReaderConfiguration.parse, json.loads('{"frame_rate": "60"}'))
+
+
+class SCCReaderFrameRateTest(unittest.TestCase):
+
+  def test_from_value_returns_instance_unchanged(self):
+    self.assertIs(SCCReaderFrameRate.FPS_2997, SCCReaderFrameRate.from_value(SCCReaderFrameRate.FPS_2997))
+
+  def test_from_value_parses_all_labels(self):
+    self.assertIs(SCCReaderFrameRate.FPS_30,   SCCReaderFrameRate.from_value("30"))
+    self.assertIs(SCCReaderFrameRate.FPS_2997, SCCReaderFrameRate.from_value("29.97"))
+    self.assertIs(SCCReaderFrameRate.FPS_25,   SCCReaderFrameRate.from_value("25"))
+    self.assertIs(SCCReaderFrameRate.FPS_2398, SCCReaderFrameRate.from_value("23.976"))
+
+  def test_from_value_invalid_raises(self):
+    self.assertRaisesRegex(ValueError, "Invalid SCC Reader Frame Rate '60'",
+                           SCCReaderFrameRate.from_value, "60")
 
 if __name__ == '__main__':
   unittest.main()

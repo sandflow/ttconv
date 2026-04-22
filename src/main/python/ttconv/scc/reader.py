@@ -88,9 +88,11 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
   lines = scc_content.splitlines()
   nb_lines = len(lines)
 
+  frame_rate = config.frame_rate if config is not None else None
+
   for (index, line) in enumerate(lines):
     LOGGER.debug(line)
-    scc_line = SccLine.from_str(line)
+    scc_line = SccLine.from_str(line, frame_rate)
 
     progress_callback((index + 1) / nb_lines)
 

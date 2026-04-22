@@ -36,9 +36,10 @@ from ttconv.isd import ISD
 from ttconv.model import Br, P, ContentElement, CellResolutionType, Span
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.reader import to_model, to_disassembly
+from ttconv.scc.config import SccReaderConfiguration, SCCReaderFrameRate
 from ttconv.style_properties import StyleProperties, CoordinateType, LengthType, FontStyleType, NamedColors, TextDecorationType, \
   StyleProperty, ExtentType, ColorType, DisplayAlignType, ShowBackgroundType
-from ttconv.time_code import FPS_29_97, SmpteTimeCode
+from ttconv.time_code import FPS_29_97, FPS_30, FPS_25, FPS_23_98, SmpteTimeCode
 
 LOREM_IPSUM = """Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
@@ -71,6 +72,9 @@ class SccReaderTest(unittest.TestCase):
 
   def check_element_timecode(self, timecode: Fraction, expected_timecode: str):
     self.assertEqual(SmpteTimeCode.parse(expected_timecode, FPS_29_97).to_temporal_offset(), timecode)
+
+  def check_element_timecode_at_fps(self, timecode: Fraction, expected_timecode: str, fps: Fraction):
+    self.assertEqual(SmpteTimeCode.parse(expected_timecode, fps).to_temporal_offset(), timecode)
 
   def check_element_style(self, elem: ContentElement, style_property: Type[StyleProperty], expected_value):
     self.assertEqual(expected_value, elem.get_style(style_property))
@@ -1540,6 +1544,49 @@ Scenarist_SCC V1.0
 
     self.check_caption(p_list[0], "caption1", "01:03:28:21", None, "HEY, THERE.")
     self.assertEqual(region_1, p_list[0].get_region())
+
+
+  def test_scc_reader_all_ndf_framerates_parse_without_error(self):
+    """All SCCReaderFrameRate values can be used to parse an SCC document."""
+    scc_content = "\n".join([
+      "Scenarist_SCC V1.0",
+      "",
+      "01:03:27:23\t94ae 94ae 9420 9420 94f4 94f4 c845 d92c 942c 942c 942f 942f",
+      "",
+    ])
+    ndf_fps_map = {
+      SCCReaderFrameRate.FPS_30:   (FPS_30,    "01:03:28:03"),
+      SCCReaderFrameRate.FPS_2997: (FPS_29_97, "01:03:28:03"),
+      SCCReaderFrameRate.FPS_25:   (FPS_25,    "01:03:28:08"),
+      SCCReaderFrameRate.FPS_2398: (FPS_23_98, "01:03:28:09"),
+    }
+    for fr, (fps, expected_tc) in ndf_fps_map.items():
+      with self.subTest(frame_rate=fr.label):
+        config = SccReaderConfiguration(frame_rate=fr)
+        doc = to_model(scc_content, config)
+        p_list = list(list(doc.get_body())[0])
+        self.assertEqual(1, len(p_list))
+        self.check_element_timecode_at_fps(p_list[0].get_begin(), expected_tc, fps)
+
+  def test_scc_reader_all_df_framerates_parse_without_error(self):
+    """DF timecode delimiter is detected correctly for fractional framerates."""
+    scc_content = "\n".join([
+      "Scenarist_SCC V1.0",
+      "",
+      "01:03:27;23\t94ae 94ae 9420 9420 94f4 94f4 c845 d92c 942c 942c 942f 942f",
+      "",
+    ])
+    df_fps_map = {
+      SCCReaderFrameRate.FPS_2997: (FPS_29_97, "01:03:28;03"),
+      SCCReaderFrameRate.FPS_2398: (FPS_23_98, "01:03:28;09"),
+    }
+    for fr, (fps, expected_tc) in df_fps_map.items():
+      with self.subTest(frame_rate=fr.label):
+        config = SccReaderConfiguration(frame_rate=fr)
+        doc = to_model(scc_content, config)
+        p_list = list(list(doc.get_body())[0])
+        self.assertEqual(1, len(p_list))
+        self.check_element_timecode_at_fps(p_list[0].get_begin(), expected_tc, fps)
 
 
 if __name__ == '__main__':
