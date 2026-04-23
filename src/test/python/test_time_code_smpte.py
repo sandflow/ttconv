@@ -457,5 +457,17 @@ class SmpteTimeCodesTest(unittest.TestCase):
     self.assertEqual(Fraction(35964, Fraction(30000, 1001)), time_code.to_temporal_offset())
     self.assertEqual("00:20:00;00", str(time_code))
 
+    time_code = SmpteTimeCode.parse("01:00:59:29", FPS_29_97)
+    time_code.add_frames()
+    self.assertEqual(1, time_code.get_hours())
+    self.assertEqual(1, time_code.get_minutes())
+    self.assertEqual(0, time_code.get_seconds())
+    self.assertEqual(0, time_code.get_frames())
+    self.assertEqual(FPS_29_97, time_code.get_frame_rate())
+    self.assertFalse(time_code.is_drop_frame())
+    self.assertEqual(109_800, time_code.to_frames())
+    self.assertEqual(Fraction(109_800, FPS_29_97), time_code.to_temporal_offset())
+    self.assertEqual("01:01:00:00", str(time_code))
+
 if __name__ == '__main__':
   unittest.main()
