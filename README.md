@@ -263,6 +263,15 @@ text alignment.
 
 Default: `"auto"`
 
+#### frame_rate
+
+`"frame_rate" : "29.97" | "30" | "25" | "23.976"`
+
+Specifies the frame rate used to interpret timecodes in the SCC file. Drop-frame vs.
+non-drop-frame is detected automatically from the timecode delimiter.
+
+Default: `"29.97"`
+
 ### SCC Writer configuration
 
 #### allow_reflow
@@ -298,7 +307,7 @@ If `frame_rate` is:
 * `"29.97NDF"`, the output SCC file uses 29.97 fps non drop frame (NDF) timecode.
 * `"29.97DF"`, the output SCC file uses 29.97 fps drop frame (DF) timecode.
 
-Default: `"2997DF"`
+Default: `"29.97DF"`
 
 #### start_tc
 
