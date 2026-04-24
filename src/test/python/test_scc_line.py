@@ -30,16 +30,36 @@ import unittest
 
 from ttconv.scc.line import SccLine
 from ttconv.scc.caption_style import SccCaptionStyle
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.time_code import SmpteTimeCode, FPS_29_97
 
 
 class SccLineTest(unittest.TestCase):
+
+  def test_scc_line_from_str_ndf_timecode_uses_fps_29_97(self):
+    """NDF SCC timecodes (colon-delimited) are parsed at 29.97 fps, non-drop-frame."""
+    line_str = "01:00:00:00	9420 9420"
+    scc_line = SccLine.from_str(line_str)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_29_97, scc_line.time_code.get_frame_rate())
+    self.assertFalse(scc_line.time_code.is_drop_frame())
+    # 01:00:00:00 NDF at 29.97 fps = ~3603.6s (slightly longer than clock hour due to 1/29.97 frame duration)
+    self.assertEqual(SmpteTimeCode(1, 0, 0, 0, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+
+  def test_scc_line_from_str_df_timecode_is_drop_frame(self):
+    """DF SCC timecodes (semicolon-delimited) are parsed as drop-frame 29.97 fps."""
+    line_str = "01:00:00;00	9420 9420"
+    scc_line = SccLine.from_str(line_str)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_29_97, scc_line.time_code.get_frame_rate())
+    self.assertTrue(scc_line.time_code.is_drop_frame())
+    # 01:00:00;00 DF at 29.97 fps = ~3600.0s (drop-frame compensates back to real clock time)
+    self.assertEqual(SmpteTimeCode(1, 0, 0, 0, FPS_29_97, True).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
 
   def test_scc_line_from_str_with_pop_on_style(self):
     line_str = "01:03:27:29	94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(18, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	{ENM}{ENM}{RCL}{RCL}{1504}{1504}HEY, THERE.{EDM}{EDM}{}{}{EOC}{EOC}", scc_line.to_disassembly())
     self.assertEqual(SccCaptionStyle.PopOn, scc_line.get_style())
 
@@ -51,14 +71,14 @@ class SccLineTest(unittest.TestCase):
     line_str = "01:03:27:29	"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(0, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	", scc_line.to_disassembly())
     self.assertEqual(SccCaptionStyle.Unknown, scc_line.get_style())
 
     line_str = "01:03:27:29	9024 c845 d92c 2054 c845 5245 ae80 9f9f"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(8, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	{BBl}HEY, THERE.{??}", scc_line.to_disassembly())
     self.assertEqual(SccCaptionStyle.Unknown, scc_line.get_style())
 
@@ -66,7 +86,7 @@ class SccLineTest(unittest.TestCase):
     line_str = "01:03:27:29	9425 9425 94ad 94ad 94c8 94c8 c845 d92c 2054 c845 5245 ae80"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(12, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	{RU2}{RU2}{CR}{CR}{14R}{14R}HEY, THERE.", scc_line.to_disassembly())
     self.assertEqual(SccCaptionStyle.RollUp, scc_line.get_style())
 
@@ -74,6 +94,6 @@ class SccLineTest(unittest.TestCase):
     line_str = "01:03:27:29	9429 9429 94f2 94f2 c845 d92c 2054 c845 5245 ae80"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(10, len(scc_line.scc_words))
-    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_30).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
+    self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	{RDC}{RDC}{1504}{1504}HEY, THERE.", scc_line.to_disassembly())
     self.assertEqual(SccCaptionStyle.PaintOn, scc_line.get_style())

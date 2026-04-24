@@ -42,7 +42,7 @@ from ttconv.scc.codes.special_characters import SccSpecialCharacter
 from ttconv.scc.context import SccContext
 from ttconv.scc.disassembly import get_scc_word_disassembly
 from ttconv.scc.word import SccWord
-from ttconv.time_code import SmpteTimeCode, FPS_30
+from ttconv.time_code import SmpteTimeCode, FPS_29_97
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ class SccLine:
       return None
 
     time_code = match.group(1)
-    time_offset = SmpteTimeCode.parse(time_code, FPS_30)
+    time_offset = SmpteTimeCode.parse(time_code, FPS_29_97)
 
     hex_words = line.split('\t')[1].split(' ')
     scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
