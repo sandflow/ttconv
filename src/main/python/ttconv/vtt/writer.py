@@ -26,6 +26,7 @@
 """WebVTT writer"""
 
 import logging
+import typing
 from fractions import Fraction
 from typing import Dict, List, Optional
 
@@ -269,7 +270,7 @@ class VttContext:
 #
 
 
-def from_model(doc: model.ContentDocument, config = None, progress_callback=lambda _: None) -> str:
+def from_model(doc: model.ContentDocument, output: typing.BinaryIO, config=None, progress_callback=lambda _: None):
   """Converts the data model to a VTT document"""
 
   # split progress between ISD construction and VTT writing
@@ -293,4 +294,4 @@ def from_model(doc: model.ContentDocument, config = None, progress_callback=lamb
 
   vtt.finish()
 
-  return str(vtt)
+  output.write(str(vtt).encode("utf-8"))

@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import typing
+import io
 import re
 import logging
 from enum import Enum
@@ -208,7 +209,7 @@ _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
 _DEFAULT_SAFE_AREA_PCT = 10
 
-def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
+def to_model(data_file: typing.BinaryIO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
 
   extended_tags = _config.extended_tags if isinstance(_config, SRTReaderConfiguration) else False
@@ -235,7 +236,7 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
 
   body.push_child(div)
 
-  lines : str = data_file.readlines()
+  lines : str =  io.TextIOWrapper(data_file, encoding='utf-8').readlines()
 
   state = _State.COUNTER
   current_p = None

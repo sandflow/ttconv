@@ -30,10 +30,8 @@ import logging
 import os
 import sys
 import typing
-import xml.etree.ElementTree as et
 from argparse import ArgumentParser
 from enum import Enum
-from pathlib import Path
 from ttconv.filters.document_filter import DocumentFilter
 
 import ttconv.imsc.reader as imsc_reader
@@ -300,28 +298,25 @@ def convert(args):
   writer_type = FileTypes.get_file_type(args.otype, output_file_extension)
 
   if reader_type is FileTypes.TTML:
-    # 
-    # Parse the xml input file into an ElementTree
     #
-    tree = et.parse(inputfile)
+    # Open the file and pass it to the reader
+    #
+    reader_config = read_config_from_json(IMSCWriterConfiguration, json_config_data)
 
-    #
-    # Pass the parsed xml to the reader
-    #
-    model = imsc_reader.to_model(tree, progress_callback_read)
+    with open(inputfile, "rb") as f:
+      model = imsc_reader.to_model(f, reader_config, progress_callback_read)
 
   elif reader_type is FileTypes.SCC:
-    file_as_str = Path(inputfile).read_text()
-
     #
     # Read the config
     #
     reader_config = read_config_from_json(SccReaderConfiguration, json_config_data)
 
     #
-    # Pass the parsed xml to the reader
+    # Open the file and pass it to the reader
     #
-    model = scc_reader.to_model(file_as_str, reader_config, progress_callback_read)
+    with open(inputfile, "rb") as f:
+      model = scc_reader.to_model(f, reader_config, progress_callback_read)
 
   elif reader_type is FileTypes.STL:
     #
@@ -344,7 +339,7 @@ def convert(args):
     #
     # Open the file and pass it to the reader
     #
-    with open(inputfile, "r", encoding="utf-8") as f:
+    with open(inputfile, "rb") as f:
       model = srt_reader.to_model(f, reader_config, progress_callback_read)
 
   elif reader_type is FileTypes.VTT:
@@ -352,7 +347,7 @@ def convert(args):
     #
     # Open the file and pass it to the reader
     #
-    with open(inputfile, "r", encoding="utf-8") as f:
+    with open(inputfile, "rb") as f:
       model = vtt_reader.to_model(f, None, progress_callback_read)
 
   else:
@@ -401,12 +396,11 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, writer_config, progress_callback_write)
-
     #
     # Write out the converted file
     #
-    tree_from_model.write(outputfile, encoding="utf-8")
+    with open(outputfile, "wb") as f:
+      imsc_writer.from_model(model, f, writer_config, progress_callback_write)
 
   elif writer_type is FileTypes.SRT:
     #
@@ -417,13 +411,8 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, writer_config, progress_callback_write)
-
-    #
-    # Write out the converted file
-    #
-    with open(outputfile, "w", encoding="utf-8") as srt_file:
-      srt_file.write(srt_document)
+    with open(outputfile, "wb") as srt_file:
+      srt_writer.from_model(model, srt_file, writer_config, progress_callback_write)
 
   elif writer_type is FileTypes.VTT:
     #
@@ -434,13 +423,11 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    vtt_document = vtt_writer.from_model(model, writer_config, progress_callback_write)
-
     #
     # Write out the converted file
     #
-    with open(outputfile, "w", encoding="utf-8") as vtt_file:
-      vtt_file.write(vtt_document)
+    with open(outputfile, "wb") as vtt_file:
+      vtt_writer.from_model(model, vtt_file, writer_config, progress_callback_write)
 
   elif writer_type is FileTypes.SCC:
     #
@@ -451,13 +438,11 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    scc_document = scc_writer.from_model(model, writer_config, progress_callback_write)
-
     #
     # Write out the converted file
     #
-    with open(outputfile, "w", encoding="utf-8") as scc_file:
-      scc_file.write(scc_document)
+    with open(outputfile, "wb") as scc_file:
+      scc_writer.from_model(model, scc_file, writer_config, progress_callback_write)
 
 
   else:

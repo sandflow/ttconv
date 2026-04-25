@@ -35,8 +35,6 @@ import os
 import unittest
 import io
 from fractions import Fraction
-import xml.etree.ElementTree as et
-
 import ttconv.imsc.reader as imsc_reader
 import ttconv.model as model
 import ttconv.style_properties as styles
@@ -99,7 +97,7 @@ class IMSC11TextFilterTest(unittest.TestCase):
     self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
 
   def test_valid_vtt_document_passes(self):
-    f = io.StringIO("WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nHello world\n")
+    f = io.BytesIO(b"WEBVTT\n\n00:00:00.000 --> 00:00:05.000\nHello world\n")
     doc = to_model(f)
     filt = IMSC11TextFilter()
     filt.process(doc)
@@ -695,8 +693,8 @@ class IMSC11TextFilterTest(unittest.TestCase):
         if ext == ".ttml":
             with self.subTest(name):
               logging.getLogger().info("*****dummy*****") # dummy log
-              tree = et.parse(os.path.join(root, filename))
-              model = imsc_reader.to_model(tree)
+              with open(os.path.join(root, filename), 'rb') as f:
+                model = imsc_reader.to_model(f)
               self.assertIsNotNone(model)
               filt = IMSC11TextFilter()
               filt.process(model)
@@ -709,8 +707,8 @@ class IMSC11TextFilterTest(unittest.TestCase):
         if ext == ".ttml":
             with self.subTest(name):
               logging.getLogger().info("*****dummy*****") # dummy log
-              tree = et.parse(os.path.join(root, filename))
-              model = imsc_reader.to_model(tree)
+              with open(os.path.join(root, filename), 'rb') as f:
+                model = imsc_reader.to_model(f)
               self.assertIsNotNone(model)
               filt = IMSC11TextFilter()
               filt.process(model)
@@ -721,8 +719,8 @@ class IMSC11TextFilterTest(unittest.TestCase):
         (name, ext) = os.path.splitext(filename)
         if ext == ".ttml":
             with self.subTest(name):
-              tree = et.parse(os.path.join(root, filename))
-              model = imsc_reader.to_model(tree)
+              with open(os.path.join(root, filename), 'rb') as f:
+                model = imsc_reader.to_model(f)
               self.assertIsNotNone(model)
               filt = IMSC11TextFilter()
               with self.assertRaises(ValueError):

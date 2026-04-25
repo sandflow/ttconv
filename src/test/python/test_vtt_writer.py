@@ -27,13 +27,11 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+import io
 import json
 import os
 import unittest
-import xml.etree.ElementTree as et
 from fractions import Fraction
-from pathlib import Path
-
 import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.stl.reader as stl_reader
@@ -89,7 +87,7 @@ class VttWriterTest(unittest.TestCase):
     span.push_child(Text(doc, "Pellentesque interdum lacinia sollicitudin."))
     p.push_child(span)
 
-    expected_vtt = """WEBVTT
+    expected_vtt = b"""WEBVTT
 
 1
 00:00:00.000 --> 00:00:02.000
@@ -104,12 +102,14 @@ consectetur adipiscing elit.
 Pellentesque interdum lacinia sollicitudin.
 """
 
-    vtt_from_model = vtt_writer.from_model(doc, None)
+    buf = io.BytesIO()
+    vtt_writer.from_model(doc, buf)
+    vtt_from_model = buf.getvalue()
 
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_position(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
   <head>
     <styling>
@@ -128,7 +128,7 @@ Pellentesque interdum lacinia sollicitudin.
   </body>
 </tt>"""
 
-    expected_vtt="""WEBVTT
+    expected_vtt=b"""WEBVTT
 
 1
 00:00:03.500 --> 00:00:12.000 line:90%,end
@@ -140,18 +140,22 @@ to make sure the conversion basically works
 Cool, got it, will do it by end of next week.
 """
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     config = VTTWriterConfiguration()
     config.line_position = True
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.BytesIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
     config = VTTWriterConfiguration.parse(json.loads('{"line_position":true}'))
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.BytesIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_align(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
   <head>
     <styling>
@@ -174,7 +178,7 @@ Cool, got it, will do it by end of next week.
   </body>
 </tt>"""
 
-    expected_vtt="""WEBVTT
+    expected_vtt=b"""WEBVTT
 
 1
 00:00:03.500 --> 00:00:12.000 align:center
@@ -194,18 +198,22 @@ Yes.
 Good.
 """
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     config = VTTWriterConfiguration()
     config.text_align = True
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.BytesIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
     config = VTTWriterConfiguration.parse(json.loads('{"text_align":true}'))
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.BytesIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_cue_id(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001">
   <body>
     <div>
@@ -215,7 +223,7 @@ Good.
   </body>
 </tt>"""
 
-    expected_vtt="""WEBVTT
+    expected_vtt=b"""WEBVTT
 
 00:00:03.500 --> 00:00:12.000
 Only one or two short samples are needed
@@ -225,14 +233,18 @@ to make sure the conversion basically works
 Cool, got it, will do it by end of next week.
 """
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     config = VTTWriterConfiguration()
     config.cue_id = False
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.BytesIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
     config = VTTWriterConfiguration.parse(json.loads('{"cue_id":false}'))
-    vtt_from_model = vtt_writer.from_model(model, config)
+    buf = io.BytesIO()
+    vtt_writer.from_model(model, buf, config)
+    vtt_from_model = buf.getvalue()
     self.assertEqual(expected_vtt, vtt_from_model)
 
   def test_scc_test_suite(self):
@@ -242,9 +254,11 @@ Cool, got it, will do it by end of next week.
         if ext == ".scc":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            scc_content = Path(path).read_text()
-            test_model = scc_reader.to_model(scc_content)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            with open(path, 'rb') as f:
+              test_model = scc_reader.to_model(f)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
@@ -257,7 +271,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             with open(path, "rb") as stl_content:
               test_model = stl_reader.to_model(stl_content)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
@@ -270,7 +286,9 @@ Cool, got it, will do it by end of next week.
             path = os.path.join(root, filename)
             with open(path, "rb") as stl_content:
               test_model = stl_reader.to_model(stl_content)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self.assertTrue(len(vtt_from_model) > 0, msg=f"Could not convert {path}")
             self._check_output_vtt(test_model, vtt_from_model, path)
 
@@ -281,9 +299,11 @@ Cool, got it, will do it by end of next week.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
 
   @unittest.skip("Too long to process")
@@ -294,9 +314,11 @@ Cool, got it, will do it by end of next week.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            vtt_from_model = vtt_writer.from_model(test_model, None)
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
 
   @unittest.skip("IMSC 1.2 is not supported")
@@ -307,9 +329,11 @@ Cool, got it, will do it by end of next week.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            vtt_from_model =vtt_writer.from_model(test_model, None)
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
 
   @unittest.skip("IMSC 1.3 is not supported")
@@ -320,9 +344,11 @@ Cool, got it, will do it by end of next week.
         if ext == ".ttml":
           with self.subTest(name):
             path = os.path.join(root, filename)
-            tree = et.parse(path)
-            test_model = imsc_reader.to_model(tree)
-            vtt_from_model =vtt_writer.from_model(test_model, None)
+            with open(path, 'rb') as f:
+              test_model = imsc_reader.to_model(f)
+            buf = io.BytesIO()
+            vtt_writer.from_model(test_model, buf)
+            vtt_from_model = buf.getvalue()
             self._check_output_vtt(test_model, vtt_from_model, path)
   #
   # Utility functions
@@ -357,18 +383,20 @@ Cool, got it, will do it by end of next week.
 
     return paragraphs
 
-  def _check_output_vtt(self, model: ContentDocument, vtt: str, path: str):
+  def _check_output_vtt(self, model: ContentDocument, vtt: bytes, path: str):
     if self._has_document_paragraphs(model):
       self.assertTrue(len(vtt) > 0, msg=f"Could not convert {path}")
     else:
       self.assertEqual(8, len(vtt), msg=f"Could not convert {path}")
 
   def test_empty_isds(self):
-    tree = et.parse('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml')
-    doc = imsc_reader.to_model(tree)
-    srt_from_model = vtt_writer.from_model(doc)
+    with open('src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/BasicTiming010.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
+    buf = io.BytesIO()
+    vtt_writer.from_model(doc, buf)
+    srt_from_model = buf.getvalue()
 
-    self.assertEqual(srt_from_model, """WEBVTT
+    self.assertEqual(srt_from_model, b"""WEBVTT
 
 1
 00:00:10.000 --> 00:00:24.400

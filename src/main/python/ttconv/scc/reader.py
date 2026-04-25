@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 import logging
+import typing
 from typing import Optional
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType, ActiveAreaType
@@ -45,8 +46,10 @@ LOGGER = logging.getLogger(__name__)
 # SCC reader
 #
 
-def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, progress_callback=lambda _: None):
+def to_model(data_file: typing.BinaryIO, config: Optional[SccReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts a SCC document to the data model"""
+
+  scc_content = data_file.read().decode("utf-8")
 
   document = ContentDocument()
 
@@ -104,8 +107,19 @@ def to_model(scc_content: str, config: Optional[SccReaderConfiguration] = None, 
   return document
 
 
-def to_disassembly(scc_content: str, show_channels = False) -> str:
-  """Dumps an SCC document into the disassembly format"""
+def to_disassembly(scc_content: str | bytes, show_channels = False) -> str:
+  """Converts SCC content into a human-readable disassembly string.
+  
+  Args:
+    scc_content: SCC file content as a string or UTF-8 encoded bytes.
+    show_channels: If True, include the channel number for each data word.
+
+  Returns:
+    A string with one disassembled line per SCC line, terminated by newlines.
+  """
+  if isinstance(scc_content, bytes):
+    scc_content = scc_content.decode("utf-8")
+
   disassembly = ""
   for line in scc_content.splitlines():
     LOGGER.debug(line)
