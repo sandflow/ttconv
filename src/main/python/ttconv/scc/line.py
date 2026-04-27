@@ -39,6 +39,7 @@ from ttconv.scc.codes.extended_characters import SccExtendedCharacter
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.codes.special_characters import SccSpecialCharacter
+from ttconv.scc.config import SCCReaderFrameRate
 from ttconv.scc.context import SccContext
 from ttconv.scc.disassembly import get_scc_word_disassembly
 from ttconv.scc.word import SccWord
@@ -65,7 +66,7 @@ class SccLine:
     self.scc_words = scc_words
 
   @staticmethod
-  def from_str(line: str) -> Optional[SccLine]:
+  def from_str(line: str, frame_rate: Optional[SCCReaderFrameRate] = None) -> Optional[SccLine]:
     """Creates a SCC line instance from the specified string"""
     if not line:
       return None
@@ -77,7 +78,8 @@ class SccLine:
       return None
 
     time_code = match.group(1)
-    time_offset = SmpteTimeCode.parse(time_code, FPS_29_97)
+    fps = frame_rate.fps if frame_rate is not None else FPS_29_97
+    time_offset = SmpteTimeCode.parse(time_code, fps)
 
     hex_words = line.split('\t')[1].split(' ')
     scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]

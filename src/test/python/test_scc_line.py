@@ -30,7 +30,8 @@ import unittest
 
 from ttconv.scc.line import SccLine
 from ttconv.scc.caption_style import SccCaptionStyle
-from ttconv.time_code import SmpteTimeCode, FPS_29_97
+from ttconv.scc.config import SCCReaderFrameRate
+from ttconv.time_code import SmpteTimeCode, FPS_29_97, FPS_30, FPS_25, FPS_23_98
 
 
 class SccLineTest(unittest.TestCase):
@@ -97,3 +98,55 @@ class SccLineTest(unittest.TestCase):
     self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	{RDC}{RDC}{1504}{1504}HEY, THERE.", scc_line.to_disassembly())
     self.assertEqual(SccCaptionStyle.PaintOn, scc_line.get_style())
+
+
+class SccLineFromStrFrameRateTest(unittest.TestCase):
+
+  NDF_LINE = "01:03:27:23\t9420 9420"
+  DF_LINE  = "01:03:27;23\t9420 9420"
+
+  def test_explicit_fps_30_ndf(self):
+    """FPS_30 config with NDF timecode uses 30 fps, non-drop-frame."""
+    scc_line = SccLine.from_str(self.NDF_LINE, SCCReaderFrameRate.FPS_30)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_30, scc_line.time_code.get_frame_rate())
+    self.assertFalse(scc_line.time_code.is_drop_frame())
+    expected = SmpteTimeCode(1, 3, 27, 23, FPS_30, False).to_temporal_offset()
+    self.assertEqual(expected, scc_line.time_code.to_temporal_offset())
+
+  def test_explicit_fps_2997_ndf(self):
+    """FPS_2997 config with NDF timecode uses 29.97 fps, non-drop-frame."""
+    scc_line = SccLine.from_str(self.NDF_LINE, SCCReaderFrameRate.FPS_2997)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_29_97, scc_line.time_code.get_frame_rate())
+    self.assertFalse(scc_line.time_code.is_drop_frame())
+    expected = SmpteTimeCode(1, 3, 27, 23, FPS_29_97, False).to_temporal_offset()
+    self.assertEqual(expected, scc_line.time_code.to_temporal_offset())
+
+  def test_explicit_fps_2997_df(self):
+    """FPS_2997 config with DF timecode detects drop-frame from delimiter."""
+    scc_line = SccLine.from_str(self.DF_LINE, SCCReaderFrameRate.FPS_2997)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_29_97, scc_line.time_code.get_frame_rate())
+    self.assertTrue(scc_line.time_code.is_drop_frame())
+    expected = SmpteTimeCode(1, 3, 27, 23, FPS_29_97, True).to_temporal_offset()
+    self.assertEqual(expected, scc_line.time_code.to_temporal_offset())
+
+  def test_explicit_fps_25_ndf(self):
+    """FPS_25 config with NDF timecode uses 25 fps, non-drop-frame."""
+    scc_line = SccLine.from_str(self.NDF_LINE, SCCReaderFrameRate.FPS_25)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_25, scc_line.time_code.get_frame_rate())
+    self.assertFalse(scc_line.time_code.is_drop_frame())
+    expected = SmpteTimeCode(1, 3, 27, 23, FPS_25, False).to_temporal_offset()
+    self.assertEqual(expected, scc_line.time_code.to_temporal_offset())
+
+  def test_explicit_fps_2398_ndf(self):
+    """FPS_2398 config with NDF timecode uses 23.976 fps, non-drop-frame."""
+    scc_line = SccLine.from_str(self.NDF_LINE, SCCReaderFrameRate.FPS_2398)
+    self.assertIsNotNone(scc_line)
+    self.assertEqual(FPS_23_98, scc_line.time_code.get_frame_rate())
+    self.assertFalse(scc_line.time_code.is_drop_frame())
+    expected = SmpteTimeCode(1, 3, 27, 23, FPS_23_98, False).to_temporal_offset()
+    self.assertEqual(expected, scc_line.time_code.to_temporal_offset())
+

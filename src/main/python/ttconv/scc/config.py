@@ -61,6 +61,31 @@ class TextAlignment(Enum):
 
     raise ValueError(f"Invalid text align '{value}' value. Expect: 'left', 'center', 'right' or 'auto'.")
 
+class SCCReaderFrameRate(Enum):
+  """SCC Reader Frame Rates — encodes fps only; DF/NDF is detected from the timecode delimiter in the file."""
+
+  FPS_30   = ("30",     Fraction(30))
+  FPS_2997 = ("29.97",  Fraction(30000, 1001))
+  FPS_25   = ("25",     Fraction(25))
+  FPS_2398 = ("23.976", Fraction(24000, 1001))
+
+  def __init__(self, label: str, fps: Fraction):
+    self.label: str = label
+    self.fps: Fraction = fps
+
+  @staticmethod
+  def from_value(value: str | SCCReaderFrameRate) -> SCCReaderFrameRate:
+    """Create a SCCReaderFrameRate from a string label or existing instance"""
+    if isinstance(value, SCCReaderFrameRate):
+      return value
+
+    if isinstance(value, str):
+      for e in list(SCCReaderFrameRate):
+        if value.lower() == e.label.lower():
+          return e
+
+    raise ValueError(f"Invalid SCC Reader Frame Rate '{value}'. Expect {', '.join([e.label for e in list(SCCReaderFrameRate)])}.")
+
 class SCCFrameRate(Enum):
   """SCC Frame Rates"""
 
@@ -93,6 +118,11 @@ class SccReaderConfiguration(ModuleConfiguration):
   text_align: TextAlignment = field(
     default=TextAlignment.AUTO,
     metadata={"decoder": TextAlignment.from_value}
+  )
+
+  frame_rate: typing.Optional[SCCReaderFrameRate] = field(
+    default=None,
+    metadata={"decoder": lambda v: SCCReaderFrameRate.from_value(v) if v is not None else None}
   )
 
   @classmethod
