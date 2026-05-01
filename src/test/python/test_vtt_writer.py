@@ -150,6 +150,53 @@ Cool, got it, will do it by end of next week.
     vtt_from_model = vtt_writer.from_model(model, config)
     self.assertEqual(expected_vtt, vtt_from_model)
 
+  def test_ruby(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
+  <head>
+    <layout>
+      <region tts:displayAlign="center" tts:textAlign="center" tts:backgroundColor="black" xml:id="r1" tts:position="center center" tts:extent="40% 40%"/>
+    </layout>
+  </head>
+  <body>
+    <div region="r1">
+      <p begin="0s" end="1s"><span tts:ruby="container">
+        <span tts:ruby="base">base</span><span tts:ruby="text">text</span></span>
+      </p>
+      <p begin="1s" end="2s">
+        <span tts:ruby="container"><span tts:ruby="base">base</span><span tts:ruby="delimiter">(</span><span tts:ruby="text">text</span><span tts:ruby="delimiter">)</span></span>
+      </p>
+      <p begin="2s" end="3s">
+        <span tts:ruby="container">
+          <span tts:ruby="baseContainer"><span tts:ruby="base">base</span></span>
+          <span tts:ruby="textContainer" tts:rubyPosition="before"><span tts:ruby="text">text1</span></span>
+          <span tts:ruby="textContainer" tts:rubyPosition="after"><span tts:ruby="text">text2</span></span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>"""
+
+    expected_vtt="""WEBVTT
+
+1
+00:00:00.000 --> 00:00:01.000
+<ruby>base<rt>text</rt></ruby>
+
+2
+00:00:01.000 --> 00:00:02.000
+<ruby>base<rt>text</rt></ruby>
+
+3
+00:00:02.000 --> 00:00:03.000
+<ruby>base<rt>text1</rt></ruby>
+"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    config = VTTWriterConfiguration()
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual(expected_vtt, vtt_from_model)
+
   def test_align(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">

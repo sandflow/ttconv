@@ -104,7 +104,38 @@ class VttContext:
     )
 
   def process_inline_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
-    """Converts inline element (span and br) to VTT content"""
+    """Converts inline element (ruby, rb, rp, rt, rbc, rtc, span and br) to VTT content"""
+
+    if isinstance(element, model.Ruby):
+      self._paragraphs[-1].append_text('<ruby>')
+      rtc = False
+      for elem in list(element):
+        if isinstance(elem, model.Rtc):
+          if rtc: continue
+          rtc = True
+        self.process_inline_element(elem, begin, end)
+      self._paragraphs[-1].append_text('</ruby>')
+
+    if isinstance(element, model.Rbc):
+      for elem in list(element):
+        self.process_inline_element(elem, begin, end)
+
+    if isinstance(element, model.Rtc):
+      for elem in list(element):
+        self.process_inline_element(elem, begin, end)
+
+    if isinstance(element, model.Rb):
+      for elem in list(element):
+        self.process_inline_element(elem, begin, end)
+
+    if isinstance(element, model.Rp):
+      pass
+
+    if isinstance(element, model.Rt):
+      self._paragraphs[-1].append_text('<rt>')
+      for elem in list(element):
+        self.process_inline_element(elem, begin, end)
+      self._paragraphs[-1].append_text('</rt>')
 
     if isinstance(element, model.Span):
       is_bold = style.is_element_bold(element)
