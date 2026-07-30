@@ -25,6 +25,8 @@
 
 """SRT writer"""
 
+from __future__ import annotations
+import dataclasses
 import logging
 from fractions import Fraction
 from typing import List, Optional
@@ -79,7 +81,14 @@ class SrtContext:
     self._paragraphs: List[SrtParagraph] = []
     self._text_formatting = config.text_formatting
 
-  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
+  @dataclasses.dataclass
+  class _InlineProcessContext:
+    is_bold: bool | None = None
+    is_italic: bool | None = None
+    is_underline: bool | None = None
+    color: str | None = None
+
+  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction], parent_ctx: _InlineProcessContext = None):
     """Converts model element to SRT content"""
 
     if isinstance(element, model.Div):
@@ -95,7 +104,7 @@ class SrtContext:
       self._paragraphs[-1].set_end(end)
 
       for elem in list(element):
-        self.append_element(elem, begin, end)
+        self.append_element(elem, begin, end, SrtContext._InlineProcessContext())
 
       self._paragraphs[-1].normalize_eol()
 
@@ -109,27 +118,46 @@ class SrtContext:
       is_underlined = style.is_element_underlined(element)
       font_color = style.get_font_color(element)
 
+      # initialize current context to the parent context
+      ctx: SrtContext._InlineProcessContext = dataclasses.replace(parent_ctx) if parent_ctx is not None else SrtContext._InlineProcessContext()
+
+      opened_color = False
+      opened_bold = False
+      opened_italic = False
+      opened_underline = False
+
       if self._text_formatting:
-        if font_color is not None:
+        if font_color is not None and ctx.color != font_color:
           self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
-        if is_bold:
+          ctx.color = font_color
+          opened_color = True
+
+        if is_bold and not ctx.is_bold:
           self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
-        if is_italic:
+          ctx.is_bold = True
+          opened_bold = True
+
+        if is_italic and not ctx.is_italic:
           self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
-        if is_underlined:
+          ctx.is_italic = True
+          opened_italic = True
+
+        if is_underlined and not ctx.is_underline:
           self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
+          ctx.is_underline = True
+          opened_underline = True
 
       for elem in list(element):
-        self.append_element(elem, begin, end)
+        self.append_element(elem, begin, end, ctx)
 
       if self._text_formatting:
-        if is_underlined:
+        if opened_underline:
           self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
-        if is_italic:
+        if opened_italic:
           self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
-        if is_bold:
+        if opened_bold:
           self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
-        if font_color is not None:
+        if opened_color:
           self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_OUT)
 
     if isinstance(element, model.Br):
