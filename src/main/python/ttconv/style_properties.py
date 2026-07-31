@@ -59,7 +59,7 @@ class LengthType:
     c = "c"
     px = "px"
 
-  value: Numeric = 0
+  value: typing.Union[int, float] = 0
   units: Units = Units.pct
 
   def __post_init__(self):

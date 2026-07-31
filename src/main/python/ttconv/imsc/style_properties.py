@@ -365,9 +365,12 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      return styles.SpecialValues.normal \
-        if xml_attrib == "normal" \
-        else StyleProperties.ttml_length_to_model(context, xml_attrib)
+      if xml_attrib == "normal":
+        return styles.SpecialValues.normal
+      r = StyleProperties.ttml_length_to_model(context, xml_attrib)
+      if r.value < 0:
+        raise ValueError("Negative tts:lineHeight value: %d", r.value)
+      return r
 
     @classmethod
     def from_model(cls, xml_element, model_value):
