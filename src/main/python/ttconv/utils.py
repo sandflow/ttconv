@@ -25,14 +25,26 @@
 
 '''Common utilities'''
 
+import logging
 import re
 import typing
 from fractions import Fraction
 import ttconv.style_properties as styles
 
+LOGGER = logging.getLogger(__name__)
+
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
 _DEC_COLOR_RE = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 _DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
+
+def _parse_color_component(value: str) -> int:
+  '''Parses a decimal `rgb()`/`rgba()` color component, clamping to 255 if out of range
+  '''
+  i = int(value)
+  if i > 255:
+    LOGGER.error("Color component value greater than 255: %s", value)
+    return 255
+  return i
 
 def parse_color(attr_value: str) -> styles.ColorType:
   '''Parses the TTML \\<color\\> value contained in `attr_value`
@@ -44,7 +56,7 @@ def parse_color(attr_value: str) -> styles.ColorType:
 
     return styles.NamedColors[lower_attr_value].value
 
-  m = _HEX_COLOR_RE.match(attr_value)
+  m = _HEX_COLOR_RE.fullmatch(attr_value)
 
   if m:
 
@@ -57,29 +69,29 @@ def parse_color(attr_value: str) -> styles.ColorType:
       )
     )
 
-  m = _DEC_COLOR_RE.match(attr_value)
+  m = _DEC_COLOR_RE.fullmatch(attr_value)
 
   if m:
 
     return styles.ColorType(
       (
-        int(m.group(1)),
-        int(m.group(2)),
-        int(m.group(3)),
+        _parse_color_component(m.group(1)),
+        _parse_color_component(m.group(2)),
+        _parse_color_component(m.group(3)),
         255
       )
     )
 
-  m = _DEC_COLORA_RE.match(attr_value)
+  m = _DEC_COLORA_RE.fullmatch(attr_value)
 
   if m:
 
     return styles.ColorType(
       (
-        int(m.group(1)),
-        int(m.group(2)),
-        int(m.group(3)),
-        int(m.group(4))
+        _parse_color_component(m.group(1)),
+        _parse_color_component(m.group(2)),
+        _parse_color_component(m.group(3)),
+        _parse_color_component(m.group(4))
       )
     )
 
