@@ -74,5 +74,22 @@ class IMSCReaderTest(unittest.TestCase):
         c = parse_color(test[0])
         self.assertEqual(c, test[1])
 
+  def test_trailing_garbage_rejected(self):
+    with self.assertRaises(ValueError):
+      parse_color("#FFFFFFabc")
+
+    with self.assertRaises(ValueError):
+      parse_color("rgb(255,128,255)abc")
+
+    with self.assertRaises(ValueError):
+      parse_color("rgba(128,255,255,63)abc")
+
+  def test_decimal_component_out_of_range(self):
+    with self.assertRaises(ValueError):
+      parse_color("rgb(255,128,999)")
+
+    with self.assertRaises(ValueError):
+      parse_color("rgba(128,255,255,999)")
+
 if __name__ == '__main__':
   unittest.main()
