@@ -507,26 +507,19 @@ def parse_time_expression(ctx: TemporalAttributeParsingContext, time_expr: str, 
     return Fraction(m.group(1)) * 3600
 
   m = _CLOCK_TIME_FRACTION_RE.match(time_expr)
-
   if m:
     mm = int(m.group(2))
     ss = Fraction(m.group(3))
 
     if mm >= 60:
-      if strict:
-        raise ValueError("Minutes exceeds 59")
-      else:
-        LOGGER.error("Minutes value %s exceeds 59, clamping to 59", mm)
-        mm = 59
+      raise ValueError("Minutes exceeds 59")
 
-    if ss >= 61:
-      if strict:
-        raise ValueError("Seconds exceeds 60")
-      else:
-        LOGGER.error("Seconds value %s exceeds 60, clamping to 60", ss)
-        ss = Fraction(60)
-    elif ss == 60:
-      LOGGER.warning("Seconds value is 60")
+    if ss > 60:
+      raise ValueError("Seconds exceeds 60")
+
+    if ss == 60:
+      LOGGER.warning("Seconds value is 60, clamping to 59")
+      ss = Fraction(59)
 
     return Fraction(m.group(1)) * 3600 + \
             Fraction(mm) * 60 + \
@@ -549,19 +542,12 @@ def parse_time_expression(ctx: TemporalAttributeParsingContext, time_expr: str, 
     ss = int(m.group(3))
 
     if mm >= 60:
-      if strict:
-        raise ValueError("Minutes exceeds 59")
-      else:
-        LOGGER.error("Minutes value %s exceeds 59, clamping to 59", mm)
-        mm = 59
+      raise ValueError("Minutes exceeds 59")
 
-    if ss >= 61:
-      if strict:
-        raise ValueError("Seconds exceeds 60")
+    if ss > 60:
+      raise ValueError("Seconds exceeds 60")
 
-      LOGGER.error("Seconds value %s exceeds 60, clamping to 59", ss)
-      ss = 59
-    elif ss == 60:
+    if ss == 60:
       LOGGER.warning("Seconds value is 60, clamping to 59")
       ss = 59
 

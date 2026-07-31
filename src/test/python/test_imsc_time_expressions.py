@@ -88,16 +88,12 @@ class IMSCTimeExpressionsTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:99:00:10")
 
-  def test_bad_minutes_non_strict(self):
-    self.assertEqual(
-      parse_time_expression(TemporalAttributeParsingContext(), "00:99:00.5", False),
-      Fraction(59) * 60 + Fraction(1, 2)
-    )
+    # minutes overflow is always an error, regardless of strict
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(), "00:99:00.5", False)
 
-    self.assertEqual(
-      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:99:00:12", False),
-      Fraction(59) * 60 + Fraction(12, 24)
-    )
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:99:00:10", False)
 
   def test_bad_seconds(self):
     with self.assertRaises(ValueError):
@@ -106,21 +102,18 @@ class IMSCTimeExpressionsTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:00:61:10")
 
-  def test_bad_seconds_non_strict(self):
-    self.assertEqual(
-      parse_time_expression(TemporalAttributeParsingContext(), "00:00:61.5", False),
-      Fraction(60)
-    )
+    # seconds > 60 is always an error, regardless of strict
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(), "00:00:61", False)
 
-    self.assertEqual(
-      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:00:61:12", False),
-      Fraction(59) + Fraction(12, 24)
-    )
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:00:61:10", False)
 
   def test_leap_second_warning(self):
+    # seconds == 60 is always clamped to 59 with a warning, regardless of strict
     with self.assertLogs(level="WARNING") as logs:
       c = parse_time_expression(TemporalAttributeParsingContext(), "00:00:60")
-      self.assertEqual(c, Fraction(60))
+      self.assertEqual(c, Fraction(59))
       self.assertEqual(len(logs.output), 1)
 
     with self.assertLogs(level="WARNING") as logs:
