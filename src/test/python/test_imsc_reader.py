@@ -272,6 +272,17 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(value.style, styles.TextEmphasisType.Style.open_circle)
     self.assertEqual(value.position, styles.TextEmphasisType.Position.before)
 
+  def test_line_height(self):
+    value = imsc_styles.StyleProperties.LineHeight.extract(None, "normal")
+    self.assertIs(value, styles.SpecialValues.normal)
+
+    value = imsc_styles.StyleProperties.LineHeight.extract(None, "150%")
+    self.assertEqual(value.value, 150)
+    self.assertEqual(value.units, styles.LengthType.Units.pct)
+
+    with self.assertRaises(ValueError):
+      imsc_styles.StyleProperties.LineHeight.extract(None, "-150%")
+
   def test_cell_resolution(self):
     xml_str = """<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"
