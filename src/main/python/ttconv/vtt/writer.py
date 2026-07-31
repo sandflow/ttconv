@@ -124,6 +124,7 @@ class VttContext:
         else:
           color_classname = self._colors_used[color]
         self._paragraphs[-1].append_text(style.COLOR_TAG_IN.format(color_classname))
+        opened_color = True
 
       opened_bg_color = False
       if bg_color is not None:
@@ -134,6 +135,7 @@ class VttContext:
         else:
           bg_color_classname = self._background_colors_used[bg_color]
         self._paragraphs[-1].append_text(style.BG_COLOR_TAG_IN.format(bg_color_classname))
+        opened_bg_color = True
 
       opened_bold = False
       if is_bold:

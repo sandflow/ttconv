@@ -26,7 +26,6 @@
 """SRT writer"""
 
 from __future__ import annotations
-import dataclasses
 import logging
 from fractions import Fraction
 from typing import List, Optional
@@ -81,14 +80,7 @@ class SrtContext:
     self._paragraphs: List[SrtParagraph] = []
     self._text_formatting = config.text_formatting
 
-  @dataclasses.dataclass
-  class _InlineProcessContext:
-    is_bold: bool | None = None
-    is_italic: bool | None = None
-    is_underline: bool | None = None
-    color: str | None = None
-
-  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction], parent_ctx: _InlineProcessContext = None):
+  def append_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
     """Converts model element to SRT content"""
 
     if isinstance(element, model.Div):
@@ -104,7 +96,7 @@ class SrtContext:
       self._paragraphs[-1].set_end(end)
 
       for elem in list(element):
-        self.append_element(elem, begin, end, SrtContext._InlineProcessContext())
+        self.append_element(elem, begin, end)
 
       self._paragraphs[-1].normalize_eol()
 
@@ -112,14 +104,12 @@ class SrtContext:
         LOGGER.debug("Removing empty paragraph.")
         self._paragraphs.pop()
 
-    if isinstance(element, model.Span):
-      is_bold = style.is_element_bold(element)
-      is_italic = style.is_element_italic(element)
-      is_underlined = style.is_element_underlined(element)
-      font_color = style.get_font_color(element)
-
-      # initialize current context to the parent context
-      ctx: SrtContext._InlineProcessContext = dataclasses.replace(parent_ctx) if parent_ctx is not None else SrtContext._InlineProcessContext()
+    if isinstance(element, model.Text):
+      parent_span = element.parent()
+      is_bold = style.is_element_bold(parent_span)
+      is_italic = style.is_element_italic(parent_span)
+      is_underlined = style.is_element_underlined(parent_span)
+      font_color = style.get_font_color(parent_span)
 
       opened_color = False
       opened_bold = False
@@ -127,28 +117,23 @@ class SrtContext:
       opened_underline = False
 
       if self._text_formatting:
-        if font_color is not None and ctx.color != font_color:
+        if font_color is not None:
           self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
-          ctx.color = font_color
           opened_color = True
 
-        if is_bold and not ctx.is_bold:
+        if is_bold:
           self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
-          ctx.is_bold = True
           opened_bold = True
 
-        if is_italic and not ctx.is_italic:
+        if is_italic:
           self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
-          ctx.is_italic = True
           opened_italic = True
 
-        if is_underlined and not ctx.is_underline:
+        if is_underlined:
           self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
-          ctx.is_underline = True
           opened_underline = True
 
-      for elem in list(element):
-        self.append_element(elem, begin, end, ctx)
+      self._paragraphs[-1].append_text(element.get_text())
 
       if self._text_formatting:
         if opened_underline:
@@ -163,8 +148,9 @@ class SrtContext:
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
 
-    if isinstance(element, model.Text):
-      self._paragraphs[-1].append_text(element.get_text())
+    if isinstance(element, model.Span):
+      for elem in list(element):
+        self.append_element(elem, begin, end)
 
   def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to SRT content"""
