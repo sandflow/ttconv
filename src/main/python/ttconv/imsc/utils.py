@@ -112,6 +112,9 @@ def parse_position(attr_value: str) -> typing.Tuple[str, styles.LengthType, str,
 
   items = attr_value.split()
 
+  if len(items) == 0:
+    LOGGER.error("Empty tts:position value")
+
   if len(items) in (1, 2):
 
     # begin processing 1 and 2 components

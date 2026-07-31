@@ -116,5 +116,12 @@ class IMSCPositionTest(unittest.TestCase):
         c = parse_position(test[0])
         self.assertEqual(c, test[1])
 
+  def test_empty_position(self):
+    with self.assertLogs() as logs:
+      c = parse_position("")
+      self.assertEqual(c, position("left", 50, "%", "top", 50, "%"))
+      if len(logs.output) != 1:
+        self.fail(logs.output)
+
 if __name__ == '__main__':
   unittest.main()
