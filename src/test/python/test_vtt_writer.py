@@ -427,5 +427,28 @@ This text must appear at 25 seconds and disappear at 35 seconds
 <i>Lorem</i>
 """)
 
+  def test_mixed_normal_italic(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:01.000" end="00:00:02.000"><span tts:fontStyle="italic">A<span tts:fontStyle="normal">B</span>C</span></p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:01.000 --> 00:00:02.000
+<i>A</i>B<i>C</i>
+""")
+
 if __name__ == '__main__':
   unittest.main()
