@@ -107,6 +107,14 @@ class SmpteTimeCodesTest(unittest.TestCase):
     self.assertEqual(Fraction(111582, Fraction(30000, 1001)), time_code.to_temporal_offset())
     self.assertEqual("01:02:03;04", str(time_code))
 
+  def test_parse_rejects_invalid_time_code(self):
+    # the separator alternation used to include an unescaped '.', which matches
+    # any character, and matching was not anchored to the end of the string
+    for time_code in ["01x02x03x04", "01 02-03/04", "01:02:03:04garbage", "01:02:03.456"]:
+      with self.subTest(time_code=time_code):
+        with self.assertRaises(ValueError):
+          SmpteTimeCode.parse(time_code, FPS_29_97)
+
   def test_time_code_frames_conversion(self):
     time_code = SmpteTimeCode.from_frames(1795, FPS_30)
     self.assertEqual("00:00:59:25", str(time_code))
