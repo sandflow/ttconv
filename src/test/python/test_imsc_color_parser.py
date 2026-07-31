@@ -84,18 +84,12 @@ class IMSCReaderTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       parse_color("rgba(128,255,255,63)abc")
 
-  def test_decimal_component_clamped(self):
-    with self.assertLogs() as logs:
-      c = parse_color("rgb(255,128,999)")
-      self.assertEqual(c, ColorType((255, 128, 255, 255)))
-      if len(logs.output) != 1:
-        self.fail(logs.output)
+  def test_decimal_component_out_of_range(self):
+    with self.assertRaises(ValueError):
+      parse_color("rgb(255,128,999)")
 
-    with self.assertLogs() as logs:
-      c = parse_color("rgba(128,255,255,999)")
-      self.assertEqual(c, ColorType((128, 255, 255, 255)))
-      if len(logs.output) != 1:
-        self.fail(logs.output)
+    with self.assertRaises(ValueError):
+      parse_color("rgba(128,255,255,999)")
 
 if __name__ == '__main__':
   unittest.main()

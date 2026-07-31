@@ -37,18 +37,17 @@ _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([
 _DEC_COLOR_RE = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 _DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 
-def _parse_color_component(value: str) -> int:
-  '''Parses a decimal `rgb()`/`rgba()` color component, clamping to 255 if out of range
-  '''
-  i = int(value)
-  if i > 255:
-    LOGGER.error("Color component value greater than 255: %s", value)
-    return 255
-  return i
+
 
 def parse_color(attr_value: str) -> styles.ColorType:
   '''Parses the TTML \\<color\\> value contained in `attr_value`
   '''
+
+  def _parse_color_component(value: str) -> int:
+    i = int(value)
+    if i > 255:
+      raise ValueError(f"Color component value greater than 255: {value}")
+    return i
 
   lower_attr_value = str.lower(attr_value)
 
