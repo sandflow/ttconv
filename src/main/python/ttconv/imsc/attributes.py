@@ -160,9 +160,13 @@ class CellResolutionAttribute:
 
       if m is not None:
 
-        return model.CellResolutionType(columns=int(m.group(1)), rows=int(m.group(2)))
+        columns=int(m.group(1))
+        rows=int(m.group(2))
 
-      LOGGER.error("ttp:cellResolution invalid syntax")
+        if columns > 0 and rows > 0:
+          return model.CellResolutionType(columns=int(m.group(1)), rows=int(m.group(2)))
+
+      LOGGER.error("ttp:cellResolution invalid syntax: %s", cr)
 
     # default value in TTML
 

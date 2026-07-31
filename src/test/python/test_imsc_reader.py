@@ -33,7 +33,8 @@ import os
 import logging
 from fractions import Fraction
 from ttconv.imsc import namespaces
-from ttconv.imsc.attributes import DropMode, DropModeAttribute, TimeBase, TimeBaseAttribute, TimeContainerAttribute
+from ttconv.imsc.attributes import CellResolutionAttribute, DropMode, DropModeAttribute, TimeBase, TimeBaseAttribute, \
+  TimeContainerAttribute
 import ttconv.model as model
 import ttconv.style_properties as styles
 import ttconv.imsc.reader as imsc_reader
@@ -304,6 +305,35 @@ class IMSCReaderTest(unittest.TestCase):
       logging.getLogger().info("*****dummy*****") # dummy log
       self.assertEqual(TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "x"})), TimeBase.media)
       if len(logs.output) != 2:
+        self.fail(logs.output)
+
+  def test_cell_resolution_attribute(self):
+    value = CellResolutionAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}cellResolution": "32 15"}))
+    self.assertEqual(value.columns, 32)
+    self.assertEqual(value.rows, 15)
+
+    # default value in the absence of the attribute
+
+    value = CellResolutionAttribute.extract(et.Element("tt"))
+    self.assertEqual(value.columns, 32)
+    self.assertEqual(value.rows, 15)
+
+    # invalid syntax falls back to the default value
+
+    with self.assertLogs() as logs:
+      value = CellResolutionAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}cellResolution": "abc"}))
+      self.assertEqual(value.columns, 32)
+      self.assertEqual(value.rows, 15)
+      if len(logs.output) != 1:
+        self.fail(logs.output)
+
+    # zero columns or rows are rejected and fall back to the default value
+
+    with self.assertLogs() as logs:
+      value = CellResolutionAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}cellResolution": "0 15"}))
+      self.assertEqual(value.columns, 32)
+      self.assertEqual(value.rows, 15)
+      if len(logs.output) != 1:
         self.fail(logs.output)
 
   def test_dropframe_parameter(self):
