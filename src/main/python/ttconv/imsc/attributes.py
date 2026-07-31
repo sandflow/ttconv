@@ -509,9 +509,28 @@ def parse_time_expression(ctx: TemporalAttributeParsingContext, time_expr: str, 
   m = _CLOCK_TIME_FRACTION_RE.match(time_expr)
 
   if m:
+    mm = int(m.group(2))
+    ss = Fraction(m.group(3))
+
+    if mm >= 60:
+      if strict:
+        raise ValueError("Minutes exceeds 59")
+      else:
+        LOGGER.error("Minutes value %s exceeds 59, clamping to 59", mm)
+        mm = 59
+
+    if ss >= 61:
+      if strict:
+        raise ValueError("Seconds exceeds 60")
+      else:
+        LOGGER.error("Seconds value %s exceeds 60, clamping to 60", ss)
+        ss = Fraction(60)
+    elif ss == 60:
+      LOGGER.warning("Seconds value is 60")
+
     return Fraction(m.group(1)) * 3600 + \
-            Fraction(m.group(2)) * 60 + \
-            Fraction(m.group(3))
+            Fraction(mm) * 60 + \
+            ss
 
   m = _CLOCK_TIME_FRAMES_RE.match(time_expr)
 
@@ -528,6 +547,23 @@ def parse_time_expression(ctx: TemporalAttributeParsingContext, time_expr: str, 
     hh = int(m.group(1))
     mm = int(m.group(2))
     ss = int(m.group(3))
+
+    if mm >= 60:
+      if strict:
+        raise ValueError("Minutes exceeds 59")
+      else:
+        LOGGER.error("Minutes value %s exceeds 59, clamping to 59", mm)
+        mm = 59
+
+    if ss >= 61:
+      if strict:
+        raise ValueError("Seconds exceeds 60")
+
+      LOGGER.error("Seconds value %s exceeds 60, clamping to 59", ss)
+      ss = 59
+    elif ss == 60:
+      LOGGER.warning("Seconds value is 60, clamping to 59")
+      ss = 59
 
     if ctx.time_base is TimeBase.smpte:
       tc = SmpteTimeCode(hh, mm, ss, frames, ctx.frame_rate, ctx.drop_mode != DropMode.nonDrop)
