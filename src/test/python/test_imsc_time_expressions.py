@@ -81,6 +81,46 @@ class IMSCTimeExpressionsTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       parse_time_expression(TemporalAttributeParsingContext(), "100:00:00;01")
 
+  def test_bad_minutes(self):
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(), "00:99:00.5")
+
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:99:00:10")
+
+    # minutes overflow is always an error, regardless of strict
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(), "00:99:00.5", False)
+
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:99:00:10", False)
+
+  def test_bad_seconds(self):
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(), "00:00:61")
+
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:00:61:10")
+
+    # seconds > 60 is always an error, regardless of strict
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(), "00:00:61", False)
+
+    with self.assertRaises(ValueError):
+      parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:00:61:10", False)
+
+  def test_leap_second_warning(self):
+    # seconds == 60 is always clamped to 59 with a warning, regardless of strict
+    with self.assertLogs(level="WARNING") as logs:
+      c = parse_time_expression(TemporalAttributeParsingContext(), "00:00:60")
+      self.assertEqual(c, Fraction(59))
+      self.assertEqual(len(logs.output), 1)
+
+    with self.assertLogs(level="WARNING") as logs:
+      c = parse_time_expression(TemporalAttributeParsingContext(Fraction(24)), "00:00:60:00")
+      self.assertEqual(c, Fraction(59))
+      self.assertEqual(len(logs.output), 1)
+
 
 if __name__ == '__main__':
   unittest.main()
