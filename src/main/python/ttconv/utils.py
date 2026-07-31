@@ -25,19 +25,14 @@
 
 '''Common utilities'''
 
-import logging
 import re
 import typing
 from fractions import Fraction
 import ttconv.style_properties as styles
 
-LOGGER = logging.getLogger(__name__)
-
 _HEX_COLOR_RE = re.compile(r"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?")
 _DEC_COLOR_RE = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 _DEC_COLORA_RE = re.compile(r"rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
-
-
 
 def parse_color(attr_value: str) -> styles.ColorType:
   '''Parses the TTML \\<color\\> value contained in `attr_value`
