@@ -28,7 +28,6 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
-import xml.etree.ElementTree as et
 import ttconv.imsc.reader as imsc_reader
 from ttconv.isd import ISD
 import ttconv.model as model
@@ -36,9 +35,8 @@ import ttconv.model as model
 class LSWPTests(unittest.TestCase):
 
   def test_lwsp_default(self):
-    tree = et.parse('src/test/resources/ttml/lwsp_default.ttml')
-
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/lwsp_default.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     isd = ISD.from_model(doc, 0)
 
@@ -69,9 +67,8 @@ class LSWPTests(unittest.TestCase):
     self.assertEqual(spans[3][0].get_text(), "est")
 
   def test_lwsp_preserve(self):
-    tree = et.parse('src/test/resources/ttml/lwsp_preserve.ttml')
-
-    doc = imsc_reader.to_model(tree)
+    with open('src/test/resources/ttml/lwsp_preserve.ttml', 'rb') as f:
+      doc = imsc_reader.to_model(f)
 
     isd = ISD.from_model(doc, 0)
 

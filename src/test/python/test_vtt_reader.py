@@ -38,7 +38,7 @@ import ttconv.model as model
 class VTTReaderTest(unittest.TestCase):
 
   def test_sample(self):
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 
 02:00.000 --> 02:05.000
 <b>This is bold text</c>
@@ -46,7 +46,7 @@ class VTTReaderTest(unittest.TestCase):
 04:00.000 --> 04:05.000
 <i>This is italic</i> and this is not
 """
-    f = io.StringIO(SAMPLE)
+    f = io.BytesIO(SAMPLE)
     self.assertIsNotNone(to_model(f))
 
 
@@ -56,11 +56,11 @@ class VTTReaderTest(unittest.TestCase):
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
           with self.subTest(name):
-            with open(os.path.join(root, filename), encoding="utf-8") as f:
+            with open(os.path.join(root, filename), "rb") as f:
               self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 02:00.000 --> 02:05.000
 <b>This is bold text</b>
@@ -74,7 +74,7 @@ class VTTReaderTest(unittest.TestCase):
 
   def test_blank_lines(self):
     # from https://en.wikipedia.org/wiki/SubRip
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 
 1
 00:02:16.612 --> 00:02:19.376
@@ -94,13 +94,13 @@ There was no danger at all.
 
 """
 
-    f = io.StringIO(SAMPLE)
+    f = io.BytesIO(SAMPLE)
     self.assertIsNotNone(to_model(f))
 
   def test_malformed_blank_lines(self):
     # from https://github.com/sandflow/ttconv/issues/439
     # the first cue should be ignored since it is malformed
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 Kind: captions
 Language: en
 
@@ -112,7 +112,7 @@ hi<00:00:01.040><c> everyone</c><00:00:01.920><c> today</c><00:00:02.240><c> we'
 hi everyone today we're going to be
 """
 
-    doc = to_model(io.StringIO(SAMPLE))
+    doc = to_model(io.BytesIO(SAMPLE))
     self.assertIsNotNone(doc)
     body = list(doc.get_body())
     self.assertEqual(len(body), 1)
@@ -122,7 +122,7 @@ hi everyone today we're going to be
   def test_single_line_with_space(self):
     # from https://github.com/sandflow/ttconv/issues/439
     # the first cue is not ignored since the first line contains a single space
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 Kind: captions
 Language: en
 
@@ -134,7 +134,7 @@ hi<00:00:01.040><c> everyone</c><00:00:01.920><c> today</c><00:00:02.240><c> we'
 hi everyone today we're going to be
 """
 
-    doc = to_model(io.StringIO(SAMPLE))
+    doc = to_model(io.BytesIO(SAMPLE))
     self.assertIsNotNone(doc)
     body = list(doc.get_body())
     self.assertEqual(len(body), 1)
@@ -143,7 +143,7 @@ hi everyone today we're going to be
 
   def test_toplevel_timestamp_tags(self):
     # from https://github.com/sandflow/ttconv/issues/439
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 Kind: captions
 Language: en
 
@@ -155,7 +155,7 @@ hi<00:00:01.040><c> everyone</c><00:00:01.920><c> today</c><00:00:02.240><c> we'
 hi everyone today we're going to be
 """
 
-    doc = to_model(io.StringIO(SAMPLE))
+    doc = to_model(io.BytesIO(SAMPLE))
     body = list(doc.get_body())
     spans_and_brs = list(body[0][0])
     self.assertIsNone(spans_and_brs[0].get_begin()) # \x20
@@ -164,7 +164,7 @@ hi everyone today we're going to be
     self.assertEqual(spans_and_brs[4].get_begin(), 1.920 - 0.799) # today
 
   def test_italic(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 00:02:16.612 --> 00:02:19.376
 Hello <i>my</i> name is Bob
@@ -178,7 +178,7 @@ Hello <i>my</i> name is Bob
 
 
   def test_underline(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 00:02:16.612 --> 00:02:19.376
 Hello <u>my</u> name is Bob
@@ -193,7 +193,7 @@ Hello <u>my</u> name is Bob
 
 
   def test_blue(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 02:00.000 --> 02:05.000
 <c.blue>This is bold text</c>
@@ -208,7 +208,7 @@ Hello <u>my</u> name is Bob
 
 
   def test_bg_blue(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 02:00.000 --> 02:05.000
 <c.bg_blue>This is bold text</c>
@@ -222,7 +222,7 @@ Hello <u>my</u> name is Bob
       self.fail()
 
   def test_lang(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 02:00.000 --> 02:05.000
 <lang es-419>Spanish as used in Latin America and the Caribbean</lang>
@@ -237,7 +237,7 @@ Hello <u>my</u> name is Bob
 
 
   def test_multiline_tags(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 00:02:16.612 --> 00:02:19.376
 Hello <b>my
@@ -259,7 +259,7 @@ Hello <b>my
     self.assertIsInstance(next(i), model.Text)
 
   def test_long_hours(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 101:00:00.000 --> 101:00:01.000
 Hello my name is Bob
@@ -277,7 +277,7 @@ Hello my name is Bob
     )
 
   def test_ts_tag(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 00:00:01.000 --> 00:00:03.000
 Hello my name<00:02.000>is Bob
@@ -297,7 +297,7 @@ Hello my name<00:02.000>is Bob
     )
 
   def test_ignore_style(self):
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 
 STYLE
 ::cue { color:lime }
@@ -305,22 +305,22 @@ STYLE
 00:00:00.000 --> 00:00:25.000
 Red or green?
 """
-    f = io.StringIO(SAMPLE)
+    f = io.BytesIO(SAMPLE)
     self.assertIsNotNone(to_model(f))
 
   def test_ruby(self):
     # from WPT (bidi_vertical_lr.vrr)
-    SAMPLE = """WEBVTT
+    SAMPLE = b"""WEBVTT
 
 00:00:00.000 --> 00:00:05.000
-<ruby>.<rt>א<c>א</c></rt>ab)<rt>x</rt></ruby>
+<ruby>.<rt>\xd7\x90<c>\xd7\x90</c></rt>ab)<rt>x</rt></ruby>
 """
-    f = io.StringIO(SAMPLE)
+    f = io.BytesIO(SAMPLE)
     self.assertIsNotNone(to_model(f))
 
 
   def test_line_origin_extent(self):
-    f = io.StringIO(r"""WEBVTT
+    f = io.BytesIO(b"""WEBVTT
 
 1
 00:00:00.000 --> 00:00:02.000 line:0
@@ -354,13 +354,13 @@ Line 1 starting from bottom
     self.assertEqual(round(regions[3].get_style(styles.StyleProperties.Extent).height.value), 6)
 
   def _cue_settings_to_region(self, settings: str) -> model.Region:
-    f = io.StringIO(f"""WEBVTT
+    f = io.BytesIO(f"""WEBVTT
 
 1
 00:00:00.000 --> 00:00:02.000 {settings}
 Line 0 starting from top
 
-""")
+""".encode('utf-8'))
     doc = to_model(f)
     regions = list(doc.iter_regions())
     self.assertTrue(len(regions), 1)
