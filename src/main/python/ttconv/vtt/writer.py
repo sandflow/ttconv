@@ -25,6 +25,8 @@
 
 """WebVTT writer"""
 
+from __future__ import annotations
+import dataclasses
 import logging
 from fractions import Fraction
 from typing import Dict, List, Optional
@@ -43,7 +45,6 @@ from ttconv.style_properties import DirectionType, ExtentType, PositionType, Sty
                                     FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType
 
 LOGGER = logging.getLogger(__name__)
-
 
 class VttContext:
   """VTT writer context"""
@@ -72,7 +73,8 @@ class VttContext:
         FontStyleType.italic
       ],
       StyleProperties.TextDecoration: [
-        TextDecorationType.underline
+        TextDecorationType(True, False, False),
+        TextDecorationType(False, False, False)
       ],
       StyleProperties.Color: [],
       StyleProperties.BackgroundColor: []
@@ -106,13 +108,15 @@ class VttContext:
   def process_inline_element(self, element: model.ContentElement, begin: Fraction, end: Optional[Fraction]):
     """Converts inline element (span and br) to VTT content"""
 
-    if isinstance(element, model.Span):
-      is_bold = style.is_element_bold(element)
-      is_italic = style.is_element_italic(element)
-      is_underlined = style.is_element_underlined(element)
-      color = style.get_color(element)
-      bg_color = style.get_background_color(element)
+    if isinstance(element, model.Text):
+      parent_span = element.parent()
+      is_bold = style.is_element_bold(parent_span)
+      is_italic = style.is_element_italic(parent_span)
+      is_underlined = style.is_element_underlined(parent_span)
+      color = style.get_color(parent_span)
+      bg_color = style.get_background_color(parent_span)
 
+      opened_color = False
       if color is not None:
         if self._colors_used.get(color) is None:
           color_classname = style.get_color_classname(color)
@@ -121,7 +125,9 @@ class VttContext:
         else:
           color_classname = self._colors_used[color]
         self._paragraphs[-1].append_text(style.COLOR_TAG_IN.format(color_classname))
+        opened_color = True
 
+      opened_bg_color = False
       if bg_color is not None:
         if self._background_colors_used.get(bg_color) is None:
           bg_color_classname = style.get_background_color_classname(bg_color)
@@ -130,33 +136,42 @@ class VttContext:
         else:
           bg_color_classname = self._background_colors_used[bg_color]
         self._paragraphs[-1].append_text(style.BG_COLOR_TAG_IN.format(bg_color_classname))
+        opened_bg_color = True
 
+      opened_bold = False
       if is_bold:
         self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
+        opened_bold = True
+
+      opened_italic = False
       if is_italic:
         self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
+        opened_italic = True
+
+      opened_underline = False
       if is_underlined:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
+        opened_underline = True
 
-      for elem in list(element):
-        self.process_inline_element(elem, begin, end)
+      self._paragraphs[-1].append_text(element.get_text())
 
-      if is_underlined:
+      if opened_underline:
         self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
-      if is_italic:
+      if opened_italic:
         self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
-      if is_bold:
+      if opened_bold:
         self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
-      if color is not None:
+      if opened_color:
         self._paragraphs[-1].append_text(style.COLOR_TAG_OUT)
-      if bg_color is not None:
+      if opened_bg_color:
         self._paragraphs[-1].append_text(style.BG_COLOR_TAG_OUT)
 
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
 
-    if isinstance(element, model.Text):
-      self._paragraphs[-1].append_text(element.get_text())
+    if isinstance(element, model.Span):
+      for elem in list(element):
+        self.process_inline_element(elem, begin, end)
 
   def process_p(self, region: ISD.Region, element: model.P, begin: Fraction, end: Optional[Fraction]):
     """Process p element"""
@@ -196,7 +211,7 @@ class VttContext:
 
     for elem in list(element):
       self.process_inline_element(elem, begin, end)
-    
+
     self._paragraphs[-1].normalize_eol()
 
     if self._paragraphs[-1].is_only_whitespace_or_empty():

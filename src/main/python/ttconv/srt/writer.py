@@ -25,9 +25,10 @@
 
 """SRT writer"""
 
+from __future__ import annotations
 import logging
 from fractions import Fraction
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import ttconv.model as model
 import ttconv.srt.style as style
@@ -47,7 +48,7 @@ LOGGER = logging.getLogger(__name__)
 class SrtContext:
   """SRT writer context"""
 
-  filters: List[ISDFilter] = (
+  filters: Tuple[ISDFilter, ...] = (
     RegionsMergingISDFilter(),
     ParagraphsMergingISDFilter(),
     SupportedStylePropertiesISDFilter({
@@ -59,7 +60,8 @@ class SrtContext:
         FontStyleType.italic
       ],
       StyleProperties.TextDecoration: [
-        TextDecorationType.underline
+        TextDecorationType(True, False, False),
+        TextDecorationType(False, False, False)
       ],
       StyleProperties.Color: [
         # Every values
@@ -103,40 +105,53 @@ class SrtContext:
         LOGGER.debug("Removing empty paragraph.")
         self._paragraphs.pop()
 
-    if isinstance(element, model.Span):
-      is_bold = style.is_element_bold(element)
-      is_italic = style.is_element_italic(element)
-      is_underlined = style.is_element_underlined(element)
-      font_color = style.get_font_color(element)
+    if isinstance(element, model.Text):
+      parent_span = element.parent()
+      is_bold = style.is_element_bold(parent_span)
+      is_italic = style.is_element_italic(parent_span)
+      is_underlined = style.is_element_underlined(parent_span)
+      font_color = style.get_font_color(parent_span)
+
+      opened_color = False
+      opened_bold = False
+      opened_italic = False
+      opened_underline = False
 
       if self._text_formatting:
         if font_color is not None:
           self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_IN.format(font_color))
+          opened_color = True
+
         if is_bold:
           self._paragraphs[-1].append_text(style.BOLD_TAG_IN)
+          opened_bold = True
+
         if is_italic:
           self._paragraphs[-1].append_text(style.ITALIC_TAG_IN)
+          opened_italic = True
+
         if is_underlined:
           self._paragraphs[-1].append_text(style.UNDERLINE_TAG_IN)
+          opened_underline = True
 
-      for elem in list(element):
-        self.append_element(elem, begin, end)
+      self._paragraphs[-1].append_text(element.get_text())
 
       if self._text_formatting:
-        if is_underlined:
+        if opened_underline:
           self._paragraphs[-1].append_text(style.UNDERLINE_TAG_OUT)
-        if is_italic:
+        if opened_italic:
           self._paragraphs[-1].append_text(style.ITALIC_TAG_OUT)
-        if is_bold:
+        if opened_bold:
           self._paragraphs[-1].append_text(style.BOLD_TAG_OUT)
-        if font_color is not None:
+        if opened_color:
           self._paragraphs[-1].append_text(style.FONT_COLOR_TAG_OUT)
 
     if isinstance(element, model.Br):
       self._paragraphs[-1].append_text("\n")
 
-    if isinstance(element, model.Text):
-      self._paragraphs[-1].append_text(element.get_text())
+    if isinstance(element, model.Span):
+      for elem in list(element):
+        self.append_element(elem, begin, end)
 
   def add_isd(self, isd, begin: Fraction, end: Optional[Fraction]):
     """Converts and appends ISD content to SRT content"""

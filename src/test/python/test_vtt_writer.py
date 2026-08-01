@@ -379,6 +379,155 @@ This text must appear at 10 seconds and disappear at 24.4 seconds
 This text must appear at 25 seconds and disappear at 35 seconds
 """)
 
+  def test_text_italic(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p tts:fontStyle="italic" begin="00:00:00:00" end="00:00:01:00">Lorem</p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:00.000 --> 00:00:01.000
+<i>Lorem</i>
+""")
+
+  def test_inherited_italic(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:00:00" end="00:00:01:00">
+        <span tts:fontStyle="italic">
+            <span>Lorem</span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:00.000 --> 00:00:01.000
+<i>Lorem</i>
+""")
+
+  def test_mixed_normal_italic(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:01.000" end="00:00:02.000"><span tts:fontStyle="italic">A<span tts:fontStyle="normal">B</span>C</span></p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:01.000 --> 00:00:02.000
+<i>A</i>B<i>C</i>
+""")
+
+  def test_color_tag_closed(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:01.000" end="00:00:02.000"><span tts:color="red">A</span>B</p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+STYLE
+::cue {
+  background-color: transparent;
+}
+::cue(.red) {
+  color: #ff0000ff;
+}
+
+1
+00:00:01.000 --> 00:00:02.000
+<c.red>A</c>B
+""")
+
+  def test_underline(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:00:00" end="00:00:01:00">
+        <span tts:textDecoration="underline">
+            <span>Lorem</span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:00.000 --> 00:00:01.000
+<u>Lorem</u>
+""")
+
+  def test_noUnderline(self):
+    ttml_doc_str = """<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:01.000" end="00:00:02.000"><span tts:textDecoration="underline">A<span tts:textDecoration="noUnderline">B</span>C</span></p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:01.000 --> 00:00:02.000
+<u>A</u>B<u>C</u>
+""")
 
 if __name__ == '__main__':
   unittest.main()
