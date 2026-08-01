@@ -481,5 +481,53 @@ STYLE
 <c.red>A</c>B
 """)
 
+  def test_underline(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:00:00" end="00:00:01:00">
+        <span tts:textDecoration="underline">
+            <span>Lorem</span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:00.000 --> 00:00:01.000
+<u>Lorem</u>
+""")
+
+  def test_noUnderline(self):
+    ttml_doc_str = """<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p begin="00:00:01.000" end="00:00:02.000"><span tts:textDecoration="underline">A<span tts:textDecoration="noUnderline">B</span>C</span></p>
+    </div>
+  </body>
+</tt>"""
+
+    ttml_doc = et.ElementTree(et.fromstring(ttml_doc_str))
+    doc = imsc_reader.to_model(ttml_doc)
+
+    vtt_from_model = vtt_writer.from_model(doc)
+
+    self.assertEqual(vtt_from_model, """WEBVTT
+
+1
+00:00:01.000 --> 00:00:02.000
+<u>A</u>B<u>C</u>
+""")
+
 if __name__ == '__main__':
   unittest.main()

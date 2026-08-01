@@ -28,7 +28,7 @@
 from __future__ import annotations
 import logging
 from fractions import Fraction
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import ttconv.model as model
 import ttconv.srt.style as style
@@ -48,7 +48,7 @@ LOGGER = logging.getLogger(__name__)
 class SrtContext:
   """SRT writer context"""
 
-  filters: List[ISDFilter] = (
+  filters: Tuple[ISDFilter, ...] = (
     RegionsMergingISDFilter(),
     ParagraphsMergingISDFilter(),
     SupportedStylePropertiesISDFilter({
@@ -60,7 +60,8 @@ class SrtContext:
         FontStyleType.italic
       ],
       StyleProperties.TextDecoration: [
-        TextDecorationType.underline
+        TextDecorationType(True, False, False),
+        TextDecorationType(False, False, False)
       ],
       StyleProperties.Color: [
         # Every values

@@ -73,7 +73,8 @@ class VttContext:
         FontStyleType.italic
       ],
       StyleProperties.TextDecoration: [
-        TextDecorationType.underline
+        TextDecorationType(True, False, False),
+        TextDecorationType(False, False, False)
       ],
       StyleProperties.Color: [],
       StyleProperties.BackgroundColor: []
