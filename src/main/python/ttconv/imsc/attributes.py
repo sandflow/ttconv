@@ -118,7 +118,9 @@ class ContentProfilesAttribute:
   _CONTENT_PROFILES_RE = re.compile(r"\S+(?:\s+\S+)*")
 
   # combined profile designator list, e.g. all(<designator> <designator>)
-  _COMBINED_CONTENT_PROFILES_RE = re.compile(r"\s*(all|any)\s*\(\s*(\S+(?:\s+\S+)*?)\s*\)\s*\Z")
+  # `all` is the only combinator allowed on ttp:contentProfiles, see
+  # https://www.w3.org/TR/2018/REC-ttml2-20181108/#profile-attribute-contentProfiles
+  _COMBINED_CONTENT_PROFILES_RE = re.compile(r"\s*all\s*\(\s*(\S+(?:\s+\S+)*?)\s*\)\s*\Z")
 
   @staticmethod
   def extract(ttml_element) -> typing.Optional[typing.Set[str]]:
@@ -131,11 +133,7 @@ class ContentProfilesAttribute:
 
       if m is not None:
 
-        if m.group(1) == "any":
-          LOGGER.error("ttp:contentProfiles any(...) syntax is not supported")
-          return None
-
-        return set(re.findall(r'\S+', m.group(2)))
+        return set(re.findall(r'\S+', m.group(1)))
 
       m = ContentProfilesAttribute._CONTENT_PROFILES_RE.match(cr)
 
