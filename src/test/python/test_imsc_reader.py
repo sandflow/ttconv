@@ -304,6 +304,16 @@ class IMSCReaderTest(unittest.TestCase):
     doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
     self.assertSetEqual(doc.get_content_profiles(), {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"})
 
+  def test_content_profiles_all_syntax(self):
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        ttp:contentProfiles="all(http://www.w3.org/ns/ttml/profile/imsc1.1/text http://www.w3.org/ns/ttml/profile/imsc1/text)">
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    self.assertSetEqual(doc.get_content_profiles(), {"http://www.w3.org/ns/ttml/profile/imsc1.1/text", "http://www.w3.org/ns/ttml/profile/imsc1/text"})
+
   def test_timeBase_parameter(self):
     self.assertEqual(TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "media"})), TimeBase.media)
     self.assertEqual(TimeBaseAttribute.extract(et.Element("tt", {f"{{{namespaces.TTP}}}timeBase": "smpte"})), TimeBase.smpte)
