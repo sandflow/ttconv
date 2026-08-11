@@ -26,6 +26,7 @@
 """Unit tests for the SCC reader"""
 
 # pylint: disable=R0201,C0115,C0116,W0212
+import io
 import unittest
 from fractions import Fraction
 from numbers import Number
@@ -100,7 +101,7 @@ class SccReaderTest(unittest.TestCase):
     self.check_element_extent(elem, width, height, unit=LengthType.Units.pct)
 
   def test_scc_pop_on_content(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 
 01:02:53:14	94ae 94ae 9420 9420 947a 947a 97a2 97a2 a820 68ef f26e 2068 ef6e 6be9 6e67 2029 942c 942c 8080 8080 942f 942f
 
@@ -135,7 +136,7 @@ class SccReaderTest(unittest.TestCase):
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -213,7 +214,7 @@ class SccReaderTest(unittest.TestCase):
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_pop_on_content_unexpectedly_ended(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:02:16	942c
@@ -231,7 +232,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -257,7 +258,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[0].get_region())
 
   def test_scc_pop_on_content_without_preamble_address_code(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:02:16	942c
@@ -281,7 +282,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -313,7 +314,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[0].get_region())
 
   def test_scc_double_word_in_content(self):
-    scc_content = """"Scenarist_SCC V1.0
+    scc_content = b""""Scenarist_SCC V1.0
 01:02:53:14	9420 9420 94AE 94AE 9452 9452 97A1 97A1 20F2 E56D E56D 62E5 F220 9137 9137 9137 9137 942F 942F
 01:02:55:14 942c 942c
 """
@@ -322,7 +323,7 @@ Scenarist_SCC V1.0
 """
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -341,7 +342,7 @@ Scenarist_SCC V1.0
     self.assertEqual(" remember ♪♪", first_text)
 
   def test_2_rows_roll_up_content(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:00:22	9425 9425 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
@@ -363,7 +364,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
@@ -409,7 +410,7 @@ Scenarist_SCC V1.0
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:17;01	9426 9426 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
@@ -430,7 +431,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
@@ -472,7 +473,7 @@ Scenarist_SCC V1.0
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_4_rows_roll_up_content(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:34;27	94a7 94ad 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
@@ -499,7 +500,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
@@ -549,7 +550,7 @@ Scenarist_SCC V1.0
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_mix_rows_roll_up_content(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:00;22	9425 9425 94ad 94ad 9470 9470 3e3e 3e20 c849 ae80
@@ -607,7 +608,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
@@ -702,7 +703,7 @@ Scenarist_SCC V1.0
           self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_roll_up_content_without_preamble_address_code(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:34:27	9425 94ad 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
@@ -721,7 +722,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
@@ -759,7 +760,7 @@ Scenarist_SCC V1.0
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:02:53:14	9429 9429 94d2 94d2 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 94f2 94f2 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
@@ -778,7 +779,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("paint1")
@@ -859,7 +860,7 @@ Scenarist_SCC V1.0
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_paint_on_content_without_preamble_address_codes(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:02:53:14	9429 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
@@ -878,7 +879,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("paint1")
@@ -936,7 +937,7 @@ Scenarist_SCC V1.0
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_mid_row_erase_displayed_memory_control_code(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:00:00	9420 9150 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 942c 8080 8080 942f
@@ -958,7 +959,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -1019,7 +1020,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_4, p_list[5].get_region())
 
   def test_scc_content_starting_with_text(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:03:01	6970 7375 6d00 942c 942f
@@ -1037,7 +1038,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -1073,7 +1074,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_content_starting_with_mid_row_code(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:03:01	91ae 6970 7375 6d00 942c 942f
@@ -1091,7 +1092,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -1127,7 +1128,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_content_starting_with_control_code(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:03:01	942c 6970 7375 6d00 942c 942f
@@ -1145,7 +1146,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -1181,7 +1182,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_content_starting_with_preamble_address_code(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:03:01	9370 6970 7375 6d00 942c 942f
@@ -1199,7 +1200,7 @@ Scenarist_SCC V1.0
 
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -1235,7 +1236,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_with_negative_cursor(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 00:00:01:00	94AE 94AE 9420 9420 94F8 94F8 45E5 E5E3 68A1 94F4 94F4 D3E3 61F2 79A1 942C 942C 942F 942F
 00:00:02:00	942F 942F
 """
@@ -1246,7 +1247,7 @@ Scenarist_SCC V1.0
     scc_disassembly = to_disassembly(scc_content)
     self.assertEqual(scc_disassembly_expected, scc_disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
 
     self.assertIsNotNone(doc)
 
@@ -1272,20 +1273,20 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[0].get_region())
 
   def test_scc_content_starting_with_tab(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 00:42:41;20	942C 9429 97A2 5BF7
 """
     print(to_disassembly(scc_content))
-    self.assertIsNotNone(to_model(scc_content))
+    self.assertIsNotNone(to_model(io.BytesIO(scc_content)))
 
   def test_scc_content_starting_with_bs(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 00:42:41;20	942C 9429 94A1 5BF7
 """
-    self.assertIsNotNone(to_model(scc_content))
+    self.assertIsNotNone(to_model(io.BytesIO(scc_content)))
 
   def test_scc_content_starting_with_backspace(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 10:01:44;17	94AE 9420 9470 9723 946E 94A1 92B0 20ec 6120 e6e9 6e20 64e5 7320 616e 6edc e573 2031 38b0 b02c 942C 8080 8080 942F
 """
 
@@ -1296,7 +1297,7 @@ Scenarist_SCC V1.0
     scc_disassembly = to_disassembly(scc_content)
     self.assertEqual(expected_scc_disassembly, scc_disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("pop1")
@@ -1321,7 +1322,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[0].get_region())
 
   def test_scc_content_roll_up_empty_caption(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 10:03:20:16	94ad 94ad 9426 9426 92d0 92d0 a880 9138 9138 2064 942c 942c e575 f820 76ef e9f8 2c20 e56e 2061 6e67 ec61 e973 29ba
 """
     expected_scc_disassembly = """\
@@ -1331,7 +1332,7 @@ Scenarist_SCC V1.0
     scc_disassembly = to_disassembly(scc_content)
     self.assertEqual(expected_scc_disassembly, scc_disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
@@ -1366,7 +1367,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_scc_text_without_style_nor_position(self):
-    scc_content = """Scenarist_SCC V1.0
+    scc_content = b"""Scenarist_SCC V1.0
 10:55:31:29	2080 3280 2046 3180
 """
     expected_scc_disassembly = """\
@@ -1376,7 +1377,7 @@ Scenarist_SCC V1.0
     scc_disassembly = to_disassembly(scc_content)
     self.assertEqual(expected_scc_disassembly, scc_disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
     self.assertIsNotNone(doc)
 
     body = doc.get_body()
@@ -1389,7 +1390,7 @@ Scenarist_SCC V1.0
     self.assertEqual(0, len(list(div)))
 
   def test_scc_content_with_paragraph_of_spaces(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 00:00:03:01	9370 6970 7375 6d00 942c 942f
@@ -1408,7 +1409,7 @@ Scenarist_SCC V1.0
     disassembly = to_disassembly(scc_content)
     self.assertEqual(expected_disassembly, disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
 
     self.assertIsNotNone(doc)
 
@@ -1455,7 +1456,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_3, p_list[2].get_region())
 
   def test_scc_content_trying_to_roll_up_pop_on_paragraph(self):
-    scc_content = """\
+    scc_content = b"""\
 Scenarist_SCC V1.0
 
 11:19:24:05	9420 946E A861 7070 EC61 7564 E973 73E5 6DE5 6EF4 7329 9420 942C 942F
@@ -1470,7 +1471,7 @@ Scenarist_SCC V1.0
     disassembly = to_disassembly(scc_content)
     self.assertEqual(expected_disassembly, disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
 
     self.assertIsNotNone(doc)
 
@@ -1506,7 +1507,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_skipping_channel_2_content(self):
-    scc_content = """\
+    scc_content = b"""\
 01:03:27:29	1c20 1cd0 a843 4332 2920 1c2c 94ae 94ae 9420 9420 94f2 94f2 c845 d92c 2054 c845 5245 ae80 942c 942c 8080 8080 942f 942f
 """
     expected_disassembly = """\
@@ -1516,7 +1517,7 @@ Scenarist_SCC V1.0
     disassembly = to_disassembly(scc_content, show_channels=True)
     self.assertEqual(expected_disassembly, disassembly)
 
-    doc = to_model(scc_content)
+    doc = to_model(io.BytesIO(scc_content))
 
     self.assertIsNotNone(doc)
 

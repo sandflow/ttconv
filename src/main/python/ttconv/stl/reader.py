@@ -40,7 +40,7 @@ LOGGER = logging.getLogger(__name__)
 # STL reader
 #
 
-def to_model(data_file: typing.IO, config: typing.Optional[STLReaderConfiguration] = None, progress_callback=lambda _: None):
+def to_model(data_file: typing.BinaryIO, config: typing.Optional[STLReaderConfiguration] = None, progress_callback=lambda _: None):
   """Converts an STL document to the data model"""
 
   m = DataFile(

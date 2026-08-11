@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import io
 import typing
 import re
 import logging
@@ -518,7 +519,7 @@ def vtt_timestamp_to_secs(vtt_ts: str):
 
   return None
 
-def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None):
+def to_model(data_file: typing.BinaryIO, _config = None, progress_callback=lambda _: None):
   """Converts a WebVTT document to the data model"""
 
   class _State(Enum):
@@ -539,7 +540,7 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
   div = model.Div(doc)
   body.push_child(div)
 
-  lines : str = data_file.readlines()
+  lines : str = io.TextIOWrapper(data_file, encoding='utf-8').readlines()
 
   state = _State.START
   current_p = None

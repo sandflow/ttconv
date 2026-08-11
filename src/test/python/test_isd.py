@@ -28,11 +28,11 @@
 # pylint: disable=R0201,C0115,C0116
 
 import glob
+import io
 import typing
 import unittest
 import os
 import logging
-import xml.etree.ElementTree as et
 from fractions import Fraction
 import ttconv.imsc.reader as imsc_reader
 import ttconv.model as model
@@ -229,8 +229,8 @@ class ContentDocument0Test(unittest.TestCase):
 class IMSCTestSuiteTest(unittest.TestCase):
 
   def test_display_none_handling(self):
-    xml_doc = et.parse("src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/MediaParTiming002.ttml")
-    doc = imsc_reader.to_model(xml_doc)
+    with open("src/test/resources/ttml/imsc-tests/imsc1/ttml/timing/MediaParTiming002.ttml", 'rb') as f:
+      doc = imsc_reader.to_model(f)
     isd = ISD.from_model(doc, 0)
 
     regions = list(isd.iter_regions())
@@ -252,8 +252,8 @@ class IMSCTestSuiteTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            m = imsc_reader.to_model(tree)
+            with open(os.path.join(root, filename), 'rb') as f:
+              m = imsc_reader.to_model(f)
             self.assertIsNotNone(m)
             sig_times = ISD.significant_times(m)
             for t in sig_times:
@@ -269,8 +269,8 @@ class IMSCTestSuiteTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            m = imsc_reader.to_model(tree)
+            with open(os.path.join(root, filename), 'rb') as f:
+              m = imsc_reader.to_model(f)
             self.assertIsNotNone(m)
             sig_times = ISD.significant_times(m)
             for t in sig_times:
@@ -286,8 +286,8 @@ class IMSCTestSuiteTest(unittest.TestCase):
         if ext == ".ttml":
           with self.subTest(name), self.assertLogs() as logs:
             logging.getLogger().info("*****dummy*****") # dummy log
-            tree = et.parse(os.path.join(root, filename))
-            m = imsc_reader.to_model(tree)
+            with open(os.path.join(root, filename), 'rb') as f:
+              m = imsc_reader.to_model(f)
             self.assertIsNotNone(m)
             sig_times = ISD.significant_times(m)
             for t in sig_times:
@@ -527,7 +527,7 @@ class InheritanceStyleTest(unittest.TestCase):
 
   def test_textEmphasis_auto(self):
     """https://github.com/sandflow/ttconv/issues/400"""
-    xml_str = """<?xml version="1.0" encoding="utf-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="utf-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
 <head>
 <styling>
@@ -542,8 +542,7 @@ class InheritanceStyleTest(unittest.TestCase):
 </body>
 </tt>"""
 
-    tree = et.ElementTree(et.fromstring(xml_str))
-    doc = imsc_reader.to_model(tree)
+    doc = imsc_reader.to_model(io.BytesIO(xml_str))
     isd = ISD.from_model(doc, 0)
 
     regions = list(isd.iter_regions())
@@ -557,7 +556,7 @@ class InheritanceStyleTest(unittest.TestCase):
 
   def test_direction_special_semantics(self):
     """https://github.com/sandflow/ttconv/issues/400"""
-    xml_str = """<?xml version="1.0" encoding="utf-8"?>
+    xml_str = b"""<?xml version="1.0" encoding="utf-8"?>
 <tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
 <head>
 <layout>
@@ -573,8 +572,7 @@ class InheritanceStyleTest(unittest.TestCase):
 </body>
 </tt>"""
 
-    tree = et.ElementTree(et.fromstring(xml_str))
-    doc = imsc_reader.to_model(tree)
+    doc = imsc_reader.to_model(io.BytesIO(xml_str))
 
     p1 = (ISD.from_model(doc, 0).get_region("rl"))[0][0][0][0]
 
@@ -735,8 +733,8 @@ class ISDReferenceFiles:
 
   @staticmethod
   def generate_reference_file(ttml_path) -> str:
-    tree = et.parse(ttml_path)
-    doc = imsc_reader.to_model(tree)
+    with open(ttml_path, 'rb') as f:
+      doc = imsc_reader.to_model(f)
     sig_times = ISD.significant_times(doc)
 
     output_lines = []

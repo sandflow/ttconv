@@ -43,13 +43,14 @@ LOGGER = logging.getLogger(__name__)
 
 def from_model(
   model_doc: model.ContentDocument,
+  output: typing.BinaryIO,
   config: typing.Optional[imsc_config.IMSCWriterConfiguration] = None,
   progress_callback: typing.Callable[[numbers.Real], typing.NoReturn] = lambda _: None
   ):
   '''Converts the data model to an IMSC document. The writer regularly the `progress_callback` function, if provided,
   with a real between 0 and 1, indicating the relative progress of the process.
   '''
-  
+
   et.register_namespace("", xml_ns.TTML)
   et.register_namespace("ttp", xml_ns.TTP)
   et.register_namespace("tts", xml_ns.TTS)
@@ -78,7 +79,7 @@ def from_model(
   else:
     time_format = TimeExpressionSyntaxEnum.clock_time
 
-  return et.ElementTree(
+  et.ElementTree(
     imsc_elements.TTElement.from_model(
       model_doc,
       config.fps,
@@ -86,4 +87,4 @@ def from_model(
       progress_callback,
       config.profile_signaling
     )
-  )
+  ).write(output, encoding="utf-8")

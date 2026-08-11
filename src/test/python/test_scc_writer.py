@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+import io
 import json
 import os
 import unittest
@@ -100,7 +101,7 @@ class SccWriterConfigurationTest(unittest.TestCase):
 class SCCWriterTest(unittest.TestCase):
 
   def test_basic(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
     ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
@@ -112,7 +113,7 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:00:00;21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
 
@@ -123,7 +124,7 @@ class SCCWriterTest(unittest.TestCase):
 00:00:05;00	942c 942c"""
 
   def test_pop_on_centered(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:tts="http://www.w3.org/ns/ttml#styling"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
@@ -135,20 +136,22 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:00:00;21	9420 9420 94ae 94ae 94d6 94d6 20c8 e5ec ecef 942f 942f
 
 00:00:03;00	942c 942c"""
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     assert model is not None
     config = SccWriterConfiguration()
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_pop_on_right_aligned(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:tts="http://www.w3.org/ns/ttml#styling"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
@@ -160,20 +163,22 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:00:00;20	9420 9420 94ae 94ae 94dc 94dc 2020 20c8 e5ec ecef 942f 942f
 
 00:00:03;00	942c 942c"""
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     assert model is not None
     config = SccWriterConfiguration()
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_rollup(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
     ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
@@ -186,7 +191,7 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:00:00;28	94a7 94a7 94ad 94ad 9470 9470 c8e5 ecec ef80
 
@@ -196,13 +201,15 @@ class SCCWriterTest(unittest.TestCase):
 
 00:00:10;00	942c 942c"""
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     config = SccWriterConfiguration()
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
     # round-trip test
-    rt_model = scc_reader.to_model(scc_from_model)
+    rt_model = scc_reader.to_model(io.BytesIO(scc_from_model))
     # cfg = IMSCWriterConfiguration(time_format=TimeExpressionSyntaxEnum.frames, fps=Fraction(30000, 1001))
     # imsc_writer.from_model(rt_model, cfg).write(sys.stdout.buffer)
     b = rt_model.get_body()
@@ -214,7 +221,7 @@ class SCCWriterTest(unittest.TestCase):
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
 
   def test_basic_2997NDF(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml">
   <body>
     <div>
@@ -223,21 +230,23 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     assert model is not None
 
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:59:56:03	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
 
 00:59:58:12	942c 942c"""
 
     config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_2997_NDF)
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_basic_30FPS(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
     ttp:frameRate="30">
@@ -249,10 +258,10 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
     assert model is not None
 
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:00:00:21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
 
@@ -263,11 +272,13 @@ class SCCWriterTest(unittest.TestCase):
 00:00:05:00	942c 942c"""
 
     config = SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF)
-    scc_from_model = scc_writer.from_model(model, config)
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, config)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_zero_start(self):
-    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+    ttml_doc_str = b"""<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
     ttp:frameRate="30">
@@ -278,21 +289,25 @@ class SCCWriterTest(unittest.TestCase):
   </body>
 </tt>"""
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    model = imsc_reader.to_model(io.BytesIO(ttml_doc_str))
 
     with self.assertRaises(RuntimeError):
-      scc_writer.from_model(model)
+      scc_writer.from_model(model, io.BytesIO())
 
-    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration(start_tc="01:00:00;00"))
-    expected_scc="""Scenarist_SCC V1.0
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, SccWriterConfiguration(start_tc="01:00:00;00"))
+    scc_from_model = buf.getvalue()
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:59:59;21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
 
 01:00:02;29	942c 942c"""
     self.assertEqual(scc_from_model, expected_scc)
 
-    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF, start_tc="01:00:00:00"))
-    expected_scc="""Scenarist_SCC V1.0
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf, SccWriterConfiguration(frame_rate=SCCFrameRate.FPS_30_NDF, start_tc="01:00:00:00"))
+    scc_from_model = buf.getvalue()
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:59:59:21	9420 9420 94ae 94ae 9440 9440 c8e5 ecec ef80 942f 942f
 
@@ -300,7 +315,7 @@ class SCCWriterTest(unittest.TestCase):
     self.assertEqual(scc_from_model, expected_scc)
 
   def test_multi_regions(self):
-    expected_scc="""Scenarist_SCC V1.0
+    expected_scc=b"""Scenarist_SCC V1.0
 
 00:00:00;22	9420 9420 94ae 94ae 9440 9440 6180 942f 942f
 
@@ -310,7 +325,7 @@ class SCCWriterTest(unittest.TestCase):
 
 00:00:03;29	942c 942c"""
 
-    SAMPLE = """<tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
+    SAMPLE = b"""<tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="en">
 	<head>
 		<layout>
 			<region xml:id="r_a" tts:origin="0% 0%" tts:extent="50% 50%" />
@@ -327,8 +342,10 @@ class SCCWriterTest(unittest.TestCase):
 
 """
 
-    model = imsc_reader.to_model(et.ElementTree(et.fromstring(SAMPLE)))
-    scc_from_model = scc_writer.from_model(model)
+    model = imsc_reader.to_model(io.BytesIO(SAMPLE))
+    buf = io.BytesIO()
+    scc_writer.from_model(model, buf)
+    scc_from_model = buf.getvalue()
     self.assertEqual(scc_from_model, expected_scc)
 
 if __name__ == '__main__':

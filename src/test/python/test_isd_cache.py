@@ -27,12 +27,12 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import io
 from fractions import Fraction
 import unittest
 from ttconv.isd import ISD
 import ttconv.model as model
 import ttconv.style_properties as styles
-import xml.etree.ElementTree as et
 import ttconv.imsc.reader as imsc_reader
 
 
@@ -107,7 +107,7 @@ class ISDCacheTests(unittest.TestCase):
 
 
   def test_show_background(self):
-    ttml_doc = """<tt xml:lang="en"
+    ttml_doc = b"""<tt xml:lang="en"
     xmlns="http://www.w3.org/ns/ttml"
     xmlns:tts="http://www.w3.org/ns/ttml#styling"
     xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
@@ -134,7 +134,7 @@ class ISDCacheTests(unittest.TestCase):
   </body>
 </tt>"""
 
-    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc)))
+    doc = imsc_reader.to_model(io.BytesIO(ttml_doc))
 
     sig_times = ISD.significant_times(doc)
 
