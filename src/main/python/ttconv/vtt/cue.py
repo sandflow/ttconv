@@ -47,6 +47,13 @@ class VttCue:
     left = "left"
     center = "center"
     right = "right"
+    start = "start"
+    end = "end"
+
+  class Vertical(Enum):
+    """WebVTT vertical positioning cue setting"""
+    lr = "lr"  # left to right
+    rl = "rl"  # right to left
 
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
@@ -55,9 +62,12 @@ class VttCue:
     self._begin: Optional[ClockTime] = None
     self._end: Optional[ClockTime] = None
     self._text: str = ""
+    self._position: int = None
+    self._size: int = None
     self._line: int = None
     self._linealign: VttCue.LineAlignment = None
     self._textalign: VttCue.TextAlignment = None
+    self._vertical: VttCue.Vertical = None
 
   def set_begin(self, offset: Fraction):
     """Sets the paragraph begin time code"""
@@ -95,6 +105,30 @@ class VttCue:
   def get_align(self) -> Optional[LineAlignment]:
     """Return the WebVTT line alignment cue setting"""
     return self._linealign
+    
+  def set_vertical(self, vertical: Vertical):
+    """Sets the WebVTT vertical positioning cue setting"""
+    self._vertical = vertical
+
+  def get_vertical(self) -> Optional[Vertical]:
+    """Returns the WebVTT vertical positioning cue setting"""
+    return self._vertical
+
+  def set_position(self, position: int):
+    """Sets the WebVTT position cue setting (in whole percent)"""
+    self._position = position
+
+  def get_position(self) -> Optional[int]:
+    """Returns the WebVTT position cue setting (in whole percent)"""
+    return self._position
+
+  def set_size(self, size: int):
+    """Sets the WebVTT size cue setting (in whole percent)"""
+    self._size = size
+  
+  def get_size(self) -> Optional[int]:
+    """Returns the WebVTT size cue setting (in whole percent)"""
+    return self._size
 
   def set_textalign(self, textalign: TextAlignment):
     """Sets the WebVTT text alignment cue setting"""
@@ -134,6 +168,10 @@ class VttCue:
     # cue timing
     t += f"{self._begin} --> {self._end}"
 
+    # cue vertical positioning
+    if self._vertical is not None:
+      t += f" vertical:{self._vertical.value}"
+
     # cue text position
     if self._textalign is not None:
       t += f" align:{self._textalign.value}"
@@ -144,6 +182,13 @@ class VttCue:
 
       if self._linealign is not None:
         t += f",{self._linealign.value}"
+        
+    # cue position
+    if self._position is not None:
+      t += f" position:{self._position}%"
+
+      if self._size is not None:
+        t += f" size:{self._size}%"
 
     t += "\n"
 
