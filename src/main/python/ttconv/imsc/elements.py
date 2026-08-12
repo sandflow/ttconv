@@ -632,10 +632,6 @@ class StyleElement(TTMLElement):
 
     style_ctx.id = imsc_attr.XMLIDAttribute.extract(xml_elem)
 
-    if style_ctx.id is None:
-      LOGGER.error("A style element must have an id")
-      return None
-
     return style_ctx
 
 
