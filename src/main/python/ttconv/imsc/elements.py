@@ -521,7 +521,7 @@ class StylingElement(TTMLElement):
         
         style_element = StyleElement.from_xml(styling_ctx, child_xml_elem)
 
-        if style_element is None:
+        if style_element is None or style_element.id is None:
           continue
 
         if style_element.id in styling_ctx.style_elements:
