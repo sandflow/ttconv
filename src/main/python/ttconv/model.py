@@ -597,7 +597,7 @@ class Ruby(ContentElement):
 
     ts = [type(x) for x in children]
 
-    if ts not in [[Rb, Rt], [Rb, Rp, Rt, Rp], [Rbc, Rtc], [Rbc, Rtc, Rtc]]:
+    if ts not in [[], [Rb, Rt], [Rb, Rp, Rt, Rp], [Rbc, Rtc], [Rbc, Rtc, Rtc]]:
       raise ValueError("Children of ruby do not conform to requirements")
 
     for child in children:
