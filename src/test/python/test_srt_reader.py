@@ -546,6 +546,19 @@ Also no alignment tag
     self.assertNotIn("{\\an", text_content)
     self.assertIn("Multiple tags here", text_content)
 
+  def test_empty_cue_text(self):
+    # A cue whose text body is empty (a time line immediately followed by a
+    # blank line) used to raise UnboundLocalError.
+    f = io.StringIO(
+      "1\n"
+      "00:00:01,000 --> 00:00:04,000\n"
+      "\n"
+      "2\n"
+      "00:00:05,000 --> 00:00:08,000\n"
+      "Second\n"
+    )
+    self.assertIsNotNone(to_model(f))
+
 
 if __name__ == '__main__':
   unittest.main()

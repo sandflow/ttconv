@@ -270,6 +270,7 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
         return None
 
       current_p = model.P(doc)
+      subtitle_text = ""
 
       current_p.set_begin(
         int(m.group('begin_h')) * 3600 + 

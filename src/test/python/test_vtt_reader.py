@@ -438,5 +438,10 @@ Line 0 starting from top
     self.assertEqual(o.x.value, 100*1/40)
     self.assertEqual(e.width.value, 100 - 2*100*1/40)
 
+  def test_empty_input(self):
+    # An empty document used to raise AttributeError on the None sentinel.
+    self.assertIsNotNone(to_model(io.StringIO("")))
+    self.assertIsNotNone(to_model(io.StringIO("   \n")))
+
 if __name__ == '__main__':
   unittest.main()

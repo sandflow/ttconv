@@ -547,6 +547,8 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
   for line_index, line in enumerate(_none_terminated(lines)):
 
     if state is _State.START:
+      if line is None:
+        break
       if not line.startswith("WEBVTT"):
         LOGGER.warning("The first line of the file does not start with WEBVTT")
       state = _State.LOOKING
