@@ -179,7 +179,11 @@ class _TextParser(HTMLParser):
       return
 
   def handle_endtag(self, tag):
-    self.parent = self.parent.parent()
+    # Ignore an unmatched end tag. Without this guard a stray "</b>" would
+    # walk the parent above the paragraph, and following text would be pushed
+    # onto the div or body, which only accept P children.
+    if isinstance(self.parent, model.Span):
+      self.parent = self.parent.parent()
 
   def handle_data(self, data):
     lines = data.split("\n")

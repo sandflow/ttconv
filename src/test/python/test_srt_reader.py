@@ -546,6 +546,22 @@ Also no alignment tag
     self.assertNotIn("{\\an", text_content)
     self.assertIn("Multiple tags here", text_content)
 
+  def test_unmatched_end_tag(self):
+    # A stray end tag with no matching start tag used to raise
+    # "TypeError: Children of body must be P instances".
+    f = io.StringIO(
+      "1\n"
+      "00:00:01,000 --> 00:00:04,000\n"
+      "</b>text\n"
+    )
+    doc = to_model(f)
+    self.assertIsNotNone(doc)
+    text_content = ""
+    for e in doc.get_body().dfs_iterator():
+      if isinstance(e, model.Text):
+        text_content += e.get_text()
+    self.assertIn("text", text_content)
+
 
 if __name__ == '__main__':
   unittest.main()
