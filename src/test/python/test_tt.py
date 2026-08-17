@@ -111,6 +111,13 @@ class IMSCAppTest(unittest.TestCase):
         "--otype", "not_ttml", 
         "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
 
+  def test_convert_bad_vtt_signature(self):
+    with self.assertRaises(SystemExit):
+      tt.main(["convert",
+        "-i", "src/test/resources/vtt/bad-signature.vtt",
+        "-o", "build/bad-signature.out.ttml",
+        "--config_file", "src/test/resources/config_files/unit_test_cfg.json"])
+
   def test_convert_mismtach_file_type_and_file_name(self):
     tt.main(["convert", 
       "-i", "src/test/resources/ttml/body_only.ttml", 

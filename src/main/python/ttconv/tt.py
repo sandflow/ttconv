@@ -172,6 +172,9 @@ def progress_callback_write(percent_progress: float):
     }
   )
 
+def die(msg: str):
+  LOGGER.error(msg)
+  sys.exit(msg)
 
 class FileTypes(Enum):
   '''Enumerates the types of supported'''
@@ -361,8 +364,13 @@ def convert(args):
     else:
       exit_str = f'Input file {args.input} is not supported'
 
-    LOGGER.error(exit_str)
-    sys.exit(exit_str)
+    die(exit_str)
+
+  #
+  # handle the case where the input file could not be read into the model
+  #
+  if model is None:
+    die("Aborting due to invalid input file contents.")
 
   #
   # apply document language
@@ -466,8 +474,7 @@ def convert(args):
     else:
       exit_str = f'Output file is {args.output} is not supported'
 
-    LOGGER.error(exit_str)
-    sys.exit(exit_str)
+    die(exit_str)
 
 
 # Ensure that the handler is added only once/globally
