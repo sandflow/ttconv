@@ -617,7 +617,7 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or len(line) == 0:
-        if len(subtitle_lines) > 0 is not None:
+        if len(subtitle_lines) > 0:
           _parse_cue_text(
             "\n".join(subtitle_lines),
             current_p,
