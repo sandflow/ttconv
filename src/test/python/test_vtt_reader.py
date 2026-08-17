@@ -50,8 +50,10 @@ class VTTReaderTest(unittest.TestCase):
     self.assertIsNotNone(to_model(f))
 
 
-  def test_samples(self):
-    for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
+  def test_valid_samples(self):
+    for root, subdirs, files in os.walk("src/test/resources/vtt/"):
+      # exclude invalid samples
+      subdirs[:] = [d for d in subdirs if d != "invalid"]
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
