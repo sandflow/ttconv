@@ -333,6 +333,18 @@ Hello
     self.assertIsInstance(p_children[0], model.Span)
     self.assertEqual(p_children[0].first_child().get_text(), "Hello")
 
+  def test_spurious_emtpy_line(self):
+    f = io.StringIO(r"""1
+101:00:00,000 --> 101:00:01,000
+
+2
+101:00:00,000 --> 101:00:01,000
+Bonjour
+""")
+    doc = to_model(f)
+    self.assertIsNotNone(doc)
+    self.assertEqual(len(doc.get_body()), 1)
+
   def test_multiline_text(self):
     f = io.StringIO(r"""1
 101:00:00,000 --> 101:00:01,000

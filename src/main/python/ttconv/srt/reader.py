@@ -295,6 +295,7 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
         int(m.group('end_ms')) / 1000
         )
 
+      subtitle_text = None
       state = _State.TEXT
 
       continue
@@ -302,6 +303,12 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
     if state in (_State.TEXT, _State.TEXT_MORE):
 
       if line is None or _EMPTY_RE.fullmatch(line):
+        state = _State.COUNTER
+
+        if subtitle_text is None:
+          LOGGER.warning("Ignoring cue due to a spurious blank line at line %s", line_index)
+          continue
+
         subtitle_text = subtitle_text.strip('\r\n').replace(r"\n\r", "\n")
 
         # Extract and handle alignment tags if enabled
@@ -338,7 +345,6 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
         parser.feed(subtitle_text)
         parser.close()
 
-        state = _State.COUNTER
         continue
 
       if state is _State.TEXT:
