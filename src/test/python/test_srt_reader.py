@@ -546,6 +546,27 @@ Also no alignment tag
     self.assertNotIn("{\\an", text_content)
     self.assertIn("Multiple tags here", text_content)
 
+  def test_unbalanced_tag_1(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello my</b> name is Bob
+""")
+    with self.assertLogs() as logs:
+      doc = to_model(f)
+      self.assertIsNotNone(doc)
+      if len(logs.output) != 1:
+        self.fail(logs.output)
+
+  def test_unbalanced_tag_2(self):
+    f = io.StringIO(r"""1
+00:02:16,612 --> 00:02:19,376
+Hello <u><b>my</u></b> name is Bob
+""")
+    with self.assertLogs() as logs:
+      doc = to_model(f)
+      self.assertIsNotNone(doc)
+      if len(logs.output) != 2:
+        self.fail(logs.output)
 
 if __name__ == '__main__':
   unittest.main()

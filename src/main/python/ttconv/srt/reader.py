@@ -144,6 +144,7 @@ class _TextParser(HTMLParser):
 
   def __init__(self, paragraph: model.P, line_number: int) -> None:
     self.line_num: int = line_number
+    self.tag_stack: typing.List[str] = []
     self.parent: model.ContentElement = paragraph
     super().__init__()
 
@@ -178,8 +179,17 @@ class _TextParser(HTMLParser):
       LOGGER.warning("Unknown tag %s at line %s", tag, self.line_num)
       return
 
+    self.tag_stack.append(tag.lower())
+
   def handle_endtag(self, tag):
-    self.parent = self.parent.parent()
+    if len(self.tag_stack) > 0:
+      self.parent = self.parent.parent()
+      opened_tag = self.tag_stack.pop()
+      if opened_tag != tag.lower():
+        LOGGER.error("Closing tag <%s> at line %s does not match closet opened tag <%s>", tag, self.line_num, opened_tag)
+    else:
+      # this handles the case where tags are being closed without ever having been opened
+      LOGGER.error("Unbalanced tag <%s> at line %s", tag, self.line_num)
 
   def handle_data(self, data):
     lines = data.split("\n")
