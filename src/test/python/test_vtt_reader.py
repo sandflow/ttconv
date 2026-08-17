@@ -480,6 +480,12 @@ Line 0 starting from top
     f = io.StringIO(SAMPLE)
     self.assertIsNone(to_model(f))
 
+  def test_bad_signature_5(self):
+    SAMPLE = ""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNone(to_model(f))
+
+
   def test_empty_file_1(self):
     SAMPLE = """WEBVTT"""
     f = io.StringIO(SAMPLE)
