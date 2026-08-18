@@ -38,12 +38,39 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.stl.reader as stl_reader
 from ttconv.vtt.config import VTTWriterConfiguration
+from ttconv.vtt.cue import VttCue
 import ttconv.vtt.writer as vtt_writer
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
 
 
 class VttWriterTest(unittest.TestCase):
+
+  def test_normalize_eol_whitespace_only_lines(self):
+    # Parity with the SRT writer fix for issue #350: with xml:space="preserve"
+    # the cue text contains whitespace-only lines around the content. These must
+    # be treated as blank so that the WebVTT output does not start with an
+    # invalid blank line right after the timing line.
+    cue = VttCue(1)
+    cue.append_text("\n   \n   Test whitespace handling\n   \n   ")
+    cue.normalize_eol()
+
+    lines = cue._text.split("\n")
+    self.assertNotEqual(lines[0].strip(), "", msg="leading whitespace-only line was not removed")
+    self.assertNotEqual(lines[-1].strip(), "", msg="trailing whitespace-only line was not removed")
+    self.assertIn("Test whitespace handling", cue._text)
+
+    # An interior whitespace-only line must collapse to a single break, and
+    # already-clean text must be left untouched.
+    cue = VttCue(1)
+    cue.append_text("Line one\n   \nLine two")
+    cue.normalize_eol()
+    self.assertEqual("Line one\nLine two", cue._text)
+
+    cue = VttCue(1)
+    cue.append_text("Hello\nWorld")
+    cue.normalize_eol()
+    self.assertEqual("Hello\nWorld", cue._text)
 
   def test_vtt_writer(self):
     doc = ContentDocument()

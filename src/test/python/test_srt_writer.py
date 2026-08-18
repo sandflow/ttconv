@@ -37,6 +37,7 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.scc.reader as scc_reader
 import ttconv.srt.writer as srt_writer
 import ttconv.srt.config as srt_config
+from ttconv.srt.paragraph import SrtParagraph
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
 
@@ -103,6 +104,32 @@ Pellentesque interdum lacinia sollicitudin.
     srt_from_model = srt_writer.from_model(doc)
 
     self.assertEqual(expected_srt, srt_from_model)
+
+  def test_normalize_eol_whitespace_only_lines(self):
+    # Reproduces issue #350: with xml:space="preserve" the paragraph text
+    # contains whitespace-only lines around the content. These must be treated
+    # as blank so that the SRT output does not start with an invalid blank line
+    # right after the timing line.
+    paragraph = SrtParagraph(1)
+    paragraph.append_text("\n   \n   Test whitespace handling\n   \n   ")
+    paragraph.normalize_eol()
+
+    lines = paragraph._text.split("\n")
+    self.assertNotEqual(lines[0].strip(), "", msg="leading whitespace-only line was not removed")
+    self.assertNotEqual(lines[-1].strip(), "", msg="trailing whitespace-only line was not removed")
+    self.assertIn("Test whitespace handling", paragraph._text)
+
+    # An interior whitespace-only line must collapse to a single break, and
+    # already-clean text must be left untouched.
+    paragraph = SrtParagraph(1)
+    paragraph.append_text("Line one\n   \nLine two")
+    paragraph.normalize_eol()
+    self.assertEqual("Line one\nLine two", paragraph._text)
+
+    paragraph = SrtParagraph(1)
+    paragraph.append_text("Hello\nWorld")
+    paragraph.normalize_eol()
+    self.assertEqual("Hello\nWorld", paragraph._text)
 
   def test_scc_test_suite(self):
     for root, _subdirs, files in os.walk("src/test/resources/scc"):

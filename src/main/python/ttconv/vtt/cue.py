@@ -49,6 +49,7 @@ class VttCue:
     right = "right"
 
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
+  _WS_LINE_RE = re.compile(r"^[^\S\n]+$", re.MULTILINE)
 
   def __init__(self, identifier: Optional[int] = None):
     self._id: int = identifier
@@ -106,8 +107,11 @@ class VttCue:
 
   def normalize_eol(self):
     """Remove line breaks at the beginning and end of the paragraph, and replace
-    line break sequences with a single line break"""
-    self._text = VttCue._EOL_SEQ_RE.sub("\n", self._text).strip("\n\r")
+    line break sequences with a single line break. Lines that contain only
+    whitespace are treated as blank, so that whitespace-preserving input does not
+    emit an invalid blank line after the timing line."""
+    text = VttCue._WS_LINE_RE.sub("", self._text)
+    self._text = VttCue._EOL_SEQ_RE.sub("\n", text).strip("\n\r")
 
   def append_text(self, text: str):
     """Appends text to the paragraph"""
