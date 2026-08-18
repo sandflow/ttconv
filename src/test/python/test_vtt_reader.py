@@ -487,6 +487,19 @@ Line 0 starting from top
     f = io.StringIO(SAMPLE)
     self.assertIsNone(to_model(f))
 
+  def test_null_char(self):
+    SAMPLE = """WEBVTT
+1
+00:00:00.000 --> 00:00:02.000
+Line \u0000
+
+"""
+    f = io.StringIO(SAMPLE)
+    doc = to_model(f)
+
+    text_node = doc.get_body().first_child().first_child().first_child().first_child()
+    self.assertIsInstance(text_node, model.Text)
+    self.assertEqual(text_node.get_text(), "Line �")
 
   def test_empty_file_1(self):
     SAMPLE = """WEBVTT"""
