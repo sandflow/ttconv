@@ -50,13 +50,15 @@ class VTTReaderTest(unittest.TestCase):
     self.assertIsNotNone(to_model(f))
 
 
-  def test_samples(self):
-    for root, _subdirs, files in os.walk("src/test/resources/vtt/"):
+  def test_valid_samples(self):
+    for root, subdirs, files in os.walk("src/test/resources/vtt/"):
+      # exclude invalid samples
+      subdirs[:] = [d for d in subdirs if d != "invalid"]
       for filename in files:
         (name, ext) = os.path.splitext(filename)
         if ext == ".vtt":
           with self.subTest(name):
-            with open(os.path.join(root, filename), encoding="utf-8") as f:
+            with open(os.path.join(root, filename), "r", encoding="utf-8-sig") as f:
               self.assertIsNotNone(to_model(f))
 
   def test_bold(self):
@@ -437,6 +439,82 @@ Line 0 starting from top
     self.assertEqual(e.height.value, 100 - 2*100*1/23)
     self.assertEqual(o.x.value, 100*1/40)
     self.assertEqual(e.width.value, 100 - 2*100*1/40)
+
+  def test_bad_signature_1(self):
+    SAMPLE = """webvtt
+
+1
+00:00:00.000 --> 00:00:02.000
+Line 0 starting from top
+
+"""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNone(to_model(f))
+
+  def test_bad_signature_2(self):
+    SAMPLE = """WEB
+
+1
+00:00:00.000 --> 00:00:02.000
+Line 0 starting from top
+
+"""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNone(to_model(f))
+
+  def test_bad_signature_3(self):
+    SAMPLE = """WEBVTTS
+
+1
+00:00:00.000 --> 00:00:02.000
+Line 0 starting from top
+
+"""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNone(to_model(f))
+
+  def test_bad_signature_4(self):
+    SAMPLE = """1
+00:00:00.000 --> 00:00:02.000
+Line 0 starting from top
+
+"""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNone(to_model(f))
+
+  def test_bad_signature_5(self):
+    SAMPLE = ""
+    f = io.StringIO(SAMPLE)
+    self.assertIsNone(to_model(f))
+
+  def test_null_char(self):
+    SAMPLE = """WEBVTT
+1
+00:00:00.000 --> 00:00:02.000
+Line \u0000
+
+"""
+    f = io.StringIO(SAMPLE)
+    doc = to_model(f)
+
+    text_node = doc.get_body().first_child().first_child().first_child().first_child()
+    self.assertIsInstance(text_node, model.Text)
+    self.assertEqual(text_node.get_text(), "Line �")
+
+  def test_empty_file_1(self):
+    SAMPLE = """WEBVTT"""
+    f = io.StringIO(SAMPLE)
+    m = to_model(f)
+    self.assertIsNotNone(m)
+    self.assertEqual(len(m.get_body()), 0)
+
+  def test_empty_file_2(self):
+    SAMPLE = """WEBVTT ABD
+"""
+    f = io.StringIO(SAMPLE)
+    m = to_model(f)
+    self.assertIsNotNone(m)
+    self.assertEqual(len(m.get_body()), 0)
 
 if __name__ == '__main__':
   unittest.main()

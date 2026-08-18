@@ -505,7 +505,7 @@ def _get_or_make_region(
   return found_region
 
 _VTT_TS_RE = re.compile(r"(?:(?P<hh>[0-9]{2,}):)?(?P<mm>[0-9]{2}):(?P<ss>[0-9]{2})\.(?P<ms>[0-9]{3})")
-_VTT_TS_TAG_RE = re.compile(r"<((?:[0-9]{2,3}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3})>")
+_VTT_FIRST_LINE_RE = re.compile(r"WEBVTT([\n\t ].*)?")
 
 def vtt_timestamp_to_secs(vtt_ts: str):
   m = _VTT_TS_RE.fullmatch(vtt_ts)
@@ -518,8 +518,9 @@ def vtt_timestamp_to_secs(vtt_ts: str):
 
   return None
 
-def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None):
-  """Converts a WebVTT document to the data model"""
+def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: None) -> typing.Optional[model.ContentDocument]:
+  """Converts a WebVTT document to the data model. Returns `None` if the
+  document does not start with the correct WebVTT file signature."""
 
   class _State(Enum):
     LOOKING = 1
@@ -530,25 +531,25 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
     NOTE = 6
     STYLE = 7
 
-
-  doc = model.ContentDocument()
-
-  body = model.Body(doc)
-  doc.set_body(body)
-
-  div = model.Div(doc)
-  body.push_child(div)
-
-  lines : str = data_file.readlines()
+  # see https://www.w3.org/TR/webvtt1/#file-parsing
+  lines = data_file.read().replace("\u0000", "\uFFFD") \
+                          .replace("\u000D\u000A", "\u000A") \
+                          .replace("\u000D", "\u000A") \
+                          .split("\u000A")
 
   state = _State.START
-  current_p = None
+  doc = None              # output document
+  div = None              # div into which cues will be inserted as p's
+  current_p = None        # current p
 
   for line_index, line in enumerate(_none_terminated(lines)):
 
     if state is _State.START:
-      if not line.startswith("WEBVTT"):
-        LOGGER.warning("The first line of the file does not start with WEBVTT")
+      if not _VTT_FIRST_LINE_RE.fullmatch(line):
+        LOGGER.error("The first line of the file does not start with WEBVTT")
+        break
+      doc = model.ContentDocument()
+      doc.set_body(model.Body(doc))
       state = _State.LOOKING
       continue
 
@@ -610,15 +611,15 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
       current_p.set_region(_get_or_make_region(doc, cue_params[3:]))
 
       state = _State.TEXT
-      subtitle_text = None
+      subtitle_lines = []
       continue
 
     if state in (_State.TEXT, _State.TEXT_MORE):
 
-      if line is None or _EMPTY_RE.fullmatch(line):
-        if subtitle_text is not None:
+      if line is None or len(line) == 0:
+        if len(subtitle_lines) > 0:
           _parse_cue_text(
-            subtitle_text.strip('\r\n').replace(r"\n\r", "\n"),
+            "\n".join(subtitle_lines),
             current_p,
             line_index
           )
@@ -629,10 +630,12 @@ def to_model(data_file: typing.IO, _config = None, progress_callback=lambda _: N
         continue
 
       if state is _State.TEXT:
+        if div is None:
+          div = model.Div(doc)
+          doc.get_body().push_child(div)
         div.push_child(current_p)
-        subtitle_text = ""
 
-      subtitle_text += line
+      subtitle_lines.append(line)
 
       state = _State.TEXT_MORE
 
