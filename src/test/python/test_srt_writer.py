@@ -353,5 +353,36 @@ Lorem
 <u>A</u>B<u>C</u>
 """)
 
+  def test_lwsp_filled_lines(self):
+    ttml_doc_str = """<tt xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling" xml:lang="de" ttp:cellResolution="44 29">
+    <head>
+        <layout>
+            <region xml:id="r0" tts:displayAlign="after" tts:extent="90% 80%" tts:origin="5% 10%" />
+        </layout>
+    </head>
+    <body>
+        <div xml:space="preserve">
+            <p region="r0" begin="00:00:01.000" end="00:00:03.000" xml:space="preserve">
+                
+            Test whitespace handling
+            
+        </p>
+        </div>
+    </body>
+</tt>"""
+
+    expected_srt="""1
+00:00:01,000 --> 00:00:03,000
+                
+            Test whitespace handling
+            
+        
+"""
+
+    model = srt_writer.from_model(imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str))))
+    self.assertEqual(expected_srt, model)
+
 if __name__ == '__main__':
   unittest.main()
