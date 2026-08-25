@@ -73,7 +73,7 @@ class ModuleConfiguration:
   @staticmethod
   def get_field_default(field: dataclasses.Field) -> Optional[Any]:
     """Returns the default field value if any, None otherwise"""
-    if isinstance(field.default, dataclasses._MISSING_TYPE):
+    if field.default is dataclasses.MISSING:
       return None
     return field.default
 
