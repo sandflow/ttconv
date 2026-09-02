@@ -210,6 +210,13 @@ class _Chunk:
     # adjust the begin time preserving the end time
     self.set_begin(self.get_begin() - other.get_dur())
 
+  def is_erase(self) -> bool:
+    """True if this chunk starts by erasing displayed memory (EDM). A chunk that
+    had an erase merged into its front by insert() also reports True; this is
+    harmless in the post-pass, which only tests pristine (unmerged) input chunks."""
+    edm = SccControlCode.EDM.get_ch1_value()
+    return self._octet_buffer[:2] == bytearray((edm >> 8, edm & 0xFF))
+
   def __len__(self):
     return len(self._octet_buffer)
 
@@ -320,7 +327,10 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
     captions.append(caption)
 
+  # pop-on paint and erase chunks are appended here at their natural (undelayed)
+  # positions; line 21 collisions are resolved in a post-pass once every chunk is known
   chunks : List[_Chunk] = []
+  use_popon = not (is_rollup is True and not config.force_popon)
   for i, caption in enumerate(captions):
     # 25% for SCC writing
     progress_callback(0.75 + (i + 1) / len(captions) / 4)
@@ -390,24 +400,71 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
 
       enm_chunk.set_begin(int(caption.get_begin() * config.frame_rate.fps - enm_chunk.get_dur() + 2))
-      # check if there is an overlap with the previous chunk
-      if len(chunks) > 0:
-        if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
-          LOGGER.warning("Skipping ISD at %s due to overlap in line 21 packets with previous ISD", float(caption.get_begin()))
-          continue
-
-        if enm_chunk.overlap(chunks[-1]):
-          enm_chunk.insert(chunks[-1])
-          chunks.pop()
-
       chunks.append(enm_chunk)
 
-      # initialize the EDM chunk
+      # the erase for this caption, at its authored end
       if caption.get_end() is not None:
         edm_chunk = _Chunk()
         edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
         edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
         chunks.append(edm_chunk)
+
+  # post-pass over the collected chunks: resolve line 21 packet collisions in order,
+  # pairing each pop-on paint chunk with its following erase.
+  if use_popon:
+    resolved: List[_Chunk] = []
+    i = 0
+    while i < len(chunks):
+      enm_chunk = chunks[i]
+      edm_chunk = chunks[i + 1] if i + 1 < len(chunks) and chunks[i + 1].is_erase() else None
+      i += 2 if edm_chunk is not None else 1
+
+      if len(resolved) > 0:
+        # the preceding erase (EDM) and the frame the previous caption becomes visible
+        edm = resolved[-1]
+        prev_paint_end = resolved[-2].get_end()
+        if prev_paint_end + edm.get_dur() > enm_chunk.get_begin():
+          # line 21 packets don't fit back-to-back; delay this caption to sit after
+          # the erase. The erase may be pulled back, but never before the previous
+          # caption's paint frame.
+          caption_end_f = None if edm_chunk is None else edm_chunk.get_begin()
+          # values read from the chunks' original (pre-move) positions, computed
+          # before any set_begin below so nothing depends on statement order
+          caption_begin_f = enm_chunk.get_end() - 2
+          authored_window = None if caption_end_f is None else caption_end_f - enm_chunk.get_end()
+          # physical limit: if even pulled fully back the display cannot finish
+          # before its own erase, the caption genuinely cannot be shown
+          infeasible = caption_end_f is not None and \
+            caption_end_f - (prev_paint_end + edm.get_dur() + enm_chunk.get_dur()) <= 0
+          if infeasible and config.drop_overlapping_captions:
+            LOGGER.warning("Skipping ISD at %s due to overlap in line 21 packets with previous ISD",
+                           SmpteTimeCode.from_frames(caption_begin_f, config.frame_rate.fps, config.frame_rate.df))
+            continue
+          # hold the erase near its authored frame, pulling it back only as far as
+          # needed to leave this caption a positive window when that is possible
+          edm_begin = edm.get_begin()
+          if caption_end_f is not None and not infeasible:
+            edm_begin = min(edm_begin, caption_end_f - enm_chunk.get_dur() - edm.get_dur() - 1)
+          edm_begin = max(edm_begin, prev_paint_end)
+          new_begin = edm_begin + edm.get_dur()
+          if infeasible:
+            # never drop: keep the caption and push its own erase (and every caption
+            # after it) later so it gets its authored window, accepting timeline drift
+            edm_chunk.set_begin(new_begin + enm_chunk.get_dur() + max(authored_window, 1))
+          # delay the onset and pull the erase up against this chunk so the merge
+          # below carries it in, otherwise the stale erase would wipe the caption
+          enm_chunk.set_begin(new_begin)
+          edm.set_begin(edm_begin)
+
+        if enm_chunk.overlap(resolved[-1]):
+          enm_chunk.insert(resolved[-1])
+          resolved.pop()
+
+      resolved.append(enm_chunk)
+      if edm_chunk is not None:
+        resolved.append(edm_chunk)
+
+    chunks = resolved
 
   start_offset = 0
   if config.start_tc is not None:

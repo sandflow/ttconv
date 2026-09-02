@@ -136,6 +136,13 @@ class SccWriterConfiguration(ModuleConfiguration):
     metadata={"decoder": lambda y: str(y) if y is not None else None}
   )
 
+  # Whether a colliding pop-on caption that cannot be shown before its own erase
+  # is dropped. When false the caption is always kept, delaying as needed.
+  drop_overlapping_captions: bool = field(
+    default=True,
+    metadata={"decoder": bool}
+  )
+
   @classmethod
   def name(cls):
     return "scc_writer"
