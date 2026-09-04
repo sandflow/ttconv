@@ -245,8 +245,6 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
   config : SccWriterConfiguration = config if config is not None else SccWriterConfiguration()
   isds = ISD.generate_isd_sequence(doc, _isd_progress)
-  is_rollup = None
-  is_last_empty = True
 
   # generate list of captions
   captions: List[_Caption] = []
@@ -270,10 +268,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
     if non_empty_region_cnt == 0:
       # skip empty ISD
-      is_last_empty = True
       continue
-
-    is_last_empty = False
 
     caption: _Caption = _Caption.from_regions(list(isd.iter_regions()))
     caption.set_begin(begin)
@@ -308,17 +303,21 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
       caption.set_lines(reflowed_lines)
 
-    # detect roll-up captions
-    if len(captions) > 1 and is_rollup is not False and not is_last_empty:
-      if caption[-1].startswith(captions[-1][-1]) or \
-        len(caption) > 1 and caption[-2] == captions[-1][-1]:
-        is_rollup = True
-      else:
-        if is_rollup is True:
-          LOGGER.warning("Inconsistent roll-up captions, defaulting to pop-on")
-        is_rollup = False
-
     captions.append(caption)
+
+  # detect roll-up captions
+  is_rollup = False
+  for i in range(1, len(captions)):
+    # do not detect roll-up if successive captions are more than 1 frame apart
+    # ideally we would ignore successive captions unless they are contiguous,
+    # but many tools incorrectly set end times to be inclusive instead of exclusive
+    if abs(captions[i - 1].get_end() - captions[i].get_begin()) > Fraction(1, 30):
+      continue
+
+    if captions[i][-1].startswith(captions[i - 1][-1]) or \
+      len(captions[i]) > 1 and captions[i][-2] == captions[i - 1][-1]:
+      is_rollup = True
+      break
 
   chunks : List[_Chunk] = []
   for i, caption in enumerate(captions):

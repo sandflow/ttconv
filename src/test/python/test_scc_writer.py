@@ -41,6 +41,7 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.writer as scc_writer
 import ttconv.scc.reader as scc_reader
+import ttconv.vtt.reader as vtt_reader
 from ttconv.scc.config import SCCFrameRate, SccWriterConfiguration
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
@@ -212,6 +213,18 @@ class SCCWriterTest(unittest.TestCase):
     p1 = list(div)[1]
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
+
+  def test_rollup_detection_break(self):
+    # captions with small inter-cue gaps must not defeat roll-up detection,
+    # and one non-matching pair must not force the whole document to pop-on
+    with open("src/test/resources/vtt/rollup-detection-break.vtt", "r", encoding="utf-8-sig") as f:
+      model = vtt_reader.to_model(f)
+
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+
+    self.assertIn("94a7 94a7", scc_from_model)
+    self.assertNotIn("9420 9420", scc_from_model)
 
   def test_basic_2997NDF(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
