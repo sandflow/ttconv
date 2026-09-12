@@ -263,6 +263,59 @@ Line 4
     scc_from_model = scc_writer.from_model(model, config)
     self.assertEqual(scc_from_model, expected_scc)
 
+  def test_rollup_restart(self):
+    f = StringIO("""1
+01:00:01,000 --> 01:00:02,000
+Line 1
+
+2
+01:00:02,000 --> 01:00:03,000
+Line 1
+Line 2
+
+3
+01:00:03,000 --> 01:00:04,000
+Line 2
+Line 3
+
+4
+01:00:06,000 --> 01:00:07,000
+Line 4
+
+5
+01:00:09,000 --> 01:00:10,000
+Line 1
+Line 2
+
+6
+01:00:10,000 --> 00:00:11,000
+Line 2
+Line 3
+""")
+
+    expected_scc="""Scenarist_SCC V1.0
+
+01:00:00;28	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2031
+
+01:00:01;28	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2032
+
+01:00:02;28	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 20b3
+
+01:00:03;29	942c 942c
+
+01:00:05;27	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2034
+
+01:00:06;29	942c 942c
+
+01:00:08;16	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2031 94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2032
+
+01:00:09;29	942c 942c"""
+
+    model = srt_reader.to_model(f)
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
+
   def test_basic_2997NDF(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml">
