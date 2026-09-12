@@ -293,7 +293,7 @@ def _process_as_rollup(captions, config, progress_callback) -> List[_Chunk]:
 
     # erase the display if there is a gap between roll-up captions or if it is the last caption
     if caption.get_end() is not None and \
-      (i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin()):
+      (i == len(captions) - 1 or captions[i + 1].get_begin() - caption.get_end() > Fraction(1, 30)):
       edm_chunk = _Chunk()
       edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
       edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
