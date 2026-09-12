@@ -427,7 +427,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
     captions.append(caption)
 
   is_rollup = False
-  if config.force_popon:
+  if not config.force_popon:
     # detect roll-up captions
     for i in range(1, len(captions)):
       # do not detect roll-up if successive captions are more than 1 frame apart
