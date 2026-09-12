@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 import logging
 from fractions import Fraction
 import re
@@ -233,6 +234,126 @@ class _Chunk:
 
 MAX_LINEWIDTH = 32
 
+class _RollupKind(Enum):
+  START = 0
+  ROLL_UP = 1
+  PAINT_ON = 2
+
+def _process_as_rollup(captions, config, progress_callback) -> List[_Chunk]:
+  chunks: List[_Chunk] = []
+
+  for i, caption in enumerate(captions):
+    # 25% for SCC writing
+    progress_callback(0.75 + (i + 1) / len(captions) / 4)
+
+    ru_chunk: _Chunk = _Chunk()
+
+    # what kind of roll-up caption are we handling
+    kind: _RollupKind = _RollupKind.START
+    if i > 0:
+      if captions[i][-1].startswith(captions[i - 1][-1]):
+        kind = _RollupKind.PAINT_ON
+      elif len(captions[i]) > 1 and captions[i][-2] == captions[i - 1][-1]:
+        kind = _RollupKind.ROLL_UP
+
+    begin_f = int(caption.get_begin() * config.frame_rate.fps)
+
+    if kind is _RollupKind.PAINT_ON:
+      ru_chunk.set_begin(begin_f)
+      for c in caption[-1][len(captions[i - 1][-1]):]:
+        ru_chunk.push_char(c)
+    else:
+      # determine the first line to be emitted
+      first_line_index = 0 if kind is _RollupKind.START else -1
+
+      for line in caption[first_line_index:]:
+
+        if config.rollup_lines == 2:
+          ru_chunk.push_control_code(SccControlCode.RU2.get_ch1_value())
+        elif config.rollup_lines == 3:
+          ru_chunk.push_control_code(SccControlCode.RU3.get_ch1_value())
+        else:
+          ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
+
+        # the caption begins when the CR code is received
+        begin_f = begin_f - ru_chunk.get_dur()
+        ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
+        pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
+        ru_chunk.push_control_code(pac.get_ch1_packet())
+
+        for c in line:
+          ru_chunk.push_char(c)
+
+        if len(chunks) > 0 and begin_f < chunks[-1].get_end():
+          begin_f = chunks[-1].get_end()
+          LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(caption.get_begin(), config.frame_rate.fps))
+        ru_chunk.set_begin(begin_f)
+
+    chunks.append(ru_chunk)
+
+    # erase the display if there is a gap between roll-up captions or if it is the last caption
+    if caption.get_end() is not None and \
+      (i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin()):
+      edm_chunk = _Chunk()
+      edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+      edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
+      chunks.append(edm_chunk)
+
+  return chunks
+
+def _process_as_popon(captions, config, progress_callback) -> List[_Chunk]:
+  chunks : List[_Chunk] = []
+
+  for i, caption in enumerate(captions):
+    # 25% for SCC writing
+    progress_callback(0.75 + (i + 1) / len(captions) / 4)
+
+    enm_chunk: _Chunk = _Chunk()
+
+    enm_chunk.push_control_code(SccControlCode.RCL.get_ch1_value())
+    enm_chunk.push_control_code(SccControlCode.ENM.get_ch1_value())
+    for line_num, line in enumerate(caption, 15 - len(caption)):
+      if caption.get_alignment() == TextAlignType.center:
+        indent = (32 - len(line)) // 2
+      elif caption.get_alignment() == TextAlignType.end:
+        indent = 32 - len(line)
+      else:
+        indent = None
+
+      spaces = indent % 4 if indent is not None else 0
+      indent = 4 * (indent // 4) if indent is not None else None
+
+      pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
+      enm_chunk.push_control_code(pac.get_ch1_packet())
+
+      for i in range(spaces):
+        enm_chunk.push_char(" ")
+      for c in line:
+        enm_chunk.push_char(c)
+    enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
+
+    enm_chunk.set_begin(int(caption.get_begin() * config.frame_rate.fps - enm_chunk.get_dur() + 2))
+    # check if there is an overlap with the previous chunk
+    if len(chunks) > 0:
+      if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
+        LOGGER.warning("Skipping ISD at %s due to overlap in line 21 packets with previous ISD", float(caption.get_begin()))
+        continue
+
+      if enm_chunk.overlap(chunks[-1]):
+        enm_chunk.insert(chunks[-1])
+        chunks.pop()
+
+    chunks.append(enm_chunk)
+
+    # initialize the EDM chunk
+    if caption.get_end() is not None:
+      edm_chunk = _Chunk()
+      edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
+      edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
+      chunks.append(edm_chunk)
+
+  return chunks
+
 #
 # scc writer
 #
@@ -305,108 +426,25 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
 
     captions.append(caption)
 
-  # detect roll-up captions
   is_rollup = False
-  for i in range(1, len(captions)):
-    # do not detect roll-up if successive captions are more than 1 frame apart
-    # ideally we would ignore successive captions unless they are contiguous,
-    # but many tools incorrectly set end times to be inclusive instead of exclusive
-    if abs(captions[i - 1].get_end() - captions[i].get_begin()) > Fraction(1, 30):
-      continue
+  if config.force_popon:
+    # detect roll-up captions
+    for i in range(1, len(captions)):
+      # do not detect roll-up if successive captions are more than 1 frame apart
+      # ideally we would ignore successive captions unless they are contiguous,
+      # but many tools incorrectly set end times to be inclusive instead of exclusive
+      if abs(captions[i - 1].get_end() - captions[i].get_begin()) > Fraction(1, 30):
+        continue
 
-    if captions[i][-1].startswith(captions[i - 1][-1]) or \
-      len(captions[i]) > 1 and captions[i][-2] == captions[i - 1][-1]:
-      is_rollup = True
-      break
+      if captions[i][-1].startswith(captions[i - 1][-1]) or \
+        len(captions[i]) > 1 and captions[i][-2] == captions[i - 1][-1]:
+        is_rollup = True
+        break
 
-  chunks : List[_Chunk] = []
-  for i, caption in enumerate(captions):
-    # 25% for SCC writing
-    progress_callback(0.75 + (i + 1) / len(captions) / 4)
-
-    if is_rollup is True and not config.force_popon:
-      ru_chunk: _Chunk = _Chunk()
-
-      is_painton = i > 0 and caption[-1].startswith(captions[i - 1][-1])
-
-      begin_f = int(caption.get_begin() * config.frame_rate.fps)
-
-      if not is_painton:
-        if config.rollup_lines == 2:
-          ru_chunk.push_control_code(SccControlCode.RU2.get_ch1_value())
-        elif config.rollup_lines == 3:
-          ru_chunk.push_control_code(SccControlCode.RU3.get_ch1_value())
-        else:
-          ru_chunk.push_control_code(SccControlCode.RU4.get_ch1_value())
-        # the caption begins when the CR code is received
-        begin_f = begin_f - ru_chunk.get_dur()
-        ru_chunk.push_control_code(SccControlCode.CR.get_ch1_value())
-        pac = SccPreambleAddressCode(1, 15, NamedColors.white, 0, False, False)
-        ru_chunk.push_control_code(pac.get_ch1_packet())
-
-
-      if len(chunks) > 0 and begin_f < chunks[-1].get_end():
-        begin_f = chunks[-1].get_end()
-        LOGGER.warning("Overlapping roll-up text at %s", SmpteTimeCode.from_seconds(caption.get_begin(), config.frame_rate.fps))
-      ru_chunk.set_begin(begin_f)
-
-      for c in (caption[-1][len(captions[i - 1][-1]):] if is_painton else caption[-1]):
-        ru_chunk.push_char(c)
-
-      chunks.append(ru_chunk)
-
-      # erase the display if there is a gap between roll-up captions
-      if caption.get_end() is not None and \
-        (i == len(captions) - 1 or caption.get_end() != captions[i + 1].get_begin()):
-        edm_chunk = _Chunk()
-        edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
-        chunks.append(edm_chunk)
-
-    else:
-      enm_chunk: _Chunk = _Chunk()
-
-      enm_chunk.push_control_code(SccControlCode.RCL.get_ch1_value())
-      enm_chunk.push_control_code(SccControlCode.ENM.get_ch1_value())
-      for line_num, line in enumerate(caption, 15 - len(caption)):
-        if caption.get_alignment() == TextAlignType.center:
-          indent = (32 - len(line)) // 2
-        elif caption.get_alignment() == TextAlignType.end:
-          indent = 32 - len(line)
-        else:
-          indent = None
-
-        spaces = indent % 4 if indent is not None else 0
-        indent = 4 * (indent // 4) if indent is not None else None
-
-        pac = SccPreambleAddressCode(1, line_num, NamedColors.white, indent, False, False)
-        enm_chunk.push_control_code(pac.get_ch1_packet())
-
-        for i in range(spaces):
-          enm_chunk.push_char(" ")
-        for c in line:
-          enm_chunk.push_char(c)
-      enm_chunk.push_control_code(SccControlCode.EOC.get_ch1_value())
-
-      enm_chunk.set_begin(int(caption.get_begin() * config.frame_rate.fps - enm_chunk.get_dur() + 2))
-      # check if there is an overlap with the previous chunk
-      if len(chunks) > 0:
-        if chunks[-2].get_end() + chunks[-1].get_dur() > enm_chunk.get_begin():
-          LOGGER.warning("Skipping ISD at %s due to overlap in line 21 packets with previous ISD", float(caption.get_begin()))
-          continue
-
-        if enm_chunk.overlap(chunks[-1]):
-          enm_chunk.insert(chunks[-1])
-          chunks.pop()
-
-      chunks.append(enm_chunk)
-
-      # initialize the EDM chunk
-      if caption.get_end() is not None:
-        edm_chunk = _Chunk()
-        edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
-        edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
-        chunks.append(edm_chunk)
+  if is_rollup:
+    chunks = _process_as_rollup(captions, config, progress_callback)
+  else:
+    chunks = _process_as_popon(captions, config, progress_callback)
 
   start_offset = 0
   if config.start_tc is not None:
