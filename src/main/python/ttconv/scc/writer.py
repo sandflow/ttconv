@@ -448,7 +448,11 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       if captions[i][-1].startswith(captions[i - 1][-1]) or \
         len(captions[i]) > 1 and captions[i][-2] == captions[i - 1][-1]:
         rollup_count = rollup_count + 1
-    is_rollup = 100 * rollup_count / len(captions) > ROLLUP_DETECTION_PCT
+
+    if len(captions) > 10:
+      is_rollup = 100 * rollup_count / (len(captions) + 1) > ROLLUP_DETECTION_PCT
+    else:
+      is_rollup = rollup_count > 0
 
   if is_rollup:
     chunks = _process_as_rollup(captions, config, progress_callback)
