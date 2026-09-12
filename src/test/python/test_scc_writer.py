@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+from io import StringIO
 import json
 import os
 import unittest
@@ -42,6 +43,8 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.writer as scc_writer
 import ttconv.scc.reader as scc_reader
 import ttconv.vtt.reader as vtt_reader
+import ttconv.srt.reader as srt_reader
+
 from ttconv.scc.config import SCCFrameRate, SccWriterConfiguration
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
@@ -225,6 +228,40 @@ class SCCWriterTest(unittest.TestCase):
 
     self.assertIn("94a7 94a7", scc_from_model)
     self.assertNotIn("9420 9420", scc_from_model)
+
+  def test_rollup_multiline_start(self):
+    f = StringIO("""1
+00:00:01,000 --> 00:00:02,000
+Line 1
+Line 2
+
+2
+00:00:02,000 --> 00:00:03,000
+Line 1
+Line 2
+Line 3
+
+3
+00:00:03,000 --> 00:00:04,000
+Line 2
+Line 3
+Line 4
+""")
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;16	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2031 94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2032
+
+00:00:01;27	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 20b3
+
+00:00:02;27	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2034
+
+00:00:03;29	942c 942c"""
+
+    model = srt_reader.to_model(f)
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
 
   def test_basic_2997NDF(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
