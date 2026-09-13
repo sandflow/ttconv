@@ -385,6 +385,103 @@ class ContentElementTest(unittest.TestCase):
 
     self.assertSequenceEqual(list(dest.iter_styles()), list(src.iter_styles()))
 
+  def test_clone_detached(self):
+    src = model.ContentElement()
+
+    src.set_begin(Fraction(1, 2))
+    src.set_id("hello")
+    src.push_child(model.ContentElement())
+
+    clone = src.clone()
+
+    self.assertIsNot(clone, src)
+    self.assertIsInstance(clone, model.ContentElement)
+    self.assertIsNone(clone.parent())
+    self.assertEqual(clone.get_begin(), src.get_begin())
+    self.assertEqual(clone.get_id(), src.get_id())
+    self.assertEqual(len(clone), len(src))
+    self.assertIsNot(clone.first_child(), src.first_child())
+
+  def test_clone_same_doc(self):
+    doc = model.ContentDocument()
+
+    region = model.Region("region", doc)
+    doc.put_region(region)
+
+    body = model.Body(doc)
+    doc.set_body(body)
+
+    div = model.Div(doc)
+    div.set_region(region)
+    body.push_child(div)
+
+    p = model.P(doc)
+    p.set_id("p1")
+    div.push_child(p)
+
+    span = model.Span(doc)
+    span.set_lang("en")
+    p.push_child(span)
+
+    text = model.Text(doc, "hello")
+    span.push_child(text)
+
+    clone = div.clone()
+
+    self.assertIs(type(clone), model.Div)
+    self.assertIsNone(clone.parent())
+    self.assertIs(clone.get_doc(), doc)
+    self.assertIs(clone.get_region(), region)
+
+    self.assertEqual(len(clone), 1)
+    clone_p = clone.first_child()
+    self.assertIsNot(clone_p, p)
+    self.assertEqual(clone_p.get_id(), "p1")
+
+    clone_span = clone_p.first_child()
+    self.assertEqual(clone_span.get_lang(), "en")
+
+    clone_text = clone_span.first_child()
+    self.assertEqual(clone_text.get_text(), "hello")
+
+    # the clone can be attached alongside the original, in the same document
+    body.push_child(clone)
+    self.assertIs(clone.parent(), body)
+
+    # the original subtree is left untouched
+    self.assertEqual(len(div), 1)
+    self.assertIs(div.first_child(), p)
+
+  def test_clone_other_doc_unknown_region(self):
+    doc = model.ContentDocument()
+    region = model.Region("region", doc)
+    doc.put_region(region)
+
+    div = model.Div(doc)
+    div.set_region(region)
+
+    other_doc = model.ContentDocument()
+
+    with self.assertRaises(ValueError):
+      div.clone(other_doc)
+
+  def test_clone_other_doc_known_region(self):
+    doc = model.ContentDocument()
+    region = model.Region("region", doc)
+    doc.put_region(region)
+
+    div = model.Div(doc)
+    div.set_region(region)
+
+    other_doc = model.ContentDocument()
+    other_region = model.Region("region", other_doc)
+    other_doc.put_region(other_region)
+
+    clone = div.clone(other_doc)
+
+    self.assertIs(clone.get_doc(), other_doc)
+    self.assertIs(clone.get_region(), other_region)
+
 class BodyTest(unittest.TestCase):
 
   def test_push_child(self):
@@ -547,6 +644,24 @@ class RegionTest(unittest.TestCase):
     self.assertSequenceEqual(list(dest.iter_animation_steps()), list(src.iter_animation_steps()))
 
     self.assertSequenceEqual(list(dest.iter_styles()), list(src.iter_styles()))
+
+  def test_clone(self):
+    doc = model.ContentDocument()
+
+    src = model.Region("hello", doc)
+    doc.put_region(src)
+
+    src.set_lang("fr")
+    src.set_style(styles.StyleProperties.Color, styles.NamedColors.green.value)
+
+    clone = src.clone()
+
+    self.assertIsNot(clone, src)
+    self.assertIs(type(clone), model.Region)
+    self.assertIs(clone.get_doc(), doc)
+    self.assertEqual(clone.get_id(), "hello")
+    self.assertEqual(clone.get_lang(), "fr")
+    self.assertEqual(clone.get_style(styles.StyleProperties.Color), styles.NamedColors.green.value)
 
 class RubyTest(unittest.TestCase):
 
