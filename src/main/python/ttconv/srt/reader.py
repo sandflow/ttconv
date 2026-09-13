@@ -210,7 +210,8 @@ class _State(Enum):
 
 _EMPTY_RE = re.compile(r"\s+")
 _COUNTER_RE = re.compile(r"\d+")
-_TIMECODE_RE = re.compile(r"(?P<begin_h>[0-9]{2,3}):(?P<begin_m>[0-9]{2}):(?P<begin_s>[0-9]{2}),(?P<begin_ms>[0-9]{3})\s+-->\s+(?P<end_h>[0-9]{2,3}):(?P<end_m>[0-9]{2}):(?P<end_s>[0-9]{2}),(?P<end_ms>[0-9]{3})")
+_SRT_TS_RE = re.compile(r"(?P<hh>[0-9]{2,3}):(?P<mm>[0-9]{2}):(?P<ss>[0-9]{2}),(?P<ms>[0-9]{3})")
+_TC_LINE_RE = re.compile(r"(?P<begin>[0-9]{2,3}:[0-9]{2}:[0-9]{2},[0-9]{3})\s+-->\s+(?P<end>[0-9]{2,3}:[0-9]{2}:[0-9]{2},[0-9]{3})")
 _DEFAULT_FONT_STACK = ("Verdana", "Arial", "Tiresias", styles.GenericFontFamilyType.sansSerif)
 _DEFAULT_FONT_SIZE = styles.LengthType(80, styles.LengthType.Units.pct)
 _DEFAULT_OUTLINE_THICKNESS = styles.LengthType(5, styles.LengthType.Units.pct)
@@ -219,12 +220,17 @@ _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
 _DEFAULT_SAFE_AREA_PCT = 10
 
-def _srt_timecode_to_secs(m: re.Match, prefix: str) -> Fraction:
-  whole_secs = int(m.group(f'{prefix}_h')) * 3600 + \
-    int(m.group(f'{prefix}_m')) * 60 + \
-    int(m.group(f'{prefix}_s'))
+def srt_timecode_to_secs(srt_ts: str) -> typing.Optional[Fraction]:
+  m = _SRT_TS_RE.fullmatch(srt_ts)
 
-  return Fraction(whole_secs * 1000 + int(m.group(f'{prefix}_ms')), 1000)
+  if m:
+    s = int(m.group('hh')) * 3600 + \
+      int(m.group('mm')) * 60 + \
+      int(m.group('ss'))
+
+    return Fraction(s * 1000 + int(m.group('ms')), 1000)
+
+  return None
 
 def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
@@ -281,7 +287,7 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
       if line is None:
         break
 
-      m = _TIMECODE_RE.search(line)
+      m = _TC_LINE_RE.search(line)
 
       if m is None:
         LOGGER.fatal("Missing timecode at line %s", line_index)
@@ -289,8 +295,8 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
 
       current_p = model.P(doc)
 
-      current_p.set_begin(_srt_timecode_to_secs(m, 'begin'))
-      current_p.set_end(_srt_timecode_to_secs(m, 'end'))
+      current_p.set_begin(srt_timecode_to_secs(m.group('begin')))
+      current_p.set_end(srt_timecode_to_secs(m.group('end')))
 
       subtitle_text = None
       state = _State.TEXT

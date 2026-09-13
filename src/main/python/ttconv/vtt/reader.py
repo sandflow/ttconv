@@ -512,11 +512,11 @@ def vtt_timestamp_to_secs(vtt_ts: str) -> typing.Optional[Fraction]:
   m = _VTT_TS_RE.fullmatch(vtt_ts)
 
   if m:
-    whole_secs = int(m.group('hh') if m.group('hh') is not None else 0) * 3600 + \
+    s = int(m.group('hh') if m.group('hh') is not None else 0) * 3600 + \
       int(m.group('mm')) * 60 + \
       int(m.group('ss'))
 
-    return Fraction(whole_secs * 1000 + int(m.group('ms')), 1000)
+    return Fraction(s * 1000 + int(m.group('ms')), 1000)
 
   return None
 
