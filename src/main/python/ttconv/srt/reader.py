@@ -31,6 +31,7 @@ import typing
 import re
 import logging
 from enum import Enum
+from fractions import Fraction
 from html.parser import HTMLParser
 
 from ttconv import model
@@ -218,6 +219,13 @@ _DEFAULT_OUTLINE_COLOR = styles.NamedColors.black.value
 _DEFAULT_LINE_HEIGHT = styles.LengthType(125, styles.LengthType.Units.pct)
 _DEFAULT_SAFE_AREA_PCT = 10
 
+def _srt_timecode_to_secs(m: re.Match, prefix: str) -> Fraction:
+  whole_secs = int(m.group(f'{prefix}_h')) * 3600 + \
+    int(m.group(f'{prefix}_m')) * 60 + \
+    int(m.group(f'{prefix}_s'))
+
+  return Fraction(whole_secs * 1000 + int(m.group(f'{prefix}_ms')), 1000)
+
 def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progress_callback=lambda _: None):
   """Converts an SRT document to the data model"""
 
@@ -281,19 +289,8 @@ def to_model(data_file: typing.IO, _config: SRTReaderConfiguration = None, progr
 
       current_p = model.P(doc)
 
-      current_p.set_begin(
-        int(m.group('begin_h')) * 3600 + 
-        int(m.group('begin_m')) * 60 + 
-        int(m.group('begin_s')) +
-        int(m.group('begin_ms')) / 1000
-        )
-    
-      current_p.set_end(
-        int(m.group('end_h')) * 3600 + 
-        int(m.group('end_m')) * 60 + 
-        int(m.group('end_s')) +
-        int(m.group('end_ms')) / 1000
-        )
+      current_p.set_begin(_srt_timecode_to_secs(m, 'begin'))
+      current_p.set_end(_srt_timecode_to_secs(m, 'end'))
 
       subtitle_text = None
       state = _State.TEXT

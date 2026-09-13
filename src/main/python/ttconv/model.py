@@ -387,6 +387,8 @@ class ContentElement:
 
   def set_begin(self, time_offset: typing.Optional[Fraction]):
     '''Sets the (inclusive) begin time of the element, in seconds.'''
+    if time_offset is not None and not isinstance(time_offset, Fraction):
+      raise TypeError("time_offset must be a Fraction or None")
     self._begin = time_offset
 
   def get_begin(self) -> typing.Optional[Fraction]:
@@ -395,6 +397,8 @@ class ContentElement:
 
   def set_end(self, time_offset: typing.Optional[Fraction]):
     '''Sets the (exclusive) end time of the element, in seconds.'''
+    if time_offset is not None and not isinstance(time_offset, Fraction):
+      raise TypeError("time_offset must be a Fraction or None")
     self._end = time_offset
 
   def get_end(self) -> typing.Optional[Fraction]:
