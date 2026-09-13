@@ -29,6 +29,7 @@
 import unittest
 import io
 import os.path
+from fractions import Fraction
 
 from ttconv.vtt.reader import to_model
 import ttconv.style_properties as styles
@@ -162,8 +163,8 @@ hi everyone today we're going to be
     spans_and_brs = list(body[0][0])
     self.assertIsNone(spans_and_brs[0].get_begin()) # \x20
     self.assertIsNone(spans_and_brs[2].get_begin()) # hi
-    self.assertEqual(spans_and_brs[3].get_begin(), 1.040 - 0.799) # everyone
-    self.assertEqual(spans_and_brs[4].get_begin(), 1.920 - 0.799) # today
+    self.assertEqual(spans_and_brs[3].get_begin(), Fraction(1040, 1000) - Fraction(799, 1000)) # everyone
+    self.assertEqual(spans_and_brs[4].get_begin(), Fraction(1920, 1000) - Fraction(799, 1000)) # today
 
   def test_italic(self):
     f = io.StringIO(r"""WEBVTT

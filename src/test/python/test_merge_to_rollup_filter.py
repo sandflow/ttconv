@@ -95,6 +95,58 @@ class MergeToRollUpFilterTests(unittest.TestCase):
     paragraphs = [c for c in div if isinstance(c, model.P)]
     self.assertEqual(len(paragraphs), 2)
 
+  def test_raises_on_p_with_none_begin(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    p1 = _make_p(doc, None, Fraction(1), "line1")
+    div.push_child(p1)
+
+    with self.assertRaises(ValueError):
+      MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig()).process(doc)
+
+  def test_raises_on_p_with_none_end(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    p1 = _make_p(doc, Fraction(0), None, "line1")
+    div.push_child(p1)
+
+    with self.assertRaises(ValueError):
+      MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig()).process(doc)
+
+  def test_raises_on_non_p_element_with_begin(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    div.set_begin(Fraction(0))
+    body.push_child(div)
+
+    with self.assertRaises(ValueError):
+      MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig()).process(doc)
+
+  def test_raises_on_overlapping_paragraphs(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    p1 = _make_p(doc, Fraction(0), Fraction(2), "line1")
+    p2 = _make_p(doc, Fraction(1), Fraction(3), "line2")
+    div.push_child(p1)
+    div.push_child(p2)
+
+    with self.assertRaises(ValueError):
+      MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig()).process(doc)
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -27,6 +27,7 @@
 
 from __future__ import annotations
 
+import itertools
 import typing
 from dataclasses import dataclass, field
 from fractions import Fraction
@@ -49,6 +50,15 @@ def _max_gap_decoder(value: typing.Union[Fraction, str, int, float]) -> Fraction
   raise ValueError("max_gap must be a number or a numeric string")
 
 
+def _num_lines_decoder(value: typing.Union[int, str]) -> int:
+  value = int(value)
+
+  if value not in (2, 3, 4):
+    raise ValueError("num_lines must be 2, 3 or 4")
+
+  return value
+
+
 @dataclass
 class MergeToRollUpDocFilterConfig(ModuleConfiguration):
   """Configuration class for the Merge to roll-up filter"""
@@ -59,6 +69,9 @@ class MergeToRollUpDocFilterConfig(ModuleConfiguration):
 
   # maximum gap, in seconds, between two paragraphs for them to be merged
   max_gap: typing.Optional[Fraction] = field(default=Fraction(1, 30), metadata={"decoder": _max_gap_decoder})
+
+  # number of lines simultaneously visible in the roll-up
+  num_lines: int = field(default=3, metadata={"decoder": _num_lines_decoder})
 
 
 class MergeToRollUpDocFilter(DocumentFilter):
@@ -72,6 +85,7 @@ class MergeToRollUpDocFilter(DocumentFilter):
 
   def __init__(self, config: MergeToRollUpDocFilterConfig):
     super().__init__(config)
+    self.config = config
 
   @dataclass
   class _Line:
@@ -81,32 +95,98 @@ class MergeToRollUpDocFilter(DocumentFilter):
     end: Fraction
 
   def process(self, doc: ContentDocument) -> ContentDocument:
+    # fast fail if there is no body
     body = doc.get_body()
-
     if body is None:
       return doc
 
-    all_ps = [e for e in body.dfs_iterator() if isinstance(e, P)]
-    all_ps.sort(key=lambda p: p.get_begin() if p.get_begin() is not None else Fraction(0)) # type: ignore
+    # collect all the p elements and make sure they match a constrained stucture
+    all_ps = []
 
-    target_p = None
+    for e in body.dfs_iterator():
+      if isinstance(e, P):
+        if e.get_begin() is None or e.get_end() is None:
+          raise ValueError("p elements must have a finite begin and end")
+        all_ps.append(e)
+      elif e.get_begin() is not None or e.get_end() is not None:
+        raise ValueError("Only p elements may have a begin or end")
+
+      if isinstance(e, Br) and not isinstance(e.parent(), P):
+        raise ValueError("br elements must have a p element as parent")
+
+    all_ps.sort(key=lambda p: p.get_begin()) # type: ignore
+
+    for prev_p, next_p in zip(all_ps, all_ps[1:]):
+      if next_p.get_begin() < prev_p.get_end():
+        raise ValueError("p elements must not overlap in time")
+
+    if len(all_ps) == 0:
+      return doc 
+
+    # collect, in runs, all lines of p elements who are contiguous
+    runs: typing.List[typing.List["MergeToRollUpDocFilter._Line"]] = []
+    cur_run: typing.List["MergeToRollUpDocFilter._Line"] = []
+    for i in range(len(all_ps)):
+
+      if i == 0 or all_ps[i].get_begin() - all_ps[i-1].get_end() > self.config.max_gap:
+        cur_run = []
+        runs.append(cur_run)
+
+      p = all_ps[i]
+      begin = typing.cast(Fraction, p.get_begin())
+      end = typing.cast(Fraction, p.get_end())
+
+      lines = []
+      cur_line: typing.Optional["MergeToRollUpDocFilter._Line"] = None
+
+      for child in itertools.chain(p, [None]):
+        if child is None or isinstance(child, Br):
+          if cur_line is not None:
+            lines.append(cur_line)
+          cur_line = None
+          continue
+        if cur_line is None:
+          cur_line = self._Line(first=child, last=child, begin=begin, end=end)
+        else:
+          cur_line.last = child
+
+      if not lines:
+        continue
+
+      total_duration = Fraction(end - begin, len(lines))
+
+      for j in range(len(lines)):
+        lines[j].begin = begin + j * total_duration
+        lines[j].end = begin + (j + 1) * total_duration
+        cur_run.append(lines[j])
+
+    # generate roll-up p elements
+    for run in runs:
+      for line_i, line in enumerate(run):
+        new_p = P(doc)
+
+        original_p = typing.cast(ContentElement, line.first.parent())
+        parent = typing.cast(ContentElement, original_p.parent())
+
+        original_p.copy_to(new_p)
+        new_p.set_begin(line.begin)
+        new_p.set_end(line.end)
+        new_p.set_region(original_p.get_region())
+
+        for ctx_idx, ctx_line in enumerate(run[max(0, line_i - self.config.num_lines + 1):line_i + 1]):
+          if ctx_idx > 0:
+            new_p.push_child(Br(doc))
+
+          child = ctx_line.first
+          while True:
+            new_p.push_child(child.clone(doc))
+            if child is ctx_line.last:
+              break
+            child = typing.cast(ContentElement, child.next_sibling())
+
+        parent.push_child(new_p)
+
     for p in all_ps:
-
-      if p.get_end() is None:
-        target_p = None
-        continue
-
-      begin = p.get_begin() if p.get_begin() is not None else Fraction(0)
-
-      if target_p is None or begin - target_p.get_end() > self.config.max_gap:
-        target_p = p
-        continue
-
-      target_p.push_child(Br(target_p.get_doc()))
-      for child in p:
-        child.remove()
-        target_p.push_child(child)
       p.remove()
-      target_p.set_end(p.get_end())
 
     return doc
