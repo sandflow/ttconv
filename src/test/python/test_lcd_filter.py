@@ -28,6 +28,7 @@
 # pylint: disable=R0201,C0115,C0116
 
 import unittest
+from fractions import Fraction
 from ttconv.filters.doc.lcd import LCDDocFilter, LCDDocFilterConfig
 import ttconv.model as model
 import ttconv.style_properties as styles
@@ -88,7 +89,7 @@ class LCDFilterTests(unittest.TestCase):
 
     # r5: begin="1s"
     r5 = model.Region("r5", doc)
-    r5.set_begin(1)
+    r5.set_begin(Fraction(1))
     doc.put_region(r5)
 
     # body

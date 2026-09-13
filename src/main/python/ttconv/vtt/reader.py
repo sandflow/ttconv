@@ -28,6 +28,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from fractions import Fraction
 import typing
 import re
 import logging
@@ -507,14 +508,15 @@ def _get_or_make_region(
 _VTT_TS_RE = re.compile(r"(?:(?P<hh>[0-9]{2,}):)?(?P<mm>[0-9]{2}):(?P<ss>[0-9]{2})\.(?P<ms>[0-9]{3})")
 _VTT_FIRST_LINE_RE = re.compile(r"WEBVTT([\n\t ].*)?")
 
-def vtt_timestamp_to_secs(vtt_ts: str):
+def vtt_timestamp_to_secs(vtt_ts: str) -> typing.Optional[Fraction]:
   m = _VTT_TS_RE.fullmatch(vtt_ts)
 
   if m:
-    return int(m.group('hh') if m.group('hh') is not None else 0) * 3600 + \
+    s = int(m.group('hh') if m.group('hh') is not None else 0) * 3600 + \
       int(m.group('mm')) * 60 + \
-      int(m.group('ss')) + \
-      int(m.group('ms')) / 1000
+      int(m.group('ss'))
+
+    return Fraction(s * 1000 + int(m.group('ms')), 1000)
 
   return None
 
