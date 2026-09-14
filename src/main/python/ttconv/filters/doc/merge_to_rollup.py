@@ -75,9 +75,8 @@ class MergeToRollUpDocFilterConfig(ModuleConfiguration):
 
 
 class MergeToRollUpDocFilter(DocumentFilter):
-  """Merges paragraphs that have identical styles and are separated by
-  less than 1/30 s, so that they are presented as a single, continuous
-  caption instead of being popped on and off independently."""
+  """Merges paragraphs into roll-up style captions if they have identical regions and are separated by
+  less than `max_gap`."""
 
   @classmethod
   def get_config_class(cls) -> ModuleConfiguration:
@@ -101,7 +100,7 @@ class MergeToRollUpDocFilter(DocumentFilter):
       return doc
 
     # collect all the p elements and make sure they match a constrained stucture
-    all_ps = []
+    all_ps: typing.List[P] = []
 
     for e in body.dfs_iterator():
       if isinstance(e, P):
@@ -128,7 +127,11 @@ class MergeToRollUpDocFilter(DocumentFilter):
     cur_run: typing.List["MergeToRollUpDocFilter._Line"] = []
     for i in range(len(all_ps)):
 
-      if i == 0 or all_ps[i].get_begin() - all_ps[i-1].get_end() > self.config.max_gap:
+      # P elements are not contiguous if the gap between them is greater
+      # than max_gap or they do not belong to the same region
+      if i == 0 or \
+        all_ps[i].get_begin() - all_ps[i-1].get_end() > self.config.max_gap or \
+        all_ps[i].get_region() != all_ps[i-1].get_region():
         cur_run = []
         runs.append(cur_run)
 
@@ -160,31 +163,52 @@ class MergeToRollUpDocFilter(DocumentFilter):
         lines[j].end = begin + (j + 1) * total_duration
         cur_run.append(lines[j])
 
-    # generate roll-up p elements
+    # generate roll-up p elements: consecutive lines are merged into a single p
+    # element for as long as they fit within num_lines; once that capacity is
+    # exceeded, the oldest visible line is dropped and a new p element is
+    # started to represent the resulting, shifted window
     for run in runs:
-      for line_i, line in enumerate(run):
-        new_p = P(doc)
+      window: typing.List["MergeToRollUpDocFilter._Line"] = []
+      cur_new_p: typing.Optional[P] = None
 
-        original_p = typing.cast(ContentElement, line.first.parent())
-        parent = typing.cast(ContentElement, original_p.parent())
+      for line in run:
+        window.append(line)
+        evicted = len(window) > self.config.num_lines
+        if evicted:
+          window.pop(0)
 
-        original_p.copy_to(new_p)
-        new_p.set_begin(line.begin)
-        new_p.set_end(line.end)
-        new_p.set_region(original_p.get_region())
+        if cur_new_p is None or evicted:
+          original_p = typing.cast(ContentElement, line.first.parent())
+          parent = typing.cast(ContentElement, original_p.parent())
 
-        for ctx_idx, ctx_line in enumerate(run[max(0, line_i - self.config.num_lines + 1):line_i + 1]):
-          if ctx_idx > 0:
-            new_p.push_child(Br(doc))
+          cur_new_p = P(doc)
+          original_p.copy_to(cur_new_p)
+          cur_new_p.set_begin(line.begin)
+          cur_new_p.set_region(original_p.get_region())
 
-          child = ctx_line.first
+          for ctx_idx, ctx_line in enumerate(window):
+            if ctx_idx > 0:
+              cur_new_p.push_child(Br(doc))
+
+            child = ctx_line.first
+            while True:
+              cur_new_p.push_child(child.clone(doc))
+              if child is ctx_line.last:
+                break
+              child = typing.cast(ContentElement, child.next_sibling())
+
+          parent.push_child(cur_new_p)
+        else:
+          cur_new_p.push_child(Br(doc))
+
+          child = line.first
           while True:
-            new_p.push_child(child.clone(doc))
-            if child is ctx_line.last:
+            cur_new_p.push_child(child.clone(doc))
+            if child is line.last:
               break
             child = typing.cast(ContentElement, child.next_sibling())
 
-        parent.push_child(new_p)
+        cur_new_p.set_end(line.end)
 
     for p in all_ps:
       p.remove()
