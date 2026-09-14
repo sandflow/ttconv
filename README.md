@@ -309,6 +309,14 @@ must be consistent with the value of the `frame_rate` parameter.
 
 Default: `null`
 
+#### drop_overlapping_captions
+
+`"drop_overlapping_captions" : true | false`
+
+When two pop-on captions collide (their line 21 packets do not fit back-to-back), the writer delays the later caption instead of dropping it. If `true`, a caption that still cannot be shown before its own erase is dropped. If `false`, the caption is always kept, delaying it and pushing its erase (and subsequent captions) later as needed, so no caption is ever lost. Note that keeping a caption that cannot otherwise be shown pushes its own erase and every following caption later, so later captions' timecodes can drift, by a large amount on dense content.
+
+Default: `true`
+
 ### LCD filter configuration (`"lcd"`)
 
 #### Description

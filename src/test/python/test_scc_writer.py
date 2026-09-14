@@ -41,7 +41,10 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.writer as scc_writer
 import ttconv.scc.reader as scc_reader
+import ttconv.vtt.reader as vtt_reader
+from ttconv.isd import ISD
 from ttconv.scc.config import SCCFrameRate, SccWriterConfiguration
+from ttconv.time_code import SmpteTimeCode
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
 
@@ -53,6 +56,14 @@ class SccWriterConfigurationTest(unittest.TestCase):
     self.assertEqual(config.allow_reflow, True)
     self.assertEqual(config.force_popon, False)
     self.assertEqual(config.frame_rate, SCCFrameRate.FPS_2997_DF)
+    self.assertEqual(config.drop_overlapping_captions, True)
+
+  def test_drop_overlapping_captions(self):
+    config = SccWriterConfiguration.parse(json.loads("""{"drop_overlapping_captions": false }"""))
+    self.assertEqual(config.drop_overlapping_captions, False)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"drop_overlapping_captions": true }"""))
+    self.assertEqual(config.drop_overlapping_captions, True)
 
   def test_allow_reflow(self):
     config = SccWriterConfiguration.parse(json.loads("""{"allow_reflow": true }"""))
@@ -330,6 +341,143 @@ class SCCWriterTest(unittest.TestCase):
     model = imsc_reader.to_model(et.ElementTree(et.fromstring(SAMPLE)))
     scc_from_model = scc_writer.from_model(model)
     self.assertEqual(scc_from_model, expected_scc)
+
+  _FPS_2997 = Fraction(30000, 1001)
+
+  @staticmethod
+  def _read_scc_vtt(name):
+    fixture = Path(__file__).parent.parent / "resources" / "scc" / "vtt" / name
+    with open(fixture, encoding="utf-8") as f:
+      return vtt_reader.to_model(f)
+
+  @classmethod
+  def _scc_chunks(cls, scc):
+    """Returns [(begin_frame, packet_count)] for each timecoded row of an SCC document."""
+    rows = []
+    for line in scc.splitlines():
+      if "\t" not in line:
+        continue
+      tc, packets = line.split("\t")
+      rows.append((SmpteTimeCode.parse(tc, cls._FPS_2997).to_frames(), len(packets.split())))
+    return rows
+
+  @classmethod
+  def _rt_display_windows(cls, scc):
+    """Round-trips an SCC document and returns each displayed caption's on-screen
+    duration in frames (next ISD begin minus this ISD begin)."""
+    seq = ISD.generate_isd_sequence(scc_reader.to_model(scc))
+    windows = []
+    for i, (begin, isd) in enumerate(seq):
+      if any(len(r) > 0 for r in isd.iter_regions()):
+        end = seq[i + 1][0] if i + 1 < len(seq) else None
+        if end is not None:
+          windows.append(int(end * cls._FPS_2997) - int(begin * cls._FPS_2997))
+    return windows
+
+  def test_dense_popon_emitted_scc_is_ordered(self):
+    for name in ("dense_popon_line21.vtt", "dense_popon_cascade.vtt"):
+      scc = scc_writer.from_model(self._read_scc_vtt(name), SccWriterConfiguration())
+      rows = self._scc_chunks(scc)
+      for (begin, count), (next_begin, _) in zip(rows, rows[1:]):
+        self.assertGreaterEqual(
+          next_begin, begin + count,
+          msg=f"overlapping/decreasing chunks in {name}: {rows}")
+
+  def test_dense_popon_default_delays_and_preserves(self):
+    # every source caption here can be shown before its own erase, so the default
+    # (drop_overlapping_captions true) delays them but drops none
+    scc = scc_writer.from_model(self._read_scc_vtt("dense_popon_line21.vtt"), SccWriterConfiguration())
+
+    source_captions = len(list(self._read_scc_vtt("dense_popon_line21.vtt").get_body())[0])
+    windows = self._rt_display_windows(scc)
+
+    self.assertEqual(scc.count("9420") // 2, source_captions)
+    self.assertEqual(len(windows), source_captions)
+    # none self-erased: every emitted caption has a positive on-screen window,
+    # including one squeezed short by the collision
+    self.assertTrue(all(w > 0 for w in windows), msg=f"self-erased caption: {windows}")
+    self.assertLess(min(windows), max(windows))
+
+  def test_dense_popon_default_drops_infeasible(self):
+    # a caption that cannot finish its display before its own erase is dropped
+    scc = scc_writer.from_model(self._read_scc_vtt("dense_popon_cascade.vtt"), SccWriterConfiguration())
+
+    source_captions = len(list(self._read_scc_vtt("dense_popon_cascade.vtt").get_body())[0])
+    emitted_captions = scc.count("9420") // 2
+    windows = self._rt_display_windows(scc)
+
+    self.assertLess(emitted_captions, source_captions)
+    self.assertEqual(len(windows), emitted_captions)
+    self.assertTrue(all(w > 0 for w in windows), msg=f"self-erased caption: {windows}")
+    rows = self._scc_chunks(scc)
+    for (begin, count), (next_begin, _) in zip(rows, rows[1:]):
+      self.assertGreaterEqual(next_begin, begin + count, msg=f"overlap/decrease: {rows}")
+
+  def test_dense_popon_keep_never_drops(self):
+    # with drop_overlapping_captions false no caption is ever lost, even when this
+    # means pushing erases later and drifting the timeline
+    config = SccWriterConfiguration.parse(json.loads("""{"drop_overlapping_captions": false }"""))
+    scc = scc_writer.from_model(self._read_scc_vtt("dense_popon_cascade.vtt"), config)
+
+    source_captions = len(list(self._read_scc_vtt("dense_popon_cascade.vtt").get_body())[0])
+    emitted_captions = scc.count("9420") // 2
+    windows = self._rt_display_windows(scc)
+
+    self.assertEqual(emitted_captions, source_captions)
+    self.assertEqual(len(windows), source_captions)
+    self.assertTrue(all(w > 0 for w in windows), msg=f"self-erased caption: {windows}")
+    rows = self._scc_chunks(scc)
+    for (begin, count), (next_begin, _) in zip(rows, rows[1:]):
+      self.assertGreaterEqual(next_begin, begin + count, msg=f"overlap/decrease: {rows}")
+
+  def test_dense_popon_no_line_drop(self):
+    expected_scc = """Scenarist_SCC V1.0
+
+00:00:28;23	9420 9420 94ae 94ae 1370 1370 c1ec 7661 f2e5 7aa7 7320 70e5 f273 70e5 e3f4 e976 e52c 2049 2061 6d20 64ef 6ee5 9452 9452 20f7 e9f4 6820 f468 e973 2070 f2ef eae5 e3f4 ae20 49a7 6d80 942f 942f
+
+00:00:31;28	9420 9420 94ae 94ae 13d0 13d0 f2e5 6164 7920 e6ef f220 73ef 6de5 f468 e96e 6720 e5ec 73e5 ae20 c4ef 2079 ef75 1370 1370 f468 e96e 6b20 4cef 6e64 ef6e 20f7 ef75 ec64 2062 e520 e56e f4e9 e3e9 6e67 20e5 94d6 94d6 2020 ef75 6768 942c 942c 942f 942f
+
+00:00:36;20	9420 9420 94ae 94ae 94d6 94d6 e6ef f220 68e9 6dbf 942c 942c 942f 942f
+
+00:00:37;13	942c 942c 9420 9420 94ae 94ae 13d0 13d0 4ce5 f420 6de5 20ea 7573 f420 70e9 e36b 2075 7020 ef6e 2073 ef6d e5f4 68e9 6e67 1370 1370 f468 61f4 2079 ef75 206d e56e f4e9 ef6e e564 20f4 68e5 f2e5 2c20 f768 7920 c1f4 9454 9454 2020 e5f4 e9e3 ef20 cd61 64f2 e964 942f 942f
+
+00:00:40;14	9420 9420 94ae 94ae 13d0 13d0 61f2 e56e a7f4 2067 efe9 6e67 20f4 ef20 73e5 ecec 20f4 ef20 c261 f2e3 e5ec ef6e 1370 1370 ae20 d9e5 732c 20f4 68e5 7920 61f2 e520 f2e9 7661 ec73 2c20 79e5 732c 20f4 68e5 94d6 94d6 2020 2061 f2e5 942c 942c 942f 942f
+
+00:00:45;15	942c 942c"""
+
+    scc = scc_writer.from_model(self._read_scc_vtt("dense_popon_line21.vtt"), SccWriterConfiguration())
+    self.assertEqual(scc, expected_scc)
+
+    self.assertEqual(scc.count("9420") // 2, 5)
+
+  def test_dense_popon_carry_erase_not_stale(self):
+    # a colliding caption is delayed and the previous erase is carried into its
+    # chunk, so the stale erase never wipes the caption that follows it
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml">
+  <body><div>
+    <p begin="0.633s" end="1.5s">Hi</p>
+    <p begin="1.5s" end="2.94s">Let me just pick up on something there</p>
+  </div></body>
+</tt>"""
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    scc = scc_writer.from_model(model, SccWriterConfiguration())
+
+    self.assertEqual(scc.count("9420") // 2, 2)
+
+    rows = self._scc_chunks(scc)
+    for (begin, count), (next_begin, _) in zip(rows, rows[1:]):
+      self.assertGreaterEqual(next_begin, begin + count, msg=f"overlap/decrease: {rows}")
+
+    # the erase (942c) is merged in front of the delayed caption's paint (9420),
+    # rather than emitted as a standalone row that would erase it
+    self.assertTrue(
+      any("\t" in l and l.split("\t")[1].startswith("942c 942c 9420") for l in scc.splitlines()),
+      msg="previous erase was not carried into the delayed caption's chunk")
+
+    windows = self._rt_display_windows(scc)
+    self.assertEqual(len(windows), 2)
+    self.assertTrue(all(w > 0 for w in windows), msg=f"self-erased caption: {windows}")
 
 if __name__ == '__main__':
   unittest.main()
