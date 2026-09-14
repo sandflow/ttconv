@@ -34,7 +34,38 @@ from fractions import Fraction
 
 from ttconv.config import ModuleConfiguration
 from ttconv.filters.document_filter import DocumentFilter
-from ttconv.model import Br, ContentDocument, P, ContentElement
+from ttconv.model import Br, ContentDocument, P, ContentElement, Text
+
+
+def have_same_contents(a: ContentElement, b: ContentElement) -> bool:
+  # are the the same element kind
+  if type(a) is not type(b):
+    return False
+
+  # do they belong to the same document
+  if a.get_doc() is not b.get_doc():
+    return False
+
+  # do they have the same region, space handling and language
+  if a.get_region() is not b.get_region() or a.get_space() != b.get_space() or a.get_lang() != b.get_lang():
+    return False
+
+  # do they have the same styles
+  a_styles = {style_prop: a.get_style(style_prop) for style_prop in a.iter_styles()}
+  b_styles = {style_prop: b.get_style(style_prop) for style_prop in b.iter_styles()}
+  if a_styles != b_styles:
+    return False
+
+  if isinstance(a, Text):
+    return a.get_text() == typing.cast(Text, b).get_text()
+
+  a_children = list(a)
+  b_children = list(b)
+
+  if len(a_children) != len(b_children):
+    return False
+
+  return all(have_same_contents(ac, bc) for ac, bc in zip(a_children, b_children))
 
 
 def _max_gap_decoder(value: typing.Union[Fraction, str, int, float]) -> Fraction:
@@ -68,10 +99,11 @@ class MergeToRollUpDocFilterConfig(ModuleConfiguration):
     return "merge_to_rollup"
 
   # maximum gap, in seconds, between two paragraphs for them to be merged
-  max_gap: typing.Optional[Fraction] = field(default=Fraction(1, 30), metadata={"decoder": _max_gap_decoder})
+  max_gap: typing.Optional[Fraction] = field(default=Fraction(0, 1), metadata={"decoder": _max_gap_decoder})
 
   # number of lines simultaneously visible in the roll-up
   num_lines: int = field(default=3, metadata={"decoder": _num_lines_decoder})
+
 
 
 class MergeToRollUpDocFilter(DocumentFilter):
@@ -104,11 +136,18 @@ class MergeToRollUpDocFilter(DocumentFilter):
 
     for e in body.dfs_iterator():
       if isinstance(e, P):
-        if e.get_begin() is None or e.get_end() is None:
-          raise ValueError("p elements must have a finite begin and end")
+        if e.get_begin() is None:
+          # TODO: imsc_reader.to_model() stores an explicit begin of 0 as None
+          # (0 being the implicit default begin), so normalize it back to 0.
+          e.set_begin(Fraction(0))
+        if e.get_end() is None:
+          raise ValueError("p elements must have a finite end")
         all_ps.append(e)
-      elif e.get_begin() is not None or e.get_end() is not None:
-        raise ValueError("Only p elements may have a begin or end")
+      elif e.get_begin() is not None:
+        # TODO: non-p elements can legitimately end up with a non-None get_end()
+        # (e.g. imsc_reader.to_model() sets a container's end to the max end of
+        # its children), so only a non-None begin is treated as a violation here.
+        raise ValueError("Only p elements may have a begin")
 
       if isinstance(e, Br) and not isinstance(e.parent(), P):
         raise ValueError("br elements must have a p element as parent")
@@ -120,7 +159,15 @@ class MergeToRollUpDocFilter(DocumentFilter):
         raise ValueError("p elements must not overlap in time")
 
     if len(all_ps) == 0:
-      return doc 
+      return doc
+
+    # merge successive paragraphs with identical contents
+    for i in range(len(all_ps) - 1, 0, -1):
+      if all_ps[i].get_begin() - all_ps[i-1].get_end() > self.config.max_gap and \
+        have_same_contents(all_ps[i - 1], all_ps[i]):
+        all_ps[i - 1].set_end(all_ps[i].get_end())
+        all_ps[i].remove()
+        del all_ps[i]
 
     # collect, in runs, all lines of p elements who are contiguous
     runs: typing.List[typing.List["MergeToRollUpDocFilter._Line"]] = []
@@ -164,9 +211,7 @@ class MergeToRollUpDocFilter(DocumentFilter):
         cur_run.append(lines[j])
 
     # generate roll-up p elements: consecutive lines are merged into a single p
-    # element for as long as they fit within num_lines; once that capacity is
-    # exceeded, the oldest visible line is dropped and a new p element is
-    # started to represent the resulting, shifted window
+    # element for as long as they fit within num_lines
     for run in runs:
       window: typing.List["MergeToRollUpDocFilter._Line"] = []
       cur_new_p: typing.Optional[P] = None
