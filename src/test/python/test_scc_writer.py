@@ -27,6 +27,7 @@
 
 # pylint: disable=R0201,C0115,C0116,W0212
 
+from io import StringIO
 import json
 import os
 import unittest
@@ -41,6 +42,9 @@ import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.scc.writer as scc_writer
 import ttconv.scc.reader as scc_reader
+import ttconv.vtt.reader as vtt_reader
+import ttconv.srt.reader as srt_reader
+
 from ttconv.scc.config import SCCFrameRate, SccWriterConfiguration
 from ttconv.model import ContentDocument, Region, Body, Div, P, Span, Text, ContentElement
 from ttconv.style_properties import StyleProperties, DisplayType
@@ -80,6 +84,26 @@ class SccWriterConfigurationTest(unittest.TestCase):
 
     with self.assertRaises(ValueError):
       config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 5 }"""))
+
+  def test_rollup_gap_tolerance(self):
+    config = SccWriterConfiguration()
+    self.assertEqual(config.rollup_gap_tolerance, 0)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_gap_tolerance": "1/30" }"""))
+    self.assertEqual(config.rollup_gap_tolerance, Fraction(1, 30))
+
+  def test_rollup_detection_pct(self):
+    config = SccWriterConfiguration()
+    self.assertEqual(config.rollup_detection_pct, 100)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_detection_pct": 50 }"""))
+    self.assertEqual(config.rollup_detection_pct, 50)
+
+    with self.assertRaises(ValueError):
+      config = SccWriterConfiguration.parse(json.loads("""{"rollup_detection_pct": -1 }"""))
+
+    with self.assertRaises(ValueError):
+      config = SccWriterConfiguration.parse(json.loads("""{"rollup_detection_pct": 101 }"""))
 
   def test_frame_rate(self):
     config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "30NDF" }"""))
@@ -212,6 +236,105 @@ class SCCWriterTest(unittest.TestCase):
     p1 = list(div)[1]
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())
+
+  def test_rollup_detection_break(self):
+    # captions with small inter-cue gaps must not defeat roll-up detection,
+    # and one non-matching pair must not force the whole document to pop-on
+    with open("src/test/resources/vtt/rollup-detection-break.vtt", "r", encoding="utf-8-sig") as f:
+      model = vtt_reader.to_model(f)
+
+    config = SccWriterConfiguration(rollup_gap_tolerance=Fraction(1, 30), rollup_detection_pct=50)
+    scc_from_model = scc_writer.from_model(model, config)
+
+    self.assertIn("94a7 94a7", scc_from_model)
+    self.assertNotIn("9420 9420", scc_from_model)
+
+  def test_rollup_multiline_start(self):
+    f = StringIO("""1
+00:00:01,000 --> 00:00:02,000
+Line 1
+Line 2
+
+2
+00:00:02,000 --> 00:00:03,000
+Line 1
+Line 2
+Line 3
+
+3
+00:00:03,000 --> 00:00:04,000
+Line 2
+Line 3
+Line 4
+""")
+
+    expected_scc="""Scenarist_SCC V1.0
+
+00:00:00;16	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2031 94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2032
+
+00:00:01;27	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 20b3
+
+00:00:02;27	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2034
+
+00:00:03;29	942c 942c"""
+
+    model = srt_reader.to_model(f)
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
+
+  def test_rollup_restart(self):
+    f = StringIO("""1
+01:00:01,000 --> 01:00:02,000
+Line 1
+
+2
+01:00:02,000 --> 01:00:03,000
+Line 1
+Line 2
+
+3
+01:00:03,000 --> 01:00:04,000
+Line 2
+Line 3
+
+4
+01:00:06,000 --> 01:00:07,000
+Line 4
+
+5
+01:00:09,000 --> 01:00:10,000
+Line 1
+Line 2
+
+6
+01:00:10,000 --> 00:00:11,000
+Line 2
+Line 3
+""")
+
+    expected_scc="""Scenarist_SCC V1.0
+
+01:00:00;28	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2031
+
+01:00:01;28	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2032
+
+01:00:02;28	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 20b3
+
+01:00:03;29	942c 942c
+
+01:00:05;27	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2034
+
+01:00:06;29	942c 942c
+
+01:00:08;16	94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2031 94a7 94a7 94ad 94ad 9470 9470 4ce9 6ee5 2032
+
+01:00:09;29	942c 942c"""
+
+    model = srt_reader.to_model(f)
+    config = SccWriterConfiguration()
+    scc_from_model = scc_writer.from_model(model, config)
+    self.assertEqual(scc_from_model, expected_scc)
 
   def test_basic_2997NDF(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
