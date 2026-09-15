@@ -107,6 +107,20 @@ def _decode_rollup_lines(value: str) -> int:
 
   return decoded_value
 
+def _decode_fraction(value: typing.Union[str, int, float, Fraction]) -> Fraction:
+  if isinstance(value, Fraction):
+    return value
+
+  return Fraction(value)
+
+def _decode_percentage(value: str) -> int:
+  decoded_value = int(value)
+
+  if decoded_value < 0 or decoded_value > 100:
+    raise ValueError(f"Invalid percentage '{value}' value. Expect: 0-100.")
+
+  return decoded_value
+
 @dataclass
 class SccWriterConfiguration(ModuleConfiguration):
   """SCC writer configuration"""
@@ -134,6 +148,20 @@ class SccWriterConfiguration(ModuleConfiguration):
   start_tc: typing.Optional[str] = field(
     default=None,
     metadata={"decoder": lambda y: str(y) if y is not None else None}
+  )
+
+  # tolerance above which two successive captions will not be
+  # considered for roll-up detection
+  rollup_gap_tolerance: Fraction = field(
+    default=Fraction(0),
+    metadata={"decoder": _decode_fraction}
+  )
+
+  # percentage of captions that fit the roll-up template in order for
+  # the file to be considered for roll-up processing
+  rollup_detection_pct: int = field(
+    default=100,
+    metadata={"decoder": _decode_percentage}
   )
 
   @classmethod

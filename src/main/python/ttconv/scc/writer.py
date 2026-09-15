@@ -44,14 +44,6 @@ from ttconv.time_code import FPS_29_97, FPS_30, SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
 
-# Tolerance above which two successive captions will not be
-# considered for roll-up detection
-ROLLUP_GAP_TOLERANCE = Fraction(1, 30)
-
-# Percentage of captions that fit the roll-up template in order for
-# the file to be considered for roll-up processing
-ROLLUP_DETECTION_PCT = 50
-
 class _Caption:
   """Collection of lines of text with a begin and end time and an alignment"""
 
@@ -301,7 +293,7 @@ def _process_as_rollup(captions, config, progress_callback) -> List[_Chunk]:
 
     # erase the display if there is a gap between roll-up captions or if it is the last caption
     if caption.get_end() is not None and \
-      (i == len(captions) - 1 or captions[i + 1].get_begin() - caption.get_end() > ROLLUP_GAP_TOLERANCE):
+      (i == len(captions) - 1 or captions[i + 1].get_begin() - caption.get_end() > config.rollup_gap_tolerance):
       edm_chunk = _Chunk()
       edm_chunk.push_control_code(SccControlCode.EDM.get_ch1_value())
       edm_chunk.set_begin(int(caption.get_end() * config.frame_rate.fps))
@@ -442,7 +434,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       # do not detect roll-up if successive captions are more than 1 frame apart
       # ideally we would ignore successive captions unless they are contiguous,
       # but many tools incorrectly set end times to be inclusive instead of exclusive
-      if abs(captions[i - 1].get_end() - captions[i].get_begin()) > ROLLUP_GAP_TOLERANCE:
+      if abs(captions[i - 1].get_end() - captions[i].get_begin()) > config.rollup_gap_tolerance:
         continue
 
       if captions[i][-1].startswith(captions[i - 1][-1]) or \
@@ -450,7 +442,7 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         rollup_count = rollup_count + 1
 
     if len(captions) > 10:
-      is_rollup = 100 * rollup_count / (len(captions) + 1) > ROLLUP_DETECTION_PCT
+      is_rollup = 100 * rollup_count / (len(captions) + 1) > config.rollup_detection_pct
     else:
       is_rollup = rollup_count > 0
 
