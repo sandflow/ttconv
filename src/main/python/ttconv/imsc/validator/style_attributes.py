@@ -28,8 +28,8 @@
 import re
 from ttconv.imsc.validator.other_attributes import ValidationContext, attribute
 from ttconv.imsc.validator.font_helper import is_quoted_string, is_valid_font_families
-from ttconv.imsc.validator.namespaces import QName
-import ttconv.imsc.validator.namespaces as xml_ns
+from ttconv.imsc.namespaces import QName
+import ttconv.imsc.namespaces as xml_ns
 import ttconv.style_properties as ttconv_styles
 import ttconv.imsc.utils as imsc_utils
 

@@ -27,7 +27,7 @@
 
 import unittest
 import ttconv.imsc.validator.infoset as IS
-import ttconv.imsc.validator.namespaces as NS
+import ttconv.imsc.namespaces as NS
 from ttconv.imsc.validator.rules import (
   NodeSequence, AnyRule, OptionalRule, PCDATARule, Rule, SequenceRule, ZeroOrMoreRule
 )

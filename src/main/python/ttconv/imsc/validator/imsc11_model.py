@@ -32,12 +32,12 @@ import xml.etree.ElementTree as ET
 
 from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary
 from ttconv.imsc.validator.event_handler import EventHandler
-import ttconv.imsc.validator.namespaces
+import ttconv.imsc.namespaces
 import ttconv.imsc.validator.other_attributes as other_attrs
 import ttconv.imsc.validator.style_attributes as style_attrs
 from ttconv.imsc.validator.rules import AnyRule, EmptyRule, NodeSequence, OneOrMoreRule, OptionalRule, PCDATARule, Rule, SequenceRule, ZeroOrMoreRule
 import ttconv.imsc.validator.infoset as IS
-import ttconv.imsc.validator.namespaces as NS
+import ttconv.imsc.namespaces as NS
 
 from ttconv.imsc.validator.ttml_profile_helper import is_ttml2_feature_ns, is_ttml2_feature_designation, is_ttml2_extension_designation
 from ttconv.imsc.validator.uri_helper import is_absolute_uri, urijoin
@@ -74,7 +74,7 @@ class StyleDefinition:
   id: str
   in_styling: bool
   style_refs: typing.Set[str] = field(default_factory=set)
-  spec_styles: typing.Set[ttconv.imsc.validator.namespaces.QName] = field(default_factory=set)
+  spec_styles: typing.Set[ttconv.imsc.namespaces.QName] = field(default_factory=set)
 
 @dataclass
 class IMSCValidationContext(other_attrs.ValidationContext):
@@ -300,7 +300,7 @@ class ForeignElement(Rule):
     return "FOREIGN"
 
 class Actor(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "actor")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "actor")
   content_model = EmptyRule()
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
@@ -312,7 +312,7 @@ class Actor(IMSCElement):
   )
 
 class Name(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "name")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "name")
   content_model = PCDATARule()
   required_attributes = AttributeVocabulary(
     other_attrs.NameTypeAttribute,
@@ -322,7 +322,7 @@ class Name(IMSCElement):
     other_attrs.XMLSpaceAttribute,)
 
 class Agent(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "agent")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "agent")
   content_model: Rule = SequenceRule(ZeroOrMoreRule(Name()), OptionalRule(Actor()))
   required_attributes = AttributeVocabulary(
     other_attrs.AgentTypeAttribute,
@@ -340,7 +340,7 @@ class Agent(IMSCElement):
       ctx.sig_agent_ids.add(xml_id.value)    
 
 class Item(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "item")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "item")
   required_attributes = AttributeVocabulary(
     other_attrs.ItemNameAttribute,
   )
@@ -352,14 +352,14 @@ class Item(IMSCElement):
 Item.content_model = AnyRule(PCDATARule(), ZeroOrMoreRule(Item()))
 
 class Copyright(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "copyright")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "copyright")
   content_model: Rule = PCDATARule()
   optional_attributes = AttributeVocabulary(other_attrs.XMLLangAttribute,
     other_attrs.XMLIDAttribute,
     other_attrs.XMLSpaceAttribute,)
 
 class Desc(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "desc")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "desc")
   content_model: Rule = PCDATARule()
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
@@ -368,7 +368,7 @@ class Desc(IMSCElement):
     )
 
 class Title(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTM, "title")
+  qname = ttconv.imsc.namespaces.QName(NS.TTM, "title")
   content_model: Rule = PCDATARule()
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
@@ -377,7 +377,7 @@ class Title(IMSCElement):
     )
 
 class AltText(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.ITTM, "altText")
+  qname = ttconv.imsc.namespaces.QName(NS.ITTM, "altText")
   content_model: Rule = PCDATARule()
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
@@ -388,7 +388,7 @@ class AltText(IMSCElement):
     ctx.event_handler.warn("ittm:altText element is deprecated")
 
 class Metadata(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "metadata")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "metadata")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
     other_attrs.XMLIDAttribute,
@@ -398,7 +398,7 @@ class Metadata(IMSCElement):
   content_model: Rule = ZeroOrMoreRule(AnyRule(Agent(), Name(), Actor(), Copyright(), Desc(), Title(), Item(), AltText(), ForeignElement()))
 
 class Initial(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "initial")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "initial")
   content_model: Rule = ZeroOrMoreRule(Metadata())
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
@@ -414,7 +414,7 @@ class Initial(IMSCElement):
       ctx.event_handler.error("No style attribute specified in an initial element")
 
 class Style(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "style")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "style")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
     other_attrs.XMLIDAttribute,
@@ -449,7 +449,7 @@ class Style(IMSCElement):
             sd.spec_styles.add(a.name.qname)
 
 class Styling(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "styling")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "styling")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
     other_attrs.XMLIDAttribute,
@@ -483,7 +483,7 @@ class Styling(IMSCElement):
 
 
 class Region(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "region")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "region")
   content_model: Rule
   required_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
@@ -519,7 +519,7 @@ class Region(IMSCElement):
       ctx.region_ids.add(xml_id.value)   
 
 class Layout(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "layout")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "layout")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLLangAttribute,
     other_attrs.XMLIDAttribute,
@@ -528,7 +528,7 @@ class Layout(IMSCElement):
   content_model = ZeroOrMoreRule(AnyRule(Region(), Metadata(), ForeignElement()))
 
 class Feature(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTP, "feature")
+  qname = ttconv.imsc.namespaces.QName(NS.TTP, "feature")
   content_model = PCDATARule()
   required_attributes = AttributeVocabulary(
   )
@@ -550,7 +550,7 @@ class Feature(IMSCElement):
       ctx.event_handler.error("Invalid feature designator '%s'", uri)
 
 class Extension(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTP, "extension")
+  qname = ttconv.imsc.namespaces.QName(NS.TTP, "extension")
   content_model = PCDATARule()
   required_attributes = AttributeVocabulary(
   )
@@ -572,7 +572,7 @@ class Extension(IMSCElement):
       ctx.event_handler.error("Invalid extension designator '%s'", uri)
 
 class Features(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTP, "features")
+  qname = ttconv.imsc.namespaces.QName(NS.TTP, "features")
   content_model = SequenceRule(
     ZeroOrMoreRule(Metadata()),
     ZeroOrMoreRule(Feature())
@@ -589,7 +589,7 @@ class Features(IMSCElement):
       ctx.event_handler.error("Invalid feature base namespace '%s'", uri_attr.value)
 
 class Extensions(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTP, "extensions")
+  qname = ttconv.imsc.namespaces.QName(NS.TTP, "extensions")
   content_model = SequenceRule(
     ZeroOrMoreRule(Metadata()),
     ZeroOrMoreRule(Extension())
@@ -607,7 +607,7 @@ class Extensions(IMSCElement):
 
 
 class Profile(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTP, "profile")
+  qname = ttconv.imsc.namespaces.QName(NS.TTP, "profile")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     other_attrs.UseAttribute,
@@ -624,7 +624,7 @@ Profile.content_model = SequenceRule(
 )
 
 class Head(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "head")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "head")
   content_model = SequenceRule(
     ZeroOrMoreRule(AnyRule(Metadata(), Agent(), Copyright(), Desc(), Title(), Item(), Profile())),
     OptionalRule(Styling()),
@@ -642,7 +642,7 @@ class Head(IMSCElement):
     ctx.in_head = False
 
 class Set(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "set")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "set")
   content_model = ZeroOrMoreRule(Metadata())
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
@@ -680,7 +680,7 @@ Region.content_model = ZeroOrMoreRule(AnyRule(Metadata(), Style(), Set(), Foreig
 
 
 class Br(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "br")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "br")
   content_model = SequenceRule(
     ZeroOrMoreRule(Metadata()),
     ZeroOrMoreRule(Set())
@@ -699,7 +699,7 @@ class Span(IMSCElement):
   """A `span` element. Subclasses represent specific ruby roles, distinguished
   by the specified value of tts:ruby, per TTML2, 10.2.35."""
 
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "span")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "span")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     other_attrs.XMLLangAttribute,
@@ -821,7 +821,7 @@ Span.content_model = SequenceRule(
 
 
 class P(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "p")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "p")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     other_attrs.XMLLangAttribute,
@@ -860,7 +860,7 @@ class P(IMSCElement):
 
 
 class Div(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "div")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "div")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     other_attrs.XMLLangAttribute,
@@ -884,7 +884,7 @@ Div.content_model = SequenceRule(
 )
 
 class Body(IMSCElement):
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "body")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "body")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     other_attrs.XMLLangAttribute,
@@ -905,7 +905,7 @@ Body.content_model = SequenceRule(ZeroOrMoreRule(Metadata()), ZeroOrMoreRule(Set
 
 class TT(IMSCElement):
   content_model: Rule = SequenceRule(OptionalRule(Head()), OptionalRule(Body()))
-  qname = ttconv.imsc.validator.namespaces.QName(NS.TTML, "tt")
+  qname = ttconv.imsc.namespaces.QName(NS.TTML, "tt")
   optional_attributes = AttributeVocabulary(
     other_attrs.ExtentAttribute,
     other_attrs.XMLLangAttribute,

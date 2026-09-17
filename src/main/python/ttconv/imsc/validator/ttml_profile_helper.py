@@ -27,7 +27,7 @@
 
 import urllib.parse as URL
 
-import ttconv.imsc.validator.namespaces as NS
+import ttconv.imsc.namespaces as NS
 from ttconv.imsc.validator.uri_helper import is_absolute_uri, is_relative_uri
 from ttconv.imsc.validator.xml_helper import is_valid_xml_name
 

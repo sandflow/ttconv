@@ -31,7 +31,7 @@ import typing
 import xml.parsers.expat
 
 from ttconv.imsc.validator.event_handler import EventHandler
-from ttconv.imsc.validator.namespaces import QName
+from ttconv.imsc.namespaces import QName
 
 @dataclass(frozen=True)
 class Name:

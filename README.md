@@ -57,7 +57,7 @@ tt validate <.ttml file>
 _ttconv_ currently supports converting between the following formats.Additional
 input and output formats are planned, and suggestions/contributions are welcome.
 
-*Input Formats*
+#### Input Formats
 
 * [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
 * [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
@@ -65,7 +65,7 @@ input and output formats are planned, and suggestions/contributions are welcome.
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [WebVTT](https://www.w3.org/TR/webvtt1/)
 
-*Output Formats*
+#### Output Formats
 
 * [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
 * [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
@@ -405,7 +405,7 @@ _NOTE_: This filter is not currently intended as substitute for a full IMSC 1.1 
 
 ### Format support
 
-_ttconv_ currently supports validating documents that conform to 
+_ttconv_ currently supports validating documents that conform to
 [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#profiles).
 
 ### Command line

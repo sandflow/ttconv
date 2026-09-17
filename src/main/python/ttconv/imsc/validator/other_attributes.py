@@ -33,8 +33,8 @@ import typing
 from dataclasses import dataclass, field
 from enum import Enum
 
-from ttconv.imsc.validator.namespaces import QName
-import ttconv.imsc.validator.namespaces as ns
+from ttconv.imsc.namespaces import QName
+import ttconv.imsc.namespaces as ns
 import ttconv.imsc.utils as imsc_utils
 from ttconv.imsc.validator.ttml_profile_helper import absolutize_profile_designator, is_ttml2_profile_designator
 from ttconv.imsc.validator.uri_helper import is_uri
