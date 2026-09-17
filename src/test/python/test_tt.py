@@ -29,6 +29,7 @@
 
 import os
 import io
+import logging
 import unittest
 from contextlib import redirect_stdout
 from contextlib import redirect_stderr
@@ -275,6 +276,64 @@ class IMSCAppTest(unittest.TestCase):
       '-o', out_path,
       '--filter', 'imsc11filter'
       ])
+
+
+class ValidateSubcommandTest(unittest.TestCase):
+  '''Unit tests for the "validate" subcommand, which validates a TTML document
+  against the IMSC 1.1 model (see ttconv.imsc.validator.imsc11_model).'''
+
+  _VALID_DOCUMENT = "src/test/resources/ttml/validation/tt-body-div-p-two-spans-valid.ttml"
+  _INVALID_DOCUMENT = "src/test/resources/ttml/validation/imsc11-condition-attribute-invalid.ttml"
+
+  def setUp(self):
+    root_logger = logging.getLogger()
+    self._orig_level = root_logger.level
+    self._orig_handlers = list(root_logger.handlers)
+
+  def tearDown(self):
+    root_logger = logging.getLogger()
+    root_logger.handlers = self._orig_handlers
+    root_logger.setLevel(self._orig_level)
+
+  def test_valid_document_returns_zero(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", self._VALID_DOCUMENT]), 0)
+    self.assertEqual(stderr.getvalue(), "")
+
+  def test_invalid_document_returns_one_and_prints_error(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
+  def test_unknown_log_level_argument_exits_with_usage_error(self):
+    with redirect_stderr(io.StringIO()):
+      with self.assertRaises(SystemExit) as cm:
+        tt.main(["validate", "--log-level", "bogus", self._VALID_DOCUMENT])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_default_model_is_imsc11text(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--model", "imsc11text", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
+  def test_unknown_model_argument_exits_with_usage_error(self):
+    with redirect_stderr(io.StringIO()):
+      with self.assertRaises(SystemExit) as cm:
+        tt.main(["validate", "--model", "bogus", self._VALID_DOCUMENT])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_nonexistent_file_argument_exits(self):
+    with redirect_stderr(io.StringIO()):
+      with self.assertRaises(SystemExit):
+        tt.main(["validate", "/nonexistent-file.ttml"])
+
+  def test_log_level_below_error_still_prints_errors(self):
+    # "error" is the highest level accepted by --log-level, so error messages
+    # are always printed regardless of the level requested
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--log-level", "warning", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
 
 if __name__ == '__main__':
   unittest.main()

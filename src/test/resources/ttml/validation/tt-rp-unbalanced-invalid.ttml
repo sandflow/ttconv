@@ -1,0 +1,17 @@
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p>
+        <span tts:ruby="container">
+          <span tts:ruby="baseContainer">
+            <span tts:ruby="base">B</span>
+          </span>
+          <span tts:ruby="textContainer">
+            <span tts:ruby="delimiter">(</span>
+            <span tts:ruby="text">T</span>
+          </span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>

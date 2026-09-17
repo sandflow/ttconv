@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en">
+  <body xmlns:f="http://foreign">
+    <div>
+      <p begin="0s" end="5s">This text must be visible.</p>
+      <f:p>This text must not be visible.</f:p>
+    </div>
+  </body>
+</tt>

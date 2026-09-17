@@ -38,6 +38,7 @@ from ttconv.filters.document_filter import DocumentFilter
 
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
+import ttconv.imsc.validator.imsc11_model as imsc11_model
 import ttconv.scc.reader as scc_reader
 import ttconv.scc.writer as scc_writer
 import ttconv.srt.writer as srt_writer
@@ -63,7 +64,6 @@ CONFIGURATIONS = [
   SccReaderConfiguration,
   SRTReaderConfiguration,
 ]
-
 
 class ProgressConsoleHandler(logging.StreamHandler):
   """
@@ -477,6 +477,58 @@ def convert(args):
     die(exit_str)
 
 
+VALIDATE_LOG_LEVELS: typing.Dict[str, int] = {
+  "debug": logging.DEBUG,
+  "info": logging.INFO,
+  "warning": logging.WARNING,
+  "error": logging.ERROR
+}
+
+# Maps a "validate" subcommand --model name to its validate() function
+VALIDATE_MODELS: typing.Dict[str, typing.Callable[[typing.BinaryIO], bool]] = {
+  "imsc11text": imsc11_model.validate
+}
+
+@subcommand([
+  argument("file", help="path to the TTML document to validate"),
+  argument(
+    "-m", "--model",
+    choices=sorted(VALIDATE_MODELS),
+    default="imsc11text",
+    help="model to validate against (default: %(default)s)"
+  ),
+  argument(
+    "-l", "--log-level",
+    choices=sorted(VALIDATE_LOG_LEVELS, key=lambda name: VALIDATE_LOG_LEVELS[name]),
+    default="error",
+    help="minimum severity of log messages to print (default: %(default)s)"
+  )
+])
+def validate(args) -> int:
+  '''Validates a TTML document against a model (default: IMSC 1.1)'''
+
+  log_level = VALIDATE_LOG_LEVELS[args.log_level]
+
+  handler = logging.StreamHandler()
+  handler.setLevel(log_level)
+  handler.setFormatter(logging.Formatter("%(levelname)s:%(message)s"))
+
+  root_logger = logging.getLogger()
+  root_logger.setLevel(log_level)
+  root_logger.addHandler(handler)
+
+  model_validate = VALIDATE_MODELS[args.model]
+
+  try:
+    with open(args.file, "rb") as f:
+      if not model_validate(f):
+        return 1
+  except OSError as e:
+    die(f"can't open '{args.file}': {e}")
+
+  return 0
+
+
 # Ensure that the handler is added only once/globally
 # Otherwise the handler will be called multiple times
 progress = ProgressConsoleHandler()
@@ -490,9 +542,9 @@ def main(argv=None):
   args = cli.parse_args(argv if argv is not None else sys.argv[1:])
   if args.subcommand is None:
     cli.print_help()
-  else:
-    args.func(args)
+    return None
+  return args.func(args)
 
 
 if __name__ == "__main__":
-  main()
+  sys.exit(main())

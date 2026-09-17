@@ -1,0 +1,172 @@
+[
+  {
+    "file": "ttml1-valid-agent-idref-duplicate.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-agent-missing-actor.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-agent-missing-name.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-all-elements.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute {http://www.w3.org/ns/ttml#styling}writingMode is not applicable to {http://www.w3.org/ns/ttml}div",
+      "Attribute {http://www.w3.org/ns/ttml#styling}display is not applicable to {http://www.w3.org/ns/ttml}br"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <set> (line 40)"
+    ]
+  },
+  {
+    "file": "ttml1-valid-all-metadata.xml",
+    "result": "fail",
+    "errors": [
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing"
+    ]
+  },
+  {
+    "file": "ttml1-valid-all-parameters.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 2)",
+      "Attribute dropMode is prohibited on <tt> (line 2)",
+      "Attribute markerMode is prohibited on <tt> (line 2)",
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 2)",
+      "Attribute subFrameRate is prohibited on <tt> (line 2)"
+    ]
+  },
+  {
+    "file": "ttml1-valid-all-profiles.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-all-styles.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (40px 50px)",
+      "Bad tts:textOutline value (yellow 1px 2px)",
+      "Bad tts:textOutline value (1px 2px)"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <style> (line 373)",
+      "Attribute (zIndex) is deprecated on <style> (line 374)",
+      "Attribute (zIndex) is deprecated on <style> (line 375)",
+      "Attribute (zIndex) is deprecated on <style> (line 376)",
+      "Attribute (zIndex) is deprecated on <style> (line 377)",
+      "Attribute (zIndex) is deprecated on <style> (line 378)"
+    ]
+  },
+  {
+    "file": "ttml1-valid-all-timing.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute subFrameRate is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (01:02:03:04.0)",
+      "Bad begin attribute value (01:02:03:04.5)",
+      "Bad end attribute value (01:02:03:04.0)",
+      "Bad end attribute value (01:02:03:04.5)",
+      "Bad end attribute value (01:02:03:04.0)",
+      "Bad end attribute value (01:02:03:04.5)",
+      "Bad begin attribute value (01:02:03:04.0)",
+      "Bad end attribute value (01:02:03:04.0)",
+      "Bad begin attribute value (01:02:03:04.5)",
+      "Bad end attribute value (01:02:03:04.5)",
+      "Bad begin attribute value (01:02:03:04.0)",
+      "Bad end attribute value (01:02:03:04.0)",
+      "Bad begin attribute value (01:02:03:04.5)",
+      "Bad end attribute value (01:02:03:04.5)"
+    ]
+  },
+  {
+    "file": "ttml1-valid-extension-non-standard.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-extensions-base-other-namespace.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-font-family-quoted-generic.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-forced-encoding-utf8.xml",
+    "result": "fail",
+    "errors": [
+      "XML parse error at line 6: not well-formed (invalid token): line 6, column 75"
+    ]
+  },
+  {
+    "file": "ttml1-valid-foreign-metadata.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-foreign.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-opacity-out-of-range.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute opacity is not applicable to <div> (line 9)",
+      "Attribute opacity is not applicable to <div> (line 10)",
+      "Attribute opacity is not applicable to <div> (line 11)",
+      "Attribute opacity is not applicable to <div> (line 12)",
+      "Attribute opacity is not applicable to <div> (line 13)"
+    ]
+  },
+  {
+    "file": "ttml1-valid-origin-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute origin is not applicable to <div> (line 9)",
+      "Attribute origin is not applicable to <div> (line 10)",
+      "Attribute origin is not applicable to <div> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml1-valid-profile-attribute-ignored.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-profile-attribute-non-standard.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-profile-extension-non-standard-in-other-namespace.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-profile-missing.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-profile-non-standard.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-role-duplicate.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-role-extension.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-simple.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-style-idref-duplicate-with-intervening.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-valid-style-idref-duplicate-without-intervening.xml",
+    "result": "pass"
+  }
+]
