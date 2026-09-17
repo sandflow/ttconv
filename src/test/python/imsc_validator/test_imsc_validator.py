@@ -34,17 +34,35 @@ from ttconv.imsc.validator.imsc11_model import validate
 
 LOGGER = logging.getLogger(__name__)
 
+class _CollectingHandler(logging.Handler):
+  def __init__(self):
+    super().__init__()
+    self.records = []
+
+  def emit(self, record):
+    self.records.append(record)
+
 @contextlib.contextmanager
 def _assert_no_logs(test_case: unittest.TestCase):
-  '''Portable equivalent of TestCase.assertNoLogs(), which is 3.10+ only.'''
-  logged = True
+  '''Portable equivalent of TestCase.assertNoLogs(), which is 3.10+ only.
+  '''
+  root_logger = logging.getLogger()
+  handler = _CollectingHandler()
+  old_handlers = root_logger.handlers[:]
+  old_level = root_logger.level
+  old_propagate = root_logger.propagate
+  root_logger.handlers = [handler]
+  root_logger.setLevel(1)  # capture everything; filtered by level below instead
+  root_logger.propagate = False
   try:
-    with test_case.assertLogs(level=logging.ERROR):
-      yield
-  except AssertionError:
-    logged = False
-  if logged:
-    test_case.fail("Expected no error messages to be logged")
+    yield
+  finally:
+    root_logger.handlers = old_handlers
+    root_logger.setLevel(old_level)
+    root_logger.propagate = old_propagate
+  offending = [r for r in handler.records if r.levelno >= logging.ERROR]
+  if offending:
+    test_case.fail(f"Expected no error messages to be logged, got: {[r.getMessage() for r in offending]}")
 
 class IMSCValidatorDocumentTests(unittest.TestCase):
 
