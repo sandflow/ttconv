@@ -408,6 +408,10 @@ _NOTE_: This filter is not currently intended as substitute for a full IMSC 1.1 
 _ttconv_ currently supports validating documents that conform to
 [IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#profiles).
 
+### Demo app
+
+http://imsc11validator.sandflow.com/
+
 ### Command line
 
 `tt validate [-h] [-m {imsc11text}] [-l {debug,info,warning,error}] file`
