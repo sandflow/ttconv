@@ -1,0 +1,1886 @@
+[
+  {
+    "file": "ttml1-invld-bad-actor-agent-idref-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Bad agent id value: `a1 a2`"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-actor-agent-idref-non-significant.xml",
+    "result": "fail",
+    "errors": [
+      "No significant agent with xml:id 'a2' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-actor-agent-idref-wrong-eltype.xml",
+    "result": "fail",
+    "errors": [
+      "No significant agent with xml:id 'h1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-agent-idref-non-significant.xml",
+    "result": "fail",
+    "errors": [
+      "No significant agent with xml:id 'a1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-agent-idref-wrong-eltype.xml",
+    "result": "fail",
+    "errors": [
+      "XML parse error at line 11: no element found: line 11, column 0"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-extra-part-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:00:)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-extra-part.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:00:123)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-exceeds-frame-rate.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:10)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-extra-sub-part.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:00.0.123)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-in-clock-mode.xml",
+    "result": "fail",
+    "errors": [
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:0a)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-sub-frame-exceeds-sub-frame-rate.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute subFrameRate is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (00:00:00:09.5)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-sub-frame-sub-part-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:00.)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-sub-frame-sub-part-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:00.a)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-whole-sub-part-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-whole-sub-part-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:0.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-frames-whole-sub-part-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00:a.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-hours-empty-with-minutes-and-seconds.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (:00:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-hours-empty-with-minutes-only.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-hours-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0:00:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-hours-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (a:00:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-internal-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00 : 00 : 00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-minutes-empty-with-seconds.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00::00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-minutes-empty-without-seconds.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-minutes-exceeds-59.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:60:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-minutes-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:000:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-minutes-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:0:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-minutes-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:a:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-exceeds-60-with-fraction.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:60.00001)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-exceeds-60.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:61)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:000)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-extra-sub-part.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00.0.123)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-fraction-sub-part-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00.)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-fraction-sub-part-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:00.a)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-missing.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:0a)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-whole-sub-part-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-whole-sub-part-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:0.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-clock-time-seconds-whole-sub-part-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (00:00:a.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-fraction-part-empty-with-metric.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0.s)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-fraction-part-empty-without-metric.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0.)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-frames-in-clock-mode.xml",
+    "result": "fail",
+    "errors": [
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-garbage-after-metric.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0s 0f)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-metric-non-letter-with-fraction.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (1.0#)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-metric-non-letter-without-fraction.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (1#)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-missing-metric-with-fraction.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0.0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-missing-metric-without-fraction.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0#)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-unknown-metric-wrong-case.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (0H)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-begin-offset-time-unknown-metric.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (1hopper)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-delimiter.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (1:2)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-extra-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (1 2 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-missing-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (1)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (1 -2)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-with-units.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (1px 2px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-cell-resolution-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:cellResolution value (1 0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-function-bad-component-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,X))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-function-extra-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-function-missing-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-function-negative-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,-1))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-function-out-of-range-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,256))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-function-padded-component.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#1234567)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-garbage-after-digits.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#123456xyz)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-missing-all-digits-garbage-after-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#xyz)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-missing-all-digits-hash-only.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#12345)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#00000X)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgb-hash-space-after-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (# 123456)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-function-bad-component-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba(0,0,0,X))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-function-extra-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-function-missing-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba(0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-function-negative-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba(0,0,0,-1))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-function-out-of-range-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,0,256))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-function-padded-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba( 0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-hash-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#000000000)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-hash-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#0000000)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-rgba-hash-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#0000000X)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-space-padded-named-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( black)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-space-padded-rgb-function.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( rgb(0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-space-padded-rgb-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( #000000)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-space-padded-rgba-function.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( rgba(0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-space-padded-rgba-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( #00000000)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-color-unknown-named-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (pink)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-dur-disallowed-smpte-discontinuous.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute markerMode is prohibited on <tt> (line 3)",
+      "Time base TimeBase.smpte is not supported"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extension-empty-designation-token.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extension-missing-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extension-unknown-designation-token.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#foo'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extensions-base-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension base namespace ''"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extensions-base-non-absolute.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension base namespace 'foo'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extensions-base-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "xml:base: '*:*' is not a valid URI-reference",
+      "Invalid extension base namespace '*:*'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (\t\n\r )",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (100px, 200px)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value ()",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (100px 200px 300px)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-missing-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (100px)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (100px 364.4)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-negative-height.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (100.1px -200.0px)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-negative-width.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (-100.1px 200.0px)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-root-height.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent on <tt> must use px units (10px 10c)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-root-width.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent on <tt> must use px units (10% 10px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-semicolon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "XML parse error at line 7: junk after document element: line 7, column 2"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-extent-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "XML parse error at line 7: junk after document element: line 7, column 2"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-feature-empty-designation-token.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/#'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-feature-missing-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-feature-unknown-designation-token.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/#foo'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-feature-unknown-namespace.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://example.com/ns/ttml/feature/#foo'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-features-base-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature base namespace ''"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-features-base-non-absolute.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature base namespace 'foo'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-features-base-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "xml:base: '*:*' is not a valid URI-reference",
+      "Invalid feature base namespace '*:*'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-features-base-unknown-namespace.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature base namespace 'http://example.com/ns/ttml/feature/'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-empty-item-final.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (Foo,)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-empty-item-medial.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (Foo,,Bar)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-quoted-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value ('')"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-quoted-extra-unrecognized.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value ('Foo' Bar)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-quoted-incomplete-escape.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value ('\\)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-quoted-unterminated.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (')"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-bad-following.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (a?)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-bad-initial.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (?)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-double-hyphen.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (--foo)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-incomplete-escape.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (Foo\\)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-missing-initial.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:fontFamily value (-)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-reserved-inherit.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-invld-bad-font-family-unquoted-reserved-initial.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (100px, 200px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (Red/Black)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (100px 200px 300px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (100px 364.4)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-mixed-units.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (1px 2c)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-negative-height.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (100.1px -200.0px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-negative-width.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (-100.1px 200.0px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-semicolon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (100px:200px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-font-size-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (100px 364.4smoot)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRate value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRate value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-delimiter.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value (1:2)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-extra-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value (1 2 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-missing-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value (1)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value (1 -2)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-with-units.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRateMultiplier value (1px 2px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-multiplier-zero.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:frameRateMultiplier denominator is 0"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRate value (-1)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-frame-rate-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:frameRate value (0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-lang.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid language tag `123` for xml:lang"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-line-height-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:lineHeight syntax: \t\n\r "
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-line-height-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:lineHeight syntax: "
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-line-height-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:lineHeight syntax: 100px 200px"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-line-height-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:lineHeight syntax: 364.4"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-line-height-negative-height.xml",
+    "result": "fail",
+    "errors": [
+      "tts:lineHeight -200.0px is less than 0"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-line-height-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid tts:lineHeight syntax: 364.4smoot"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (\t\n\r )",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (100px, 200px)",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value ()",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (100px 200px 300px)",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-missing-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (100px)",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (100px 364.4)",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-semicolon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (100px:200px)",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-origin-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:origin value (100px 364.4smoot)",
+      "Attribute origin is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (\t\n\r )",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px, 200px)",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value ()",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px 200px 300px 400px 500px)",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px 364.4)",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-negative-before-and-after.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (-100.1px 200.0px)",
+      "Attribute extent is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-negative-start-and-end.xml",
+    "result": "fail",
+    "errors": [
+      "ebutts:linePadding must be non-negative (100.1px -200.0px)",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-semicolon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px:200px)",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-padding-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px 364.4smoot)",
+      "Attribute padding is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-delimiter.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-extra-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-missing-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-with-units.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-pixel-aspect-ratio-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-attribute-empty.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:profile '' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-attribute-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:profile '*:*' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-attribute-unknown-absolute-designator.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:profile 'http://www.w3.org/ns/ttml/profile/bar' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-attribute-unknown-relative-designator.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:profile 'foo' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-extension-empty-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-extension-missing-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-extension-unknown-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unknown'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-extension-unknown-value.xml",
+    "result": "fail",
+    "errors": [
+      "Bad value attribute value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-feature-empty-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/#'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-feature-missing-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-feature-unknown-designation.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/#unknown'"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-feature-unknown-value.xml",
+    "result": "fail",
+    "errors": [
+      "Bad value attribute value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-use-attribute-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad use attribute value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-use-attribute-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad use attribute value (*:*)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-use-attribute-unknown-absolute-designator.xml",
+    "result": "fail",
+    "errors": [
+      "Bad use attribute value (http://www.w3.org/ns/ttml/profile/bar)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-profile-use-attribute-unknown-relative-designator.xml",
+    "result": "fail",
+    "errors": [
+      "Bad use attribute value (foo)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-region-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad region id value: `\t\n\r `"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-region-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad region id value: ``"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-region-idref-unresolvable.xml",
+    "result": "fail",
+    "errors": [
+      "No referenceable region element with xml:id 'r1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-region-idref-wrong-eltype.xml",
+    "result": "fail",
+    "errors": [
+      "No referenceable region element with xml:id 's1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad style attribute value: ``"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad style attribute value: ``"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-idref-loop-length-1.xml",
+    "result": "fail",
+    "errors": [
+      "Infinite referential styling loop starting with style id s1"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-idref-loop-length-2.xml",
+    "result": "fail",
+    "errors": [
+      "Infinite referential styling loop starting with style id s1",
+      "Infinite referential styling loop starting with style id s2"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-idref-loop-length-4.xml",
+    "result": "fail",
+    "errors": [
+      "Infinite referential styling loop starting with style id s2",
+      "Infinite referential styling loop starting with style id s3",
+      "Infinite referential styling loop starting with style id s4",
+      "Infinite referential styling loop starting with style id s5"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-idref-non-significant.xml",
+    "result": "fail",
+    "errors": [
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing",
+      "No referenceable style element with xml:id 's1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-idref-unresolvable.xml",
+    "result": "fail",
+    "errors": [
+      "No referenceable style element with xml:id 's1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-style-idref-wrong-eltype.xml",
+    "result": "fail",
+    "errors": [
+      "No referenceable style element with xml:id 'r1' exists"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-sub-frame-rate-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute subFrameRate is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-sub-frame-rate-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute subFrameRate is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-sub-frame-rate-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute subFrameRate is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-sub-frame-rate-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute subFrameRate is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-bad-blur-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (yellow 0px red)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-bad-blur-missing-units.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (yellow 1px 0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-bad-blur-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (yellow 0px -1px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-bad-thickness-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (yellow red)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-bad-thickness-missing-units.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (yellow 0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-bad-thickness-negative.xml",
+    "result": "fail",
+    "errors": [
+      "tts:textOutline thickness must be non-negative (yellow -1px)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-text-outline-missing-thickness.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textOutline value (yellow)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-tick-rate-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:tickRate value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-tick-rate-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:tickRate value ()"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-tick-rate-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:tickRate value (-1)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-tick-rate-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:tickRate value (0)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-unicode-bidi-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value (\t\n\r )",
+      "Attribute unicodeBidi is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-unicode-bidi-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value ()",
+      "Attribute unicodeBidi is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-unicode-bidi-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value (unknown)",
+      "Attribute unicodeBidi is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-z-index-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:zIndex value (\t\n\r )",
+      "Attribute zIndex is not applicable to <body> (line 8)"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-z-index-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:zIndex value ()",
+      "Attribute zIndex is not applicable to <body> (line 8)"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-z-index-extra-integer.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:zIndex value (1 2)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-z-index-non-integer-real.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:zIndex value (1.2)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-bad-z-index-non-integer-token.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:zIndex value (normal)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-metadata-disallowed-attributes.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute role is prohibited on <tt> (line 2)",
+      "Attribute role is prohibited on <head> (line 7)",
+      "Attribute role is prohibited on <title> (line 8)",
+      "Attribute role is prohibited on <desc> (line 9)",
+      "Attribute role is prohibited on <copyright> (line 10)",
+      "Attribute role is prohibited on <agent> (line 11)",
+      "Attribute role is prohibited on <name> (line 12)",
+      "Attribute role is prohibited on <actor> (line 16)",
+      "Attribute role is prohibited on <profile> (line 18)",
+      "Attribute role is prohibited on <features> (line 19)",
+      "Attribute role is prohibited on <feature> (line 20)",
+      "Attribute role is prohibited on <extensions> (line 22)",
+      "Attribute role is prohibited on <extension> (line 23)",
+      "Attribute role is prohibited on <styling> (line 26)",
+      "Attribute role is prohibited on <style> (line 27)",
+      "Attribute role is prohibited on <layout> (line 29)",
+      "Attribute role is prohibited on <region> (line 30)",
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing",
+      "Attribute role is prohibited on <set> (line 34)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-metadata-non-element-content.xml",
+    "result": "fail",
+    "errors": [
+      "metadata contents does not match (agent | name | actor | copyright | desc | title | item | altText | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml1-invld-metadata-unknown-attributes.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute foo is prohibited on <body> (line 7)",
+      "Attribute bar is prohibited on <div> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-missing-lang.xml",
+    "result": "fail",
+    "errors": [
+      "xml:lang attribute missing"
+    ]
+  },
+  {
+    "file": "ttml1-invld-non-unique-id.xml",
+    "result": "fail",
+    "errors": [
+      "Duplicate xml:id value"
+    ]
+  },
+  {
+    "file": "ttml1-invld-non-well-formed-start-tag.xml",
+    "result": "fail",
+    "errors": [
+      "XML parse error at line 3: not well-formed (invalid token): line 3, column 2"
+    ]
+  },
+  {
+    "file": "ttml1-invld-non-well-formed-xml-declaration.xml",
+    "result": "fail",
+    "errors": [
+      "XML parse error at line 1: unclosed token: line 1, column 0"
+    ]
+  },
+  {
+    "file": "ttml1-invld-parameter-disallowed-attributes.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute frameRate is prohibited on <head> (line 6)",
+      "Attribute frameRate is prohibited on <metadata> (line 7)",
+      "Attribute frameRate is prohibited on <title> (line 8)",
+      "Attribute frameRate is prohibited on <desc> (line 9)",
+      "Attribute frameRate is prohibited on <copyright> (line 10)",
+      "Attribute frameRate is prohibited on <agent> (line 11)",
+      "Attribute frameRate is prohibited on <name> (line 12)",
+      "Attribute frameRate is prohibited on <actor> (line 16)",
+      "Attribute frameRate is prohibited on <styling> (line 18)",
+      "Attribute frameRate is prohibited on <style> (line 19)",
+      "Attribute frameRate is prohibited on <layout> (line 21)",
+      "Attribute frameRate is prohibited on <region> (line 22)",
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing",
+      "Attribute frameRate is prohibited on <body> (line 25)",
+      "Attribute frameRate is prohibited on <set> (line 26)",
+      "Attribute frameRate is prohibited on <div> (line 27)",
+      "Attribute frameRate is prohibited on <p> (line 28)",
+      "Attribute frameRate is prohibited on <span> (line 29)",
+      "Attribute frameRate is prohibited on <br> (line 30)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-parameter-unknown-attributes.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute framerate is prohibited on <tt> (line 2)",
+      "Attribute foo is prohibited on <tt> (line 2)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-root-div.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml1-invld-root-html.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml1-invld-set-maximum-style-count-exceeded.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-invld-style-disallowed-attributes.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute display is prohibited on <tt> (line 2)",
+      "Attribute display is prohibited on <head> (line 8)",
+      "Attribute display is prohibited on <title> (line 9)",
+      "Attribute display is prohibited on <desc> (line 10)",
+      "Attribute display is prohibited on <copyright> (line 11)",
+      "Attribute display is prohibited on <agent> (line 12)",
+      "Attribute display is prohibited on <name> (line 13)",
+      "Attribute display is prohibited on <actor> (line 17)",
+      "Attribute display is prohibited on <profile> (line 19)",
+      "Attribute display is prohibited on <features> (line 20)",
+      "Attribute display is prohibited on <feature> (line 21)",
+      "Attribute display is prohibited on <extensions> (line 23)",
+      "Attribute display is prohibited on <extension> (line 24)",
+      "Attribute display is prohibited on <styling> (line 27)",
+      "Attribute display is prohibited on <layout> (line 29)"
+    ]
+  },
+  {
+    "file": "ttml1-invld-style-unknown-attributes.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute foo is prohibited on <tt> (line 2)",
+      "Attribute fontsize is prohibited on <style> (line 8)",
+      "Attribute fontweight is prohibited on <body> (line 11)"
+    ]
+  }
+]

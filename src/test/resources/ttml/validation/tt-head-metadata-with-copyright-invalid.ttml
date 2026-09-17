@@ -1,0 +1,9 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata">
+  <head>
+    <metadata>
+      <ttm:copyright><ttm:agent/></ttm:copyright>
+    </metadata>
+  </head>
+</tt>

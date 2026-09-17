@@ -1,0 +1,10 @@
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" xmlns:ittm="http://www.w3.org/ns/ttml/profile/imsc1#metadata">
+  <body>
+    <div>
+      <metadata>
+        <ittm:altText>Nous étions inscrits au même lycée.</ittm:altText>
+      </metadata>
+      <p>Hello</p>
+    </div>
+  </body>
+</tt>
