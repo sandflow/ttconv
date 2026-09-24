@@ -210,6 +210,57 @@ class OneOrMoreRule(Rule):
   def pattern(self) -> str:
     return f"{self.rule.pattern()}+"
 
+class UnorderedRule(Rule):
+  """Matches a run of nodes in any order, where each rule occurs a bounded number of times.
+
+  Each entry is a `(rule, min_occurs, max_occurs)` tuple, where `max_occurs` is `None` if unbounded.
+
+  Nodes are matched greedily: at each position, the rules that have not yet reached their maximum are tried in the order
+  given and the first that matches wins. As a result, a node that matches a rule that has reached its maximum falls
+  through to a later rule that also matches it, e.g. a catch-all, instead of failing to match. The rule fails, without
+  consuming any node, if a rule occurs fewer than `min_occurs` times. Each occurrence of a rule must consume at least one
+  node.
+  """
+
+  def __init__(self, *entries: typing.Tuple[Rule, int, typing.Optional[int]], mixed_content: bool | None = None):
+    for rule, min_occurs, max_occurs in entries:
+      if min_occurs < 0 or (max_occurs is not None and max_occurs < max(min_occurs, 1)):
+        raise ValueError(f"Invalid occurrences for {rule.pattern()}: min {min_occurs}, max {max_occurs}")
+    self.entries = entries
+    self.mixed_content = mixed_content
+
+  def match(self, their_seq: NodeSequence, ctx: typing.Any) -> bool:
+    our_seq = NodeSequence(their_seq, self.mixed_content)
+    counts = [0] * len(self.entries)
+
+    while our_seq.peek() is not None:
+      for i, (rule, _, max_occurs) in enumerate(self.entries):
+        if max_occurs is not None and counts[i] >= max_occurs:
+          continue
+
+        candidate = NodeSequence(our_seq)
+        if rule.match(candidate, ctx) and candidate._index != our_seq._index:
+          our_seq.update_from(candidate)
+          counts[i] += 1
+          break
+      else:
+        break
+
+    if any(count < min_occurs for count, (_, min_occurs, _) in zip(counts, self.entries)):
+      return False
+
+    their_seq.update_from(our_seq)
+    return True
+
+  def pattern(self) -> str:
+    def occurrences(min_occurs: int, max_occurs: typing.Optional[int]) -> str:
+      return {(1, 1): "", (0, 1): "?", (0, None): "*", (1, None): "+"}.get(
+        (min_occurs, max_occurs),
+        f"{{{min_occurs},{'' if max_occurs is None else max_occurs}}}"
+      )
+
+    return "(" + " & ".join(r.pattern() + occurrences(lo, hi) for r, lo, hi in self.entries) + ")"
+
 class PCDATARule(Rule):
   """Validates that all nodes in a sequence are text nodes
   """

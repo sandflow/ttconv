@@ -29,7 +29,7 @@ import unittest
 import ttconv.imsc.validator.infoset as IS
 import ttconv.imsc.namespaces as NS
 from ttconv.imsc.validator.rules import (
-  NodeSequence, AnyRule, OptionalRule, PCDATARule, Rule, SequenceRule, ZeroOrMoreRule
+  NodeSequence, AnyRule, OptionalRule, PCDATARule, Rule, SequenceRule, UnorderedRule, ZeroOrMoreRule
 )
 
 
@@ -61,6 +61,21 @@ class _SingleElementRule(Rule):
     return True
   def pattern(self) -> str:
     return "elem"
+
+
+class _NamedElementRule(Rule):
+  """Test helper: matches exactly one IS.Element node with the given local name."""
+  def __init__(self, local_name: str):
+    self.local_name = local_name
+  def match(self, their_seq: NodeSequence, ctx) -> bool:
+    our_seq = NodeSequence(their_seq)
+    n = our_seq.pop()
+    if not isinstance(n, IS.Element) or n.name.qname.local_name != self.local_name:
+      return False
+    their_seq.update_from(our_seq)
+    return True
+  def pattern(self) -> str:
+    return self.local_name
 
 
 T1  = IS.Text("hello")
@@ -253,6 +268,94 @@ class TestSequenceRule(unittest.TestCase):
   def test_pattern(self):
     rule = SequenceRule(_SingleTextRule(), _SingleElementRule())
     self.assertEqual(rule.pattern(), "(#text elem)")
+
+
+class TestUnorderedRule(unittest.TestCase):
+
+  A, B, C = _elem("a"), _elem("b"), _elem("c")
+
+  @staticmethod
+  def _rule(**kwargs) -> UnorderedRule:
+    return UnorderedRule(
+      (_NamedElementRule("a"), 1, 1),
+      (_NamedElementRule("b"), 0, 1),
+      (_NamedElementRule("c"), 1, 3),
+      **kwargs
+    )
+
+  def test_matches_in_any_order(self):
+    for nodes in ([self.A, self.B, self.C], [self.C, self.B, self.A], [self.B, self.C, self.A], [self.C, self.A]):
+      with self.subTest([n.name.qname.local_name for n in nodes]):
+        seq = NodeSequence(list(nodes))
+        self.assertTrue(self._rule().match(seq, None))
+        self.assertIsNone(seq.peek())
+
+  def test_interleaved_occurrences(self):
+    seq = NodeSequence([self.C, self.A, self.C, self.B, self.C])
+    self.assertTrue(self._rule().match_all(seq, None))
+
+  def test_fails_below_minimum(self):
+    seq = NodeSequence([self.A, self.B])
+    self.assertFalse(self._rule().match(seq, None))
+    self.assertIs(seq.peek(), self.A)
+
+  def test_fails_when_empty_and_a_rule_is_required(self):
+    self.assertFalse(self._rule().match(NodeSequence([]), None))
+
+  def test_matches_empty_when_nothing_is_required(self):
+    self.assertTrue(UnorderedRule((_NamedElementRule("a"), 0, 1)).match_all(NodeSequence([]), None))
+
+  def test_stops_at_maximum(self):
+    for extra in (self.A, self.C):
+      with self.subTest(extra.name.qname.local_name):
+        nodes = [self.A, self.C, self.C, self.C, extra]
+        seq = NodeSequence(nodes)
+        self.assertTrue(self._rule().match(seq, None))
+        self.assertIs(seq.peek(), extra)
+        self.assertFalse(self._rule().match_all(NodeSequence(nodes), None))
+
+  def test_stops_at_unknown_node(self):
+    seq = NodeSequence([self.A, self.C, self.C, E1, self.B])
+    self.assertTrue(self._rule().match(seq, None))
+    self.assertIs(seq.peek(), E1)
+
+  def test_unbounded(self):
+    rule = UnorderedRule((_NamedElementRule("a"), 1, None))
+    self.assertTrue(rule.match_all(NodeSequence([self.A] * 50), None))
+    self.assertFalse(rule.match(NodeSequence([]), None))
+
+  def test_falls_through_to_later_rule_at_maximum(self):
+    rule = UnorderedRule((_NamedElementRule("a"), 0, 1), (_SingleElementRule(), 0, None))
+    seq = NodeSequence([self.A, self.A, self.A])
+    self.assertTrue(rule.match_all(seq, None))
+
+  def test_first_matching_rule_wins(self):
+    # the catch-all is first, so it consumes `b`, and `b` is never seen as `b`
+    rule = UnorderedRule((_SingleElementRule(), 0, None), (_NamedElementRule("b"), 1, 1))
+    self.assertFalse(rule.match(NodeSequence([self.B]), None))
+
+  def test_zero_length_matches_do_not_count_or_loop(self):
+    # PCDATARule always matches, but consumes nothing on an element
+    rule = UnorderedRule((PCDATARule(), 0, None), (_NamedElementRule("a"), 1, 1))
+    seq = NodeSequence([self.A])
+    self.assertTrue(rule.match_all(seq, None))
+
+  def test_skips_whitespace_when_not_mixed_content(self):
+    seq = NodeSequence([self.A, WS, self.C])
+    self.assertTrue(self._rule().match_all(seq, None))
+
+  def test_pattern(self):
+    self.assertEqual(self._rule().pattern(), "(a & b? & c{1,3})")
+    self.assertEqual(
+      UnorderedRule((_NamedElementRule("a"), 0, None), (_NamedElementRule("b"), 1, None), (_NamedElementRule("c"), 2, None)).pattern(),
+      "(a* & b+ & c{2,})"
+    )
+
+  def test_invalid_occurrences(self):
+    for lo, hi in ((-1, 1), (2, 1), (0, 0)):
+      with self.subTest((lo, hi)):
+        with self.assertRaises(ValueError):
+          UnorderedRule((_NamedElementRule("a"), lo, hi))
 
 
 class TestValidateAll(unittest.TestCase):

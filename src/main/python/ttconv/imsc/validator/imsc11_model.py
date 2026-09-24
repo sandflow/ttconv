@@ -185,13 +185,16 @@ class IMSCElement(Rule):
   optional_attributes = AttributeVocabulary()
   required_attributes = AttributeVocabulary()
   applicable_styles = AttributeVocabulary()
+  non_foreign_namespaces: typing.Optional[typing.Set[typing.Optional[str]]] = NON_FOREIGN_NAMESPACES
+  # whether whitespace-only text nodes are significant when matching the content model
+  mixed_content: typing.Optional[bool] = None
 
   def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
 
     # validate attributes that are not prohibited
     for attr in e.get_attributes():
       # ignore foreign namespaces
-      if not attr.name.qname.ns in NON_FOREIGN_NAMESPACES:
+      if self.non_foreign_namespaces is not None and not attr.name.qname.ns in self.non_foreign_namespaces:
         continue
 
       attr_model = self.optional_attributes.get(attr.name.qname) or self.required_attributes.get(attr.name.qname)
@@ -239,7 +242,8 @@ class IMSCElement(Rule):
     if hasattr(self, "content_model") and \
       not self.content_model.match_all(
         NodeSequence(element.get_children(),
-                     non_foreign_ns=NON_FOREIGN_NAMESPACES),
+                     mixed_content=self.mixed_content,
+                     non_foreign_ns=self.non_foreign_namespaces),
                      ctx):
       ctx.event_handler.error(f"{self.pattern()} contents does not match {self.content_model.pattern()}")
 
@@ -906,18 +910,15 @@ Body.content_model = SequenceRule(ZeroOrMoreRule(Metadata()), ZeroOrMoreRule(Set
 class TT(IMSCElement):
   content_model: Rule = SequenceRule(OptionalRule(Head()), OptionalRule(Body()))
   qname = ttconv.imsc.namespaces.QName(NS.TTML, "tt")
+  required_attributes = AttributeVocabulary(
+    other_attrs.XMLLangAttribute,
+  )
   optional_attributes = AttributeVocabulary(
     other_attrs.ExtentAttribute,
-    other_attrs.XMLLangAttribute,
     other_attrs.XMLIDAttribute,
     other_attrs.XMLSpaceAttribute,
     PARAMETER_ATTRIBUTES
   )
-
-  def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
-    super().validate_attributes(e, ctx)
-    if e.get_attribute(other_attrs.XMLLangAttribute.qname) is None:
-      ctx.event_handler.error("xml:lang attribute missing")
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     super().validate_contents(element, ctx)

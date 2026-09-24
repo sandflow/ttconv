@@ -73,6 +73,13 @@ class Element:
   def get_children(self) -> typing.Sequence[Element | Text]:
     return self.children
 
+  def dfs_iterator(self) -> typing.Iterator[Element]:
+    """Iterates over this element and its descendant elements, depth first and in document order"""
+    yield self
+    for c in self.get_children():
+      if isinstance(c, Element):
+        yield from c.dfs_iterator()
+
   def add_attribute(self, attr: Attribute):
     self.attributes[attr.name.qname] = attr
 
@@ -92,67 +99,76 @@ class Infoset:
   # maps prefix to the namespace URIs it was bound to
   namespaces: dict[str, list[str]]
 
-  @staticmethod
-  def fromFile(f: typing.BinaryIO, event_handler: EventHandler) -> typing.Optional[Infoset]:
+  class _Handler:
+    """Builds an infoset from the events of an expat parser. Subclasses can handle additional events."""
+
+    # separates the namespace URI from the local name in the names reported by expat
     SEP = " "
 
-    def _resolve_name(expat_name: str, ns_map: dict[str, list[str]]) -> Name:
-      if SEP in expat_name:
-        uri, local = expat_name.split(SEP, 1)
-        prefixes = ns_map.get(uri)
+    def __init__(self, parser: xml.parsers.expat.XMLParserType):
+      self.ns_map: dict[str, list[str]] = {}
+      self.prefix_to_uri: dict[str, list[str]] = {}
+      self.elem_stack: list[Element] = []
+      self.result: Element | None = None
+      self.parser: xml.parsers.expat.XMLParserType = parser
+
+      parser.StartNamespaceDeclHandler = self.start_ns
+      parser.EndNamespaceDeclHandler = self.end_ns
+      parser.StartElementHandler = self.start
+      parser.EndElementHandler = self.end
+      parser.CharacterDataHandler = self.data
+
+    def _resolve_name(self, expat_name: str) -> Name:
+      if self.SEP in expat_name:
+        uri, local = expat_name.split(self.SEP, 1)
+        prefixes = self.ns_map.get(uri)
         return Name(prefix=prefixes[-1] if prefixes else None, qname=QName(ns=uri, local_name=local))
       return Name(prefix=None, qname=QName(ns=None, local_name=expat_name))
 
-    class _Handler:
+    def get_result(self) -> Element | None:
+      return self.result
 
-      def __init__(self, parser: xml.parsers.expat.XMLParserType):
-        self.ns_map: dict[str, list[str]] = {}
-        self.prefix_to_uri: dict[str, list[str]] = {}
-        self.elem_stack: list[Element] = []
-        self.result: Element | None = None
-        self.parser: xml.parsers.expat.XMLParserType = parser
+    def start_ns(self, prefix, uri):
+      self.ns_map.setdefault(uri, []).append(prefix)
+      self.prefix_to_uri.setdefault(prefix, []).append(uri)
 
-      def get_result(self) -> Element | None:
-        return self.result
+    def end_ns(self, prefix):
+      uri_stack = self.prefix_to_uri.get(prefix)
+      if uri_stack:
+        uri = uri_stack.pop()
+        ps = self.ns_map.get(uri)
+        if ps:
+          ps.pop()
 
-      def start_ns(self, prefix, uri):
-        self.ns_map.setdefault(uri, []).append(prefix)
-        self.prefix_to_uri.setdefault(prefix, []).append(uri)
+    def start(self, tag, attrib):
+      elem = Element(self._resolve_name(tag), line_number=self.parser.CurrentLineNumber)
+      for name, value in attrib.items():
+        elem.add_attribute(Attribute(self._resolve_name(name), value))
+      self.elem_stack.append(elem)
 
-      def end_ns(self, prefix):
-        uri_stack = self.prefix_to_uri.get(prefix)
-        if uri_stack:
-          uri = uri_stack.pop()
-          ps = self.ns_map.get(uri)
-          if ps:
-            ps.pop()
+    def end(self, _):
+      elem = self.elem_stack.pop()
+      if self.elem_stack:
+        parent = self.elem_stack[-1]
+        elem.parent = parent
+        parent.children.append(elem)
+      else:
+        self.result = elem
 
-      def start(self, tag, attrib):
-        elem = Element(_resolve_name(tag, self.ns_map), line_number=self.parser.CurrentLineNumber)
-        for name, value in attrib.items():
-          elem.add_attribute(Attribute(_resolve_name(name, self.ns_map), value))
-        self.elem_stack.append(elem)
+    def data(self, text):
+      if self.elem_stack and text:
+        self.elem_stack[-1].children.append(Text(text))
 
-      def end(self, _):
-        elem = self.elem_stack.pop()
-        if self.elem_stack:
-          parent = self.elem_stack[-1]
-          elem.parent = parent
-          parent.children.append(elem)
-        else:
-          self.result = elem
+  @classmethod
+  def _from_handler(cls, handler: Infoset._Handler) -> Infoset:
+    """Creates an infoset from a handler that has parsed an entire document"""
+    assert handler.result is not None
+    return cls(handler.result, handler.prefix_to_uri)
 
-      def data(self, text):
-        if self.elem_stack and text:
-          self.elem_stack[-1].children.append(Text(text))
-
-    parser = xml.parsers.expat.ParserCreate(namespace_separator=SEP)
-    handler = _Handler(parser)
-    parser.StartNamespaceDeclHandler = handler.start_ns
-    parser.EndNamespaceDeclHandler = handler.end_ns
-    parser.StartElementHandler = handler.start
-    parser.EndElementHandler = handler.end
-    parser.CharacterDataHandler = handler.data
+  @classmethod
+  def fromFile(cls, f: typing.BinaryIO, event_handler: EventHandler) -> typing.Optional[Infoset]:
+    parser = xml.parsers.expat.ParserCreate(namespace_separator=cls._Handler.SEP)
+    handler = cls._Handler(parser)
 
     try:
       parser.ParseFile(f)
@@ -160,10 +176,9 @@ class Infoset:
       event_handler.error("XML parse error at line %d: %s", e.lineno, e)
       return None
 
-    r = handler.get_result()
-    if r is None:
+    if handler.get_result() is None:
       event_handler.error("Empty XML document")
       return None
-    assert r is not None
-    return Infoset(r, handler.prefix_to_uri)
+
+    return cls._from_handler(handler)
 

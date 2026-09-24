@@ -1778,7 +1778,7 @@
     "file": "ttml1-invld-missing-lang.xml",
     "result": "fail",
     "errors": [
-      "xml:lang attribute missing"
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}lang` missing"
     ]
   },
   {

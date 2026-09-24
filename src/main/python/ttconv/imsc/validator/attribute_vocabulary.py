@@ -25,6 +25,12 @@
 
 """Utilities for maintaining collections of TTML attributes"""
 
+def attribute(cls):
+  '''Class decorator that sets `q_name` and `qn` from `qname`.'''
+  cls.q_name = cls.qname
+  cls.qn = cls.q_name.to_clark_name()
+  return cls
+
 class AttributeVocabulary:
   """Collection of TTML attributes"""
 

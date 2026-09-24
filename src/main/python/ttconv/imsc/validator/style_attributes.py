@@ -26,7 +26,8 @@
 '''IMSC style properties'''
 
 import re
-from ttconv.imsc.validator.other_attributes import ValidationContext, attribute
+from ttconv.imsc.validator.attribute_vocabulary import attribute
+from ttconv.imsc.validator.other_attributes import ValidationContext
 from ttconv.imsc.validator.font_helper import is_quoted_string, is_valid_font_families
 from ttconv.imsc.namespaces import QName
 import ttconv.imsc.namespaces as xml_ns

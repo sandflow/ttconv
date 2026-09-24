@@ -36,6 +36,7 @@ from enum import Enum
 from ttconv.imsc.namespaces import QName
 import ttconv.imsc.namespaces as ns
 import ttconv.imsc.utils as imsc_utils
+from ttconv.imsc.validator.attribute_vocabulary import attribute
 from ttconv.imsc.validator.ttml_profile_helper import absolutize_profile_designator, is_ttml2_profile_designator
 from ttconv.imsc.validator.uri_helper import is_uri
 from ttconv.imsc.validator.lang_helper import is_valid_language_tag
@@ -80,12 +81,6 @@ class ValidationContext:
   target_sig_agent_ids: typing.Set[str] = field(default_factory=set)
   target_style_ids: typing.Set[str] = field(default_factory=set)
   namespaces: dict[str, list[str]] = field(default_factory=dict)
-
-def attribute(cls):
-  '''Class decorator that sets `q_name` and `qn` from `qname`.'''
-  cls.q_name = cls.qname
-  cls.qn = cls.q_name.to_clark_name()
-  return cls
 
 @attribute
 class XMLIDAttribute:
