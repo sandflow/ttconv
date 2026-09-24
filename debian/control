@@ -1,0 +1,18 @@
+Source: ttconv
+Priority: optional
+Section: python
+Maintainer: Nicolas Delvaux <nicolas.delvaux@cji.paris>
+Build-Depends: debhelper (>= 13),
+               dh-python,
+               python3-all,
+               python3-setuptools
+Standards-Version: 4.6.0
+
+Package: ttconv
+Architecture: all
+Section: python
+Depends: ${python3:Depends},
+         ${misc:Depends},
+Description: Timed text conversion tool
+ Command line application for converting between timed text formats used
+ in the presentations of captions, subtitles, karaoke, etc.
