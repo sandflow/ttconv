@@ -39,6 +39,7 @@ from ttconv.filters.document_filter import DocumentFilter
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.imsc.validator.imsc11_model as imsc11_model
+import ttconv.imsc.validator.rosetta.model as rosetta_model
 import ttconv.scc.reader as scc_reader
 import ttconv.scc.writer as scc_writer
 import ttconv.srt.writer as srt_writer
@@ -484,9 +485,9 @@ VALIDATE_LOG_LEVELS: typing.Dict[str, int] = {
   "error": logging.ERROR
 }
 
-# Maps a "validate" subcommand --model name to its validate() function
 VALIDATE_MODELS: typing.Dict[str, typing.Callable[[typing.BinaryIO], bool]] = {
-  "imsc11text": imsc11_model.validate
+  "imsc11text": imsc11_model.validate,
+  "rosetta": rosetta_model.validate
 }
 
 @subcommand([

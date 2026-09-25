@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  EXPECT: Root element must be tt
+  CASE: test_root_is_not_tt
+-->
+<foo xmlns="http://www.w3.org/ns/ttml"/>

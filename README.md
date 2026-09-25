@@ -414,12 +414,13 @@ http://imsc11validator.sandflow.com/
 
 ### Command line
 
-`tt validate [-h] [-m {imsc11text}] [-l {debug,info,warning,error}] file`
+`tt validate [-h] [-m {imsc11text,rosetta}] [-l {debug,info,warning,error}] file`
 
 Validates a TTML document against the specified model.
 
 * `-m`/`--model`: model to validate against (default: `imsc11text`)
   * `imsc11text`: the [Text Profile of IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/)
+  * `rosetta`: [IMSC Rosetta](https://github.com/imsc-rosetta/imsc-rosetta-specification/tree/main/documents)
 * `-l`/`--log-level`: minimum severity of log messages to print (default: `error`)
 
 Example:
