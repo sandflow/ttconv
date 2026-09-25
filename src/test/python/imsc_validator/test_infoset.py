@@ -26,6 +26,8 @@
 
 '''Unit tests for ttconv.imsc.validator.infoset'''
 
+from __future__ import annotations
+
 import unittest
 
 import ttconv.imsc.namespaces as NS

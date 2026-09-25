@@ -414,18 +414,50 @@ http://imsc11validator.sandflow.com/
 
 ### Command line
 
-`tt validate [-h] [-m {imsc11text,rosetta}] [-l {debug,info,warning,error}] file`
+`tt validate [-h] [-m {imsc11text,nbcu053,rosetta}] [-l {debug,info,warning,error}] [--config CONFIG] [--config_file CONFIG_FILE] file`
 
 Validates a TTML document against the specified model.
 
 * `-m`/`--model`: model to validate against (default: `imsc11text`)
   * `imsc11text`: the [Text Profile of IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/)
+  * `nbcu053`: NBCU-053 profile of IMSC 1.1
   * `rosetta`: [IMSC Rosetta](https://github.com/imsc-rosetta/imsc-rosetta-specification/tree/main/documents)
 * `-l`/`--log-level`: minimum severity of log messages to print (default: `error`)
+* `--config` and `--config_file`: JSON dictionary
 
-Example:
+Examples:
 
 `tt validate <.ttml file>`
+
+`tt validate -m rosetta <.imscr file>`
+
+`tt validate -m nbcu053 --config '{"nbcu053": {"frame_rate": "23.98", "hdr": true, "aspect_ratio": "2.39"}}' <.ttml file>`
+
+### NBCU-053 validator configuration (`"nbcu053"`)
+
+The configuration is required by the `nbcu053` model.
+
+#### frame_rate
+
+`"frame_rate": "23.98" | "25" | "29.97"`
+
+Frame rate of the document, as a string. Required.
+
+#### hdr
+
+`"hdr": true | false`
+
+The document is an HDR document if `hdr` is `true`.
+
+Default: `false`
+
+#### aspect_ratio
+
+`"aspect_ratio": null | "2.66" | "2.55" | "2.40" | "2.39" | "2.35" | "2.20" | "2.15" | "2.00" | "1.90" | "1.85" | "1.78" | "1.66" | "1.65" | "1.50" | "1.47" | "1.44" | "1.37" | "1.33" | "0.56" | "0.80" | "1.00"`
+
+Display aspect ratio of the media, as a string, or `null` if unspecified. It is required if the document has vertical text.
+
+Default: `null`
 
 ## Library
 
