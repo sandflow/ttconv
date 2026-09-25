@@ -373,7 +373,7 @@ class RosettaStyleTests(unittest.TestCase):
     self.assert_invalid(_doc_with_div(_div(_p(ruby, style=self.RUBY_P_STYLE), _p(_span("a"))), *self.RUBY_STYLES), expected)
     self.assert_valid(_doc_with_div(_div(_p(ruby, style=self.RUBY_P_STYLE), _p(_span("a"), style=self.RUBY_P_STYLE)), *self.RUBY_STYLES))
 
-EXAMPLES_DIR = "src/test/resources/rosetta"
+EXAMPLES_DIR = "src/test/resources/ttml/rosetta"
 INVALID_EXAMPLES_DIR = os.path.join(EXAMPLES_DIR, "invalid")
 
 def _read_example(name: str) -> str:
@@ -393,7 +393,7 @@ class RosettaExampleTests(unittest.TestCase):
   '''
 
   def test_valid_examples(self):
-    names = sorted(n for n in os.listdir(EXAMPLES_DIR) if n.endswith(".imscr") and n != "invalid.imscr")
+    names = sorted(n for n in os.listdir(EXAMPLES_DIR) if n.endswith(".imscr"))
     self.assertEqual(names, ["boxing.imscr", "metadata.imscr", "outline.imscr", "ruby.imscr", "structure.imscr", "styles.imscr", "valid.imscr"])
     for name in names:
       with self.subTest(name):
@@ -405,7 +405,7 @@ class RosettaExampleTests(unittest.TestCase):
         self.assertTrue(result)
 
   def test_invalid_examples(self):
-    # each file in INVALID_EXAMPLES_DIR breaks one rule, and states the error that it must produce in an `EXPECT:` comment. The
+    # each file in INVALID_EXAMPLES_DIR states the errors that it must produce in `EXPECT:` comments, one per line. The
     # files need not be valid IMSC 1.1, so they are validated against the Rosetta constraints alone.
     names = sorted(n for n in os.listdir(INVALID_EXAMPLES_DIR) if n.endswith(".imscr"))
     self.assertGreater(len(names), 0)
@@ -413,16 +413,16 @@ class RosettaExampleTests(unittest.TestCase):
       with self.subTest(name):
         with open(os.path.join(INVALID_EXAMPLES_DIR, name), encoding="utf-8", newline="") as f:
           doc = f.read()
-        match = re.search(r"EXPECT: (.*)", doc)
-        self.assertIsNotNone(match, "missing EXPECT comment")
-        expected = match.group(1)
+        expectations = re.findall(r"EXPECT: (.*)", doc)
+        self.assertNotEqual(expectations, [], "missing EXPECT comment")
         result, errors = _validate(doc)
         self.assertFalse(result)
-        self.assertTrue(any(expected in e for e in errors), f"Expected an error containing `{expected}`, got {errors}")
+        for expected in expectations:
+          self.assertTrue(any(expected in e for e in errors), f"Expected an error containing `{expected}`, got {errors}")
 
   def test_invalid_example(self):
-    # invalid.imscr is a valid IMSC 1.1 document, so validation gets as far as the Rosetta constraints
-    result, errors = _validate_full(_read_example("invalid.imscr"))
+    # invalid/multiple_errors.imscr is a valid IMSC 1.1 document, so validation gets as far as the Rosetta constraints
+    result, errors = _validate_full(_read_example(os.path.join("invalid", "multiple_errors.imscr")))
     self.assertFalse(result)
     self.assertEqual(len(errors), 5, errors)
     for expected in (

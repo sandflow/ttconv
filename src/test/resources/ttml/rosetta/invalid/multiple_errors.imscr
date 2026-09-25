@@ -9,7 +9,14 @@
        2. the xml:id of a div does not start with e_ (sub0)
        3. the style of a p does not reference p_font1 or p_font2
        4. a p contains whitespace outside of its span elements (pretty-printing)
-       5. s_nonered is used on a span, but d_none is not referenced by the div or by _d_default -->
+       5. s_nonered is used on a span, but d_none is not referenced by the div or by _d_default
+
+       EXPECT: rosetta:format shall be
+       EXPECT: xml:id of <div> shall start with
+       EXPECT: style on <p> shall contain p_font1 or p_font2
+       EXPECT: <p> shall not contain text or whitespace outside of <span>
+       EXPECT: unless `d_none`
+       CASE: test_invalid_example -->
   <head>
     <metadata>
       <rosetta:format>imsc-rosetta</rosetta:format>
