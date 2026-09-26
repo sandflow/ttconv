@@ -186,15 +186,19 @@ class IMSCElement(Rule):
   required_attributes = AttributeVocabulary()
   applicable_styles = AttributeVocabulary()
   non_foreign_namespaces: typing.Optional[typing.Set[typing.Optional[str]]] = NON_FOREIGN_NAMESPACES
+  # the namespaces of attributes that are validated, if different from `non_foreign_namespaces`
+  non_foreign_attribute_namespaces: typing.Optional[typing.Set[typing.Optional[str]]] = None
   # whether whitespace-only text nodes are significant when matching the content model
   mixed_content: typing.Optional[bool] = None
 
   def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
 
+    attribute_namespaces = self.non_foreign_attribute_namespaces or self.non_foreign_namespaces
+
     # validate attributes that are not prohibited
     for attr in e.get_attributes():
       # ignore foreign namespaces
-      if self.non_foreign_namespaces is not None and not attr.name.qname.ns in self.non_foreign_namespaces:
+      if attribute_namespaces is not None and not attr.name.qname.ns in attribute_namespaces:
         continue
 
       attr_model = self.optional_attributes.get(attr.name.qname) or self.required_attributes.get(attr.name.qname)

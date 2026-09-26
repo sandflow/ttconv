@@ -79,7 +79,7 @@ class BackgroundColor:
   is_inherited = False
 
   @staticmethod
-  def validate(value: str, ctx : ValidationContext):
+  def validate(value: str, _ctx : ValidationContext):
     try:
       _validate_color(value)
     except ValueError:
@@ -93,7 +93,7 @@ class Color:
   is_inherited = True
 
   @staticmethod
-  def validate(value: str, ctx : ValidationContext):
+  def validate(value: str, _ctx : ValidationContext):
     try:
       _validate_color(value)
     except ValueError:
@@ -205,7 +205,7 @@ class FontFamily:
   is_inherited = True
 
   @staticmethod
-  def validate(value: str, _ : ValidationContext):
+  def validate(value: str, _ctx : ValidationContext):
     if not is_valid_font_families(value):
       raise ValueError("Invalid tts:fontFamily value (%s)" % value)
 
@@ -259,7 +259,7 @@ class FontWeight:
   def validate(value: str, _ctx : ValidationContext):
     try:
       ttconv_styles.FontWeightType[value]
-    except ValueError:
+    except KeyError:
       raise ValueError("Bad tts:fontWeight value (%s)" % value)
 
 @attribute

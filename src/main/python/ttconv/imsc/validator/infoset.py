@@ -86,6 +86,11 @@ class Element:
   def get_attribute(self, name: QName) -> Attribute | None:
     return self.attributes.get(name)
 
+  def get_attribute_value(self, name: QName) -> str | None:
+    """Returns the value of the attribute `name`, or `None` if the attribute is absent"""
+    attr = self.attributes.get(name)
+    return attr.value if attr is not None else None
+
   def has_attribute(self, name: QName) -> bool:
     return name in self.attributes
 

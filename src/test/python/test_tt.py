@@ -410,5 +410,32 @@ class ValidateNBCU053SubcommandTest(unittest.TestCase):
       self.assertEqual(tt.main(["validate", "--config", self._CONFIG, ValidateSubcommandTest._VALID_DOCUMENT]), 0)
 
 
+class ValidateEBUTTDSubcommandTest(unittest.TestCase):
+  '''Unit tests for the "ebuttd" model of the "validate" subcommand'''
+
+  _VALID_DOCUMENT = "src/test/resources/ttml/ebuttd/valid/example.ttml"
+  _INVALID_DOCUMENT = "src/test/resources/ttml/ebuttd/invalid/time_base_not_media.ttml"
+
+  def setUp(self):
+    root_logger = logging.getLogger()
+    self._orig_level = root_logger.level
+    self._orig_handlers = list(root_logger.handlers)
+
+  def tearDown(self):
+    root_logger = logging.getLogger()
+    root_logger.handlers = self._orig_handlers
+    root_logger.setLevel(self._orig_level)
+
+  def test_valid_document_returns_zero(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--model", "ebuttd", self._VALID_DOCUMENT]), 0)
+    self.assertEqual(stderr.getvalue(), "")
+
+  def test_invalid_document_returns_one_and_prints_error(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--model", "ebuttd", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
+
 if __name__ == '__main__':
   unittest.main()

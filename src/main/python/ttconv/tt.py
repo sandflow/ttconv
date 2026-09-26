@@ -39,6 +39,7 @@ from ttconv.filters.document_filter import DocumentFilter
 
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
+import ttconv.imsc.validator.ebuttd.model as ebuttd_model
 import ttconv.imsc.validator.imsc11_model as imsc11_model
 import ttconv.imsc.validator.nbcu053.model as nbcu053_model
 from ttconv.imsc.validator.nbcu053.config import NBCU053ValidatorConfiguration
@@ -490,6 +491,7 @@ class ValidateModels(Enum):
   '''Enumerates the models that a document can be validated against'''
   IMSC11TEXT = "imsc11text"
   NBCU053 = "nbcu053"
+  EBUTTD = "ebuttd"
   ROSETTA = "rosetta"
 
   def __str__(self):
@@ -537,6 +539,8 @@ def validate(args) -> int:
     model_validate = imsc11_model.validate
   elif args.model is ValidateModels.ROSETTA:
     model_validate = rosetta_model.validate
+  elif args.model is ValidateModels.EBUTTD:
+    model_validate = ebuttd_model.validate
   elif args.model is ValidateModels.NBCU053:
     try:
       config = read_config_from_json(NBCU053ValidatorConfiguration, load_json_config(args))
