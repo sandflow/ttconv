@@ -35,6 +35,8 @@ import ttconv.imsc.validator.ebuttd.attributes as attrs
 from ttconv.imsc.validator.ebuttd.model import validate, _validate_ebuttd
 
 _RESOURCES_DIR = "src/test/resources/ttml/ebuttd"
+# git submodule: https://github.com/IRT-Open-Source/irt-ebu-tt-d-application-samples
+_IRT_SAMPLES_DIR = os.path.join(_RESOURCES_DIR, "irt-ebu-tt-d-application-samples", "ttml")
 
 TT_OPEN = (
   '<tt xmlns="http://www.w3.org/ns/ttml"'
@@ -128,6 +130,16 @@ class DocumentTests(EBUTTDValidatorTestCase):
       with self.subTest(name):
         handler = _RecordingHandler()
         with open(os.path.join(_RESOURCES_DIR, "valid", name), "rb") as f:
+          self.assertTrue(validate(f, handler))
+        self.assertEqual(handler.errors, [])
+
+  def test_irt_samples(self):
+    names = sorted(os.listdir(_IRT_SAMPLES_DIR))
+    self.assertNotEqual(names, [], "the irt-ebu-tt-d-application-samples submodule is not initialized")
+    for name in names:
+      with self.subTest(name):
+        handler = _RecordingHandler()
+        with open(os.path.join(_IRT_SAMPLES_DIR, name), "rb") as f:
           self.assertTrue(validate(f, handler))
         self.assertEqual(handler.errors, [])
 
