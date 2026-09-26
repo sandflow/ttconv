@@ -1,0 +1,13 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <head>
+    <styling>
+      <style xml:id="s1" tts:opacity="NaN"/>
+      <style xml:id="s2" tts:opacity="-INF"/>
+      <style xml:id="s3" tts:opacity="-.0000001"/>
+      <style xml:id="s4" tts:opacity="1.0000001"/>
+      <style xml:id="s5" tts:opacity="INF"/>
+    </styling>
+  </head>
+</tt>

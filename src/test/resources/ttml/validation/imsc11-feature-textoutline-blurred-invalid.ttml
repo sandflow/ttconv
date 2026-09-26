@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #textOutline-blurred -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations">
+  <head>
+    <styling>
+      <style tts:textOutline="red 2px 1px"/>
+    </styling>
+  </head>
+</tt>

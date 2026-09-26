@@ -26,10 +26,44 @@
  
 '''Holds XML namespaces defined by TTML'''
 
+from __future__ import annotations
+
+from dataclasses import dataclass
+
 XML = "http://www.w3.org/XML/1998/namespace"
 TTML = "http://www.w3.org/ns/ttml"
 TTP = "http://www.w3.org/ns/ttml#parameter"
 TTS = "http://www.w3.org/ns/ttml#styling"
+TTA = "http://www.w3.org/ns/ttml#audio"
+TTM = "http://www.w3.org/ns/ttml#metadata"
 ITTP = "http://www.w3.org/ns/ttml/profile/imsc1#parameter"
 ITTS = "http://www.w3.org/ns/ttml/profile/imsc1#styling"
+ITTM = "http://www.w3.org/ns/ttml/profile/imsc1#metadata"
 EBUTTS = "urn:ebu:tt:style"
+SMPTE = "http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt"
+TTF = "http://www.w3.org/ns/ttml/feature/"
+TT_PROFILE = "http://www.w3.org/ns/ttml/profile/"
+XLINK = "http://www.w3.org/1999/xlink"
+TTE = "http://www.w3.org/ns/ttml/extension/"
+
+@dataclass(frozen=True, order=True)
+class QName:
+  """Represents a qualified name"""
+  ns: str | None
+  local_name: str
+
+  def to_clark_name(self):
+    """Clark name representation of the qualified name"""
+    if self.ns is None:
+      return self.local_name
+    return f"{{{self.ns}}}{self.local_name}"
+
+  @staticmethod
+  def from_clark_name(clark_name: str):
+    if clark_name.startswith("{"):
+        uri, local = clark_name[1:].split("}", 1)
+        return QName(ns=uri, local_name=local)
+    return QName(ns=None, local_name=clark_name)
+
+  def __str__(self):
+    return self.to_clark_name()

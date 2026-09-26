@@ -12,7 +12,7 @@
 ## Introduction
 
 _ttconv_ is a library and command line application written in pure Python for
-converting between timed text formats used in the presentations of captions,
+processing timed text formats used in the presentations of captions,
 subtitles, karaoke, etc.
 
     TTML / IMSC ---                                       ---- IMSC / TTML
@@ -25,36 +25,18 @@ subtitles, karaoke, etc.
                 /
     WebVTT ----
 
-_ttconv_ works by mapping the input document, whatever its format, into an
-internal canonical model, which is then optionally transformed by document
-filters, and finally mapped to the format of the output document is derived. The
+_ttconv_ works by mapping input documents, whatever their respective formats,
+into an internal canonical model, which is then used for processing. The
 canonical model closely follows the [TTML 2](https://www.w3.org/TR/ttml2) data
-model, as constrained by the [IMSC 1.3 Text
-Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles) specification.
+model, as constrained by the [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
+specification. In the case of conversion, for example, the document in
+the internal model can be optionally transformed by document filters, and
+finally mapped to the format of the output document is derived.
 
-## Online demo
+_ttconv_ supports the following operations:
 
-[https://ttconv.sandflow.com/](https://ttconv.sandflow.com/)
-
-## Format support
-
-_ttconv_ currently supports the following input and output formats. Additional input and output formats are planned, and
-suggestions/contributions are welcome.
-
-### Input Formats
-
-* [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
-* [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
-* [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
-* [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
-* [WebVTT](https://www.w3.org/TR/webvtt1/)
-
-### Output Formats
-
-* [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
-* [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
-* [WebVTT](https://www.w3.org/TR/webvtt1/)
-* [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
+* [conversion](#convert) between formats
+* [validation](#validate) of formats
 
 ## Quick start
 
@@ -64,9 +46,35 @@ To install the latest version of `ttconv`, including pre-releases:
 pip install --pre ttconv
 
 tt convert -i <input .scc file> -o <output .ttml file>
+
+tt validate <.ttml file>
 ```
 
-## Documentation
+## Convert
+
+### Format support
+
+_ttconv_ currently supports converting between the following formats.Additional
+input and output formats are planned, and suggestions/contributions are welcome.
+
+#### Input Formats
+
+* [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
+* [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
+* [EBU STL](https://tech.ebu.ch/docs/tech/tech3264.pdf)
+* [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
+* [WebVTT](https://www.w3.org/TR/webvtt1/)
+
+#### Output Formats
+
+* [SubRip/.srt](https://en.wikipedia.org/wiki/SubRip)
+* [IMSC 1.3 Text Profile](https://www.w3.org/TR/ttml-imsc1.3/#profiles)
+* [WebVTT](https://www.w3.org/TR/webvtt1/)
+* [CTA 608/.scc](https://en.wikipedia.org/wiki/EIA-608)
+
+### Online demo
+
+[https://ttconv.sandflow.com/](https://ttconv.sandflow.com/)
 
 ### Command line
 
@@ -294,6 +302,7 @@ Default: `4`
 `"frame_rate" : "30NDF" | "29.97NDF" | "29.97DF"`
 
 If `frame_rate` is:
+
 * `"30NDF"`, the output SCC file uses 30 fps non drop frame (NDF) timecode.
 * `"29.97NDF"`, the output SCC file uses 29.97 fps non drop frame (NDF) timecode.
 * `"29.97DF"`, the output SCC file uses 29.97 fps drop frame (DF) timecode.
@@ -391,6 +400,67 @@ _NOTE_: This filter is not currently intended as substitute for a full IMSC 1.1 
 #### Example
 
     tt convert -i input.vtt -o output.ttml --filter imsc11text
+
+## Validate
+
+### Format support
+
+_ttconv_ currently supports validating documents that conform to
+[IMSC 1.1 Text Profile](https://www.w3.org/TR/ttml-imsc1.1/#profiles).
+
+### Demo app
+
+http://imsc11validator.sandflow.com/
+
+### Command line
+
+`tt validate [-h] [-m {imsc11text,nbcu053,ebuttd,rosetta}] [-l {debug,info,warning,error}] [--config CONFIG] [--config_file CONFIG_FILE] file`
+
+Validates a TTML document against the specified model.
+
+* `-m`/`--model`: model to validate against (default: `imsc11text`)
+  * `imsc11text`: the [Text Profile of IMSC 1.1](https://www.w3.org/TR/ttml-imsc1.1/)
+  * `nbcu053`: NBCU-053 profile of IMSC 1.1
+  * `ebuttd`: [EBU-TT-D](https://tech.ebu.ch/publications/tech3380) (EBU Tech 3380 v1.0.1)
+  * `rosetta`: [IMSC Rosetta](https://github.com/imsc-rosetta/imsc-rosetta-specification/tree/main/documents)
+* `-l`/`--log-level`: minimum severity of log messages to print (default: `error`)
+* `--config` and `--config_file`: JSON dictionary
+
+Examples:
+
+`tt validate <.ttml file>`
+
+`tt validate -m rosetta <.imscr file>`
+
+`tt validate -m ebuttd <.xml file>`
+
+`tt validate -m nbcu053 --config '{"nbcu053": {"frame_rate": "23.98", "hdr": true, "aspect_ratio": "2.39"}}' <.ttml file>`
+
+### NBCU-053 validator configuration (`"nbcu053"`)
+
+The configuration is required by the `nbcu053` model.
+
+#### frame_rate
+
+`"frame_rate": "23.98" | "25" | "29.97"`
+
+Frame rate of the document, as a string. Required.
+
+#### hdr
+
+`"hdr": true | false`
+
+The document is an HDR document if `hdr` is `true`.
+
+Default: `false`
+
+#### aspect_ratio
+
+`"aspect_ratio": null | "2.66" | "2.55" | "2.40" | "2.39" | "2.35" | "2.20" | "2.15" | "2.00" | "1.90" | "1.85" | "1.78" | "1.66" | "1.65" | "1.50" | "1.47" | "1.44" | "1.37" | "1.33" | "0.56" | "0.80" | "1.00"`
+
+Display aspect ratio of the media, as a string, or `null` if unspecified. It is required if the document has vertical text.
+
+Default: `null`
 
 ## Library
 

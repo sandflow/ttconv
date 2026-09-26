@@ -1,0 +1,16 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <head>
+    <styling>
+      <style xml:id="s1" tts:opacity="0.5"/>
+    </styling>
+  </head>
+  <body>
+    <div>
+      <p style="s1">
+        Hello
+      </p>
+    </div>
+  </body>
+</tt>
