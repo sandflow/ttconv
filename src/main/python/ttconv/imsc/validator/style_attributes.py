@@ -33,43 +33,9 @@ from ttconv.imsc.namespaces import QName
 import ttconv.imsc.namespaces as xml_ns
 import ttconv.style_properties as ttconv_styles
 import ttconv.imsc.utils as imsc_utils
+import ttconv.utils
 
-_HEX_COLOR_RE = re.compile(r"^#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?$")
-_DEC_COLOR_RE = re.compile(r"^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$")
-_DEC_COLORA_RE = re.compile(r"^rgba\(\s*(\d+),\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$")
 _NON_NEGATIVE_NUMBER_RE = re.compile(r"^\d+(\.\d+)?$")
-
-def _validate_color(attr_value: str):
-  '''Parses the TTML \\<color\\> value contained in `attr_value`
-  '''
-
-  if str.lower(attr_value) in ttconv_styles.NamedColors.__members__:
-    return
-
-  m = _HEX_COLOR_RE.match(attr_value)
-  if m:
-    for i in range(4):
-      if m.group(i + 1) is None:
-        break
-      if int(m.group(i + 1), 16) > 255:
-        raise ValueError()
-    return
-
-  m = _DEC_COLOR_RE.match(attr_value)
-  if m:
-    for i in range(3):
-      if int(m.group(i + 1)) > 255:
-        raise ValueError()
-    return
-  
-  m = _DEC_COLORA_RE.match(attr_value)
-  if m:
-    for i in range(4):
-      if int(m.group(i + 1)) > 255:
-        raise ValueError()
-    return
-
-  raise ValueError()
 
 @attribute
 class BackgroundColor:
@@ -81,7 +47,7 @@ class BackgroundColor:
   @staticmethod
   def validate(value: str, _ctx : ValidationContext):
     try:
-      _validate_color(value)
+      ttconv.utils.parse_color(value)
     except ValueError:
       raise ValueError("Bad backgroundColor value (%s)" % value)
 
@@ -95,7 +61,7 @@ class Color:
   @staticmethod
   def validate(value: str, _ctx : ValidationContext):
     try:
-      _validate_color(value)
+      ttconv.utils.parse_color(value)
     except ValueError:
       raise ValueError("Bad backgroundColor value (%s)" % value)
 
@@ -554,7 +520,7 @@ class TextEmphasis:
       if is_quoted_string(token):
         raise ValueError("tts:textEmphasis emphasis-style quoted-string component is not permitted (%s)" % token)
       try:
-        _validate_color(token)
+        ttconv.utils.parse_color(token)
       except ValueError:
         raise ValueError("Bad tts:textEmphasis value (%s)" % value)
       else:
@@ -582,7 +548,7 @@ class TextOutline:
       raise ValueError("tts:textOutline thickness must be non-negative (%s)" % value)
     if len(components) == 2:
       try:
-        _validate_color(components[0])
+        ttconv.utils.parse_color(components[0])
       except ValueError:
         raise ValueError("Bad tts:textOutline value (%s)" % value)
 
@@ -611,7 +577,7 @@ class TextShadow:
           (l, _) = imsc_utils.parse_length(components[2])
         except ValueError:
           try:
-            _validate_color(components[2])
+            ttconv.utils.parse_color(components[2])
           except ValueError:
             raise ValueError("Bad tts:textShadow value (%s)" % value)
         else:
@@ -625,7 +591,7 @@ class TextShadow:
         if l < 0:
           raise ValueError("Negative length in tts:textShadow value (%s)" % value)
         try:
-          _validate_color(components[3])
+          ttconv.utils.parse_color(components[3])
         except ValueError:
           raise ValueError("Bad tts:textShadow value (%s)" % value)
 
