@@ -142,9 +142,6 @@ def _get_referenced_style_ids(e: IS.Element) -> typing.List[str]:
   sa = e.get_attribute(other_attrs.StyleAttribute.qname)
   return other_attrs.StyleAttribute.parse(sa.value) if sa is not None else []
 
-def _get_child_elements_by_qname(e: IS.Element, qname: QName) -> typing.List[IS.Element]:
-  return [c for c in e.get_children() if isinstance(c, IS.Element) and c.name.qname == qname]
-
 def _references_style_of_kind(e: IS.Element, kind: typing.Union[type, typing.Tuple[type, ...]]) -> bool:
   '''Returns whether `e` references a style whose specification is an instance of `kind`'''
   return any(isinstance(styles.StyleSpecification.get(style_id), kind) for style_id in _get_referenced_style_ids(e))
@@ -288,7 +285,7 @@ class HeadMetadata(RosettaElement):
         problems.append(("Unknown element <rosetta:%s> in <metadata> (line %s)", c.name.qname.local_name, c.get_line_number()))
 
     for rule, lo, hi in rosetta_entries:
-      count = len(_get_child_elements_by_qname(element, rule.qname))
+      count = len(element.get_children_by_qname(rule.qname))
       if count < lo or (hi is not None and count > hi):
         bound = ("exactly", lo) if lo == hi else ("at least", lo) if count < lo else ("at most", hi)
         problems.append(("<metadata> shall contain %s %s <rosetta:%s>, found %s (line %s)",
@@ -395,7 +392,7 @@ class BrOnlySpan(RosettaElement):
   optional_attributes = AttributeVocabulary()
 
   def is_instance(self, their_seq: NodeSequence, ctx: IMSCValidationContext) -> bool:
-    return super().is_instance(their_seq, ctx) and len(_get_child_elements_by_qname(their_seq.peek(), Br.qname)) > 0
+    return super().is_instance(their_seq, ctx) and len(their_seq.peek().get_children_by_qname(Br.qname)) > 0
 
 class RubyPart(RosettaElement):
   '''A `span` that contains only text, and references `style`. Either the base or the text of a ruby container.'''
@@ -532,7 +529,7 @@ class Div(RosettaElement):
       ctx.event_handler.error("Outline and dropshadow styles shall not be mixed in a <div> (line %s)", line)
 
     # boxing (ps_bg_xxx on every base level <span>) and striping (ps_bg_xxx on every <p>) are applied consistently
-    paragraphs = _get_child_elements_by_qname(element, P.qname)
+    paragraphs = element.get_children_by_qname(P.qname)
 
     # whether an element of the <div> references a ps_bg_boxedxxx style
     boxed = False
@@ -556,7 +553,7 @@ class Div(RosettaElement):
         boxed = boxed or e_boxed
         ghost = ghost or e_ghost
         # base level <span> elements are the children of <p> that do not contain <br>
-        if e.parent is p and e.name.qname == imsc11.Span.qname and not _get_child_elements_by_qname(e, Br.qname):
+        if e.parent is p and e.name.qname == imsc11.Span.qname and not e.get_children_by_qname(Br.qname):
           if e_boxed or e_ghost:
             boxed_span = True
           elif not p_has_boxing:

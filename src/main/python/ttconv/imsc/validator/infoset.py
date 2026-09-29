@@ -73,6 +73,10 @@ class Element:
   def get_children(self) -> typing.Sequence[Element | Text]:
     return self.children
 
+  def get_children_by_qname(self, qname: QName) -> typing.List[Element]:
+    """Returns the child elements whose name is `qname`, in document order"""
+    return [c for c in self.children if isinstance(c, Element) and c.name.qname == qname]
+
   def dfs_iterator(self) -> typing.Iterator[Element]:
     """Iterates over this element and its descendant elements, depth first and in document order"""
     yield self

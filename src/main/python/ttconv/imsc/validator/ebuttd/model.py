@@ -239,9 +239,7 @@ class P(IMSCElement):
     super().validate_contents(element, ctx)
     if not (element.has_attribute(attrs.Begin.qname) or element.has_attribute(attrs.End.qname)):
       return
-    for span in element.get_children():
-      if not isinstance(span, IS.Element) or span.name.qname != Span.qname:
-        continue
+    for span in element.get_children_by_qname(Span.qname):
       if span.has_attribute(attrs.Begin.qname) or span.has_attribute(attrs.End.qname):
         ctx.event_handler.error("<span> shall not specify timing since its parent <p> does (line %s)", span.get_line_number())
 
