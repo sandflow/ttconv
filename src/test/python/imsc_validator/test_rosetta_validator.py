@@ -33,7 +33,7 @@ import typing
 
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.validator.rosetta.styles as styles
-from ttconv.imsc.validator.rosetta.model import BOXED_STYLES, GHOST_BOXED_STYLES, RUBY_STYLES, SPAN_OUTLINE_STYLES, validate, \
+from ttconv.imsc.validator.rosetta.model import validate, \
   _validate_imscr
 
 XML_DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
@@ -285,13 +285,16 @@ class RosettaStyleTests(unittest.TestCase):
     self.assert_invalid(make_doc(head=make_head(replace={style_id: definition})), expected)
 
   def test_listed_styles_are_defined(self):
-    listed = {*styles.FOREGROUND_STYLES, *styles.ALIGNMENT_STYLES, *styles.DIV_MODIFIER_STYLES, *RUBY_STYLES,
-      *BOXED_STYLES, *GHOST_BOXED_STYLES, *SPAN_OUTLINE_STYLES, styles.QUANTISATION_REGION_STYLE}
-    self.assertEqual(sorted(listed - set(styles.STYLE_VALIDATORS)), [])
-    self.assertEqual(len(styles.FOREGROUND_STYLES), 8)
+    listed = {*(spec.style_id for spec in styles.BaseRDefault.FOREGROUND_STYLES), *(spec.style_id for spec in styles.ALIGNMENT_STYLES), styles.RQuantisationregion.style_id}
+    self.assertEqual(sorted(listed - set(styles.StyleSpecification.style_ids())), [])
+    self.assertEqual(len(styles.BaseRDefault.FOREGROUND_STYLES), 8)
     self.assertEqual(len(styles.ALIGNMENT_STYLES), 9)
-    self.assertEqual((len(BOXED_STYLES), len(GHOST_BOXED_STYLES), len(SPAN_OUTLINE_STYLES)), (8, 8, 24))
-    self.assertEqual(len(styles.STYLE_VALIDATORS), 89)
+    specs = [styles.StyleSpecification.get(i) for i in styles.StyleSpecification.style_ids()]
+    span_outline_styles = [s for s in specs if s.required_div_style is not None]
+    boxed_styles = [s for s in specs if isinstance(s, styles.BoxedBackgroundSpecification)]
+    ghost_boxed_styles = [s for s in specs if isinstance(s, styles.GhostBoxedBackgroundSpecification)]
+    self.assertEqual((len(boxed_styles), len(ghost_boxed_styles), len(span_outline_styles)), (8, 8, 24))
+    self.assertEqual(len(styles.StyleSpecification.style_ids()), 89)
 
   # style definitions
 

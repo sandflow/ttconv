@@ -64,41 +64,12 @@ REQUIRED_PREFIXES: typing.Dict[str, typing.Optional[str]] = {
   ROSETTA: "rosetta",
 }
 
-# maps outline/dropshadow `span` styles to the corresponding `div` style that must be present
-SPAN_OUTLINE_STYLES = {
-  "s_outlineblack": "d_outline",
-  "s_outlinered": "d_outline",
-  "s_outlineyellow": "d_outline",
-  "s_outlinegreen": "d_outline",
-  "s_outlinecyan": "d_outline",
-  "s_outlineblue": "d_outline",
-  "s_outlinemagenta": "d_outline",
-  "s_outlinewhite": "d_outline",
-
-  "s_dropblack": "d_drop",
-  "s_dropred": "d_drop",
-  "s_dropyellow": "d_drop",
-  "s_dropgreen": "d_drop",
-  "s_dropcyan": "d_drop",
-  "s_dropblue": "d_drop",
-  "s_dropmagenta": "d_drop",
-  "s_dropwhite": "d_drop",
-
-  "s_noneblack": "d_none",
-  "s_nonered": "d_none",
-  "s_noneyellow": "d_none",
-  "s_nonegreen": "d_none",
-  "s_nonecyan": "d_none",
-  "s_noneblue": "d_none",
-  "s_nonemagenta": "d_none",
-  "s_nonewhite": "d_none",
-}
-
 # exactly one of these is referenced by a ruby container
-RUBY_ALIGN_STYLES = frozenset(("s_rb_algn_center", "s_rb_algn_around"))
-RUBY_BASE_STYLE = "s_rb_b"
-RUBY_TEXT_STYLE = "s_rb_t"
-RUBY_STYLES = RUBY_ALIGN_STYLES | {"s_rb_posn_outside", RUBY_BASE_STYLE, RUBY_TEXT_STYLE}
+RUBY_ALIGN_STYLES = frozenset((styles.SRbAlgnCenter, styles.SRbAlgnAround))
+RUBY_STYLES = RUBY_ALIGN_STYLES | {styles.SRbPosnOutside, styles.SRbB, styles.SRbT}
+
+def _style_ids(specs: typing.Iterable[typing.Type[styles.StyleSpecification]]) -> typing.Set[str]:
+  return {spec.style_id for spec in specs}
 
 _TIME_RE = re.compile(r"(\d{2}):([0-5]\d):([0-5]\d)\.(\d{3})")
 
@@ -147,6 +118,9 @@ class RosettaElement(IMSCElement):
 
   non_foreign_namespaces = None
 
+  # styles that the element may reference, or `None` if they are not constrained
+  referenceable_styles: typing.Optional[typing.AbstractSet[typing.Type[styles.StyleSpecification]]] = None
+
   def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
     # namespace prefixes are mandated by the specification
     for name in [e.get_name()] + [a.name for a in e.get_attributes()]:
@@ -158,34 +132,22 @@ class RosettaElement(IMSCElement):
           expected or "(default)", e.get_name().qname.local_name, e.get_line_number())
     super().validate_attributes(e, ctx)
 
+    if self.referenceable_styles is not None:
+      referenceable_ids = {spec.style_id for spec in self.referenceable_styles}
+      for style_id in _get_referenced_style_ids(e):
+        if style_id and style_id not in referenceable_ids:
+          ctx.event_handler.error("Style `%s` shall not be referenced by <%s> (line %s)", style_id, e.get_name().qname.local_name, e.get_line_number())
+
 def _get_referenced_style_ids(e: IS.Element) -> typing.List[str]:
   sa = e.get_attribute(other_attrs.StyleAttribute.qname)
   return other_attrs.StyleAttribute.parse(sa.value) if sa is not None else []
 
-def _validate_applicable_styles_by_prefix(e: IS.Element, ctx: IMSCValidationContext, prefixes: typing.Tuple[str, ...]):
-  '''Checks that the styles referenced by `e` may be applied to it'''
-  for style_id in _get_referenced_style_ids(e):
-    if style_id and not style_id.startswith(prefixes):
-      ctx.event_handler.error("Style `%s` shall not be referenced by <%s> (line %s)", style_id, e.get_name().qname.local_name, e.get_line_number())
-
 def _get_child_elements_by_qname(e: IS.Element, qname: QName) -> typing.List[IS.Element]:
   return [c for c in e.get_children() if isinstance(c, IS.Element) and c.name.qname == qname]
 
-BOXED_STYLES = frozenset((
-  "ps_bg_boxedblack", "ps_bg_boxedred", "ps_bg_boxedyellow", "ps_bg_boxedgreen",
-  "ps_bg_boxedcyan", "ps_bg_boxedblue", "ps_bg_boxedmagenta", "ps_bg_boxedwhite",
-))
-
-GHOST_BOXED_STYLES = frozenset((
-  "ps_bg_ghostboxedblack", "ps_bg_ghostboxedred", "ps_bg_ghostboxedyellow", "ps_bg_ghostboxedgreen",
-  "ps_bg_ghostboxedcyan", "ps_bg_ghostboxedblue", "ps_bg_ghostboxedmagenta", "ps_bg_ghostboxedwhite",
-))
-
-BOXING_STYLES = BOXED_STYLES | GHOST_BOXED_STYLES
-
-def _has_boxing(e: IS.Element) -> bool:
-  '''Returns whether `e` references a boxed or ghost boxed style'''
-  return not BOXING_STYLES.isdisjoint(_get_referenced_style_ids(e))
+def _references_style_of_kind(e: IS.Element, kind: typing.Union[type, typing.Tuple[type, ...]]) -> bool:
+  '''Returns whether `e` references a style whose specification is an instance of `kind`'''
+  return any(isinstance(styles.StyleSpecification.get(style_id), kind) for style_id in _get_referenced_style_ids(e))
 
 class MetadataTextElement(RosettaElement):
   '''A Rosetta metadata element that contains only text, which is unconstrained unless `check_text()` is overridden'''
@@ -351,13 +313,13 @@ class Style(RosettaElement, imsc11.Style):
       return
 
     line = e.get_line_number()
-    validator = styles.STYLE_VALIDATORS.get(xml_id.value)
-    if validator is None:
+    spec = styles.StyleSpecification.get(xml_id.value)
+    if spec is None:
       ctx.event_handler.error("Style `%s` is not defined by the specification (line %s)", xml_id.value, line)
       return
 
     values = {a.name.qname: a.value for a in e.get_attributes() if a.name.qname != other_attrs.XMLIDAttribute.qname}
-    validator.validate(xml_id.value, values, line, ctx.event_handler)
+    spec.validate(values, line, ctx.event_handler)
 
 class Styling(RosettaElement, imsc11.Styling):
   content_model = OneOrMoreRule(Style())
@@ -365,8 +327,8 @@ class Styling(RosettaElement, imsc11.Styling):
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     super().validate_contents(element, ctx)
-    if styles.QUANTISATION_REGION_STYLE not in ctx.style_defs:
-      ctx.event_handler.error("Style `%s` shall be present (line %s)", styles.QUANTISATION_REGION_STYLE, element.get_line_number())
+    if styles.RQuantisationregion.style_id not in ctx.style_defs:
+      ctx.event_handler.error("Style `%s` shall be present (line %s)", styles.RQuantisationregion.style_id, element.get_line_number())
 
 class Region(RosettaElement, imsc11.Region):
   content_model = EmptyRule()
@@ -382,7 +344,7 @@ class Region(RosettaElement, imsc11.Region):
   def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
     super().validate_attributes(e, ctx)
     if e.has_attribute(other_attrs.StyleAttribute.qname) and \
-        set(_get_referenced_style_ids(e)) not in ({"r_default"}, {"r_default", "r_vertical"}):
+        set(_get_referenced_style_ids(e)) not in ({styles.RDefault.style_id}, {styles.RDefault.style_id, styles.RVertical.style_id}):
       ctx.event_handler.error("style on <region> shall be `r_default` or `r_default r_vertical` (line %s)", e.get_line_number())
 
 class Layout(RosettaElement, imsc11.Layout):
@@ -403,14 +365,27 @@ class TextSpan(RosettaElement):
   content_model = PCDATARule()
   optional_attributes = AttributeVocabulary(other_attrs.StyleAttribute)
   applicable_styles = imsc11.Span.applicable_styles
-
-  def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
-    super().validate_attributes(e, ctx)
-    _validate_applicable_styles_by_prefix(e, ctx, ("s_", "ps_"))
+  referenceable_styles = frozenset((
+    styles.SFgBlack, styles.SFgRed, styles.SFgYellow, styles.SFgGreen,
+    styles.SFgCyan, styles.SFgBlue, styles.SFgMagenta, styles.SFgWhite,
+    styles.SOutlineBlack, styles.SOutlineRed, styles.SOutlineYellow, styles.SOutlineGreen,
+    styles.SOutlineCyan, styles.SOutlineBlue, styles.SOutlineMagenta, styles.SOutlineWhite,
+    styles.SDropBlack, styles.SDropRed, styles.SDropYellow, styles.SDropGreen,
+    styles.SDropCyan, styles.SDropBlue, styles.SDropMagenta, styles.SDropWhite,
+    styles.SNoneBlack, styles.SNoneRed, styles.SNoneYellow, styles.SNoneGreen,
+    styles.SNoneCyan, styles.SNoneBlue, styles.SNoneMagenta, styles.SNoneWhite,
+    styles.PsBgBoxedBlack, styles.PsBgBoxedRed, styles.PsBgBoxedYellow, styles.PsBgBoxedGreen,
+    styles.PsBgBoxedCyan, styles.PsBgBoxedBlue, styles.PsBgBoxedMagenta, styles.PsBgBoxedWhite,
+    styles.PsBgGhostBoxedBlack, styles.PsBgGhostBoxedRed, styles.PsBgGhostBoxedYellow, styles.PsBgGhostBoxedGreen,
+    styles.PsBgGhostBoxedCyan, styles.PsBgGhostBoxedBlue, styles.PsBgGhostBoxedMagenta, styles.PsBgGhostBoxedWhite,
+    styles.SItalic, styles.SBold, styles.SUnderline, styles.SCombine,
+    styles.SRbB, styles.SRbT, styles.SRbAlgnCenter, styles.SRbAlgnAround, styles.SRbPosnOutside,
+    styles.SEmfFco, styles.SEmfFdo, styles.SEmfFso, styles.SEmfOco, styles.SEmfOdo, styles.SEmfOso,
+  ))
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     super().validate_contents(element, ctx)
-    if not RUBY_STYLES.isdisjoint(_get_referenced_style_ids(element)):
+    if not _style_ids(RUBY_STYLES).isdisjoint(_get_referenced_style_ids(element)):
       ctx.event_handler.error("Ruby styles shall only be used on <span> elements that contain ruby (line %s)", element.get_line_number())
 
 class BrOnlySpan(RosettaElement):
@@ -423,36 +398,34 @@ class BrOnlySpan(RosettaElement):
     return super().is_instance(their_seq, ctx) and len(_get_child_elements_by_qname(their_seq.peek(), Br.qname)) > 0
 
 class RubyPart(RosettaElement):
-  '''A `span` that contains only text, and references `style_id`. Either the base or the text of a ruby container.'''
+  '''A `span` that contains only text, and references `style`. Either the base or the text of a ruby container.'''
   qname = imsc11.Span.qname
   content_model = PCDATARule()
   required_attributes = AttributeVocabulary(other_attrs.StyleAttribute)
   applicable_styles = imsc11.Span.applicable_styles
-  style_id: str
+  style: typing.Type[styles.StyleSpecification]
+  referenceable_styles = TextSpan.referenceable_styles
 
   def is_instance(self, their_seq: NodeSequence, ctx: IMSCValidationContext) -> bool:
-    return super().is_instance(their_seq, ctx) and self.style_id in _get_referenced_style_ids(their_seq.peek())
-
-  def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
-    super().validate_attributes(e, ctx)
-    _validate_applicable_styles_by_prefix(e, ctx, ("s_", "ps_"))
+    return super().is_instance(their_seq, ctx) and self.style.style_id in _get_referenced_style_ids(their_seq.peek())
 
   def pattern(self):
-    return f"{self.qname.local_name}[{self.style_id}]"
+    return f"{self.qname.local_name}[{self.style.style_id}]"
 
 class RubyBase(RubyPart):
   '''A `span` that contains the base of a ruby container'''
-  style_id = RUBY_BASE_STYLE
+  style = styles.SRbB
 
 class RubyText(RubyPart):
   '''A `span` that contains the text of a ruby container'''
-  style_id = RUBY_TEXT_STYLE
+  style = styles.SRbT
 
 class RubySpan(RosettaElement):
   '''A `span` that references exactly one of `RUBY_ALIGN_STYLES`, and contains a ruby base and a ruby text, in any order'''
   qname = imsc11.Span.qname
   content_model = UnorderedRule((RubyBase(), 1, 1), (RubyText(), 1, 1))
   required_attributes = AttributeVocabulary(other_attrs.StyleAttribute)
+  referenceable_styles = TextSpan.referenceable_styles
   applicable_styles = AttributeVocabulary(
     imsc11.Span.applicable_styles,
     style_attrs.RubyAlign,
@@ -461,23 +434,31 @@ class RubySpan(RosettaElement):
 
   def is_instance(self, their_seq: NodeSequence, ctx: IMSCValidationContext) -> bool:
     return super().is_instance(their_seq, ctx) and \
-      len(RUBY_ALIGN_STYLES.intersection(_get_referenced_style_ids(their_seq.peek()))) == 1
-
-  def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
-    super().validate_attributes(e, ctx)
-    _validate_applicable_styles_by_prefix(e, ctx, ("s_", "ps_"))
+      len(_style_ids(RUBY_ALIGN_STYLES).intersection(_get_referenced_style_ids(their_seq.peek()))) == 1
 
 class P(RosettaElement):
   qname = QName(NS.TTML, "p")
   required_attributes = AttributeVocabulary(other_attrs.StyleAttribute)
   applicable_styles = imsc11.P.applicable_styles
+  referenceable_styles = frozenset((
+    styles.PFont1, styles.PFont2,
+    styles.PRtl,
+    styles.PAlStart, styles.PAlEnd, styles.PAlCenter,
+    styles.PAlStartCenter, styles.PAlStartEnd,
+    styles.PAlEndStart, styles.PAlEndCenter,
+    styles.PAlCenterStart, styles.PAlCenterEnd,
+    styles.PRbResOutside, styles.PShear,
+    styles.PsBgBoxedBlack, styles.PsBgBoxedRed, styles.PsBgBoxedYellow, styles.PsBgBoxedGreen,
+    styles.PsBgBoxedCyan, styles.PsBgBoxedBlue, styles.PsBgBoxedMagenta, styles.PsBgBoxedWhite,
+    styles.PsBgGhostBoxedBlack, styles.PsBgGhostBoxedRed, styles.PsBgGhostBoxedYellow, styles.PsBgGhostBoxedGreen,
+    styles.PsBgGhostBoxedCyan, styles.PsBgGhostBoxedBlue, styles.PsBgGhostBoxedMagenta, styles.PsBgGhostBoxedWhite,
+  ))
   content_model = ZeroOrMoreRule(AnyRule(BrOnlySpan(), RubySpan(), TextSpan()))
 
   def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
     super().validate_attributes(e, ctx)
-    if e.has_attribute(other_attrs.StyleAttribute.qname) and not {"p_font1", "p_font2"} & set(_get_referenced_style_ids(e)):
+    if e.has_attribute(other_attrs.StyleAttribute.qname) and not {styles.PFont1.style_id, styles.PFont2.style_id} & set(_get_referenced_style_ids(e)):
       ctx.event_handler.error("style on <p> shall contain p_font1 or p_font2 (line %s)", e.get_line_number())
-    _validate_applicable_styles_by_prefix(e, ctx, ("p_", "ps_"))
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     # whitespace is significant since xml:space is preserve and mixed_content is `False`
@@ -493,6 +474,9 @@ class DivMetadata(RosettaElement):
 
 class Div(RosettaElement):
   qname = QName(NS.TTML, "div")
+  referenceable_styles = frozenset((
+    styles.DDefault, styles.DFillgap, styles.DForced, styles.DOutline, styles.DDrop, styles.DNone,
+  ))
   required_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     other_attrs.RegionAttribute,
@@ -511,9 +495,8 @@ class Div(RosettaElement):
     if xml_id is not None and not xml_id.value.startswith("e_"):
       ctx.event_handler.error("xml:id of <div> shall start with `e_` (line %s)", line)
 
-    if e.has_attribute(other_attrs.StyleAttribute.qname) and "d_default" not in _get_referenced_style_ids(e):
+    if e.has_attribute(other_attrs.StyleAttribute.qname) and styles.DDefault.style_id not in _get_referenced_style_ids(e):
       ctx.event_handler.error("style on <div> shall contain d_default (line %s)", line)
-    _validate_applicable_styles_by_prefix(e, ctx, ("d_",))
 
     begin = e.get_attribute(BeginAttribute.qname)
     end = e.get_attribute(EndAttribute.qname)
@@ -531,35 +514,61 @@ class Div(RosettaElement):
     # s_outlinexxx, s_dropxxx and s_nonexxx require d_outline, d_drop and d_none, respectively, to be referenced directly by
     # the `style` of the `div` or of `_d_default`, and outline and dropshadow cannot be mixed
     in_effect = set(_get_referenced_style_ids(element))
-    d_default = ctx.style_defs.get("_d_default")
+    d_default = ctx.style_defs.get(styles.BaseDDefault.style_id)
     if d_default is not None:
       in_effect |= d_default.style_refs
     used = set()
     for span in (e for e in element.dfs_iterator() if e.name.qname == imsc11.Span.qname):
       for style_id in _get_referenced_style_ids(span):
-        required = SPAN_OUTLINE_STYLES.get(style_id)
-        if required is None:
+        spec = styles.StyleSpecification.get(style_id)
+        if spec is None or spec.required_div_style is None:
           continue
+        required = spec.required_div_style.style_id
         used.add(required)
         if required not in in_effect:
           ctx.event_handler.error("Style `%s` shall not be used on <span> unless `%s` is specified in `_d_default` or on <div> (line %s)",
             style_id, required, span.get_line_number())
-    if {"d_outline", "d_drop"} <= used:
+    if {styles.DOutline.style_id, styles.DDrop.style_id} <= used:
       ctx.event_handler.error("Outline and dropshadow styles shall not be mixed in a <div> (line %s)", line)
 
     # boxing (ps_bg_xxx on every base level <span>) and striping (ps_bg_xxx on every <p>) are applied consistently
     paragraphs = _get_child_elements_by_qname(element, P.qname)
 
-    boxed = any(BOXED_STYLES.intersection(_get_referenced_style_ids(e)) for p in paragraphs for e in p.dfs_iterator())
-    ghost = any(GHOST_BOXED_STYLES.intersection(_get_referenced_style_ids(e)) for p in paragraphs for e in p.dfs_iterator())
+    # whether an element of the <div> references a ps_bg_boxedxxx style
+    boxed = False
+    # whether an element of the <div> references a ps_bg_ghostboxedxxx style
+    ghost = False
+    # whether a <p> references a ps_bg_xxx style
+    boxed_p = False
+    # whether a <p> references no ps_bg_xxx style
+    unboxed_p = False
+    # whether a base level <span> references a ps_bg_xxx style
+    boxed_span = False
+    # whether a base level <span> references no ps_bg_xxx style, and neither does its <p>
+    unboxed_span = False
+    for p in paragraphs:
+      p_has_boxing = _references_style_of_kind(p, (styles.BoxedBackgroundSpecification, styles.GhostBoxedBackgroundSpecification))
+      boxed_p = boxed_p or p_has_boxing
+      unboxed_p = unboxed_p or not p_has_boxing
+      for e in p.dfs_iterator():
+        e_boxed = _references_style_of_kind(e, styles.BoxedBackgroundSpecification)
+        e_ghost = _references_style_of_kind(e, styles.GhostBoxedBackgroundSpecification)
+        boxed = boxed or e_boxed
+        ghost = ghost or e_ghost
+        # base level <span> elements are the children of <p> that do not contain <br>
+        if e.parent is p and e.name.qname == imsc11.Span.qname and not _get_child_elements_by_qname(e, Br.qname):
+          if e_boxed or e_ghost:
+            boxed_span = True
+          elif not p_has_boxing:
+            unboxed_span = True
+
     if boxed and ghost:
       ctx.event_handler.error("ps_bg_boxedxxx and ps_bg_ghostboxedxxx styles shall not be mixed in a <div> (line %s)", line)
 
-    if any(_has_boxing(p) for p in paragraphs) and not all(_has_boxing(p) for p in paragraphs):
+    if boxed_p and unboxed_p:
       ctx.event_handler.error("A ps_bg_xxx style shall be applied to every <p> of a <div> if it is applied to one (line %s)", line)
 
-    base_spans = [(p, s) for p in paragraphs for s in _get_child_elements_by_qname(p, imsc11.Span.qname) if not _get_child_elements_by_qname(s, Br.qname)]
-    if any(_has_boxing(s) for _, s in base_spans) and any(not _has_boxing(s) and not _has_boxing(p) for p, s in base_spans):
+    if boxed_span and unboxed_span:
       ctx.event_handler.error("A ps_bg_xxx style shall be applied to every base level <span> of a <div> if it is applied to one (line %s)", line)
 
 class Body(RosettaElement):
@@ -606,9 +615,9 @@ class TT(RosettaElement, imsc11.TT):
     # so that subtitles do not move depending on whether ruby is present, every <p> of a document that uses ruby references
     # p_rb_res_outside
     elements = list(element.dfs_iterator())
-    if any(e.name.qname == imsc11.Span.qname and len(RUBY_ALIGN_STYLES.intersection(_get_referenced_style_ids(e))) == 1 for e in elements):
+    if any(e.name.qname == imsc11.Span.qname and len(_style_ids(RUBY_ALIGN_STYLES).intersection(_get_referenced_style_ids(e))) == 1 for e in elements):
       for p in (e for e in elements if e.name.qname == P.qname):
-        if "p_rb_res_outside" not in _get_referenced_style_ids(p):
+        if styles.PRbResOutside.style_id not in _get_referenced_style_ids(p):
           ctx.event_handler.error("style on <p> shall contain p_rb_res_outside since the document contains ruby (line %s)", p.get_line_number())
 
 def _validate_imscr(f: typing.BinaryIO, event_handler: typing.Optional[EventHandler] = None) -> bool:
