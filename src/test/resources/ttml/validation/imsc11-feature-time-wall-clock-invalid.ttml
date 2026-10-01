@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #time-wall-clock -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations">
+  <head/>
+  <body>
+    <div begin="wallclock(2019-01-01T00:00:05)" dur="10s">
+      <p>Happy New Year</p>
+    </div>
+  </body>
+</tt>

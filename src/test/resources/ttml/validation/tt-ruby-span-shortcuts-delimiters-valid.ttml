@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- valid - tts:ruby - maximal ruby content model on spans - with shortcuts, with delimiters -->
+<!-- vendored from ttml2-tests/validation/valid/ttml2-valid-ruby-span-shortcuts-delimiters.xml, with
+     sample text added to ruby base/text spans to work around https://github.com/sandflow/ttconv
+     temporal-extent elision of untimed ruby structural elements -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head/>
+<body>
+  <div>
+    <p>
+      <span tts:ruby="container">
+        <span tts:ruby="base">A</span>
+        <span tts:ruby="delimiter"/>
+        <span tts:ruby="text">a</span>
+        <span tts:ruby="delimiter"/>
+      </span>
+    </p>
+  </div>
+</body>
+</tt>

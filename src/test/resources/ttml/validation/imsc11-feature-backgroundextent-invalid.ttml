@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #backgroundExtent -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    tts:extent="1280px 720px"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <style tts:backgroundExtent="auto"/>
+      <style tts:backgroundExtent="contain"/>
+      <style tts:backgroundExtent="cover"/>
+      <style tts:backgroundExtent="auto auto"/>
+      <style tts:backgroundExtent="available available"/>
+      <style tts:backgroundExtent="fitContent fitContent"/>
+      <style tts:backgroundExtent="minContent minContent"/>
+      <style tts:backgroundExtent="maxContent maxContent"/>
+      <style tts:backgroundExtent="1px auto"/>
+      <style tts:backgroundExtent="auto 1px"/>
+      <style tts:backgroundExtent="1px 1px"/>
+      <style tts:backgroundExtent="1% auto"/>
+      <style tts:backgroundExtent="auto 1%"/>
+      <style tts:backgroundExtent="1% 1%"/>
+    </styling>
+  </head>
+</tt>

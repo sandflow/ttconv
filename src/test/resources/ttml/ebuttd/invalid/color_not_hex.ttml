@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt:tt xmlns:tt="http://www.w3.org/ns/ttml"
+       xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+       xmlns:tts="http://www.w3.org/ns/ttml#styling"
+       xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+       xmlns:ebuttm="urn:ebu:tt:metadata"
+       xmlns:ebutts="urn:ebu:tt:style"
+       xmlns:itts="http://www.w3.org/ns/ttml/profile/imsc1#styling"
+       xmlns:ittp="http://www.w3.org/ns/ttml/profile/imsc1#parameter"
+       ttp:timeBase="media" ttp:cellResolution="50 30" xml:lang="en-GB" ittp:activeArea="0% 0% 100% 100%">
+  <tt:head>
+    <ttm:copyright>(c) EBU 2018</ttm:copyright>
+    <tt:metadata>
+      <ebuttm:conformsToStandard>urn:ebu:tt:distribution:2018-04</ebuttm:conformsToStandard>
+    </tt:metadata>
+    <tt:styling>
+      <tt:style xml:id="defaultStyle" tts:fontFamily="proportionalSansSerif, Arial" tts:fontSize="100%" tts:lineHeight="120%"
+        tts:textAlign="center" tts:color="#FFFFFF" tts:backgroundColor="#00000080" tts:fontStyle="normal" tts:fontWeight="normal"
+        tts:textDecoration="none" tts:direction="ltr" tts:wrapOption="wrap"
+        ebutts:multiRowAlign="center" ebutts:linePadding="0.5c" itts:fillLineGap="true"/>
+      <tt:style xml:id="yellow" tts:color="yellow"/>
+      <tt:style xml:id="italic" tts:fontStyle="italic"/>
+      <tt:style xml:id="bidi" tts:unicodeBidi="embed"/>
+    </tt:styling>
+    <tt:layout>
+      <tt:region xml:id="bottom" tts:origin="10% 70%" tts:extent="80% 20%" tts:displayAlign="after" tts:overflow="visible"
+        tts:padding="0% 1%" tts:showBackground="whenActive" tts:writingMode="lrtb"/>
+      <tt:region xml:id="top" tts:origin="10% 10%" tts:extent="80% 20%" style="italic" tts:displayAlign="before"/>
+    </tt:layout>
+  </tt:head>
+  <tt:body style="defaultStyle">
+    <tt:div region="bottom">
+      <tt:p xml:id="sub1" style="bidi" begin="00:00:01.000" end="00:00:03.500">Hello <tt:span style="yellow">world</tt:span><tt:br/>second line</tt:p>
+      <tt:p xml:id="sub2" begin="00:00:04" end="00:00:06.04" xml:lang="fr" style="italic">Bonjour</tt:p>
+    </tt:div>
+    <tt:div>
+      <tt:p xml:id="sub3" region="top" xml:space="preserve">
+        <tt:span begin="00:00:01.000" end="00:00:02.000">Top</tt:span>
+        <tt:span begin="00:00:02.000" end="00:00:03.000" style="yellow">left</tt:span>
+      </tt:p>
+    </tt:div>
+  </tt:body>
+</tt:tt>

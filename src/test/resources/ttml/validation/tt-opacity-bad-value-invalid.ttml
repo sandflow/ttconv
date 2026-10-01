@@ -1,0 +1,14 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <head>
+    <layout>
+      <region xml:id="r1" tts:opacity="abc"/>
+    </layout>
+  </head>
+  <body region="r1">
+    <div>
+      <p>Hello</p>
+    </div>
+  </body>
+</tt>

@@ -1,0 +1,2589 @@
+[
+  {
+    "file": "ttml2-invld-audio-embedding-bad-resource.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-audio-in-block-simple-source-mpeg.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-audio-in-inline-simple-source-mpeg.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-animation-style-value.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-negative-repeat-count.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-non-animatable-discrete-default.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-non-animatable-discrete-linear.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-non-animatable-discrete-paced.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-non-animatable-discrete-spline.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-non-animatable.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-unknown-calculation-mode.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-unknown-fill.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-animate-unknown-repeat-count.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-clip-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundClip is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-clip-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundClip is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-clip-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundClip is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-function-bad-component-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,X))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-function-extra-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-function-missing-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-function-negative-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,-1))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-function-out-of-range-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,256))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#1234567)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-garbage-after-digits.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#123456xyz)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-missing-all-digits-garbage-after-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#xyz)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-missing-all-digits-hash-only.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#12345)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#00000X)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgb-hash-space-after-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (# 123456)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-function-bad-component-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba(0,0,0,X))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-function-extra-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-function-missing-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba(0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-function-negative-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgba(0,0,0,-1))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-function-out-of-range-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (rgb(0,0,0,256))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-hash-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#000000000)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-hash-missing-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#0000000)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-rgba-hash-non-digit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (#0000000X)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-space-padded-named-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( black)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-space-padded-rgb-function.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( rgb(0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-space-padded-rgb-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( #000000)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-space-padded-rgba-function.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( rgba(0,0,0,0))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-space-padded-rgba-hash.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value ( #00000000)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-color-unknown-named-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad backgroundColor value (pink)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-extent-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundExtent is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-extent-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundExtent is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-extent-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundExtent is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-image-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-image-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-image-unresolvable-fragment-uri.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-origin-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundOrigin is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-origin-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundOrigin is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-origin-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundOrigin is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-position-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundPosition is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-position-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundPosition is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-position-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundPosition is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-position.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundPosition is prohibited on <style> (line 10)",
+      "Attribute backgroundPosition is prohibited on <style> (line 11)",
+      "Attribute backgroundPosition is prohibited on <style> (line 13)",
+      "Attribute backgroundPosition is prohibited on <style> (line 14)",
+      "Attribute backgroundPosition is prohibited on <style> (line 15)",
+      "Attribute backgroundPosition is prohibited on <style> (line 16)",
+      "Attribute backgroundPosition is prohibited on <style> (line 17)",
+      "Attribute backgroundPosition is prohibited on <style> (line 19)",
+      "Attribute backgroundPosition is prohibited on <style> (line 20)",
+      "Attribute backgroundPosition is prohibited on <style> (line 21)",
+      "Attribute backgroundPosition is prohibited on <style> (line 22)",
+      "Attribute backgroundPosition is prohibited on <style> (line 23)",
+      "Attribute backgroundPosition is prohibited on <style> (line 24)",
+      "Attribute backgroundPosition is prohibited on <style> (line 25)",
+      "Attribute backgroundPosition is prohibited on <style> (line 26)",
+      "Attribute backgroundPosition is prohibited on <style> (line 27)",
+      "Attribute backgroundPosition is prohibited on <style> (line 28)",
+      "Attribute backgroundPosition is prohibited on <style> (line 29)",
+      "Attribute backgroundPosition is prohibited on <style> (line 30)",
+      "Attribute backgroundPosition is prohibited on <style> (line 32)",
+      "Attribute backgroundPosition is prohibited on <style> (line 33)",
+      "Attribute backgroundPosition is prohibited on <style> (line 34)",
+      "Attribute backgroundPosition is prohibited on <style> (line 35)",
+      "Attribute backgroundPosition is prohibited on <style> (line 36)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-repeat-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundRepeat is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-repeat-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundRepeat is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-background-repeat-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundRepeat is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-extra-color.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-extra-radii.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-extra-style.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-extra-thickness.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-negative-thickness.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-1-argument.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-1-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-2-argument.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-2-delimiter.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-2-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-radii-missing-length.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-border-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-bpd-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-bpd-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-bpd-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-bpd-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-direction-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:direction value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-direction-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:direction value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-direction-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:direction value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-disparity-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:disparity value (\t\n\r )",
+      "Attribute disparity is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-disparity-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:disparity value ()",
+      "Attribute disparity is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-disparity-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:disparity value (100px 200px)",
+      "Attribute disparity is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-disparity-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:disparity value (364.4smoot)",
+      "Attribute disparity is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-align-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value (\t\n\r )",
+      "Attribute displayAlign is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-align-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value ()",
+      "Attribute displayAlign is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-align-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value (unknown)",
+      "Attribute displayAlign is not applicable to <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-inline-block-non-span.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-display-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-colon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (10%:20%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (10%, 20%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (10% 20% 30%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-missing-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (10%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (10% 364.4)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-negative-height-root-relative.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (10.1rw -20.0rh)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-negative-height.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (10.1% -20.0%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-negative-width-root-relative.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (-10.1rw 20.0rh)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-negative-width.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent lengths must be positive (-10.1% 20.0%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-root-cover.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (cover)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-root-height.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent on <tt> must use px units (10px 10c)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-root-measure-available.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (available available)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-root-measure-fit-content.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (fitContent fitContent)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-root-width.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent on <tt> must use px units (10% 10px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-unknown-measure-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (auto foo)",
+      "Bad tts:extent value (foo auto)",
+      "Bad tts:extent value (foo bar)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-extent-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (10% 364.4smoot)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-kerning-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontKerning is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-kerning-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontKerning is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-kerning-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontKerning is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-selection-strategy-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-selection-strategy-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-selection-strategy-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-shear-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-shear-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-shear-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <style> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-shear-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-variant-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-variant-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-variant-mixed-normal.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (normal ruby)",
+      "Bad tts:fontVariant value (normal half)",
+      "Bad tts:fontVariant value (normal full)",
+      "Bad tts:fontVariant value (ruby normal)",
+      "Bad tts:fontVariant value (half normal)",
+      "Bad tts:fontVariant value (full normal)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-variant-mixed-script.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (sup sub)",
+      "Bad tts:fontVariant value (sub sup)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-variant-mixed-width.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (full half)",
+      "Bad tts:fontVariant value (half full)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-font-variant-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-gain-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute gain is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-gain-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute gain is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-gain-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute gain is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-gain-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute gain is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ipd-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ipd-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ipd-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ipd-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-letter-spacing-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute letterSpacing is prohibited on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-letter-spacing-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute letterSpacing is prohibited on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-letter-spacing-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute letterSpacing is prohibited on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-letter-spacing-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute letterSpacing is prohibited on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-letter-spacing-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute letterSpacing is prohibited on <body> (line 8)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-line-shear-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-line-shear-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-line-shear-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <style> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-line-shear-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-luminance-gain-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-luminance-gain-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-luminance-gain-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value (0.)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-luminance-gain-sign-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value (-1)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-luminance-gain-sign-positive.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value (+1)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-luminance-gain-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-opacity-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:opacity value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-opacity-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:opacity value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-opacity-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:opacity value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-colon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px:200px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px, 200px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px 200px 300px 400px 500px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-missing-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px 364.4)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-negative-before-and-after.xml",
+    "result": "fail",
+    "errors": [
+      "ebutts:linePadding must be non-negative (-100.1px 200.0px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-negative-start-and-end.xml",
+    "result": "fail",
+    "errors": [
+      "ebutts:linePadding must be non-negative (100.1px -200.0px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-padding-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:padding value (100px 364.4smoot)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pan-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pan is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pan-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pan is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pan-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pan is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pan-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pan is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pitch-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pitch is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pitch-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pitch is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pitch-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pitch is prohibited on <style> (line 9)",
+      "Attribute pitch is prohibited on <style> (line 10)",
+      "Attribute pitch is prohibited on <style> (line 11)",
+      "Attribute pitch is prohibited on <style> (line 12)",
+      "Attribute pitch is prohibited on <style> (line 13)",
+      "Attribute pitch is prohibited on <style> (line 14)",
+      "Attribute pitch is prohibited on <style> (line 15)",
+      "Attribute pitch is prohibited on <style> (line 16)",
+      "Attribute pitch is prohibited on <style> (line 17)",
+      "Attribute pitch is prohibited on <style> (line 18)",
+      "Attribute pitch is prohibited on <style> (line 19)",
+      "Attribute pitch is prohibited on <style> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pitch-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pitch is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-pitch-unknown-unit.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pitch is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-position-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:position value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-position-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:position value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-position-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:position value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-position.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:position value (foo)",
+      "Bad tts:position value (1x)",
+      "Bad tts:position value (left foo)",
+      "Bad tts:position value (foo top)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-align-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-align-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-align-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:ruby value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:ruby value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-position-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyPosition value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-position-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyPosition value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-position-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyPosition value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-reserve-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyReserve value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-reserve-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyReserve value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-reserve-negative.xml",
+    "result": "fail",
+    "errors": [
+      "Negative length in tts:rubyReserve value (before -1px)",
+      "Negative length in tts:rubyReserve value (after -1px)",
+      "Negative length in tts:rubyReserve value (outside -1px)",
+      "Negative length in tts:rubyReserve value (both -1px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-reserve-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyReserve value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-ruby-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:ruby value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-set-animation-style-value.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-set-negative-repeat-count.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-set-non-animatable.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-set-unknown-fill.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-set-unknown-repeat-count.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-shear-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:shear value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-shear-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:shear value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-shear-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:shear value (0.%)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-shear-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:shear value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-speak-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-speak-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-speak-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-align-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textAlign value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-align-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textAlign value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-align-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textAlign value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-combine-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textCombine value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-combine-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textCombine value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-combine-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textCombine value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-emphasis-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textEmphasis value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-emphasis-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textEmphasis value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-emphasis-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "tts:textEmphasis emphasis-color component is not permitted (current)",
+      "Bad tts:textEmphasis value (unknown current before)",
+      "Bad tts:textEmphasis value (auto unknown before)",
+      "tts:textEmphasis emphasis-color component is not permitted (current)",
+      "Bad tts:textEmphasis value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-orientation-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute textOrientation is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-orientation-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute textOrientation is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-orientation-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute textOrientation is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-extra-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value (1px 1px 1px 1px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-misplaced-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value (red 1px 1px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-missing-length.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value (1px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-negative-blur.xml",
+    "result": "fail",
+    "errors": [
+      "Negative length in tts:textShadow value (1px 1px -1px)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-text-shadow-unknown-color.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value (1px 1px unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-unicode-bidi-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-unicode-bidi-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-unicode-bidi-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-visibility-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:visibility value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-visibility-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:visibility value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-bad-visibility-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:visibility value (unknown)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-base-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "xml:base: '\t\n\r ' is not a valid URI-reference",
+      "Invalid feature base namespace '\t\n\r '",
+      "xml:base: '\t\n\r ' is not a valid URI-reference",
+      "Invalid extension base namespace '\t\n\r '"
+    ]
+  },
+  {
+    "file": "ttml2-invld-base-general-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute base is prohibited on <tt> (line 3)",
+      "Attribute base is prohibited on <head> (line 6)",
+      "Attribute base is prohibited on <metadata> (line 7)",
+      "Attribute base is prohibited on <agent> (line 8)",
+      "Attribute base is prohibited on <name> (line 9)",
+      "Attribute base is prohibited on <actor> (line 12)",
+      "Attribute base is prohibited on <copyright> (line 14)",
+      "Attribute base is prohibited on <desc> (line 15)",
+      "Attribute base is prohibited on <item> (line 16)",
+      "Attribute base is prohibited on <title> (line 17)",
+      "Attribute base is prohibited on <profile> (line 19)",
+      "xml:base: '\t\n\r ' is not a valid URI-reference",
+      "Invalid feature base namespace '\t\n\r '",
+      "xml:base: '\t\n\r ' is not a valid URI-reference",
+      "Invalid extension base namespace '\t\n\r '",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "Attribute base is prohibited on <body> (line 43)",
+      "Attribute base is prohibited on <div> (line 44)",
+      "Attribute base is prohibited on <p> (line 45)",
+      "Attribute base is prohibited on <span> (line 46)",
+      "Attribute base is prohibited on <br> (line 47)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-condition-media.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-condition-parameter.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)",
+      "Attribute condition is prohibited on <style> (line 10)",
+      "Attribute condition is prohibited on <style> (line 11)",
+      "Attribute condition is prohibited on <style> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-condition-primary.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)",
+      "Attribute condition is prohibited on <style> (line 10)",
+      "Attribute condition is prohibited on <style> (line 11)",
+      "Attribute condition is prohibited on <style> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-condition-supports.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profile-combination-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profile-combination-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profile-combination-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profile-extent-root-version-2.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)",
+      "Attribute type is prohibited on <profile> (line 7)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: '' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-designator-delimiter-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: ':' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-duplicate-designator-absolutized.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'http://www.w3.org/ns/ttml/profile/ttml2-transformation ttml2-transformation' contains duplicate profile references"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-duplicate-designator.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'http://www.w3.org/ns/ttml/profile/ttml2-presentation http://www.w3.org/ns/ttml/profile/ttml2-presentation' contains duplicate profile references"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-empty.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles is the empty string"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-quantified-no-designator.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'all()' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-quantifier-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'any(http://www.w3.org/ns/ttml/profile/ttml2-transformation' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-invld-content-profiles-quantifier-unknown.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'any(http://www.w3.org/ns/ttml/profile/ttml2-transformation' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-chunked-bad-length.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-chunked-missing-type.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-chunked-with-base.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-chunked-with-condition.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-reference-internal-with-type.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-simple-bad-length.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-simple-missing-type.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-data-simple-non-alphabet.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-colon-delimiter-sans-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (4:3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-comma-delimiter-with-whitespace.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (4, 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-extra-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (4 3 7)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-missing-component.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (4)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-negative-denominator.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (1 -1)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-negative-numerator.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (-1 1)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttp:displayAspectRatio value (auto)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-zero-denominator.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:displayAspectRatio denominator is 0"
+    ]
+  },
+  {
+    "file": "ttml2-invld-display-aspect-ratio-zero-numerator.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:displayAspectRatio numerator is 0"
+    ]
+  },
+  {
+    "file": "ttml2-invld-font-embedding-family.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-font-embedding-range-interval-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-font-embedding-range-single-extra-digit.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-font-embedding-range-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-font-embedding-style-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-font-embedding-weight-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-image-embedding-bad-resource.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-image-in-block-simple-source-jpg.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-image-in-block-simple-source-png.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-image-in-inline-simple-source-jpg.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-image-in-inline-simple-source-png.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-image-unresolvable-fragment-uri.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-infer-processor-profile-method-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileMethod is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-infer-processor-profile-method-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileMethod is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-infer-processor-profile-method-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileMethod is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-infer-processor-profile-source-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileSource is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-infer-processor-profile-source-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileSource is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-infer-processor-profile-source-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileSource is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-initial-nested-style.xml",
+    "result": "fail",
+    "errors": [
+      "No style attribute specified in an initial element",
+      "initial contents does not match metadata*"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-size-0-minus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-size-0-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-size-1-minus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-size-1-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-version-0-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-version-0.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-version-1-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-version-1.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-sequence-bad-version-2-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-single-bad-version-0-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-single-bad-version-0.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-single-bad-version-1-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-single-bad-version-1.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-single-bad-version-2-plus.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-isd-single-nested-bad-version.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-invld-length-2-root-container-relative.xml",
+    "result": "fail",
+    "errors": [
+      "tts:extent on <tt> must use px units (100rw 100rh)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-metadata-item-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttm:item name value (\t\n\r )"
+    ]
+  },
+  {
+    "file": "ttml2-invld-metadata-item-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Bad ttm:item name value ()"
+    ]
+  },
+  {
+    "file": "ttml2-invld-metadata-item-qualified-missing-binding.xml",
+    "result": "fail",
+    "errors": [
+      "Unknown prefix in ttm:item name value `custom:private`"
+    ]
+  },
+  {
+    "file": "ttml2-invld-permit-feature-narrowing-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureNarrowing is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-permit-feature-narrowing-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureNarrowing is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-permit-feature-narrowing-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureNarrowing is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-permit-feature-widening-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureWidening is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-permit-feature-widening-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureWidening is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-permit-feature-widening-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureWidening is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profile-combination-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profile-combination-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profile-combination-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-designator-delimiter-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-duplicate-designator-absolutized.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-duplicate-designator.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-quantified-no-designator.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-quantifier-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-processor-profiles-quantifier-unknown.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-combine-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-combine-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-combine-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-designator-fragment-nested.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: '#nestedContentProfile' is not a valid profile reference",
+      "Attribute processorProfiles is prohibited on <tt> (line 3)",
+      "Attribute type is prohibited on <profile> (line 10)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))",
+      "Attribute type is prohibited on <profile> (line 13)",
+      "Bad use attribute value (#nonNestedContentProfile)",
+      "Attribute type is prohibited on <profile> (line 14)",
+      "Bad use attribute value (#nestedContentProfile)",
+      "Attribute type is prohibited on <profile> (line 16)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))",
+      "Attribute type is prohibited on <profile> (line 19)",
+      "Bad use attribute value (#nonNestedProcessorProfile)",
+      "Attribute type is prohibited on <profile> (line 20)",
+      "Bad use attribute value (#nestedProcessorProfile)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-designator-fragment.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute designator is prohibited on <profile> (line 7)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-designator-registry-undefined.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:profile 'http://www.w3.org/ns/ttml/profile/undefined' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-nested-mixed.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 7)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))",
+      "Attribute type is prohibited on <profile> (line 10)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))",
+      "Attribute type is prohibited on <profile> (line 14)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))",
+      "Attribute type is prohibited on <profile> (line 17)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-type-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-type-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-type-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-profile-use-fragment.xml",
+    "result": "fail",
+    "errors": [
+      "Bad use attribute value (#localProfile)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-region-inline-div-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-region-inline-image.xml",
+    "result": "fail",
+    "errors": [
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-region-inline-p-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-region-inline-span.xml",
+    "result": "fail",
+    "errors": [
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-region-inline-timing.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-validation-action-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validationAction is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-validation-action-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validationAction is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-validation-action-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validationAction is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-validation-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-validation-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-validation-unknown-keyword.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-wall-clock-date-time.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (wallclock(T))",
+      "Bad begin attribute value (wallclock(1970T))",
+      "Bad begin attribute value (wallclock(1970-01T))",
+      "Bad begin attribute value (wallclock(1970-01-01T))",
+      "Bad begin attribute value (wallclock(1970-01-01T00))",
+      "Bad begin attribute value (wallclock(1970-01-01T23:59:60.000000001))",
+      "Bad begin attribute value (wallclock(1970-01-01T23:59:61))",
+      "Bad begin attribute value (wallclock(1970-01-01T23:59:61.0))",
+      "Bad begin attribute value (wallclock(1970-01-01T24:00))",
+      "Bad begin attribute value (wallclock(9999-12-31T24:00))",
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml2-invld-wall-clock-date.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (wallclock(1970-))",
+      "Bad begin attribute value (wallclock(1970-0))",
+      "Bad begin attribute value (wallclock(1970-00))",
+      "Bad begin attribute value (wallclock(1970-00-))",
+      "Bad begin attribute value (wallclock(1970-00-01))",
+      "Bad begin attribute value (wallclock(1970-00-31))",
+      "Bad begin attribute value (wallclock(1970-01-00))",
+      "Bad begin attribute value (wallclock(1970-01-32))",
+      "Bad begin attribute value (wallclock(1970-13-01))",
+      "Bad begin attribute value (wallclock(1970-13-31))",
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml2-invld-wall-clock-wall-time.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (wallclock(:))",
+      "Bad begin attribute value (wallclock(0:))",
+      "Bad begin attribute value (wallclock(00:))",
+      "Bad begin attribute value (wallclock(00:0))",
+      "Bad begin attribute value (wallclock(00:00:))",
+      "Bad begin attribute value (wallclock(00:00:0))",
+      "Bad begin attribute value (wallclock(00:00:00.))",
+      "Bad begin attribute value (wallclock(23:59:60.000000001))",
+      "Bad begin attribute value (wallclock(23:59:61))",
+      "Bad begin attribute value (wallclock(23:59:61.0))",
+      "Bad begin attribute value (wallclock(24:00:00))",
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml2-invld-xlink-href-all-space.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute href is prohibited on <span> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-xlink-href-empty.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute href is prohibited on <span> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-xlink-href-nested-image.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute href is prohibited on <span> (line 11)",
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-invld-xlink-href-nested-span.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute href is prohibited on <span> (line 11)",
+      "Attribute href is prohibited on <span> (line 12)"
+    ]
+  }
+]

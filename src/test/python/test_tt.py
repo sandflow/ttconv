@@ -29,6 +29,8 @@
 
 import os
 import io
+import logging
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from contextlib import redirect_stderr
@@ -275,6 +277,165 @@ class IMSCAppTest(unittest.TestCase):
       '-o', out_path,
       '--filter', 'imsc11filter'
       ])
+
+
+class ValidateSubcommandTest(unittest.TestCase):
+  '''Unit tests for the "validate" subcommand, which validates a TTML document
+  against the IMSC 1.1 model (see ttconv.imsc.validator.imsc11_model).'''
+
+  _VALID_DOCUMENT = "src/test/resources/ttml/validation/tt-body-div-p-two-spans-valid.ttml"
+  _INVALID_DOCUMENT = "src/test/resources/ttml/validation/imsc11-condition-attribute-invalid.ttml"
+
+  def setUp(self):
+    root_logger = logging.getLogger()
+    self._orig_level = root_logger.level
+    self._orig_handlers = list(root_logger.handlers)
+
+  def tearDown(self):
+    root_logger = logging.getLogger()
+    root_logger.handlers = self._orig_handlers
+    root_logger.setLevel(self._orig_level)
+
+  def test_valid_document_returns_zero(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", self._VALID_DOCUMENT]), 0)
+    self.assertEqual(stderr.getvalue(), "")
+
+  def test_invalid_document_returns_one_and_prints_error(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
+  def test_unknown_log_level_argument_exits_with_usage_error(self):
+    with redirect_stderr(io.StringIO()):
+      with self.assertRaises(SystemExit) as cm:
+        tt.main(["validate", "--log-level", "bogus", self._VALID_DOCUMENT])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_default_model_is_imsc11text(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--model", "imsc11text", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
+  def test_unknown_model_argument_exits_with_usage_error(self):
+    with redirect_stderr(io.StringIO()):
+      with self.assertRaises(SystemExit) as cm:
+        tt.main(["validate", "--model", "bogus", self._VALID_DOCUMENT])
+    self.assertEqual(cm.exception.code, 2)
+
+  def test_nonexistent_file_argument_exits(self):
+    with redirect_stderr(io.StringIO()):
+      with self.assertRaises(SystemExit):
+        tt.main(["validate", "/nonexistent-file.ttml"])
+
+  def test_log_level_below_error_still_prints_errors(self):
+    # "error" is the highest level accepted by --log-level, so error messages
+    # are always printed regardless of the level requested
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--log-level", "warning", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
+
+class ValidateNBCU053SubcommandTest(unittest.TestCase):
+  '''Unit tests for the "nbcu053" model of the "validate" subcommand, which is configured with --config or --config_file'''
+
+  _VALID_DOCUMENT = "src/test/resources/ttml/nbcu/valid/nbcu053-2398-hdr-ja.ttml"
+  _INVALID_DOCUMENT = "src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-framerate.ttml"
+  _CONFIG = '{"nbcu053": {"frame_rate": "23.98", "hdr": true, "aspect_ratio": "2.39"}}'
+
+  def setUp(self):
+    root_logger = logging.getLogger()
+    self._orig_level = root_logger.level
+    self._orig_handlers = list(root_logger.handlers)
+
+  def tearDown(self):
+    root_logger = logging.getLogger()
+    root_logger.handlers = self._orig_handlers
+    root_logger.setLevel(self._orig_level)
+
+  def _validate(self, document, *args):
+    with redirect_stderr(io.StringIO()) as stderr:
+      try:
+        return tt.main(["validate", "--model", "nbcu053", *args, document]), stderr.getvalue()
+      except SystemExit as e:
+        return e.code, stderr.getvalue()
+
+  def test_valid_document_returns_zero(self):
+    self.assertEqual(self._validate(self._VALID_DOCUMENT, "--config", self._CONFIG), (0, ""))
+
+  def test_invalid_document_returns_one_and_prints_error(self):
+    code, stderr = self._validate(self._INVALID_DOCUMENT, "--config", self._CONFIG)
+    self.assertEqual(code, 1)
+    self.assertIn("ttp:frameRate SHALL be", stderr)
+
+  def test_config_file(self):
+    with tempfile.TemporaryDirectory() as directory:
+      path = os.path.join(directory, "config.json")
+      with open(path, "w") as f:
+        f.write(self._CONFIG)
+      self.assertEqual(self._validate(self._VALID_DOCUMENT, "--config_file", path), (0, ""))
+
+  def test_config_file_overrides_config(self):
+    with tempfile.TemporaryDirectory() as directory:
+      path = os.path.join(directory, "config.json")
+      with open(path, "w") as f:
+        f.write('{"nbcu053": {"frame_rate": "25"}}')
+      # the frame rate of the file, 25, is not the frame rate of the document
+      code, _ = self._validate(self._VALID_DOCUMENT, "--config", self._CONFIG, "--config_file", path)
+    self.assertEqual(code, 1)
+
+  def test_missing_configuration_exits(self):
+    code, stderr = self._validate(self._VALID_DOCUMENT)
+    self.assertNotIn(code, (0, None))
+    self.assertIn("requires a nbcu053 configuration", stderr)
+
+  def test_missing_frame_rate_exits(self):
+    code, stderr = self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"hdr": true}}')
+    self.assertNotIn(code, (0, None))
+    self.assertIn("frame_rate", stderr)
+
+  def test_bad_frame_rate_exits(self):
+    code, stderr = self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"frame_rate": 30}}')
+    self.assertNotIn(code, (0, None))
+    self.assertIn("frame_rate shall be one of", stderr)
+
+  def test_numeric_frame_rate_exits(self):
+    # the frame rate is a string, even if it looks like a number
+    code, stderr = self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"frame_rate": 23.98}}')
+    self.assertNotIn(code, (0, None))
+    self.assertIn("frame_rate shall be one of", stderr)
+
+  def test_configuration_is_ignored_by_other_models(self):
+    with redirect_stderr(io.StringIO()):
+      self.assertEqual(tt.main(["validate", "--config", self._CONFIG, ValidateSubcommandTest._VALID_DOCUMENT]), 0)
+
+
+class ValidateEBUTTDSubcommandTest(unittest.TestCase):
+  '''Unit tests for the "ebuttd" model of the "validate" subcommand'''
+
+  _VALID_DOCUMENT = "src/test/resources/ttml/ebuttd/valid/example.ttml"
+  _INVALID_DOCUMENT = "src/test/resources/ttml/ebuttd/invalid/time_base_not_media.ttml"
+
+  def setUp(self):
+    root_logger = logging.getLogger()
+    self._orig_level = root_logger.level
+    self._orig_handlers = list(root_logger.handlers)
+
+  def tearDown(self):
+    root_logger = logging.getLogger()
+    root_logger.handlers = self._orig_handlers
+    root_logger.setLevel(self._orig_level)
+
+  def test_valid_document_returns_zero(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--model", "ebuttd", self._VALID_DOCUMENT]), 0)
+    self.assertEqual(stderr.getvalue(), "")
+
+  def test_invalid_document_returns_one_and_prints_error(self):
+    with redirect_stderr(io.StringIO()) as stderr:
+      self.assertEqual(tt.main(["validate", "--model", "ebuttd", self._INVALID_DOCUMENT]), 1)
+    self.assertIn("ERROR:", stderr.getvalue())
+
 
 if __name__ == '__main__':
   unittest.main()
