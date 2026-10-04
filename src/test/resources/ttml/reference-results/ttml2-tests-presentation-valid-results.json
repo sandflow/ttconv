@@ -1,0 +1,1256 @@
+[
+  {
+    "file": "ttml2-prstn-animate-audio-gain.xml",
+    "result": "fail",
+    "errors": [
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-audio-pan.xml",
+    "result": "fail",
+    "errors": [
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-fill.xml",
+    "result": "fail",
+    "errors": [
+      "region contents does not match (metadata | style | set | FOREIGN)*",
+      "region contents does not match (metadata | style | set | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-linear-color.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-linear-opacity.xml",
+    "result": "fail",
+    "errors": [
+      "region contents does not match (metadata | style | set | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-linear-position.xml",
+    "result": "fail",
+    "errors": [
+      "region contents does not match (metadata | style | set | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-paced-position.xml",
+    "result": "fail",
+    "errors": [
+      "region contents does not match (metadata | style | set | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-repeat.xml",
+    "result": "fail",
+    "errors": [
+      "region contents does not match (metadata | style | set | FOREIGN)*",
+      "region contents does not match (metadata | style | set | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animate-spline-position.xml",
+    "result": "fail",
+    "errors": [
+      "region contents does not match (metadata | style | set | FOREIGN)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-animation-out-of-line.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "Attribute animate is prohibited on <div> (line 28)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-clip-begin-end.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-embedding-chunked.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-embedding-sourced.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "No referenceable style element with xml:id 'sBody' exists",
+      "No referenceable region element with xml:id 'area1' exists"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-gain-mix.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-gain-on-audio.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-gain-on-p.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "Attribute gain is prohibited on <p> (line 17)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "Attribute gain is prohibited on <p> (line 21)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-in-body.xml",
+    "result": "fail",
+    "errors": [
+      "body contents does not match (metadata* set* div*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-pan-mix.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-pan-on-audio.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-pan-on-p.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pan is prohibited on <p> (line 13)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "Attribute pan is prohibited on <p> (line 17)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "Attribute pan is prohibited on <p> (line 21)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-pitch-on-p.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <p> (line 13)",
+      "Attribute pitch is prohibited on <p> (line 13)",
+      "Attribute speak is prohibited on <p> (line 16)",
+      "Attribute pitch is prohibited on <p> (line 16)",
+      "Attribute speak is prohibited on <p> (line 19)",
+      "Attribute pitch is prohibited on <p> (line 19)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-pitch-on-span.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <span> (line 14)",
+      "Attribute pitch is prohibited on <span> (line 14)",
+      "Attribute speak is prohibited on <span> (line 17)",
+      "Attribute pitch is prohibited on <span> (line 17)",
+      "Attribute speak is prohibited on <span> (line 20)",
+      "Attribute pitch is prohibited on <span> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-speak-on-p.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <p> (line 13)",
+      "Attribute speak is prohibited on <p> (line 16)",
+      "Attribute speak is prohibited on <p> (line 19)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-audio-speak-on-span.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <span> (line 14)",
+      "Attribute speak is prohibited on <span> (line 17)",
+      "Attribute speak is prohibited on <span> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-clip-border.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute backgroundClip is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-clip-content.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute backgroundClip is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-clip-padding.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute backgroundClip is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-extent.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-image.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-origin-border.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-origin-content.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-origin-padding.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-position-bottom-right.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute backgroundPosition is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-position-center.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute backgroundPosition is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-position-top-left.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 16)",
+      "Attribute backgroundPosition is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <region> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-repeat-none.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-repeat-x.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-repeat-y.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-background-repeat.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-base-image.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute base is prohibited on <body> (line 18)",
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-block-radii-1.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-inline-radii-1.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)",
+      "Attribute border is prohibited on <style> (line 21)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)",
+      "Attribute border is prohibited on <style> (line 21)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-region-radii-1.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-region-radii-2.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-border-region.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-bpd-inline-block.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Attribute bpd is prohibited on <span> (line 29)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-condition-media.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <p> (line 28)",
+      "Attribute condition is prohibited on <p> (line 34)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-condition-parameter.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <p> (line 28)",
+      "Attribute condition is prohibited on <p> (line 34)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-condition-primary.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <p> (line 28)",
+      "Attribute condition is prohibited on <p> (line 34)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-condition-supports.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <p> (line 28)",
+      "Attribute condition is prohibited on <p> (line 34)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-content-profiles-combined.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 2)",
+      "Attribute inferProcessorProfileSource is prohibited on <tt> (line 2)",
+      "Attribute type is prohibited on <profile> (line 15)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'",
+      "Attribute type is prohibited on <profile> (line 20)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-content-profiles.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 13)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-disparity.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-display-align-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <div> (line 29)",
+      "Attribute displayAlign is not applicable to <div> (line 29)",
+      "Attribute bpd is prohibited on <div> (line 32)",
+      "Attribute displayAlign is not applicable to <div> (line 32)",
+      "Attribute bpd is prohibited on <div> (line 35)",
+      "Attribute displayAlign is not applicable to <div> (line 35)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-display-align-justify.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value (justify)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-display-align-region.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-display-align-relative.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-display-aspect-ratio-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-display-aspect-ratio-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-display-aspect-ratio-imsc11-3.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-display-aspect-ratio-imsc11-4.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-display-inline-block.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-image-contain.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-image-cover.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-image.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-region-measure-auto.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (auto auto)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-region-measure-fit-content.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (fitContent fitContent)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-region-measure-max-content.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (maxContent auto)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-region-measure-min-content.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (minContent auto)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-extent-region-root-container-relative.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-extent-root-auto-with-dar.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (auto)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-embedding.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-font-kerning.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontKerning is prohibited on <div> (line 27)",
+      "Attribute fontKerning is prohibited on <div> (line 33)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-selection-strategy-line-height-normal.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <div> (line 42)",
+      "Attribute fontSelectionStrategy is prohibited on <div> (line 48)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-selection-strategy.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <div> (line 27)",
+      "Attribute fontSelectionStrategy is prohibited on <div> (line 33)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-shear-linear-mapping.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <p> (line 26)",
+      "Attribute fontShear is prohibited on <p> (line 27)",
+      "Attribute fontShear is prohibited on <p> (line 31)",
+      "Attribute fontShear is prohibited on <p> (line 32)",
+      "Attribute fontShear is prohibited on <p> (line 36)",
+      "Attribute fontShear is prohibited on <p> (line 37)",
+      "Attribute fontShear is prohibited on <p> (line 41)",
+      "Attribute fontShear is prohibited on <p> (line 42)",
+      "Attribute fontShear is prohibited on <p> (line 46)",
+      "Attribute fontShear is prohibited on <p> (line 47)",
+      "Attribute fontShear is prohibited on <p> (line 51)",
+      "Attribute fontShear is prohibited on <p> (line 52)",
+      "Attribute fontShear is prohibited on <p> (line 56)",
+      "Attribute fontShear is prohibited on <p> (line 57)",
+      "Attribute fontShear is prohibited on <p> (line 61)",
+      "Attribute fontShear is prohibited on <p> (line 62)",
+      "Attribute fontShear is prohibited on <p> (line 66)",
+      "Attribute fontShear is prohibited on <p> (line 67)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-shear-no-ruby.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <p> (line 28)",
+      "Attribute fontShear is prohibited on <p> (line 31)",
+      "Attribute fontShear is prohibited on <p> (line 37)",
+      "Attribute fontShear is prohibited on <p> (line 40)",
+      "Attribute fontShear is prohibited on <p> (line 46)",
+      "Attribute fontShear is prohibited on <p> (line 49)",
+      "Attribute fontShear is prohibited on <p> (line 55)",
+      "Attribute fontShear is prohibited on <p> (line 58)",
+      "Attribute fontShear is prohibited on <p> (line 64)",
+      "Attribute fontShear is prohibited on <p> (line 67)",
+      "Attribute fontShear is prohibited on <p> (line 73)",
+      "Attribute fontShear is prohibited on <p> (line 76)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-shear-ruby-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <p> (line 25)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-shear-ruby-single.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <p> (line 27)",
+      "Attribute fontShear is prohibited on <p> (line 33)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-font-variant-width.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (half)",
+      "Bad tts:fontVariant value (full)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-image-embedding-chunked.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-image-embedding-sourced.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "No referenceable region element with xml:id 'area1' exists"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-image-imsc11-1.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-image-in-body.xml",
+    "result": "fail",
+    "errors": [
+      "body contents does not match (metadata* set* div*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-initial-imsc11-1.xml",
+    "result": "fail",
+    "errors": [
+      "Region: FontSize uses 'c' unit, only allowed on LinePadding (section 7.2.18)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-initial-imsc11-2.xml",
+    "result": "fail",
+    "errors": [
+      "Region: FontSize uses 'c' unit, only allowed on LinePadding (section 7.2.18)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-ipd-inline-block.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Attribute ipd is prohibited on <span> (line 29)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-length-root-container-relative-imsc11-1.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:origin SHALL use px or % units only, found 'Units.rw' (section 8.4.7)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-length-root-container-relative-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-length-root-container-relative-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-length-root-container-relative-imsc11-4.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-length-root-container-relative-imsc11-5.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-length-root-container-relative-imsc11-6.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-letter-spacing.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontKerning is prohibited on <div> (line 34)",
+      "Attribute letterSpacing is prohibited on <div> (line 34)",
+      "Attribute fontKerning is prohibited on <div> (line 37)",
+      "Attribute letterSpacing is prohibited on <div> (line 37)",
+      "Attribute fontKerning is prohibited on <div> (line 40)",
+      "Attribute letterSpacing is prohibited on <div> (line 40)",
+      "Attribute fontKerning is prohibited on <div> (line 43)",
+      "Attribute letterSpacing is prohibited on <div> (line 43)",
+      "Attribute fontKerning is prohibited on <div> (line 50)",
+      "Attribute letterSpacing is prohibited on <div> (line 50)",
+      "Attribute fontKerning is prohibited on <div> (line 53)",
+      "Attribute letterSpacing is prohibited on <div> (line 53)",
+      "Attribute fontKerning is prohibited on <div> (line 56)",
+      "Attribute letterSpacing is prohibited on <div> (line 56)",
+      "Attribute fontKerning is prohibited on <div> (line 59)",
+      "Attribute letterSpacing is prohibited on <div> (line 59)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-line-shear-linear-mapping.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <p> (line 26)",
+      "Attribute lineShear is prohibited on <p> (line 27)",
+      "Attribute lineShear is prohibited on <p> (line 31)",
+      "Attribute lineShear is prohibited on <p> (line 32)",
+      "Attribute lineShear is prohibited on <p> (line 36)",
+      "Attribute lineShear is prohibited on <p> (line 37)",
+      "Attribute lineShear is prohibited on <p> (line 41)",
+      "Attribute lineShear is prohibited on <p> (line 42)",
+      "Attribute lineShear is prohibited on <p> (line 46)",
+      "Attribute lineShear is prohibited on <p> (line 47)",
+      "Attribute lineShear is prohibited on <p> (line 51)",
+      "Attribute lineShear is prohibited on <p> (line 52)",
+      "Attribute lineShear is prohibited on <p> (line 56)",
+      "Attribute lineShear is prohibited on <p> (line 57)",
+      "Attribute lineShear is prohibited on <p> (line 61)",
+      "Attribute lineShear is prohibited on <p> (line 62)",
+      "Attribute lineShear is prohibited on <p> (line 66)",
+      "Attribute lineShear is prohibited on <p> (line 67)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-line-shear-no-ruby.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <p> (line 28)",
+      "Attribute lineShear is prohibited on <p> (line 31)",
+      "Attribute lineShear is prohibited on <p> (line 37)",
+      "Attribute lineShear is prohibited on <p> (line 40)",
+      "Attribute lineShear is prohibited on <p> (line 46)",
+      "Attribute lineShear is prohibited on <p> (line 49)",
+      "Attribute lineShear is prohibited on <p> (line 55)",
+      "Attribute lineShear is prohibited on <p> (line 58)",
+      "Attribute lineShear is prohibited on <p> (line 64)",
+      "Attribute lineShear is prohibited on <p> (line 67)",
+      "Attribute lineShear is prohibited on <p> (line 73)",
+      "Attribute lineShear is prohibited on <p> (line 76)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-line-shear-ruby-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <p> (line 25)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-line-shear-ruby-single.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <p> (line 27)",
+      "Attribute lineShear is prohibited on <p> (line 33)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-luminance-gain.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-metadata-item.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-opacity-block.xml",
+    "result": "fail",
+    "errors": [
+      "Referential style opacity is not applicable to <div> (line 32)",
+      "Referential style opacity is not applicable to <div> (line 35)",
+      "Referential style opacity is not applicable to <div> (line 38)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-opacity-image-block.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-opacity-image-inline.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-opacity-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Referential style opacity is not applicable to <span> (line 34)",
+      "Referential style opacity is not applicable to <span> (line 37)",
+      "Referential style opacity is not applicable to <span> (line 40)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-opacity-region.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-padding-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute padding is not applicable to <body> (line 24)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-padding-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute padding is not applicable to <body> (line 24)",
+      "Attribute padding is not applicable to <span> (line 26)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-padding-region.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-permit-feature-narrowing.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureNarrowing is prohibited on <tt> (line 2)",
+      "Attribute type is prohibited on <profile> (line 14)",
+      "Attribute extends is prohibited on <extension> (line 16)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-permit-feature-widening.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureWidening is prohibited on <tt> (line 2)",
+      "Attribute type is prohibited on <profile> (line 14)",
+      "Attribute restricts is prohibited on <extension> (line 16)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-position-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-position-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-position-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-processor-profiles-combined.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 2)",
+      "Attribute type is prohibited on <profile> (line 14)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'",
+      "Attribute type is prohibited on <profile> (line 19)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-processor-profiles.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 13)",
+      "Invalid extension designator 'http://www.w3.org/ns/ttml/extension/#unsupported'"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-profile-nesting.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 13)",
+      "Attribute combine is prohibited on <profile> (line 13)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-region-implied-animation-position.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute position is not applicable to <div> (line 28)",
+      "Attribute position is not applicable to <div> (line 31)",
+      "Attribute position is not applicable to <div> (line 34)",
+      "Attribute position is not applicable to <div> (line 37)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-region-inline.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-region-no-default.xml",
+    "result": "fail",
+    "errors": [
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-ruby-align-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-align-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-align-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-align-imsc11-4.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-align-with-base.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value (withBase)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-ruby-ignored-lwsp-container-base.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-ignored-lwsp-container-text.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-ignored-lwsp-container.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-imsc11-4.xml",
+    "result": "fail",
+    "errors": [
+      "rt contents does not match (span | #PCDATA)*"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-ruby-imsc11-5.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-position-after.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-position-before.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-position-outside.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-reserve-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-reserve-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-ruby-reserve-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-set-fill.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fill is prohibited on <set> (line 23)",
+      "Attribute fill is prohibited on <set> (line 26)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-set-multiple-styles.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-set-repeat.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute repeatCount is prohibited on <set> (line 23)",
+      "Attribute repeatCount is prohibited on <set> (line 26)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-shear-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-shear-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-shear-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-shear-linear-mapping.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <style> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-text-align-absolute.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-text-align-justify.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textAlign value (justify)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-text-align-relative.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-text-combine-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-text-emphasis-color.xml",
+    "result": "fail",
+    "errors": [
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (lime)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (current)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-text-emphasis-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-text-emphasis-imsc11-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-text-emphasis-imsc11-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-text-emphasis-quoted-string.xml",
+    "result": "fail",
+    "errors": [
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u2669')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u266a')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u21e1')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u21e3')"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-text-orientation.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute textOrientation is prohibited on <p> (line 30)",
+      "Attribute textOrientation is prohibited on <p> (line 33)",
+      "Attribute textOrientation is prohibited on <p> (line 36)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-text-shadow-imsc11-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-prstn-time-wall-clock.xml",
+    "result": "fail",
+    "errors": [
+      "Bad begin attribute value (wallclock(2018-12-31T23:59:45))",
+      "Bad begin attribute value (wallclock(2019-01-01T00:00:05))"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-unicode-bidi-isolate.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 2)",
+      "Bad tts:unicodeBidi value (isolate)",
+      "Bad tts:unicodeBidi value (isolate)",
+      "Bad tts:unicodeBidi value (isolate)",
+      "Bad tts:unicodeBidi value (isolate)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-validation-prohibited-valid.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 2)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-visibility-image.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)",
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-xlink-image.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-prstn-xlink-span.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute href is prohibited on <span> (line 22)"
+    ]
+  }
+]

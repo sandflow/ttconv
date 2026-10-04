@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #pitch -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tta="http://www.w3.org/ns/ttml#audio"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <!-- <percentage> expressions -->
+      <style tta:pitch="1%"/>
+      <style tta:pitch=".1%"/>
+      <style tta:pitch="1.1%"/>
+      <style tta:pitch="+1%"/>
+      <style tta:pitch="+.1%"/>
+      <style tta:pitch="+1.1%"/>
+      <style tta:pitch="-1%"/>
+      <style tta:pitch="-.1%"/>
+      <style tta:pitch="-1.1%"/>
+      <!-- absolute <number> expressions -->
+      <style tta:pitch="1"/>
+      <style tta:pitch=".1"/>
+      <style tta:pitch="1.1"/>
+      <style tta:pitch="1hz"/>
+      <style tta:pitch=".1hz"/>
+      <style tta:pitch="1.1hz"/>
+      <style tta:pitch="1st"/>
+      <style tta:pitch=".1st"/>
+      <style tta:pitch="1.1st"/>
+      <!-- relative <number> expressions -->
+      <style tta:pitch="+1"/>
+      <style tta:pitch="+.1"/>
+      <style tta:pitch="+1.1"/>
+      <style tta:pitch="-1"/>
+      <style tta:pitch="-.1"/>
+      <style tta:pitch="-1.1"/>
+      <style tta:pitch="+1hz"/>
+      <style tta:pitch="+.1hz"/>
+      <style tta:pitch="+1.1hz"/>
+      <style tta:pitch="-1hz"/>
+      <style tta:pitch="-.1hz"/>
+      <style tta:pitch="-1.1hz"/>
+      <style tta:pitch="+1st"/>
+      <style tta:pitch="+.1st"/>
+      <style tta:pitch="+1.1st"/>
+      <style tta:pitch="-1st"/>
+      <style tta:pitch="-.1st"/>
+      <style tta:pitch="-1.1st"/>
+    </styling>
+  </head>
+</tt>

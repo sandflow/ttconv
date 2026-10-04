@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #bpd -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    ttp:cellResolution="64 24"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    tts:extent="1280px 720px"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <style tts:bpd="auto"/>
+      <style tts:bpd="available"/>
+      <style tts:bpd="fitContent"/>
+      <style tts:bpd="maxContent"/>
+      <style tts:bpd="minContent"/>
+      <style tts:bpd="0px"/>
+      <style tts:bpd="0em"/>
+      <style tts:bpd="0c"/>
+      <style tts:bpd="0rw"/>
+      <style tts:bpd="0rh"/>
+      <style tts:bpd="0%"/>
+      <style tts:bpd="1px"/>
+      <style tts:bpd="1em"/>
+      <style tts:bpd="1c"/>
+      <style tts:bpd="1rw"/>
+      <style tts:bpd="1rh"/>
+      <style tts:bpd="1%"/>
+    </styling>
+  </head>
+</tt>

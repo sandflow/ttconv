@@ -1,0 +1,10 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <head>
+    <styling>
+      <style xml:id="s1" tts:color="#ffffff" tts:fontFamily="Arial"/>
+      <style xml:id="s2" style="s1" tts:fontWeight="bold"/>
+    </styling>
+  </head>
+</tt>
