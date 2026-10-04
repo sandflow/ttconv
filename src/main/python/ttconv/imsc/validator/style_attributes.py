@@ -63,7 +63,7 @@ class Color:
     try:
       ttconv.utils.parse_color(value)
     except ValueError:
-      raise ValueError("Bad backgroundColor value (%s)" % value)
+      raise ValueError("Bad color value (%s)" % value)
 
 @attribute
 class Direction:

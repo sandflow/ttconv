@@ -445,49 +445,49 @@
     "file": "ttml1-invld-bad-color-all-space.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (\t\n\r )"
+      "Bad color value (\t\n\r )"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-empty.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value ()"
+      "Bad color value ()"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-function-bad-component-syntax.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0,X))"
+      "Bad color value (rgb(0,0,X))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-function-extra-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0,0,0))"
+      "Bad color value (rgb(0,0,0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-function-missing-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0))"
+      "Bad color value (rgb(0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-function-negative-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0,-1))"
+      "Bad color value (rgb(0,0,-1))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-function-out-of-range-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0,256))"
+      "Bad color value (rgb(0,0,256))"
     ]
   },
   {
@@ -498,154 +498,154 @@
     "file": "ttml1-invld-bad-color-rgb-hash-extra-digit.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#1234567)"
+      "Bad color value (#1234567)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-hash-garbage-after-digits.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#123456xyz)"
+      "Bad color value (#123456xyz)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-hash-missing-all-digits-garbage-after-hash.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#xyz)"
+      "Bad color value (#xyz)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-hash-missing-all-digits-hash-only.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#)"
+      "Bad color value (#)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-hash-missing-digit.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#12345)"
+      "Bad color value (#12345)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-hash-non-digit.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#00000X)"
+      "Bad color value (#00000X)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgb-hash-space-after-hash.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (# 123456)"
+      "Bad color value (# 123456)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-function-bad-component-syntax.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgba(0,0,0,X))"
+      "Bad color value (rgba(0,0,0,X))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-function-extra-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0,0,0,0))"
+      "Bad color value (rgb(0,0,0,0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-function-missing-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgba(0,0,0))"
+      "Bad color value (rgba(0,0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-function-negative-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgba(0,0,0,-1))"
+      "Bad color value (rgba(0,0,0,-1))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-function-out-of-range-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgb(0,0,0,256))"
+      "Bad color value (rgb(0,0,0,256))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-function-padded-component.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (rgba( 0,0,0))"
+      "Bad color value (rgba( 0,0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-hash-extra-digit.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#000000000)"
+      "Bad color value (#000000000)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-hash-missing-digit.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#0000000)"
+      "Bad color value (#0000000)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-rgba-hash-non-digit.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (#0000000X)"
+      "Bad color value (#0000000X)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-space-padded-named-color.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value ( black)"
+      "Bad color value ( black)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-space-padded-rgb-function.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value ( rgb(0,0,0))"
+      "Bad color value ( rgb(0,0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-space-padded-rgb-hash.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value ( #000000)"
+      "Bad color value ( #000000)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-space-padded-rgba-function.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value ( rgba(0,0,0))"
+      "Bad color value ( rgba(0,0,0))"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-space-padded-rgba-hash.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value ( #00000000)"
+      "Bad color value ( #00000000)"
     ]
   },
   {
     "file": "ttml1-invld-bad-color-unknown-named-color.xml",
     "result": "fail",
     "errors": [
-      "Bad backgroundColor value (pink)"
+      "Bad color value (pink)"
     ]
   },
   {
