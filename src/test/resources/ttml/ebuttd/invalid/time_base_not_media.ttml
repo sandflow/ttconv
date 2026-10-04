@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Invalid: ttp:timeBase="clock"; EBU-TT-D requires ttp:timeBase="media". -->
 <tt:tt xmlns:tt="http://www.w3.org/ns/ttml"
        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
        xmlns:tts="http://www.w3.org/ns/ttml#styling"
