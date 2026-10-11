@@ -411,6 +411,12 @@ class SccContext:
 
         self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
 
+      # A row that is created by a CR has no attributes until a PAC assigns them: its text is white,
+      # non-underlined and non-italicized (CTA-608-E C.14)
+      self.current_color = None
+      self.current_font_style = None
+      self.current_text_decoration = None
+
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
       # The DER may be issued from any point on a row to delete all displayable characters, transparent
