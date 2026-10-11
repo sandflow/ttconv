@@ -123,7 +123,12 @@ class SccLine:
         self.time_code.add_frames()
       first = False
 
-      if context.previous_word is not None and context.previous_word.value == scc_word.value and context.previous_word.is_code():
+      # A control code that is sent twice in a row, in two consecutive frames, is acted on once. The
+      # repeat is not redundant if anything, such as a null word, was sent between the two
+      # (CTA-608-E D.2).
+      offset = self.time_code.to_temporal_offset()
+      if context.previous_word is not None and context.previous_word.value == scc_word.value \
+          and context.previous_word.is_code() and offset - context.previous_word_offset <= 1 / FPS_29_97:
         context.previous_word = None
         continue
 
@@ -193,6 +198,7 @@ class SccLine:
         context.previous_word_type = str
 
       context.previous_word = scc_word
+      context.previous_word_offset = offset
 
     LOGGER.debug(debug)
 

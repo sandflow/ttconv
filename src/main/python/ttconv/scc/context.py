@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from fractions import Fraction
 from typing import Optional, Type, Tuple
 
 from ttconv.model import Div
@@ -65,6 +66,7 @@ class SccContext:
 
     # Previously read SCC word value
     self.previous_word: Optional[SccWord] = None
+    self.previous_word_offset: Optional[Fraction] = None
     self.previous_word_type: Optional[Type] = None
 
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
