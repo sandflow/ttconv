@@ -1000,7 +1000,7 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(6, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:00:19", "00:00:01:15", "Lorem ipsum dolor sit amet,")
+    self.check_caption(p_list[0], "caption1", "00:00:00:19", "00:00:01:14", "Lorem ipsum dolor sit amet,")
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "00:00:01:17", "00:00:02:01", "consectetur adipiscing elit.")
@@ -1499,10 +1499,10 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(2, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "11:19:24:18", "11:19:30:18", "(applaudissements)")
+    self.check_caption(p_list[0], "caption1", "11:19:24:18", "11:19:30:17", "(applaudissements)")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "11:19:30:19", None, ">>> Narrateur: Cette")
+    self.check_caption(p_list[1], "caption2", "11:19:30:18", None, ">>> Narrateur: Cette")
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_skipping_channel_2_content(self):
@@ -1587,6 +1587,28 @@ Scenarist_SCC V1.0
     texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in list(list(doc.get_body())[0])]
     # ABCDEF, BS pair: ABCDE, G: ABCDEG, BS null BS: ABCD, H: ABCDH
     self.assertEqual("ABCDH", texts[-1])
+
+  def test_scc_roll_up_erases_the_non_displayed_memory(self):
+    # CTA-608-E C.10: Roll-Up erases Pop-On data in both memories
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 13e0 13e0 d0ef 70ad ef6e 20c1 ba20 e5f2 6173 e564 2062 7920 52d5 3280 942f 942f
+
+00:00:01:00	9420 9420 94ae 94ae 1340 1340 c8e9 6464 e56e 20c2 ba20 6d75 73f4 206e e576 e5f2 2073 68ef f780
+
+00:00:04:00	9425 9425 94ad 94ad 94e0 94e0 52ef ecec ad75 70ba 20c1 2061 6e64 20c2 20e5 f261 73e5 6480
+
+00:00:08:00	942f 942f
+
+00:00:11:00	942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in list(list(doc.get_body())[0])]
+    self.assertFalse([text for text in texts if "Hidden B" in text], texts)
+    self.assertEqual(["Pop-on A: erased by RU2", "Roll-up: A and B erased", "Roll-up: A and B erased"], texts)
 
 
 if __name__ == '__main__':

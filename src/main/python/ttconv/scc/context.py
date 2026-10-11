@@ -162,6 +162,9 @@ class SccContext:
 
       if not previous_caption.is_empty():
         self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
+      elif clear_active_caption and previous_caption.get_id() == "caption" + str(self.count):
+        # nothing was displayed, the identifier can be used again
+        self.count -= 1
 
   def backspace(self, time_code: SmpteTimeCode):
     """Move the cursors in a column to the left"""
@@ -332,6 +335,12 @@ class SccContext:
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
       # Start a new Roll-Up caption
+      if self.current_style is not SccCaptionStyle.RollUp:
+        # Switching to Roll-Up erases both memories: what is displayed and what was loaded for a
+        # Pop-On caption (CTA-608-E C.10)
+        self.push_active_caption_to_model(time_code)
+        self.new_buffered_caption()
+
       self.current_style = SccCaptionStyle.RollUp
 
       if control_code is SccControlCode.RU2:
