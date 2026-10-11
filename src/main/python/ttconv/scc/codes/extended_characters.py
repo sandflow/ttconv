@@ -48,7 +48,7 @@ class SccExtendedCharacter(SccCode):
   # Miscellaneous extended characters
   ASTERISK = (0x1228, 0x1A28, '\u002A')  # * Asterisk
   NEUTRAL_SINGLE_QUOTATION_MARK = (0x1229, 0x1A29, '\u0027')  # ' plain single quote
-  BOX_DRAWINGS_HEAVY_HORIZONTAL = (0x122A, 0x1A2A, '\u2501')  # — em dash
+  EM_DASH = (0x122A, 0x1A2A, '\u2014')  # — em dash
   COPYRIGHT_SIGN = (0x122B, 0x1A2B, '\u00A9')  # © Copyright
   SERVICE_MARK = (0x122C, 0x1A2C, '\u2120')  # SM Servicemark
   BULLET = (0x122D, 0x1A2D, '\u2022')  # ● round bullet
@@ -86,7 +86,7 @@ class SccExtendedCharacter(SccCode):
   BRACE_OPENING = (0x1329, 0x1B29, '\u007B')  # { opening brace
   BRACE_CLOSING = (0x132A, 0x1B2A, '\u007D')  # } closing brace
   REVERSE_SOLIDUS = (0x132B, 0x1B2B, '\u005C')  # \ backslash
-  LATIN_SMALL_LETTER_TURNED_V = (0x132C, 0x1B2C, '\u028C')  # ^ caret
+  CIRCUMFLEX_ACCENT = (0x132C, 0x1B2C, '\u005E')  # ^ caret
   LOW_LINE = (0x132D, 0x1B2D, '\u005F')  # _ Underbar
   VERTICAL_LINE = (0x132E, 0x1B2E, '\u007C')  # | pipe
   TILDE = (0x132F, 0x1B2F, '\u007E')  # ~ tilde
