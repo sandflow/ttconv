@@ -1630,5 +1630,23 @@ Scenarist_SCC V1.0
     self.assertEqual(NamedColors.white.value, text_span.get_style(StyleProperties.BackgroundColor))
 
 
+  def test_scc_roll_up_blank_row_rolls_up_the_rows_above(self):
+    # CTA-608-E D.2: of three consecutive CR, the second is redundant, so two rows roll up and one
+    # blank row is left between A and B
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	942c 942c 94a7 94a7 94ad 94ad 94e0 94e0 c180
+
+00:00:01:15	94ad 94ad 94ad 94e0 94e0 c280
+"""
+
+    doc = to_model(scc_content)
+
+    last = list(list(doc.get_body())[0])[-1]
+    content = ["/" if isinstance(child, Br) else list(child)[0].get_text() for child in last]
+    self.assertEqual(["A", "/", "/", "B"], content)
+
+
 if __name__ == '__main__':
   unittest.main()
