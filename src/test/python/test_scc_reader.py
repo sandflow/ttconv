@@ -1611,5 +1611,24 @@ Scenarist_SCC V1.0
     self.assertEqual(["Pop-on A: erased by RU2", "Roll-up: A and B erased", "Roll-up: A and B erased"], texts)
 
 
+  def test_scc_foreground_black_attribute_keeps_the_background(self):
+    # a background attribute code followed by a foreground attribute code: the text is black on white
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 2080 1020 1020 2080 97ae 97ae c2ec 61e3 6b20 f4e5 f8f4 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    text_span = spans[-1]
+    self.assertEqual("Black text", list(text_span)[0].get_text())
+    self.assertEqual(NamedColors.black.value, text_span.get_style(StyleProperties.Color))
+    self.assertEqual(NamedColors.white.value, text_span.get_style(StyleProperties.BackgroundColor))
+
+
 if __name__ == '__main__':
   unittest.main()

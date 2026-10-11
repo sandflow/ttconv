@@ -311,13 +311,22 @@ class SccContext:
       LOGGER.warning("No current SCC caption nor content initialized")
       return
 
+    background = None
     if processed_caption.get_current_text().get_text():
+      # a foreground code does not change the background that was set by a previous code
+      background = processed_caption.get_current_text().get_style_properties().get(StyleProperties.BackgroundColor)
       processed_caption.new_caption_text()
 
     if attribute_code.is_background():
       processed_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
     else:
+      if background is not None:
+        processed_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, background)
       processed_caption.get_current_text().add_style_property(StyleProperties.Color, attribute_code.get_color())
+
+      # the text that follows has the color of the code, not the one of the last PAC or mid-row code
+      self.current_color = attribute_code.get_color()
+      self.current_text_decoration = attribute_code.get_text_decoration()
 
     processed_caption.get_current_text().add_style_property(StyleProperties.TextDecoration,
                                                             attribute_code.get_text_decoration())
