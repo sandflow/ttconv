@@ -71,6 +71,8 @@ class SccCaptionParagraph:
 
     # Position of the cursor in the active area
     self._cursor: (int, int) = (0, 0)
+    # Whether text went past the last column since the cursor was moved
+    self._overflowing: bool = False
     # Line where the cursor is currently positioned
     self._current_line: Optional[SccCaptionLine] = None
     # Lines per row in the active area (will be separated by line-breaks)
@@ -131,8 +133,29 @@ class SccCaptionParagraph:
 
   def append_text(self, text: str):
     """Append text to current line text content"""
-    self.get_current_line().add_text(text)
-    self.indent_cursor(len(text))
+    fitting = max(min(len(text), SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - self._cursor[1]), 0)
+
+    if fitting > 0:
+      self.get_current_line().add_text(text[:fitting])
+      self.indent_cursor(fitting)
+
+    if fitting < len(text) and not self._overflowing:
+      self._overflowing = True
+      LOGGER.warning("The text overflows the last column of the row %s (at %s): the characters after it replace the "
+                     "one in the last column", self._cursor[0], self._begin)
+
+    for character in text[fitting:]:
+      # The cursor can not move past the last column: the character replaces the one in that column
+      # (CTA-608-E C.13)
+      self._cursor = (self._cursor[0], SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 1)
+      self._update_current_line_cursor()
+
+      self.get_current_line().add_text(character)
+      self.indent_cursor(1)
+
+  def tab_cursor(self, nb_columns: int):
+    """Moves the cursor to the right with a tab offset, but not past the last column (CTA-608-E C.13)"""
+    self.indent_cursor(min(nb_columns, max(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 1 - self._cursor[1], 0)))
 
   def set_lines(self, lines: Union[List[SccCaptionLine], Dict[int, SccCaptionLine]]):
     """Sets paragraph lines"""
@@ -170,6 +193,7 @@ class SccCaptionParagraph:
         del self._caption_lines[self._current_line.get_row()]
 
     self._cursor = (row, indent if indent is not None else 0)
+    self._overflowing = False
 
     if self._caption_lines.get(row) is None:
       self.new_caption_line()

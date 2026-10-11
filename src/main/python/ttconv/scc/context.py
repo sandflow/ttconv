@@ -32,7 +32,7 @@ import logging
 from typing import Optional, Tuple
 
 from ttconv.model import Div
-from ttconv.scc.caption_paragraph import SccCaptionParagraph
+from ttconv.scc.caption_paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.codes import SccChannel, SccCode
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
@@ -163,8 +163,17 @@ class SccContext:
   def backspace(self, time_code: SmpteTimeCode):
     """Move the cursors in a column to the left"""
     caption = self.get_caption_to_process(time_code)
-    caption.get_current_text().backspace()
     (row, indent) = caption.get_cursor()
+
+    if indent >= SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS:
+      # After a character in the last column the cursor moves to the column before it, and the
+      # character there is erased (CTA-608-E C.13)
+      caption.set_cursor_at(row, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 2)
+      caption.append_text(" ")
+      caption.set_cursor_at(row, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 2)
+      return
+
+    caption.get_current_text().backspace()
     caption.set_cursor_at(row, max(indent - 1, 0))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
@@ -374,13 +383,13 @@ class SccContext:
       self.new_buffered_caption()
 
     elif control_code is SccControlCode.TO1:
-      self.get_caption_to_process(time_code).indent_cursor(1)
+      self.get_caption_to_process(time_code).tab_cursor(1)
 
     elif control_code is SccControlCode.TO2:
-      self.get_caption_to_process(time_code).indent_cursor(2)
+      self.get_caption_to_process(time_code).tab_cursor(2)
 
     elif control_code is SccControlCode.TO3:
-      self.get_caption_to_process(time_code).indent_cursor(3)
+      self.get_caption_to_process(time_code).tab_cursor(3)
 
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
