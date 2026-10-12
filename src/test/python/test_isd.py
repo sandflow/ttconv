@@ -717,6 +717,109 @@ if __name__ == '__main__':
   unittest.main()
 
 
+class RubyPruningTest(unittest.TestCase):
+
+  @staticmethod
+  def _make_isd_p(ruby: str) -> model.P:
+    ttml_doc = f'''<tt xml:lang="ja" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+<body><div><p begin="0s" end="2s">{ruby}を読む</p></div></body></tt>'''
+
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc)))
+
+    isd = ISD.from_model(doc, Fraction(3, 2))
+
+    region = list(isd.iter_regions())[0]
+    body = list(region)[0]
+    div = list(body)[0]
+    return list(div)[0]
+
+  @staticmethod
+  def _types(element: model.ContentElement) -> list:
+    return [type(child) for child in element]
+
+  def test_rt_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="base">東京</span><span tts:ruby="text" end="1s">とうきょう</span></span>'
+    )
+    ruby = list(p)[0]
+    self.assertEqual([model.Rb, model.Rt], self._types(ruby))
+    self.assertTrue(list(ruby)[0].has_children())
+    self.assertFalse(list(ruby)[1].has_children())
+
+  def test_rb_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="base" end="1s">東京</span><span tts:ruby="text">とうきょう</span></span>'
+    )
+    ruby = list(p)[0]
+    self.assertEqual([model.Rb, model.Rt], self._types(ruby))
+    self.assertFalse(list(ruby)[0].has_children())
+    self.assertTrue(list(ruby)[1].has_children())
+
+  def test_rp_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="base">東京</span><span tts:ruby="delimiter" end="1s">(</span>'
+      '<span tts:ruby="text">とうきょう</span><span tts:ruby="delimiter">)</span></span>'
+    )
+    ruby = list(p)[0]
+    self.assertEqual([model.Rb, model.Rp, model.Rt, model.Rp], self._types(ruby))
+    self.assertFalse(list(ruby)[1].has_children())
+    self.assertTrue(list(ruby)[3].has_children())
+
+  def test_rtc_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="baseContainer"><span tts:ruby="base">漢</span><span tts:ruby="base">字</span></span>'
+      '<span tts:ruby="textContainer" end="1s"><span tts:ruby="text">かん</span><span tts:ruby="text">じ</span></span></span>'
+    )
+    ruby = list(p)[0]
+    self.assertEqual([model.Rbc, model.Rtc], self._types(ruby))
+    self.assertEqual([model.Rb, model.Rb], self._types(list(ruby)[0]))
+    self.assertEqual([], self._types(list(ruby)[1]))
+
+  def test_rt_in_rtc_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="baseContainer"><span tts:ruby="base">漢</span><span tts:ruby="base">字</span></span>'
+      '<span tts:ruby="textContainer"><span tts:ruby="text" end="1s">かん</span><span tts:ruby="text">じ</span></span></span>'
+    )
+    rtc = list(list(p)[0])[1]
+    self.assertEqual([model.Rt, model.Rt], self._types(rtc))
+    self.assertFalse(list(rtc)[0].has_children())
+    self.assertTrue(list(rtc)[1].has_children())
+
+  def test_rtc_rp_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="baseContainer"><span tts:ruby="base">漢</span><span tts:ruby="base">字</span></span>'
+      '<span tts:ruby="textContainer"><span tts:ruby="delimiter" end="1s">(</span><span tts:ruby="text">かん</span>'
+      '<span tts:ruby="text">じ</span><span tts:ruby="delimiter">)</span></span></span>'
+    )
+    rtc = list(list(p)[0])[1]
+    self.assertEqual([model.Rp, model.Rt, model.Rt, model.Rp], self._types(rtc))
+    self.assertFalse(list(rtc)[0].has_children())
+    self.assertTrue(list(rtc)[3].has_children())
+
+  def test_rbc_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="baseContainer" end="1s"><span tts:ruby="base">漢</span><span tts:ruby="base">字</span></span>'
+      '<span tts:ruby="textContainer"><span tts:ruby="text">かん</span><span tts:ruby="text">じ</span></span></span>'
+    )
+    ruby = list(p)[0]
+    self.assertEqual([model.Rbc, model.Rtc], self._types(ruby))
+    self.assertEqual([], self._types(list(ruby)[0]))
+    self.assertEqual([model.Rt, model.Rt], self._types(list(ruby)[1]))
+
+  def test_ruby_all_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="base" end="1s">東京</span><span tts:ruby="text" end="1s">とうきょう</span></span>'
+    )
+    self.assertEqual([model.Span], self._types(p))
+
+  def test_ruby_containers_all_pruned(self):
+    p = self._make_isd_p(
+      '<span tts:ruby="container"><span tts:ruby="baseContainer"><span tts:ruby="base" end="1s">漢</span><span tts:ruby="base" end="1s">字</span></span>'
+      '<span tts:ruby="textContainer"><span tts:ruby="delimiter" end="1s">(</span><span tts:ruby="text" end="1s">かん</span>'
+      '<span tts:ruby="text" end="1s">じ</span><span tts:ruby="delimiter" end="1s">)</span></span></span>'
+    )
+    self.assertEqual([model.Span], self._types(p))
+
 class ISDReferenceFiles:
   input_dir = os.path.join("src", "test", "resources", "ttml", "imsc-tests")
   output_dir = os.path.join("src", "test", "resources", "isd-references")

@@ -29,7 +29,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 from fractions import Fraction
-from typing import Dict, List, Optional
+from typing import Dict, Iterator, List, Optional
 
 import ttconv.model as model
 from ttconv.vtt.config import VTTWriterConfiguration
@@ -42,7 +42,7 @@ from ttconv.isd import ISD
 from ttconv.vtt.cue import VttCue
 from ttconv.vtt.css_class import CssClass
 from ttconv.style_properties import DirectionType, ExtentType, PositionType, StyleProperties, FontStyleType, NamedColors, \
-                                    FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType
+                                    FontWeightType, TextDecorationType, DisplayAlignType, TextAlignType, WritingModeType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class VttContext:
     self._filters = []
 
     if not self._config.line_position:
-      self._filters.append(RegionsMergingISDFilter())
+      self._filters.append(RegionsMergingISDFilter(is_style_copy=True))
 
     self._filters.append(ParagraphsMergingISDFilter())
 
@@ -77,7 +77,8 @@ class VttContext:
         TextDecorationType(False, False, False)
       ],
       StyleProperties.Color: [],
-      StyleProperties.BackgroundColor: []
+      StyleProperties.BackgroundColor: [],
+      StyleProperties.WritingMode: []
     }
 
     if self._config.line_position:
@@ -173,6 +174,61 @@ class VttContext:
       for elem in list(element):
         self.process_inline_element(elem, begin, end)
 
+    if isinstance(element, model.Ruby):
+      self.process_ruby(element, begin, end)
+
+  @staticmethod
+  def _iter_without_rp(element: model.ContentElement) -> Iterator[model.ContentElement]:
+    """Iterates over the children of `element`, ignoring rp elements"""
+    for child in element:
+      if isinstance(child, model.Rp):
+        LOGGER.error("rp elements are not supported; ignoring their contents")
+      else:
+        yield child
+
+  def process_ruby(self, element: model.Ruby, begin: Fraction, end: Optional[Fraction]):
+    """Converts ruby element to VTT content, where each rb/rt pair results in a separate VTT ruby element"""
+
+    children = list(self._iter_without_rp(element))
+
+    if isinstance(children[0], model.Rb):
+      # rb rt
+      rbs = [children[0]]
+      rts = [children[1]]
+    else:
+      # rbc rtc rtc?
+      if len(children) > 2:
+        LOGGER.error("Ruby elements with multiple rtc elements are not supported; ignoring all but the first rtc")
+
+      rbs = list(children[0])
+      rts = list(self._iter_without_rp(children[1]))
+
+    # rt elements without a matching rb element are ignored
+    if len(rts) > len(rbs):
+      LOGGER.error("Ignoring %s rt elements without matching rb elements", len(rts) - len(rbs))
+
+    for i, rb in enumerate(rbs):
+      rt = rts[i] if i < len(rts) else None
+
+      if rt is None or not rt.has_children():
+        # base without annotation
+        for elem in list(rb):
+          self.process_inline_element(elem, begin, end)
+        continue
+
+      self._paragraphs[-1].append_text(style.RUBY_TAG_IN)
+
+      for elem in list(rb):
+        self.process_inline_element(elem, begin, end)
+
+      self._paragraphs[-1].append_text(style.RT_TAG_IN)
+
+      for elem in list(rt):
+        self.process_inline_element(elem, begin, end)
+
+      self._paragraphs[-1].append_text(style.RT_TAG_OUT)
+      self._paragraphs[-1].append_text(style.RUBY_TAG_OUT)
+
   def process_p(self, region: ISD.Region, element: model.P, begin: Fraction, end: Optional[Fraction]):
     """Process p element"""
 
@@ -182,20 +238,42 @@ class VttContext:
     cue.set_begin(begin)
     cue.set_end(end)
 
+    writing_mode = region.get_style(StyleProperties.WritingMode)
+
+    if writing_mode == WritingModeType.tbrl:
+      cue.set_writing_direction(VttCue.WritingDirection.vertical_growing_left)
+    elif writing_mode == WritingModeType.tblr:
+      cue.set_writing_direction(VttCue.WritingDirection.vertical_growing_right)
+
     if self._config.line_position:
       display_align = region.get_style(StyleProperties.DisplayAlign)
       position: PositionType = region.get_style(StyleProperties.Position)
       extent: ExtentType = region.get_style(StyleProperties.Extent)
-      
-      if display_align == DisplayAlignType.after:
-        cue.set_line(round(position.v_offset.value + extent.height.value))
-        cue.set_align(VttCue.LineAlignment.end)
-      elif display_align == DisplayAlignType.before:
-        cue.set_line(round(position.v_offset.value))
-        cue.set_align(VttCue.LineAlignment.start)
+
+      if cue.get_writing_direction() is not VttCue.WritingDirection.horizontal:
+        # the line position of vertical cues is measured from the left edge of the viewport
+        is_before_left = cue.get_writing_direction() is VttCue.WritingDirection.vertical_growing_right
+
+        if display_align == DisplayAlignType.center:
+          cue.set_line(round(position.h_offset.value + extent.width.value / 2))
+          cue.set_align(VttCue.LineAlignment.center)
+        elif (display_align == DisplayAlignType.before) == is_before_left:
+          cue.set_line(round(position.h_offset.value))
+          cue.set_align(VttCue.LineAlignment.start)
+        else:
+          cue.set_line(round(position.h_offset.value + extent.width.value))
+          cue.set_align(VttCue.LineAlignment.end)
+
       else:
-        cue.set_line(round(position.v_offset.value + extent.height.value / 2))
-        cue.set_align(VttCue.LineAlignment.center)
+        if display_align == DisplayAlignType.after:
+          cue.set_line(round(position.v_offset.value + extent.height.value))
+          cue.set_align(VttCue.LineAlignment.end)
+        elif display_align == DisplayAlignType.before:
+          cue.set_line(round(position.v_offset.value))
+          cue.set_align(VttCue.LineAlignment.start)
+        else:
+          cue.set_line(round(position.v_offset.value + extent.height.value / 2))
+          cue.set_align(VttCue.LineAlignment.center)
 
     if self._config.text_align:
       direction = element.get_style(StyleProperties.Direction)
