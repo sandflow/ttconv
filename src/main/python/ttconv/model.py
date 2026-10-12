@@ -131,6 +131,31 @@ class ContentElement:
     for anim_step in self.iter_animation_steps():
       dest.add_animation_step(anim_step)
 
+  def clone(self, doc: typing.Optional[ContentDocument] = None) -> ContentElement:
+    '''Returns a deep copy of the element, including its descendants, detached from
+    any parent. The copy belongs to `doc`, or to the same document as the element
+    if `doc` is not specified.
+    '''
+
+    if doc is None:
+      doc = self.get_doc()
+
+    new_element = type(self)(doc)
+
+    self.copy_to(new_element)
+
+    region = self.get_region()
+
+    if region is not None:
+      assert doc is not None
+      if not doc.has_region(region.get_id()):
+        raise ValueError("Region is unknown")
+      new_element.set_region(doc.get_region(region.get_id()))
+
+    new_element.push_children([child.clone(doc) for child in self])
+
+    return new_element
+
   # document
 
   def is_attached(self) -> bool:
@@ -840,7 +865,7 @@ class Region(ContentElement):
     StyleProperties.WritingMode
     ])
 
-  def __init__(self, region_id: str, doc: ContentDocument = None):
+  def __init__(self, region_id: str, doc: typing.Optional[ContentDocument] = None):
     super().__init__(doc)
     
     if region_id is None:
@@ -864,6 +889,20 @@ class Region(ContentElement):
   def set_id(self, element_id):
     if element_id != self.get_id():
       raise RuntimeError("Region id is immutable")
+
+  def clone(self, doc: typing.Optional[ContentDocument] = None) -> Region:
+    '''Returns a deep copy of the region. The copy belongs to `doc`, or to the same
+    document as the region if `doc` is not specified.
+    '''
+
+    if doc is None:
+      doc = self.get_doc()
+
+    new_region = Region(self.get_id(), doc)
+
+    self.copy_to(new_region)
+
+    return new_region
 
   def push_child(self, child):
     raise RuntimeError("Region elements do not have children")
@@ -1032,6 +1071,27 @@ class ContentDocument(Document):
 
     for style_prop, style_value in self.iter_initial_values():
       dest.put_initial_value(style_prop, style_value)
+
+    content_profiles = self.get_content_profiles()
+    dest.set_content_profiles(set(content_profiles) if content_profiles is not None else None)
+
+  def clone(self) -> ContentDocument:
+    '''Returns a deep copy of the document, including its regions and body.
+    '''
+
+    new_doc = ContentDocument()
+
+    self.copy_to(new_doc)
+
+    for region in self.iter_regions():
+      new_doc.put_region(region.clone(new_doc))
+
+    body = self.get_body()
+
+    if body is not None:
+      new_doc.set_body(typing.cast(Body, body.clone(new_doc)))
+
+    return new_doc
 
   # attributes
 
