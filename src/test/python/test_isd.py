@@ -365,8 +365,8 @@ class ComputeStyleTest(unittest.TestCase):
     b.push_child(div1)
 
     p1 = model.P(doc)
-    p1.set_begin(0)
-    p1.set_end(3)
+    p1.set_begin(Fraction(0))
+    p1.set_end(Fraction(3))
     p1.set_style(
       styles.StyleProperties.LinePadding,
       styles.LengthType(1, styles.LengthType.Units.c)
@@ -624,8 +624,8 @@ class ContentDocument1Test(unittest.TestCase):
     b.push_child(div1)
 
     p1 = model.P(self.doc)
-    p1.set_begin(1)
-    p1.set_end(3)
+    p1.set_begin(Fraction(1))
+    p1.set_end(Fraction(3))
     div1.push_child(p1)
 
     span1 = model.Span(self.doc)
@@ -633,7 +633,7 @@ class ContentDocument1Test(unittest.TestCase):
     p1.push_child(span1)
 
     span2 = model.Span(self.doc)
-    span2.set_begin(1)
+    span2.set_begin(Fraction(1))
     span2.push_child(model.Text(self.doc, "bye"))
     p1.push_child(span2)
 

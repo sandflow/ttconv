@@ -309,6 +309,26 @@ must be consistent with the value of the `frame_rate` parameter.
 
 Default: `null`
 
+#### rollup_gap_tolerance
+
+`"rollup_gap_tolerance" : "<numerator>/<denominator>"`
+
+Specifies, as a fraction of a second, the maximum gap between two successive
+captions for them to be considered for roll-up detection.
+
+Example: `"1/30000"`
+
+Default: `"0"`
+
+#### rollup_detection_pct
+
+`"rollup_detection_pct" : 0-100`
+
+Specifies the percentage of captions that must fit the roll-up template in
+order for the file to be considered for roll-up processing.
+
+Default: `100`
+
 ### LCD filter configuration (`"lcd"`)
 
 #### Description

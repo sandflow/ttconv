@@ -85,6 +85,26 @@ class SccWriterConfigurationTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       config = SccWriterConfiguration.parse(json.loads("""{"rollup_lines": 5 }"""))
 
+  def test_rollup_gap_tolerance(self):
+    config = SccWriterConfiguration()
+    self.assertEqual(config.rollup_gap_tolerance, 0)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_gap_tolerance": "1/30" }"""))
+    self.assertEqual(config.rollup_gap_tolerance, Fraction(1, 30))
+
+  def test_rollup_detection_pct(self):
+    config = SccWriterConfiguration()
+    self.assertEqual(config.rollup_detection_pct, 100)
+
+    config = SccWriterConfiguration.parse(json.loads("""{"rollup_detection_pct": 50 }"""))
+    self.assertEqual(config.rollup_detection_pct, 50)
+
+    with self.assertRaises(ValueError):
+      config = SccWriterConfiguration.parse(json.loads("""{"rollup_detection_pct": -1 }"""))
+
+    with self.assertRaises(ValueError):
+      config = SccWriterConfiguration.parse(json.loads("""{"rollup_detection_pct": 101 }"""))
+
   def test_frame_rate(self):
     config = SccWriterConfiguration.parse(json.loads("""{"frame_rate": "30NDF" }"""))
     self.assertEqual(config.frame_rate.fps, Fraction(30))
@@ -223,7 +243,7 @@ class SCCWriterTest(unittest.TestCase):
     with open("src/test/resources/vtt/rollup-detection-break.vtt", "r", encoding="utf-8-sig") as f:
       model = vtt_reader.to_model(f)
 
-    config = SccWriterConfiguration()
+    config = SccWriterConfiguration(rollup_gap_tolerance=Fraction(1, 30), rollup_detection_pct=50)
     scc_from_model = scc_writer.from_model(model, config)
 
     self.assertIn("94a7 94a7", scc_from_model)
