@@ -150,6 +150,71 @@ Cool, got it, will do it by end of next week.
     vtt_from_model = vtt_writer.from_model(model, config)
     self.assertEqual(expected_vtt, vtt_from_model)
 
+  def test_vertical_position(self):
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
+  <head>
+    <layout>
+      <region xml:id="tbrl.before" tts:writingMode="tbrl" tts:displayAlign="before" tts:origin="10% 20%" tts:extent="30% 60%"/>
+      <region xml:id="tbrl.after" tts:writingMode="tbrl" tts:displayAlign="after" tts:origin="10% 20%" tts:extent="30% 60%"/>
+      <region xml:id="tblr.before" tts:writingMode="tblr" tts:displayAlign="before" tts:origin="10% 20%" tts:extent="30% 60%"/>
+      <region xml:id="tblr.center" tts:writingMode="tblr" tts:displayAlign="center" tts:origin="10% 20%" tts:extent="30% 60%"/>
+    </layout>
+  </head>
+  <body>
+    <div>
+      <p region="tbrl.before" begin="00:00:01:00" end="00:00:02:00">A</p>
+      <p region="tbrl.after" begin="00:00:03:00" end="00:00:04:00">B</p>
+      <p region="tblr.before" begin="00:00:05:00" end="00:00:06:00">C</p>
+      <p region="tblr.center" begin="00:00:07:00" end="00:00:08:00">D</p>
+    </div>
+  </body>
+</tt>"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+
+    config = VTTWriterConfiguration()
+    config.line_position = True
+    vtt_from_model = vtt_writer.from_model(model, config)
+    self.assertEqual("""WEBVTT
+
+1
+00:00:01.000 --> 00:00:02.000 vertical:rl line:40%,end
+A
+
+2
+00:00:03.000 --> 00:00:04.000 vertical:rl line:10%,start
+B
+
+3
+00:00:05.000 --> 00:00:06.000 vertical:lr line:10%,start
+C
+
+4
+00:00:07.000 --> 00:00:08.000 vertical:lr line:25%,center
+D
+""", vtt_from_model)
+
+    vtt_from_model = vtt_writer.from_model(model, VTTWriterConfiguration())
+    self.assertEqual("""WEBVTT
+
+1
+00:00:01.000 --> 00:00:02.000 vertical:rl
+A
+
+2
+00:00:03.000 --> 00:00:04.000 vertical:rl
+B
+
+3
+00:00:05.000 --> 00:00:06.000 vertical:lr
+C
+
+4
+00:00:07.000 --> 00:00:08.000 vertical:lr
+D
+""", vtt_from_model)
+
   def test_align(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en-US" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" ttp:frameRate="24" ttp:frameRateMultiplier="1000 1001" ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/text" ttp:timeBase="media">
@@ -285,6 +350,50 @@ Cool, got it, will do it by end of next week.
             test_model = imsc_reader.to_model(tree)
             vtt_from_model = vtt_writer.from_model(test_model, None)
             self._check_output_vtt(test_model, vtt_from_model, path)
+
+  def test_ruby(self):
+    for root, _subdirs, files in os.walk("src/test/resources/ttml/ruby"):
+      for filename in files:
+        (name, ext) = os.path.splitext(filename)
+        if ext == ".ttml":
+          with self.subTest(name):
+            test_model = imsc_reader.to_model(et.parse(os.path.join(root, filename)))
+
+            vtt_from_model = vtt_writer.from_model(test_model, None)
+            expected_vtt = Path("src/test/resources/vtt-references", name + ".vtt").read_text(encoding="utf-8")
+            self.assertEqual(expected_vtt, vtt_from_model)
+
+  def test_ruby_multiple_rtc(self):
+    test_model = imsc_reader.to_model(et.parse("src/test/resources/ttml/ruby/ruby_position_double_sided.ttml"))
+
+    with self.assertLogs(vtt_writer.LOGGER, level="ERROR") as logs:
+      vtt_writer.from_model(test_model, None)
+
+    self.assertEqual(1, len(logs.records))
+
+  def test_ruby_unmatched_rt(self):
+    ttml_doc_str = """<tt xml:lang="ja" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+<body><div><p begin="0s" end="2s"><span tts:ruby="container">
+<span tts:ruby="baseContainer"><span tts:ruby="base">漢</span></span>
+<span tts:ruby="textContainer"><span tts:ruby="text">かん</span><span tts:ruby="text">じ</span></span>
+</span></p></div></body></tt>"""
+
+    test_model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+
+    with self.assertLogs(vtt_writer.LOGGER, level="ERROR") as logs:
+      vtt_from_model = vtt_writer.from_model(test_model, None)
+
+    self.assertEqual(1, len(logs.records))
+    self.assertIn("<ruby>漢<rt>かん</rt></ruby>\n", vtt_from_model)
+    self.assertNotIn("じ", vtt_from_model)
+
+  def test_ruby_rp(self):
+    test_model = imsc_reader.to_model(et.parse("src/test/resources/ttml/ruby/ruby_rp.ttml"))
+
+    with self.assertLogs(vtt_writer.LOGGER, level="ERROR") as logs:
+      vtt_writer.from_model(test_model, None)
+
+    self.assertEqual(4, len(logs.records))
 
   @unittest.skip("Too long to process")
   def test_imsc_1_1_test_suite(self):

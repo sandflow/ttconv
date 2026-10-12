@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="ja" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text">
+  <head>
+    <metadata>
+      <ttm:desc>rb/rt and rbc/rtc with rubyPosition after</ttm:desc>
+    </metadata>
+    <layout>
+      <region xml:id="r1" tts:fontSize="200%" tts:origin="10% 10%" tts:extent="80% 80%" tts:displayAlign="after" tts:textAlign="center"/>
+    </layout>
+  </head>
+  <body>
+    <div region="r1">
+      <!-- rb/rt -->
+      <p begin="0s" end="2s">
+        <span tts:ruby="container">
+          <span tts:ruby="base">東京</span>
+          <span tts:ruby="text" tts:rubyPosition="after">とうきょう</span>
+        </span>へようこそ
+      </p>
+      <!-- rbc/rtc -->
+      <p begin="2s" end="4s">
+        <span tts:ruby="container">
+          <span tts:ruby="baseContainer">
+            <span tts:ruby="base">漢</span>
+            <span tts:ruby="base">字</span>
+          </span>
+          <span tts:ruby="textContainer" tts:rubyPosition="after">
+            <span tts:ruby="text">かん</span>
+            <span tts:ruby="text">じ</span>
+          </span>
+        </span>を読む
+      </p>
+    </div>
+  </body>
+</tt>
