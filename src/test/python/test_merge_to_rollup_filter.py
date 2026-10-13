@@ -67,16 +67,74 @@ class MergeToRollUpFilterTests(unittest.TestCase):
     div.push_child(p1)
     div.push_child(p2)
 
-    MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig(max_gap=Fraction(1, 30))).process(doc)
+    MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig(max_gap=Fraction(1, 30), line_length=5)).process(doc)
 
     paragraphs = [c for c in div if isinstance(c, model.P)]
-    self.assertEqual(len(paragraphs), 1)
-    self.assertEqual(paragraphs[0].get_begin(), Fraction(0))
-    self.assertEqual(paragraphs[0].get_end(), Fraction(2))
+    self.assertEqual(len(paragraphs), 3)
 
-    children = list(paragraphs[0])
+    # build-up: first line alone
+    self.assertEqual(paragraphs[0].get_begin(), Fraction(0))
+    self.assertEqual(paragraphs[0].get_end(), Fraction(1))
+    self.assertEqual(len(list(paragraphs[0])), 1)
+
+    # second line added; the last line's interval is split evenly while draining
+    mid = Fraction(1) + Fraction(1, 60) + (Fraction(2) - Fraction(1) - Fraction(1, 60)) / 2
+    self.assertEqual(paragraphs[1].get_begin(), Fraction(1) + Fraction(1, 60))
+    self.assertEqual(paragraphs[1].get_end(), mid)
+    children = list(paragraphs[1])
     self.assertEqual(len(children), 3)
     self.assertIsInstance(children[1], model.Br)
+
+    # drain: last line alone
+    self.assertEqual(paragraphs[2].get_begin(), mid)
+    self.assertEqual(paragraphs[2].get_end(), Fraction(2))
+    self.assertEqual(len(list(paragraphs[2])), 1)
+
+  def test_reflows_run_to_line_length(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    white = styles.NamedColors.white.value
+
+    div.push_child(_make_p(doc, Fraction(0), Fraction(1), "aaa  bbb ccc", white))
+    div.push_child(_make_p(doc, Fraction(1), Fraction(2), "ddd", white))
+
+    MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig(line_length=10)).process(doc)
+
+    def lines(p):
+      result = [""]
+      for e in p.dfs_iterator():
+        if isinstance(e, model.Br):
+          result.append("")
+        elif isinstance(e, model.Text):
+          result[-1] += e.get_text()
+      return result
+
+    paragraphs = [c for c in div if isinstance(c, model.P)]
+    # each p is reflowed separately, so text does not flow across p elements
+    self.assertEqual([lines(p) for p in paragraphs], [
+      ["aaa bbb"],
+      ["aaa bbb", "ccc"],
+      ["aaa bbb", "ccc", "ddd"],
+      ["ccc", "ddd"],
+      ["ddd"]
+      ])
+
+    # lines are timed in proportion to their length, and the last line is split while draining
+    self.assertEqual([(p.get_begin(), p.get_end()) for p in paragraphs], [
+      (Fraction(0), Fraction(7, 10)),
+      (Fraction(7, 10), Fraction(1)),
+      (Fraction(1), Fraction(4, 3)),
+      (Fraction(4, 3), Fraction(5, 3)),
+      (Fraction(5, 3), Fraction(2))
+      ])
+
+    # p styles are preserved
+    for p in paragraphs:
+      self.assertEqual(p.get_style(styles.StyleProperties.Color), white)
 
   def test_merges_successive_paragraphs_with_identical_contents(self):
     doc = model.ContentDocument()
@@ -184,6 +242,22 @@ class MergeToRollUpFilterTests(unittest.TestCase):
     self.assertEqual(paragraphs[0].get_end(), Fraction(1))
     self.assertEqual(paragraphs[1].get_begin(), Fraction(5))
     self.assertEqual(paragraphs[1].get_end(), Fraction(6))
+
+  def test_rejects_nested_spans(self):
+    doc = model.ContentDocument()
+    body = model.Body(doc)
+    doc.set_body(body)
+    div = model.Div(doc)
+    body.push_child(div)
+
+    p = _make_p(doc, Fraction(0), Fraction(1), "line1")
+    inner_span = model.Span(doc)
+    inner_span.push_child(model.Text(doc, "line2"))
+    list(p)[0].push_child(inner_span)
+    div.push_child(p)
+
+    with self.assertRaises(ValueError):
+      MergeToRollUpDocFilter(MergeToRollUpDocFilterConfig()).process(doc)
 
   def test_does_not_merge_paragraphs_with_different_regions(self):
     doc = model.ContentDocument()

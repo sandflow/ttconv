@@ -27,14 +27,14 @@
 
 from __future__ import annotations
 
-import itertools
+import collections
 import typing
 from dataclasses import dataclass, field
 from fractions import Fraction
 
 from ttconv.config import ModuleConfiguration
 from ttconv.filters.document_filter import DocumentFilter
-from ttconv.model import Br, ContentDocument, P, ContentElement, Text
+from ttconv.model import Br, ContentDocument, P, ContentElement, Span, Text
 
 
 def have_same_contents(a: ContentElement, b: ContentElement) -> bool:
@@ -90,6 +90,15 @@ def _num_lines_decoder(value: typing.Union[int, str]) -> int:
   return value
 
 
+def _line_length_decoder(value: typing.Union[int, str]) -> int:
+  value = int(value)
+
+  if value < 1:
+    raise ValueError("line_length must be positive")
+
+  return value
+
+
 @dataclass
 class MergeToRollUpDocFilterConfig(ModuleConfiguration):
   """Configuration class for the Merge to roll-up filter"""
@@ -104,6 +113,8 @@ class MergeToRollUpDocFilterConfig(ModuleConfiguration):
   # number of lines simultaneously visible in the roll-up
   num_lines: int = field(default=3, metadata={"decoder": _num_lines_decoder})
 
+  # maximum number of characters per line when reflowing the text of a run
+  line_length: int = field(default=32, metadata={"decoder": _line_length_decoder})
 
 
 class MergeToRollUpDocFilter(DocumentFilter):
@@ -120,8 +131,8 @@ class MergeToRollUpDocFilter(DocumentFilter):
 
   @dataclass
   class _Line:
-    first: ContentElement
-    last: ContentElement
+    text: str
+    p: P
     begin: Fraction
     end: Fraction
 
@@ -152,6 +163,9 @@ class MergeToRollUpDocFilter(DocumentFilter):
       if isinstance(e, Br) and not isinstance(e.parent(), P):
         raise ValueError("br elements must have a p element as parent")
 
+      if isinstance(e, Span) and not isinstance(e.parent(), P):
+        raise ValueError("span elements must have a p element as parent")
+
     all_ps.sort(key=lambda p: p.get_begin()) # type: ignore
 
     for prev_p, next_p in zip(all_ps, all_ps[1:]):
@@ -169,8 +183,9 @@ class MergeToRollUpDocFilter(DocumentFilter):
         all_ps[i].remove()
         del all_ps[i]
 
-    # collect, in runs, all lines of p elements who are contiguous
-    runs: typing.List[typing.List["MergeToRollUpDocFilter._Line"]] = []
+    # collect, in runs, the lines of p elements that are contiguous, after reflowing the text of each p
+    # element into lines of at most line_length characters
+    line_runs: typing.List[typing.List["MergeToRollUpDocFilter._Line"]] = []
     cur_run: typing.List["MergeToRollUpDocFilter._Line"] = []
     for i in range(len(all_ps)):
 
@@ -180,82 +195,97 @@ class MergeToRollUpDocFilter(DocumentFilter):
         all_ps[i].get_begin() - all_ps[i-1].get_end() > self.config.max_gap or \
         all_ps[i].get_region() != all_ps[i-1].get_region():
         cur_run = []
-        runs.append(cur_run)
+        line_runs.append(cur_run)
 
+      # distribute the duration of the p element across its lines in proportion to their number of characters
       p = all_ps[i]
       begin = typing.cast(Fraction, p.get_begin())
       end = typing.cast(Fraction, p.get_end())
+      dur = end - begin
+      lines = self._wrap_words(self._extract_words(p))
+      char_count = sum(len(line) for line in lines)
+      char_cum = 0
+      for line in lines:
+        line_begin = begin + Fraction(dur * char_cum, char_count)
+        char_cum += len(line)
+        cur_run.append(self._Line(line, p, line_begin, begin + Fraction(dur * char_cum, char_count)))
 
-      lines = []
-      cur_line: typing.Optional["MergeToRollUpDocFilter._Line"] = None
-
-      for child in itertools.chain(p, [None]):
-        if child is None or isinstance(child, Br):
-          if cur_line is not None:
-            lines.append(cur_line)
-          cur_line = None
-          continue
-        if cur_line is None:
-          cur_line = self._Line(first=child, last=child, begin=begin, end=end)
-        else:
-          cur_line.last = child
-
+    # generate roll-up p elements from the lines of each run: each line starts a new p element that
+    # contains it and up to num_lines - 1 preceding lines, so that the window builds up one line at a
+    # time. At the end of the run, the window drains one line at a time, with the last line's interval
+    # split evenly across the draining p elements.
+    for lines in line_runs:
       if not lines:
         continue
 
-      total_duration = Fraction(end - begin, len(lines))
+      window: typing.Deque["MergeToRollUpDocFilter._Line"] = collections.deque([lines[0]], maxlen=self.config.num_lines)
+      next_line_idx = 1
+      drain_step: typing.Optional[Fraction] = None
 
-      for j in range(len(lines)):
-        lines[j].begin = begin + j * total_duration
-        lines[j].end = begin + (j + 1) * total_duration
-        cur_run.append(lines[j])
-
-    # generate roll-up p elements: consecutive lines are merged into a single p
-    # element for as long as they fit within num_lines
-    for run in runs:
-      window: typing.List["MergeToRollUpDocFilter._Line"] = []
-      cur_new_p: typing.Optional[P] = None
-
-      for line in run:
-        window.append(line)
-        evicted = len(window) > self.config.num_lines
-        if evicted:
-          window.pop(0)
-
-        if cur_new_p is None or evicted:
-          original_p = typing.cast(ContentElement, line.first.parent())
-          parent = typing.cast(ContentElement, original_p.parent())
-
-          cur_new_p = P(doc)
-          original_p.copy_to(cur_new_p)
-          cur_new_p.set_begin(line.begin)
-          cur_new_p.set_region(original_p.get_region())
-
-          for ctx_idx, ctx_line in enumerate(window):
-            if ctx_idx > 0:
-              cur_new_p.push_child(Br(doc))
-
-            child = ctx_line.first
-            while True:
-              cur_new_p.push_child(child.clone(doc))
-              if child is ctx_line.last:
-                break
-              child = typing.cast(ContentElement, child.next_sibling())
-
-          parent.push_child(cur_new_p)
+      while window:
+        if next_line_idx < len(lines):
+          begin, end = window[-1].begin, window[-1].end
+        elif drain_step is None:
+          begin = window[-1].begin
+          drain_step = Fraction(window[-1].end - begin, len(window))
+          end = begin + drain_step
         else:
-          cur_new_p.push_child(Br(doc))
+          begin, end = end, end + drain_step
 
-          child = line.first
-          while True:
-            cur_new_p.push_child(child.clone(doc))
-            if child is line.last:
-              break
-            child = typing.cast(ContentElement, child.next_sibling())
+        # create a p element containing the lines in the window, each as a single unstyled span
+        # separated by br elements, and append it to the parent of the original p element of the
+        # last line in the window
+        original_p = window[-1].p
 
-        cur_new_p.set_end(line.end)
+        new_p = P(doc)
+        original_p.copy_to(new_p)
+        new_p.set_begin(begin)
+        new_p.set_end(end)
+        new_p.set_region(original_p.get_region())
+
+        for line_idx, line in enumerate(window):
+          if line_idx > 0:
+            new_p.push_child(Br(doc))
+
+          span = Span(doc)
+          span.push_child(Text(doc, line.text))
+          new_p.push_child(span)
+
+        typing.cast(ContentElement, original_p.parent()).push_child(new_p)
+
+        if next_line_idx < len(lines):
+          window.append(lines[next_line_idx])
+          next_line_idx += 1
+        else:
+          window.popleft()
 
     for p in all_ps:
       p.remove()
 
     return doc
+
+  def _wrap_words(self, words: typing.List[str]) -> typing.List[str]:
+    """Joins `words` into lines of at most line_length characters. A word longer than line_length
+    occupies a line of its own."""
+    lines: typing.List[str] = []
+
+    for word in words:
+      if lines and len(lines[-1]) + 1 + len(word) <= self.config.line_length:
+        lines[-1] += " " + word
+      else:
+        lines.append(word)
+
+    return lines
+
+  @staticmethod
+  def _extract_words(p: P) -> typing.List[str]:
+    """Splits the text of `p` into words, separated by whitespace or br elements. Span styling is
+    discarded."""
+    fragments: typing.List[str] = []
+    for child in p:
+      if isinstance(child, Br):
+        fragments.append(" ")
+      else:
+        fragments.extend(typing.cast(Text, text).get_text() for text in child)
+
+    return "".join(fragments).split()
