@@ -183,8 +183,8 @@ class MergeToRollUpDocFilter(DocumentFilter):
         all_ps[i].remove()
         del all_ps[i]
 
-    # collect, in runs, the lines of p elements that are contiguous, after reflowing the text of each p
-    # element into lines of at most line_length characters
+    # collect, in runs, the lines of p elements that are contiguous, after reflowing the words of each run
+    # into lines of at most line_length characters. A word longer than line_length occupies a line of its own.
     line_runs: typing.List[typing.List["MergeToRollUpDocFilter._Line"]] = []
     cur_run: typing.List["MergeToRollUpDocFilter._Line"] = []
     for i in range(len(all_ps)):
@@ -197,18 +197,26 @@ class MergeToRollUpDocFilter(DocumentFilter):
         cur_run = []
         line_runs.append(cur_run)
 
-      # distribute the duration of the p element across its lines in proportion to their number of characters
+      # distribute the duration of the p element across its words in proportion to their number of
+      # characters, and extend each line to the end of its last word
       p = all_ps[i]
       begin = typing.cast(Fraction, p.get_begin())
       end = typing.cast(Fraction, p.get_end())
       dur = end - begin
-      lines = self._wrap_words(self._extract_words(p))
-      char_count = sum(len(line) for line in lines)
+      words = self._extract_words(p)
+      char_count = sum(len(word) for word in words)
       char_cum = 0
-      for line in lines:
-        line_begin = begin + Fraction(dur * char_cum, char_count)
-        char_cum += len(line)
-        cur_run.append(self._Line(line, p, line_begin, begin + Fraction(dur * char_cum, char_count)))
+      for word in words:
+        word_begin = begin + Fraction(dur * char_cum, char_count)
+        char_cum += len(word)
+        word_end = begin + Fraction(dur * char_cum, char_count)
+
+        if cur_run and len(cur_run[-1].text) + 1 + len(word) <= self.config.line_length:
+          cur_run[-1].text += " " + word
+          cur_run[-1].p = p
+          cur_run[-1].end = word_end
+        else:
+          cur_run.append(self._Line(word, p, word_begin, word_end))
 
     # generate roll-up p elements from the lines of each run: each line starts a new p element that
     # contains it and up to num_lines - 1 preceding lines, so that the window builds up one line at a
@@ -263,19 +271,6 @@ class MergeToRollUpDocFilter(DocumentFilter):
       p.remove()
 
     return doc
-
-  def _wrap_words(self, words: typing.List[str]) -> typing.List[str]:
-    """Joins `words` into lines of at most line_length characters. A word longer than line_length
-    occupies a line of its own."""
-    lines: typing.List[str] = []
-
-    for word in words:
-      if lines and len(lines[-1]) + 1 + len(word) <= self.config.line_length:
-        lines[-1] += " " + word
-      else:
-        lines.append(word)
-
-    return lines
 
   @staticmethod
   def _extract_words(p: P) -> typing.List[str]:

@@ -114,22 +114,17 @@ class MergeToRollUpFilterTests(unittest.TestCase):
       return result
 
     paragraphs = [c for c in div if isinstance(c, model.P)]
-    # each p is reflowed separately, so text does not flow across p elements
     self.assertEqual([lines(p) for p in paragraphs], [
       ["aaa bbb"],
-      ["aaa bbb", "ccc"],
-      ["aaa bbb", "ccc", "ddd"],
-      ["ccc", "ddd"],
-      ["ddd"]
+      ["aaa bbb", "ccc ddd"],
+      ["ccc ddd"]
       ])
 
-    # lines are timed in proportion to their length, and the last line is split while draining
+    # words are timed in proportion to their length, and the last line is split while draining
     self.assertEqual([(p.get_begin(), p.get_end()) for p in paragraphs], [
-      (Fraction(0), Fraction(7, 10)),
-      (Fraction(7, 10), Fraction(1)),
-      (Fraction(1), Fraction(4, 3)),
-      (Fraction(4, 3), Fraction(5, 3)),
-      (Fraction(5, 3), Fraction(2))
+      (Fraction(0), Fraction(2, 3)),
+      (Fraction(2, 3), Fraction(4, 3)),
+      (Fraction(4, 3), Fraction(2))
       ])
 
     # p styles are preserved
