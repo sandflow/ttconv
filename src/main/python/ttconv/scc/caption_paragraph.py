@@ -244,6 +244,15 @@ class SccCaptionParagraph:
     if new_cursor_position < 0:
       self._current_line.indent(new_cursor_position)
 
+    gap = new_cursor_position - self._current_line.get_length()
+    if gap > 0 and not self._current_line.is_empty():
+      # The cursor moved right past the end of the text of the row: the cells in between show nothing
+      gap_text = SccCaptionText(" " * gap)
+      gap_text.add_style_property(StyleProperties.BackgroundColor, NamedColors.transparent.value)
+      self._current_line.add_text(gap_text)
+      # What is written next is not part of the gap
+      self._current_line.add_text(SccCaptionText())
+
     self._current_line.set_cursor(new_cursor_position)
 
   def get_lines(self) -> Dict[int, SccCaptionLine]:

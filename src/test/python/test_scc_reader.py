@@ -1903,5 +1903,23 @@ Scenarist_SCC V1.0
     texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
     self.assertEqual("Ay", texts[-1], texts)
 
+  def test_scc_gap_between_two_texts_of_a_row(self):
+    # a PAC for the same row, to the right of the end of the text, leaves the cells in between empty
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 c180 1554 1554 c280 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual("A" + " " * 7 + "B", "".join(list(span)[0].get_text() for span in spans))
+    self.assertEqual(NamedColors.transparent.value, spans[1].get_style(StyleProperties.BackgroundColor))
+    self.assertEqual("B", list(spans[-1])[0].get_text())
+    self.assertEqual(NamedColors.black.value, spans[-1].get_style(StyleProperties.BackgroundColor))
+
 if __name__ == '__main__':
   unittest.main()
