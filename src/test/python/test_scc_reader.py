@@ -1779,5 +1779,20 @@ Scenarist_SCC V1.0
     self.assertEqual(1, len(p_list))
     self.assertEqual("\u00c1B", "".join(list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span)))
 
+  def test_scc_fifth_row_replaces_the_oldest_row(self):
+    # CTA-608-E C.5: a caption memory has four rows at most, a fifth row replaces the oldest one
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 9140 9140 c180 9240 9240 c280 1540 1540 4380 1640 1640 c480 9740 9740 4580 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    texts = [list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span)]
+    self.assertEqual(["B", "C", "D", "E"], texts)
+
 if __name__ == '__main__':
   unittest.main()

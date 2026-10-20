@@ -44,6 +44,7 @@ LOGGER = logging.getLogger(__name__)
 
 SCC_SAFE_AREA_CELL_RESOLUTION_ROWS = 15
 SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS = 32
+SCC_MAX_ROWS = 4
 
 SCC_ROOT_CELL_RESOLUTION_ROWS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_ROWS / 0.80)
 SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 0.80)
@@ -136,6 +137,9 @@ class SccCaptionParagraph:
     if len(text) == 0:
       return
 
+    if self._caption_style in (SccCaptionStyle.PopOn, SccCaptionStyle.PaintOn) and self._current_line.is_empty():
+      self._start_row()
+
     cols_left = SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - self._cursor[1]
 
     if len(text) > cols_left:
@@ -155,6 +159,19 @@ class SccCaptionParagraph:
 
     self.get_current_line().add_text(text)
     self.indent_cursor(len(text))
+
+  def _start_row(self):
+    """A row gets its first character: a fifth row replaces the oldest of the four rows allowed (CTA-608-E C.5)"""
+    row = self._current_line.get_row()
+    others = [r for r, line in self._caption_lines.items() if r != row and not line.is_empty()]
+
+    if len(others) >= SCC_MAX_ROWS:
+      del self._caption_lines[others[0]]
+
+    # the rows are kept in the order of their first character
+    if self._caption_lines.get(row) is self._current_line:
+      del self._caption_lines[row]
+    self._caption_lines[row] = self._current_line
 
   def tab_cursor(self, nb_columns: int):
     """Moves the cursor to the right with a tab offset, but not past the last column (CTA-608-E C.13)"""
