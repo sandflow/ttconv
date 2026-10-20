@@ -671,19 +671,19 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[11].get_region())
 
     self.check_caption(p_list[12], "caption13", "00:00:21;26", "00:00:34;28", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
-                       ">> IT WAS ", "GOOD", " TO BE IN THE")
+                       ">> IT WAS", " GOOD", " TO BE IN THE")
     self.assertEqual(region_1, p_list[12].get_region())
 
     self.check_caption(p_list[13], "caption14", "00:00:34;28", "00:00:36;13", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
-                       ">> IT WAS ", "GOOD", " TO BE IN THE", Br, "And restore Iowa's land, water")
+                       ">> IT WAS", " GOOD", " TO BE IN THE", Br, "And restore Iowa's land, water")
     self.assertEqual(region_1, p_list[13].get_region())
 
-    self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS ", "GOOD",
+    self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS", " GOOD",
                        " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.")
     self.assertEqual(region_1, p_list[14].get_region())
 
-    self.check_caption(p_list[15], "caption16", "00:00:44;09", None, ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
+    self.check_caption(p_list[15], "caption16", "00:00:44;09", None, ">> IT WAS", " GOOD", " TO BE IN THE", Br,
                        "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
     self.assertEqual(region_1, p_list[15].get_region())
 
@@ -1726,6 +1726,47 @@ Scenarist_SCC V1.0
     # on the first row, and the BS of the third row erases the column 31 before the x is written there
     self.assertEqual(["ABCDEFGHIJKLMNOPQRSTUVWXYZ01234Y", "Z", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123x5", "Q"], rows)
 
+  def test_scc_foreground_black_underline_attribute_does_not_underline_the_standard_space(self):
+    # CTA-608-E 6.2: a standard decoder ignores a Foreground Attribute code and the formatting is the same on all
+    # decoders, so the standard space that precedes the code is not underlined: the underline starts with "world"
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 9470 9470 10a8 10a8 c8e5 ecec ef20 972f 972f f7ef f2ec 6480 942f 942f
+
+00:00:02:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual(["Hello ", "world"], [list(span)[0].get_text() for span in spans])
+
+    for span in spans:
+      self.assertEqual(NamedColors.red.value, span.get_style(StyleProperties.BackgroundColor))
+
+    self.assertNotEqual(TextDecorationType(underline=True), spans[0].get_style(StyleProperties.TextDecoration))
+    self.assertEqual(NamedColors.black.value, spans[1].get_style(StyleProperties.Color))
+    self.assertEqual(TextDecorationType(underline=True), spans[1].get_style(StyleProperties.TextDecoration))
+
+  def test_scc_attribute_code_takes_the_cell_of_the_standard_space(self):
+    # CTA-608-E 6.2: the standard space that precedes a background attribute code is overwritten by the code
+    # (automatic backspace), so the space is displayed with the background: one cell, not two
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 2080 1028 1028 c1c2 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual([" AB"], ["".join(list(span)[0].get_text() for span in [s]) for s in spans])
+    self.assertEqual(NamedColors.red.value, spans[0].get_style(StyleProperties.BackgroundColor))
 
 if __name__ == '__main__':
   unittest.main()
