@@ -180,6 +180,10 @@ class SccCaptionParagraph:
     """Moves the cursor to the right with a tab offset, but not past the last column (CTA-608-E C.13)"""
     self.indent_cursor(min(nb_columns, max(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 1 - self._cursor[1], 0)))
 
+  def delete_to_end_of_row(self):
+    """Deletes the characters of the current row from the cursor to the end of the row"""
+    self._current_line.truncate(self._cursor[1] - self._current_line.get_indent())
+
   def set_lines(self, lines: Union[List[SccCaptionLine], Dict[int, SccCaptionLine]]):
     """Sets paragraph lines"""
     if isinstance(lines, dict):

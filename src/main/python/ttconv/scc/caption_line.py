@@ -139,6 +139,16 @@ class SccCaptionLine:
     """Returns the line indentation"""
     return self._indent
 
+  def truncate(self, length: int):
+    """Keeps the first characters of the line"""
+    remaining = max(length, 0)
+    for text in self._texts:
+      kept = min(text.get_length(), remaining)
+      text.truncate(kept)
+      remaining -= kept
+
+    self.set_cursor(min(self._cursor, self.get_length()))
+
   def clear(self):
     """Clears the line text contents"""
     self._texts.clear()

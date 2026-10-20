@@ -1963,5 +1963,26 @@ Scenarist_SCC V1.0
     self.assertEqual("B", list(spans[-1])[0].get_text())
     self.assertEqual(NamedColors.black.value, spans[-1].get_style(StyleProperties.BackgroundColor))
 
+  def test_scc_delete_to_end_of_row_keeps_the_start_of_the_row(self):
+    # CTA-608-E B.3: DER deletes the characters from the cursor to the end of the row; a PAC for the middle
+    # of the row only moves the cursor to it
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 9470 9470 cbe5 e570 f879
+
+00:00:02:00	94f2 94f2 94a4 94a4
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
+    # the PAC and the DER are sent in two frames, the caption is split at each of them
+    self.assertEqual(["Keepxy", "Keepxy", "Keep"], texts)
+    self.assertEqual(p_list[1].get_end(), p_list[2].get_begin())
+
 if __name__ == '__main__':
   unittest.main()

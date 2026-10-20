@@ -245,9 +245,11 @@ class SccContext:
 
       self.paint_on_active_caption(time_code)
 
-      # Clear target row on Paint-On style
+      # A row that is written again from its first cell is replaced. (A PAC does not erase anything in CTA-608-E: the
+      # text that follows overwrites the characters, which this reader does not map, and the end of the row is deleted
+      # by a DER. A PAC for the middle of a row only moves the cursor.)
       target_row = self.active_caption.get_lines().get(pac_row)
-      if target_row is not None:
+      if target_row is not None and (pac_indent or 0) <= target_row.get_indent():
         target_row.clear()
 
       self.active_caption.set_cursor_at(pac_row, pac_indent)
@@ -465,12 +467,16 @@ class SccContext:
         self.active_caption.set_cursor_at(self.roll_up_base_row)
 
     elif control_code is SccControlCode.DER:
-      # Delete to End of Row (Paint-On)
-      # The DER may be issued from any point on a row to delete all displayable characters, transparent
-      # spaces, and mid-row codes from (and including) the current cell to the end of the row.
-      # Not used in this implementation since this SCC reader does not map the text overlapping into
-      # the model (i.e. a row is erased when a PAC is received, so before a new caption is written onto it).
-      pass
+      # Delete to End of Row: the characters from (and including) the current cell to the end of the row are deleted
+      # (CTA-608-E B.3). A row of a Paint-On caption is erased by it, not by a PAC.
+      if self.current_style is SccCaptionStyle.PaintOn and self.has_active_caption() \
+          and not self.active_caption.is_empty():
+        # What is displayed until the code is received
+        self.paint_on_active_caption(time_code)
+
+      caption = self.get_caption_to_process(time_code)
+      if caption is not None:
+        caption.delete_to_end_of_row()
 
     elif control_code is SccControlCode.BS:
       # Backspace
