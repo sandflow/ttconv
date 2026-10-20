@@ -436,6 +436,11 @@ class SccContext:
       # Backspace
       # When a Backspace is received, the cursor moves to the left one column position erasing
       # the character or Mid-Row Code occupying that location, unless the cursor is in Column 1
+      if self.current_style is SccCaptionStyle.PaintOn and self.has_active_caption() \
+          and not self.active_caption.is_empty():
+        # The character is on screen until the code erases it: end the paragraph that shows it here
+        self.paint_on_active_caption(time_code)
+
       self.backspace(time_code)
 
   def process_text(self, word: str, time_code: SmpteTimeCode):
