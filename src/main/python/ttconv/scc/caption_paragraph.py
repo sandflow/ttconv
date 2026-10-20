@@ -307,6 +307,14 @@ class SccCaptionParagraph:
 
     return get_position_from_offsets(self._safe_area_x_offset, self._safe_area_y_offset)
 
+  def _get_line_padding(self, line: SccCaptionLine) -> int:
+    """Returns the number of cells between the left of the paragraph and the first cell of a line, when the lines are
+    start-aligned (the other alignments place the lines by themselves)"""
+    if self.get_style_property(StyleProperties.TextAlign) not in (None, TextAlignType.start):
+      return 0
+
+    return max(line.get_indent() - min(other.get_indent() for other in self._caption_lines.values()), 0)
+
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
     if self.is_empty():
@@ -314,7 +322,7 @@ class SccCaptionParagraph:
 
     paragraph_rows = self._caption_lines.keys()
     nb_lines = max(paragraph_rows) - min(paragraph_rows) + 1
-    max_text_lengths = max([line.get_length() for line in self._caption_lines.values()])
+    max_text_lengths = max([self._get_line_padding(line) + line.get_length() for line in self._caption_lines.values()])
 
     return get_extent_from_dimensions(max_text_lengths, nb_lines)
 
@@ -389,6 +397,14 @@ class SccCaptionParagraph:
           p.push_child(Br(doc))
 
       last_row = row
+
+      padding = self._get_line_padding(caption_line)
+      if padding > 0 and not caption_line.is_empty():
+        # Move the line to its column, the cells before it show nothing
+        padding_span = Span(doc)
+        padding_span.set_style(StyleProperties.BackgroundColor, NamedColors.transparent.value)
+        padding_span.push_child(Text(doc, " " * padding))
+        p.push_child(padding_span)
 
       for caption_text in caption_line.get_texts():
 

@@ -369,7 +369,8 @@ Scenarist_SCC V1.0
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 28, 15, doc.get_cell_resolution())
+    # the row at the 5th column needs 4 more cells than the others
+    self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -392,20 +393,22 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[1], "caption2", "00:00:02:25", "00:00:04:19", expected_text[0], Br, expected_text[1])
     self.assertEqual(region_1, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:04:19", "00:00:06:06", expected_text[1], Br, expected_text[2])
+    self.check_caption(p_list[2], "caption3", "00:00:04:19", "00:00:06:06", expected_text[1], Br, "    ",
+                       expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
+    self.check_element_style(list(p_list[2])[3], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
-    self.check_caption(p_list[3], "caption4", "00:00:06:06", None, expected_text[2], Br, expected_text[3])
+    self.check_caption(p_list[3], "caption4", "00:00:06:06", None, "    ", expected_text[2], Br,
+                       expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
-    self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
+    self.check_element_style(list(p_list[3])[1], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
     for p in p_list:
-      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+      for span in [elem for elem in list(p) if isinstance(elem, Span) and list(elem)[0].get_text().strip()]:
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
@@ -1439,8 +1442,9 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[1], "caption2", "09:59:59:24", "10:00:01:04", " ")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "10:00:01:05", "11:00:09:07", "(camera shutter)", Br, Br, Br, Br,
-                       " <chaotic cacophony", Br, " exists throughout program>")
+    # the lines that start to the right of the others are moved there by cells that show nothing
+    self.check_caption(p_list[2], "caption3", "10:00:01:05", "11:00:09:07", "     ", "(camera shutter)", Br, Br, Br, Br,
+                       "    ", " <chaotic cacophony", Br, " exists throughout program>")
     self.assertEqual(region_3, p_list[2].get_region())
 
   def test_scc_content_trying_to_roll_up_pop_on_paragraph(self):
@@ -1570,6 +1574,27 @@ Scenarist_SCC V1.0
     self.assertEqual(" cd", list(spans[1])[0].get_text())
     self.assertEqual(NamedColors.red.value, spans[1].get_style(StyleProperties.Color))
     self.assertEqual(NamedColors.white.value, spans[1].get_style(StyleProperties.BackgroundColor))
+
+  def test_scc_rows_keep_their_columns(self):
+    # CTA-608-E 6.1: every row has its own column (PAC indent, tab offsets); the paragraph can't be aligned by
+    # itself here, so the row that starts to the right is moved to its column by cells that show nothing
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 9140 9140 6162 9252 9252 e364 e5e6 6768 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    content = ["/" if isinstance(child, Br) else list(child)[0].get_text() for child in p_list[0]]
+    self.assertEqual(["ab", "/", "/", "    ", "cdefgh"], content)
+    padding = list(p_list[0])[3]
+    self.assertEqual(NamedColors.transparent.value, padding.get_style(StyleProperties.BackgroundColor))
+    region = p_list[0].get_region()
+    self.assertEqual(10, region.get_style(StyleProperties.Extent).width.value // 2.5)    # 4 + 6 cells
+
 
   def test_scc_roll_up_blank_row_rolls_up_the_rows_above(self):
     # CTA-608-E D.2: of three consecutive CR, the second is redundant, so two rows roll up and one
@@ -1720,7 +1745,8 @@ Scenarist_SCC V1.0
     self.assertEqual(1, len([log for log in logs.output if "overflows" in log]))
 
     last = list(list(doc.get_body())[0])[-1]
-    rows = [list(child)[0].get_text() for child in last if isinstance(child, Span)]
+    rows = [list(child)[0].get_text() for child in last if isinstance(child, Span)
+            and child.get_style(StyleProperties.BackgroundColor) != NamedColors.transparent.value]
 
     # 32 columns: the characters after the 32nd replace the 32nd one, here ...0123 4 5 X Y become ...01234 Y
     # on the first row, and the BS of the third row erases the column 31 before the x is written there
