@@ -472,7 +472,7 @@ class _SccParagraphRegion:
     # Convert paragraph origin units into percentages
     paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
 
-    if self._paragraph.get_caption_style() in (SccCaptionStyle.RollUp, SccCaptionStyle.PaintOn):
+    if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
       return region_origin \
              and region_origin.x.units is paragraph_origin.x.units \
              and region_origin.y.units is paragraph_origin.y.units \
