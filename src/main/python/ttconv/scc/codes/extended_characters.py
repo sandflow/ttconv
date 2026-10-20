@@ -99,17 +99,17 @@ class SccExtendedCharacter(SccCode):
   ESZETT = (0x1334, 0x1B34, '\u00DF')  # ß eszett (mall sharp s)
   YEN_SIGN = (0x1335, 0x1B35, '\u00A5')  # ¥ yen
   CURRENCY_SIGN = (0x1336, 0x1B36, '\u00A4')  # ¤ non-specific currency sign
-  BOX_DRAWINGS_HEAVY_VERTICAL = (0x1337, 0x1B37, '\u2503')  # | Vertical bar
+  BOX_DRAWINGS_LIGHT_VERTICAL = (0x1337, 0x1B37, '\u2502')  # | Vertical bar
 
   # Danish extended characters
   LATIN_CAPITAL_LETTER_A_WITH_RING_ABOVE = (0x1338, 0x1B38, '\u00C5')  # Å capital A with ring
   LATIN_SMALL_LETTER_A_WITH_RING_ABOVE = (0x1339, 0x1B39, '\u00E5')  # å small a with ring
   LATIN_CAPITAL_LETTER_O_WITH_STROKE = (0x133A, 0x1B3A, '\u00D8')  # Ø capital O with slash
   LATIN_SMALL_LETTER_O_WITH_STROKE = (0x133B, 0x1B3B, '\u00F8')  # ø small o with slash
-  BOX_DRAWINGS_HEAVY_DOWN_AND_RIGHT = (0x133C, 0x1B3C, '\u250F')  # ⎡ upper left corner
-  BOX_DRAWINGS_HEAVY_DOWN_AND_LEFT = (0x133D, 0x1B3D, '\u2513')  # ⎤ upper right corner
-  BOX_DRAWINGS_HEAVY_UP_AND_RIGHT = (0x133E, 0x1B3E, '\u2517')  # ⎣ lower left corner
-  BOX_DRAWINGS_HEAVY_UP_AND_LEFT = (0x133F, 0x1B3F, '\u251B')  # ⎦ lower right corner
+  BOX_DRAWINGS_LIGHT_DOWN_AND_RIGHT = (0x133C, 0x1B3C, '\u250C')  # ⎡ upper left corner
+  BOX_DRAWINGS_LIGHT_DOWN_AND_LEFT = (0x133D, 0x1B3D, '\u2510')  # ⎤ upper right corner
+  BOX_DRAWINGS_LIGHT_UP_AND_RIGHT = (0x133E, 0x1B3E, '\u2514')  # ⎣ lower left corner
+  BOX_DRAWINGS_LIGHT_UP_AND_LEFT = (0x133F, 0x1B3F, '\u2518')  # ⎦ lower right corner
 
   def __init__(self, channel_1: int, channel_2: int, unicode: chr):
     super().__init__(channel_1, channel_2)
