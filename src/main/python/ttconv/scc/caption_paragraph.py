@@ -70,6 +70,9 @@ class SccCaptionParagraph:
     self._column_offset: int = safe_area_x_offset
     self._row_offset: int = safe_area_y_offset
 
+    # Base row of a roll-up caption
+    self._base_row: int = SCC_SAFE_AREA_CELL_RESOLUTION_ROWS
+
     # Position of the cursor in the active area
     self._cursor: (int, int) = (0, 0)
     # Whether text went past the last column since the cursor was moved
@@ -324,6 +327,14 @@ class SccCaptionParagraph:
 
     return max(line.get_indent() - min(other.get_indent() for other in self._caption_lines.values()), 0)
 
+  def set_base_row(self, base_row: int):
+    """Sets the base row of a roll-up caption"""
+    self._base_row = base_row
+
+  def get_base_row(self) -> int:
+    """Returns the base row of a roll-up caption"""
+    return self._base_row
+
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
     if self.is_empty():
@@ -498,11 +509,18 @@ class _SccParagraphRegion:
     paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
 
     if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
+      # The region ends on the base row
+      base_row_extent = convert_cells_to_percentages(get_extent_from_dimensions(0, self._paragraph.get_base_row()),
+                                                     self._doc.get_cell_resolution())
+      region_extent = region.get_style(StyleProperties.Extent)
+
       return region_origin \
              and region_origin.x.units is paragraph_origin.x.units \
              and region_origin.y.units is paragraph_origin.y.units \
              and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
-             and region_origin.y.value <= paragraph_origin.y.value
+             and region_origin.y.value <= paragraph_origin.y.value \
+             and region_extent is not None \
+             and math.isclose(region_extent.height.value, base_row_extent.height.value, abs_tol=0.001)
 
     return region_origin \
            and region_origin.x.units is paragraph_origin.x.units \
@@ -581,8 +599,8 @@ class _SccParagraphRegion:
     region_width = min(paragraph_extent.width.value, available_width)
 
     if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
-      # The region height extends from the top row to the bottom row of the safe area
-      region_height = self._bottom - (self._top + 1)
+      # The region height extends from the top row of the safe area to the base row
+      region_height = self._paragraph.get_base_row()
       region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.after)
     else:
       # The region height extends from its origin to the bottom of the safe area

@@ -84,6 +84,9 @@ class SccContext:
     # Roll-up caption number of lines
     self.roll_up_depth: int = 0
 
+    # Roll-up caption base row
+    self.roll_up_base_row: int = ROLL_UP_BASE_ROW
+
     # Cursor position in the active area
     self.active_cursor: Tuple[int, int] = (0, 0)
 
@@ -101,6 +104,7 @@ class SccContext:
   def new_active_caption(self, begin_time_code: SmpteTimeCode, caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
     """Initializes a new caption being displayed"""
     self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, caption_style)
+    self.active_caption.set_base_row(self.roll_up_base_row)
     self.active_caption.set_begin(begin_time_code)
 
   def new_buffered_caption(self):
@@ -210,6 +214,27 @@ class SccContext:
 
     self.active_caption.set_cursor_at(cursor[0], cursor[1])
 
+  def move_roll_up_base_row(self, base_row: int, time_code: SmpteTimeCode):
+    """Moves the roll-up caption that is displayed to a new base row"""
+    shift = base_row - self.roll_up_base_row
+    self.roll_up_base_row = base_row
+
+    if not self.has_active_caption():
+      return
+
+    if self.active_caption.is_empty():
+      self.active_caption.set_base_row(base_row)
+      return
+
+    # The caption is displayed on the rows it had up to now
+    moved_lines = self.active_caption.copy_lines()
+    self.push_active_caption_to_model(time_code)
+
+    self.new_active_caption(time_code, SccCaptionStyle.RollUp)
+    self.active_caption.set_lines({row + shift: line for row, line in moved_lines.items()})
+    for row, line in self.active_caption.get_lines().items():
+      line.set_row(row)
+
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SmpteTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
 
@@ -236,14 +261,14 @@ class SccContext:
       if self.active_caption.get_begin() is None:
         self.active_caption.set_begin(time_code)
 
-      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
-      if pac_row in range(5, 12):
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
-        self.active_caption.new_caption_text()
-        return
+      # The PAC row is the base row of the roll-up caption, but the rows of the caption have to fit above it
+      # (CTA-608-E C.4, C.7)
+      base_row = max(pac_row, self.roll_up_depth)
 
-      # Force roll-up paragraph to belong to the same region
-      self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW, pac_indent)
+      if base_row != self.roll_up_base_row:
+        self.move_roll_up_base_row(base_row, time_code)
+
+      self.active_caption.set_cursor_at(base_row, pac_indent)
 
       self.active_caption.new_caption_text()
 
@@ -356,12 +381,18 @@ class SccContext:
       elif control_code is SccControlCode.RU4:
         self.roll_up_depth = 4
 
+      if not self.has_active_caption() or self.active_caption.is_empty():
+        # The base row is row 15 when no roll-up caption is displayed (CTA-608-E C.15)
+        self.roll_up_base_row = ROLL_UP_BASE_ROW
+
+      self.roll_up_base_row = max(self.roll_up_base_row, self.roll_up_depth)
+
       if not self.has_active_caption():
         # If there is currently no active caption, initialize an empty new paragraph
         self.new_active_caption(time_code, SccCaptionStyle.RollUp)
 
         self.active_caption.set_caption_style(SccCaptionStyle.RollUp)
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW, 0)
+        self.active_caption.set_cursor_at(self.roll_up_base_row, 0)
         self.active_caption.new_caption_line()
         self.active_caption.new_caption_text()
 
@@ -431,7 +462,7 @@ class SccContext:
         self.new_active_caption(time_code, SccCaptionStyle.RollUp)
         self.active_caption.set_lines(previous_lines)
 
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
+        self.active_caption.set_cursor_at(self.roll_up_base_row)
 
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)

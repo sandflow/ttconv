@@ -346,7 +346,7 @@ Scenarist_SCC V1.0
 
 00:00:00:22	9425 9425 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
-00:00:02:23	9425 9425 94ad 94ad 9673 9673 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+00:00:02:23	9425 9425 94ad 94ad 9470 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
 00:00:04:17	9425 9425 94ad 94ad 9473 9473 d0e5 ecec e56e f4e5 73f1 75e5 20e9 6ef4 e5f2 6475 6d20 ec61 e375 73ae
 
@@ -356,7 +356,7 @@ Scenarist_SCC V1.0
 
     scc_disassembly = """\
 00:00:00:22	{RU2}{RU2}{CR}{CR}{1500}{1500}Lorem ipsum dolor sit amet,
-00:00:02:23	{RU2}{RU2}{CR}{CR}{0804}{0804}consectetur adipiscing elit.
+00:00:02:23	{RU2}{RU2}{CR}{CR}{1500}{1500}consectetur adipiscing elit.
 00:00:04:17	{RU2}{RU2}{CR}{CR}{1504}{1504}Pellentesque interdum lacus.
 00:00:06:04	{RU2}{RU2}{CR}{CR}{1500}{1500}Integer luctus et ligula.
 """
@@ -933,9 +933,9 @@ Scenarist_SCC V1.0
 
 00:00:00:00	9420 9150 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 942c 8080 8080 942f
 
-00:00:01:14	9426 942c 94ad 9050 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+00:00:01:14	9426 942c 94ad 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
-00:00:02:00	9426 94ad 942c 9350 d0e5 ecec e56e f4e5 73f1 75e5 20e9 6ef4 e5f2 6475 6d20 ec61 e375 73ae
+00:00:02:00	9426 94ad 942c 9470 d0e5 ecec e56e f4e5 73f1 75e5 20e9 6ef4 e5f2 6475 6d20 ec61 e375 73ae
 
 00:00:03:00	9429 942c 9370 496e 7465 6765 7220 6c75 6374 7573 2065 7420 942c 7361 6769 7474 6973 2e80
 
@@ -943,8 +943,8 @@ Scenarist_SCC V1.0
 
     scc_disassembly = """\
 00:00:00:00	{RCL}{0100}Lorem ipsum dolor sit amet,{EDM}{}{}{EOC}
-00:00:01:14	{RU3}{EDM}{CR}{1100}consectetur adipiscing elit.
-00:00:02:00	{RU3}{CR}{EDM}{1200}Pellentesque interdum lacus.
+00:00:01:14	{RU3}{EDM}{CR}{1500}consectetur adipiscing elit.
+00:00:02:00	{RU3}{CR}{EDM}{1500}Pellentesque interdum lacus.
 00:00:03:00	{RDC}{EDM}{1300}Integer luctus et {EDM}sagittis.
 """
 
@@ -1314,10 +1314,10 @@ Scenarist_SCC V1.0
 
   def test_scc_content_roll_up_empty_caption(self):
     scc_content = """Scenarist_SCC V1.0
-10:03:20:16	94ad 94ad 9426 9426 92d0 92d0 a880 9138 9138 2064 942c 942c e575 f820 76ef e9f8 2c20 e56e 2061 6e67 ec61 e973 29ba
+10:03:20:16	94ad 94ad 9426 9426 9470 9470 a880 9138 9138 2064 942c 942c e575 f820 76ef e9f8 2c20 e56e 2061 6e67 ec61 e973 29ba
 """
     expected_scc_disassembly = """\
-10:03:20:16	{CR}{CR}{RU3}{RU3}{0300}{0300}(àà d{EDM}{EDM}eux voix, en anglais):
+10:03:20:16	{CR}{CR}{RU3}{RU3}{1500}{1500}(àà d{EDM}{EDM}eux voix, en anglais):
 """
 
     scc_disassembly = to_disassembly(scc_content)
@@ -1594,6 +1594,48 @@ Scenarist_SCC V1.0
     self.assertEqual(NamedColors.transparent.value, padding.get_style(StyleProperties.BackgroundColor))
     region = p_list[0].get_region()
     self.assertEqual(10, region.get_style(StyleProperties.Extent).width.value // 2.5)    # 4 + 6 cells
+
+
+  def test_scc_roll_up_pac_sets_the_base_row(self):
+    # CTA-608-E C.7, F.1.1.5: the row of a PAC is the base row of a roll-up caption, the caption is displayed
+    # above it, and a PAC for another base row moves the displayed caption
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9426 9426 94ad 94ad 9470 9470 c180
+
+00:00:02:00	9426 9426 94ad 94ad 9470 9470 c280
+
+00:00:04:00	16e0 16e0
+
+00:00:06:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = [["/" if isinstance(c, Br) else list(c)[0].get_text() for c in p] for p in p_list]
+    self.assertEqual([["A"], ["A", "/", "B"], ["A", "/", "B"]], texts)
+
+    heights = [p.get_region().get_style(StyleProperties.Extent).height.value for p in p_list]
+    self.assertEqual([79, 79, 42], heights)                    # 15 and 8 of 19 rows
+    self.assertEqual(p_list[0].get_end(), p_list[1].get_begin())
+    self.assertEqual(p_list[1].get_end(), p_list[2].get_begin())
+
+  def test_scc_roll_up_base_row_is_at_least_the_depth(self):
+    # CTA-608-E C.4: three rows can't be displayed above row 2, the depth wins
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9426 9426 94ad 94ad 9240 9240 c180
+
+00:00:02:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(16, p_list[0].get_region().get_style(StyleProperties.Extent).height.value)     # 3 of 19 rows
 
 
   def test_scc_roll_up_blank_row_rolls_up_the_rows_above(self):
