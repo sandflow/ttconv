@@ -136,4 +136,4 @@ class SccStandardCharactersTest(unittest.TestCase):
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x7C], "÷")
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x7D], "Ñ")
     self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x7E], "ñ")
-    self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x7F], "█")
+    self.assertEqual(SCC_STANDARD_CHARACTERS_MAPPING[0x7F], "■")
