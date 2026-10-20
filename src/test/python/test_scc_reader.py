@@ -1816,5 +1816,66 @@ Scenarist_SCC V1.0
     last_origin = last.get_region().get_style(StyleProperties.Origin)
     self.assertGreater(last_origin.y.value, first_origin.y.value)
 
+  def test_scc_paint_on_text_typed_after_a_pause_starts_a_new_span(self):
+    # text that is not sent in the frame after the previous word appears when it is sent, the text before it
+    # was on screen alone until then; span times are relative to the paragraph
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c162
+
+00:00:02:00	6380
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual(["Ab", "c"], [list(span)[0].get_text() for span in spans])
+    self.assertIsNone(spans[0].get_begin())
+    self.assertAlmostEqual(2.0, float(spans[1].get_begin()), delta=0.1)
+
+  def test_scc_paint_on_over_roll_up_span_times_are_relative_to_the_paragraph(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 9425 94ad 94ad 9470 9470 c880
+
+00:00:02:00	9429 9429 9240 9240 c162
+
+00:00:03:00	6380
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    painted = [p for p in p_list if [list(span)[0].get_text() for span in p if isinstance(span, Span)][:2] == ["Ab", "c"]]
+    self.assertEqual(1, len(painted))
+    span = [child for child in painted[0] if isinstance(child, Span)][1]
+    self.assertAlmostEqual(1.0, float(span.get_begin()), delta=0.1)
+
+  def test_scc_backspace_erases_across_texts(self):
+    # CTA-608-E B.12: BS erases the character to the left, also when it is the last one of an earlier text of
+    # the row: "Ab", "x" sent later (a text of its own), BS, a null (the second BS is not redundant), BS, then y
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c162
+
+00:00:02:00	7880 94a1 94a1 8080 94a1 7980
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
+    self.assertEqual("Ay", texts[-1], texts)
+
 if __name__ == '__main__':
   unittest.main()

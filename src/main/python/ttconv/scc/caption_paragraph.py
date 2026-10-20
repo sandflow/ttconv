@@ -402,11 +402,11 @@ class SccCaptionParagraph:
 
           begin = caption_text.get_begin().to_temporal_offset()
 
-          if self.get_caption_style() is SccCaptionStyle.PaintOn:
-            # Compute paragraph-relative begin time
-            begin -= self._begin.to_temporal_offset()
+          # Compute paragraph-relative begin time (text can be painted on a caption of another style)
+          begin -= self._begin.to_temporal_offset()
 
-          span.set_begin(begin)
+          if begin > 0:
+            span.set_begin(begin)
 
         if caption_text.get_end() is not None:
 

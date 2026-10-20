@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from fractions import Fraction
 from typing import Optional, Tuple
 
 from ttconv.model import Div
@@ -41,7 +42,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.style_properties import StyleProperties
-from ttconv.time_code import SmpteTimeCode
+from ttconv.time_code import SmpteTimeCode, FPS_29_97
 
 ROLL_UP_BASE_ROW = 15
 
@@ -66,6 +67,9 @@ class SccContext:
     self.preceding_cc: Optional[SccCode | SccPreambleAddressCode] = None
     # Frame number at which the preceding control code was received
     self.preceding_cc_frame: Optional[int] = None
+
+    # Time of the previous word that was processed, to tell whether a word is sent in the frame that follows it
+    self.previous_word_offset: Optional[Fraction] = None
 
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style = SccCaptionStyle.default()
@@ -173,7 +177,12 @@ class SccContext:
       caption.set_cursor_at(row, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 2)
       return
 
-    caption.get_current_text().backspace()
+    erased_text = caption.get_current_text()
+    if erased_text.is_empty():
+      # the character to erase is at the end of an earlier text of the line
+      erased_text = next((text for text in reversed(caption.get_current_line().get_texts()) if not text.is_empty()),
+                         erased_text)
+    erased_text.backspace()
     caption.set_cursor_at(row, max(indent - 1, 0))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
@@ -474,6 +483,13 @@ class SccContext:
       else:
         if not self.has_active_caption():
           self.paint_on_active_caption(time_code)
+
+        elif self.previous_word_offset is not None \
+            and time_code.to_temporal_offset() - self.previous_word_offset > 1 / FPS_29_97:
+          # Not sent in the frame after the previous word: the text before it was on screen alone for a while
+          if not self.active_caption.get_current_text().is_empty():
+            self.active_caption.new_caption_text()
+          self.active_caption.get_current_text().set_begin(time_code)
 
         self.active_caption.append_text(word)
 
