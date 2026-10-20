@@ -382,6 +382,12 @@ class SccContext:
       # Erase buffered caption
       self.new_buffered_caption()
 
+    elif control_code is SccControlCode.FON:
+      # Flash On occupies a cell, displayed as a space like a mid-row code (CTA-608-E C.19); IMSC has no flashing
+      processed_caption = self.get_caption_to_process(time_code)
+      if processed_caption is not None:
+        processed_caption.append_text(" ")
+
     elif control_code is SccControlCode.TO1:
       self.get_caption_to_process(time_code).tab_cursor(1)
 
