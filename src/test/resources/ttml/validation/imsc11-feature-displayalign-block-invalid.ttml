@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #displayAlign-block -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" tts:extent="1280px 720px">
+  <head/>
+  <body>
+    <div tts:bpd="128px" tts:displayAlign="after">
+      <p>Lorem ipsum dolor sit amet.</p>
+    </div>
+  </body>
+</tt>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #animate-minimal -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations">
+  <head>
+    <animation>
+      <animate xml:id="a1" calcMode="discrete" keyTimes="0;0.5;1" tts:color="red;green;blue"/>
+      <animate xml:id="a2" calcMode="linear" keyTimes="0;0.25;0.50;1" tts:color="red;green;yellow;blue"/>
+    </animation>
+  </head>
+</tt>

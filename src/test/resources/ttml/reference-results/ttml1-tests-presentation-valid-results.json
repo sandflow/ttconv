@@ -1,0 +1,167 @@
+[
+  {
+    "file": "ttml1-prstn-animation.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-anonymous-span-duration-implicit.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-background-color-block.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-background-color-inline-lrtb.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-background-color-inline-spaces-lrtb.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-background-color-region.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-break-duration-implicit.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-break.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute display is not applicable to <br> (line 15)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-color-rgb-with-lwsp.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-color.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-direction.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-display-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-display-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-font-family.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-font-size-anamorphic-cell.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (0.5c 1c)",
+      "Bad tts:fontSize value (2c 1c)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-font-size-anamorphic-em.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (2c 1c)",
+      "Bad tts:fontSize value (1em 1em)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-font-size-inherited-em.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-font-size-region-em.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-initial-non-inherited.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-line-height.xml",
+    "result": "fail",
+    "errors": [
+      "Body: FontSize uses 'c' unit, only allowed on LinePadding (section 7.2.18)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-padding-region.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-region-timing.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-set-duration-implicit.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-show-background.xml",
+    "result": "fail",
+    "errors": [
+      "ISD has 5 regions, maximum 4 allowed"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-span-duration-implicit.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-text-decoration.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-text-outline.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid value TextOutlineType(thickness=LengthType(value=0.1, units=<Units.c: 'c'>), color=ColorType(components=(255, 0, 0, 255), ident=<Colorimetry.RGBA8: 'RGBA8'>)) for style property <class 'ttconv.style_properties.StyleProperties.TextOutline'>"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-unknown-attribute.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute foo is prohibited on <p> (line 16)"
+    ]
+  },
+  {
+    "file": "ttml1-prstn-visibility-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-visibility-2.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-visibility.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml1-prstn-z-index.xml",
+    "result": "pass",
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <region> (line 14)",
+      "Attribute (zIndex) is deprecated on <region> (line 15)",
+      "Attribute (zIndex) is deprecated on <region> (line 16)",
+      "Attribute (zIndex) is deprecated on <region> (line 17)",
+      "Attribute (zIndex) is deprecated on <region> (line 18)",
+      "Attribute (zIndex) is deprecated on <region> (line 19)"
+    ]
+  }
+]

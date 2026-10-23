@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #fontVariant -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <style tts:fontVariant="normal"/>
+      <style tts:fontVariant="half"/>
+      <style tts:fontVariant="half ruby"/>
+      <style tts:fontVariant="half ruby sub"/>
+      <style tts:fontVariant="half ruby super"/>
+      <style tts:fontVariant="half sub"/>
+      <style tts:fontVariant="half sub ruby"/>
+      <style tts:fontVariant="half super"/>
+      <style tts:fontVariant="half super ruby"/>
+      <style tts:fontVariant="full"/>
+      <style tts:fontVariant="full ruby"/>
+      <style tts:fontVariant="full ruby sub"/>
+      <style tts:fontVariant="full ruby super"/>
+      <style tts:fontVariant="full sub"/>
+      <style tts:fontVariant="full sub ruby"/>
+      <style tts:fontVariant="full super"/>
+      <style tts:fontVariant="full super ruby"/>
+      <style tts:fontVariant="ruby"/>
+      <style tts:fontVariant="ruby half"/>
+      <style tts:fontVariant="ruby half sub"/>
+      <style tts:fontVariant="ruby half super"/>
+      <style tts:fontVariant="ruby full"/>
+      <style tts:fontVariant="ruby full sub"/>
+      <style tts:fontVariant="ruby full super"/>
+      <style tts:fontVariant="ruby sub"/>
+      <style tts:fontVariant="ruby sub half"/>
+      <style tts:fontVariant="ruby sub full"/>
+      <style tts:fontVariant="ruby super"/>
+      <style tts:fontVariant="ruby super half"/>
+      <style tts:fontVariant="ruby super full"/>
+      <style tts:fontVariant="sub"/>
+      <style tts:fontVariant="sub ruby"/>
+      <style tts:fontVariant="sub ruby full"/>
+      <style tts:fontVariant="sub ruby half"/>
+      <style tts:fontVariant="sub full"/>
+      <style tts:fontVariant="sub full ruby"/>
+      <style tts:fontVariant="sub half"/>
+      <style tts:fontVariant="sub half ruby"/>
+      <style tts:fontVariant="super"/>
+      <style tts:fontVariant="super ruby"/>
+      <style tts:fontVariant="super ruby full"/>
+      <style tts:fontVariant="super ruby half"/>
+      <style tts:fontVariant="super full"/>
+      <style tts:fontVariant="super full ruby"/>
+      <style tts:fontVariant="super half"/>
+      <style tts:fontVariant="super half ruby"/>
+    </styling>
+  </head>
+</tt>

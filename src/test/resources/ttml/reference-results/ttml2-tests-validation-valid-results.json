@@ -1,0 +1,2192 @@
+[
+  {
+    "file": "ttml2-valid-animate-discrete.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-animate-fill.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-animate-linear.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-animate-out-of-line.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-animate-paced.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-animate-repeat-count.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-animate-spline.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-audio-embedding.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-audio-in-block.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-audio-in-body.xml",
+    "result": "fail",
+    "errors": [
+      "body contents does not match (metadata* set* div*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-audio-in-inline.xml",
+    "result": "fail",
+    "errors": [
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-background-clip.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundClip is prohibited on <style> (line 9)",
+      "Attribute backgroundClip is prohibited on <style> (line 10)",
+      "Attribute backgroundClip is prohibited on <style> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-background-color-rgb-function-padded-component.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-background-color-rgba-function-padded-component.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-background-color.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-background-extent.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundExtent is prohibited on <style> (line 10)",
+      "Attribute backgroundExtent is prohibited on <style> (line 11)",
+      "Attribute backgroundExtent is prohibited on <style> (line 12)",
+      "Attribute backgroundExtent is prohibited on <style> (line 13)",
+      "Attribute backgroundExtent is prohibited on <style> (line 14)",
+      "Attribute backgroundExtent is prohibited on <style> (line 15)",
+      "Attribute backgroundExtent is prohibited on <style> (line 16)",
+      "Attribute backgroundExtent is prohibited on <style> (line 17)",
+      "Attribute backgroundExtent is prohibited on <style> (line 18)",
+      "Attribute backgroundExtent is prohibited on <style> (line 19)",
+      "Attribute backgroundExtent is prohibited on <style> (line 20)",
+      "Attribute backgroundExtent is prohibited on <style> (line 21)",
+      "Attribute backgroundExtent is prohibited on <style> (line 22)",
+      "Attribute backgroundExtent is prohibited on <style> (line 23)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-background-image.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <style> (line 9)",
+      "Attribute backgroundImage is prohibited on <style> (line 10)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-background-origin.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundOrigin is prohibited on <style> (line 9)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 10)",
+      "Attribute backgroundOrigin is prohibited on <style> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-background-position.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundPosition is prohibited on <style> (line 11)",
+      "Attribute backgroundPosition is prohibited on <style> (line 12)",
+      "Attribute backgroundPosition is prohibited on <style> (line 13)",
+      "Attribute backgroundPosition is prohibited on <style> (line 15)",
+      "Attribute backgroundPosition is prohibited on <style> (line 16)",
+      "Attribute backgroundPosition is prohibited on <style> (line 17)",
+      "Attribute backgroundPosition is prohibited on <style> (line 18)",
+      "Attribute backgroundPosition is prohibited on <style> (line 19)",
+      "Attribute backgroundPosition is prohibited on <style> (line 20)",
+      "Attribute backgroundPosition is prohibited on <style> (line 21)",
+      "Attribute backgroundPosition is prohibited on <style> (line 22)",
+      "Attribute backgroundPosition is prohibited on <style> (line 23)",
+      "Attribute backgroundPosition is prohibited on <style> (line 25)",
+      "Attribute backgroundPosition is prohibited on <style> (line 26)",
+      "Attribute backgroundPosition is prohibited on <style> (line 27)",
+      "Attribute backgroundPosition is prohibited on <style> (line 28)",
+      "Attribute backgroundPosition is prohibited on <style> (line 29)",
+      "Attribute backgroundPosition is prohibited on <style> (line 30)",
+      "Attribute backgroundPosition is prohibited on <style> (line 31)",
+      "Attribute backgroundPosition is prohibited on <style> (line 32)",
+      "Attribute backgroundPosition is prohibited on <style> (line 33)",
+      "Attribute backgroundPosition is prohibited on <style> (line 34)",
+      "Attribute backgroundPosition is prohibited on <style> (line 35)",
+      "Attribute backgroundPosition is prohibited on <style> (line 36)",
+      "Attribute backgroundPosition is prohibited on <style> (line 37)",
+      "Attribute backgroundPosition is prohibited on <style> (line 38)",
+      "Attribute backgroundPosition is prohibited on <style> (line 39)",
+      "Attribute backgroundPosition is prohibited on <style> (line 40)",
+      "Attribute backgroundPosition is prohibited on <style> (line 42)",
+      "Attribute backgroundPosition is prohibited on <style> (line 43)",
+      "Attribute backgroundPosition is prohibited on <style> (line 44)",
+      "Attribute backgroundPosition is prohibited on <style> (line 45)",
+      "Attribute backgroundPosition is prohibited on <style> (line 46)",
+      "Attribute backgroundPosition is prohibited on <style> (line 47)",
+      "Attribute backgroundPosition is prohibited on <style> (line 48)",
+      "Attribute backgroundPosition is prohibited on <style> (line 49)",
+      "Attribute backgroundPosition is prohibited on <style> (line 50)",
+      "Attribute backgroundPosition is prohibited on <style> (line 51)",
+      "Attribute backgroundPosition is prohibited on <style> (line 52)",
+      "Attribute backgroundPosition is prohibited on <style> (line 53)",
+      "Attribute backgroundPosition is prohibited on <style> (line 54)",
+      "Attribute backgroundPosition is prohibited on <style> (line 55)",
+      "Attribute backgroundPosition is prohibited on <style> (line 56)",
+      "Attribute backgroundPosition is prohibited on <style> (line 57)",
+      "Attribute backgroundPosition is prohibited on <style> (line 58)",
+      "Attribute backgroundPosition is prohibited on <style> (line 59)",
+      "Attribute backgroundPosition is prohibited on <style> (line 60)",
+      "Attribute backgroundPosition is prohibited on <style> (line 61)",
+      "Attribute backgroundPosition is prohibited on <style> (line 62)",
+      "Attribute backgroundPosition is prohibited on <style> (line 63)",
+      "Attribute backgroundPosition is prohibited on <style> (line 64)",
+      "Attribute backgroundPosition is prohibited on <style> (line 65)",
+      "Attribute backgroundPosition is prohibited on <style> (line 66)",
+      "Attribute backgroundPosition is prohibited on <style> (line 67)",
+      "Attribute backgroundPosition is prohibited on <style> (line 68)",
+      "Attribute backgroundPosition is prohibited on <style> (line 69)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-background-repeat.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundRepeat is prohibited on <style> (line 9)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 10)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 11)",
+      "Attribute backgroundRepeat is prohibited on <style> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-base-general.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute base is prohibited on <tt> (line 3)",
+      "Attribute base is prohibited on <head> (line 6)",
+      "Attribute base is prohibited on <metadata> (line 7)",
+      "Attribute base is prohibited on <actor> (line 8)",
+      "Attribute base is prohibited on <agent> (line 9)",
+      "Attribute base is prohibited on <name> (line 10)",
+      "Attribute base is prohibited on <copyright> (line 12)",
+      "Attribute base is prohibited on <desc> (line 13)",
+      "Attribute base is prohibited on <item> (line 14)",
+      "Attribute base is prohibited on <title> (line 15)",
+      "Attribute base is prohibited on <profile> (line 17)",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "Attribute base is prohibited on <body> (line 38)",
+      "Attribute base is prohibited on <div> (line 39)",
+      "Attribute base is prohibited on <p> (line 40)",
+      "Attribute base is prohibited on <span> (line 41)",
+      "Attribute base is prohibited on <br> (line 42)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-base.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute base is prohibited on <head> (line 5)",
+      "Invalid feature base namespace '.'",
+      "Invalid extension base namespace '.'"
+    ]
+  },
+  {
+    "file": "ttml2-valid-border-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <body> (line 9)",
+      "Attribute border is prohibited on <div> (line 10)",
+      "Attribute border is prohibited on <p> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-border-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <span> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-border-radii-1.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 10)",
+      "Attribute border is prohibited on <style> (line 11)",
+      "Attribute border is prohibited on <style> (line 12)",
+      "Attribute border is prohibited on <style> (line 13)",
+      "Attribute border is prohibited on <style> (line 14)",
+      "Attribute border is prohibited on <style> (line 15)",
+      "Attribute border is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)",
+      "Attribute border is prohibited on <style> (line 21)",
+      "Attribute border is prohibited on <style> (line 22)",
+      "Attribute border is prohibited on <style> (line 23)",
+      "Attribute border is prohibited on <style> (line 24)",
+      "Attribute border is prohibited on <style> (line 25)",
+      "Attribute border is prohibited on <style> (line 26)",
+      "Attribute border is prohibited on <style> (line 27)",
+      "Attribute border is prohibited on <style> (line 28)",
+      "Attribute border is prohibited on <style> (line 29)",
+      "Attribute border is prohibited on <style> (line 30)",
+      "Attribute border is prohibited on <style> (line 31)",
+      "Attribute border is prohibited on <style> (line 32)",
+      "Attribute border is prohibited on <style> (line 33)",
+      "Attribute border is prohibited on <style> (line 34)",
+      "Attribute border is prohibited on <style> (line 35)",
+      "Attribute border is prohibited on <style> (line 36)",
+      "Attribute border is prohibited on <style> (line 37)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-border-radii-2.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 10)",
+      "Attribute border is prohibited on <style> (line 11)",
+      "Attribute border is prohibited on <style> (line 12)",
+      "Attribute border is prohibited on <style> (line 13)",
+      "Attribute border is prohibited on <style> (line 14)",
+      "Attribute border is prohibited on <style> (line 15)",
+      "Attribute border is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)",
+      "Attribute border is prohibited on <style> (line 21)",
+      "Attribute border is prohibited on <style> (line 22)",
+      "Attribute border is prohibited on <style> (line 23)",
+      "Attribute border is prohibited on <style> (line 24)",
+      "Attribute border is prohibited on <style> (line 25)",
+      "Attribute border is prohibited on <style> (line 26)",
+      "Attribute border is prohibited on <style> (line 27)",
+      "Attribute border is prohibited on <style> (line 28)",
+      "Attribute border is prohibited on <style> (line 29)",
+      "Attribute border is prohibited on <style> (line 30)",
+      "Attribute border is prohibited on <style> (line 31)",
+      "Attribute border is prohibited on <style> (line 32)",
+      "Attribute border is prohibited on <style> (line 33)",
+      "Attribute border is prohibited on <style> (line 34)",
+      "Attribute border is prohibited on <style> (line 35)",
+      "Attribute border is prohibited on <style> (line 36)",
+      "Attribute border is prohibited on <style> (line 37)",
+      "Attribute border is prohibited on <style> (line 38)",
+      "Attribute border is prohibited on <style> (line 39)",
+      "Attribute border is prohibited on <style> (line 40)",
+      "Attribute border is prohibited on <style> (line 41)",
+      "Attribute border is prohibited on <style> (line 42)",
+      "Attribute border is prohibited on <style> (line 43)",
+      "Attribute border is prohibited on <style> (line 44)",
+      "Attribute border is prohibited on <style> (line 45)",
+      "Attribute border is prohibited on <style> (line 46)",
+      "Attribute border is prohibited on <style> (line 47)",
+      "Attribute border is prohibited on <style> (line 48)",
+      "Attribute border is prohibited on <style> (line 49)",
+      "Attribute border is prohibited on <style> (line 50)",
+      "Attribute border is prohibited on <style> (line 51)",
+      "Attribute border is prohibited on <style> (line 52)",
+      "Attribute border is prohibited on <style> (line 53)",
+      "Attribute border is prohibited on <style> (line 54)",
+      "Attribute border is prohibited on <style> (line 55)",
+      "Attribute border is prohibited on <style> (line 56)",
+      "Attribute border is prohibited on <style> (line 57)",
+      "Attribute border is prohibited on <style> (line 58)",
+      "Attribute border is prohibited on <style> (line 59)",
+      "Attribute border is prohibited on <style> (line 60)",
+      "Attribute border is prohibited on <style> (line 61)",
+      "Attribute border is prohibited on <style> (line 62)",
+      "Attribute border is prohibited on <style> (line 63)",
+      "Attribute border is prohibited on <style> (line 64)",
+      "Attribute border is prohibited on <style> (line 65)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-border-region.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <region> (line 10)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-border.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute border is prohibited on <style> (line 10)",
+      "Attribute border is prohibited on <style> (line 11)",
+      "Attribute border is prohibited on <style> (line 12)",
+      "Attribute border is prohibited on <style> (line 13)",
+      "Attribute border is prohibited on <style> (line 14)",
+      "Attribute border is prohibited on <style> (line 15)",
+      "Attribute border is prohibited on <style> (line 16)",
+      "Attribute border is prohibited on <style> (line 17)",
+      "Attribute border is prohibited on <style> (line 18)",
+      "Attribute border is prohibited on <style> (line 19)",
+      "Attribute border is prohibited on <style> (line 20)",
+      "Attribute border is prohibited on <style> (line 21)",
+      "Attribute border is prohibited on <style> (line 22)",
+      "Attribute border is prohibited on <style> (line 23)",
+      "Attribute border is prohibited on <style> (line 24)",
+      "Attribute border is prohibited on <style> (line 25)",
+      "Attribute border is prohibited on <style> (line 26)",
+      "Attribute border is prohibited on <style> (line 27)",
+      "Attribute border is prohibited on <style> (line 28)",
+      "Attribute border is prohibited on <style> (line 29)",
+      "Attribute border is prohibited on <style> (line 30)",
+      "Attribute border is prohibited on <style> (line 31)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-bpd-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <body> (line 9)",
+      "Attribute bpd is prohibited on <div> (line 10)",
+      "Attribute bpd is prohibited on <p> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-bpd-inline-block.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Attribute bpd is prohibited on <span> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-bpd-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <span> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-bpd.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute bpd is prohibited on <style> (line 11)",
+      "Attribute bpd is prohibited on <style> (line 12)",
+      "Attribute bpd is prohibited on <style> (line 13)",
+      "Attribute bpd is prohibited on <style> (line 14)",
+      "Attribute bpd is prohibited on <style> (line 15)",
+      "Attribute bpd is prohibited on <style> (line 16)",
+      "Attribute bpd is prohibited on <style> (line 17)",
+      "Attribute bpd is prohibited on <style> (line 18)",
+      "Attribute bpd is prohibited on <style> (line 19)",
+      "Attribute bpd is prohibited on <style> (line 20)",
+      "Attribute bpd is prohibited on <style> (line 21)",
+      "Attribute bpd is prohibited on <style> (line 22)",
+      "Attribute bpd is prohibited on <style> (line 23)",
+      "Attribute bpd is prohibited on <style> (line 24)",
+      "Attribute bpd is prohibited on <style> (line 25)",
+      "Attribute bpd is prohibited on <style> (line 26)",
+      "Attribute bpd is prohibited on <style> (line 27)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-condition-media.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)",
+      "Attribute condition is prohibited on <style> (line 10)",
+      "Attribute condition is prohibited on <style> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-condition-parameter.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)",
+      "Attribute condition is prohibited on <style> (line 10)",
+      "Attribute condition is prohibited on <style> (line 11)",
+      "Attribute condition is prohibited on <style> (line 12)",
+      "Attribute condition is prohibited on <style> (line 13)",
+      "Attribute condition is prohibited on <style> (line 14)",
+      "Attribute condition is prohibited on <style> (line 15)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-condition-primary.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)",
+      "Attribute condition is prohibited on <style> (line 10)",
+      "Attribute condition is prohibited on <style> (line 11)",
+      "Attribute condition is prohibited on <style> (line 12)",
+      "Attribute condition is prohibited on <style> (line 13)",
+      "Attribute condition is prohibited on <style> (line 14)",
+      "Attribute condition is prohibited on <style> (line 15)",
+      "Attribute condition is prohibited on <style> (line 16)",
+      "Attribute condition is prohibited on <style> (line 17)",
+      "Attribute condition is prohibited on <style> (line 18)",
+      "Attribute condition is prohibited on <style> (line 19)",
+      "Attribute condition is prohibited on <style> (line 20)",
+      "Attribute condition is prohibited on <style> (line 21)",
+      "Attribute condition is prohibited on <style> (line 22)",
+      "Attribute condition is prohibited on <style> (line 23)",
+      "Attribute condition is prohibited on <style> (line 24)",
+      "Attribute condition is prohibited on <style> (line 25)",
+      "Attribute condition is prohibited on <style> (line 26)",
+      "Attribute condition is prohibited on <style> (line 27)",
+      "Attribute condition is prohibited on <style> (line 28)",
+      "Attribute condition is prohibited on <style> (line 29)",
+      "Attribute condition is prohibited on <style> (line 30)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-condition-supports.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profile-combination-ignore.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profile-combination-least-restrictive.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profile-combination-most-restrictive.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profile-combination-replace.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute contentProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profile-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)",
+      "Attribute type is prohibited on <profile> (line 7)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profile-nested.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profiles-quantified-all-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'all(http://www.w3.org/ns/ttml/profile/ttml2-transformation' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profiles-quantified-all-single.xml",
+    "result": "fail",
+    "errors": [
+      "ttp:contentProfiles: 'all(http://www.w3.org/ns/ttml/profile/ttml2-transformation)' is not a valid profile reference"
+    ]
+  },
+  {
+    "file": "ttml2-valid-content-profiles-unquantified-multiple.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-content-profiles-unquantified-single.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-data-embedding-chunked-zero-length.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-chunked.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-reference-missing-type.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-reference-with-metadata.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-reference.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-simple-with-lwsp.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-simple-zero-length.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-simple.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-data-embedding-sourced.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-direction-p.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-direction-span.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-disparity.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-display-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-display-2.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-display-align-1-region.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-display-align-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-display-align-2-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute displayAlign is not applicable to <body> (line 8)",
+      "Attribute displayAlign is not applicable to <div> (line 9)",
+      "Attribute displayAlign is not applicable to <p> (line 10)",
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-display-align-2-region.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value (justify)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-display-align-2.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value (justify)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-display-align-justify.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:displayAlign value (justify)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-display-aspect-ratio-16-9.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-display-aspect-ratio-4-3.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-display-inline-block.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Bad tts:display value (inlineBlock)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-1-region.xml",
+    "result": "fail",
+    "errors": [
+      "Error reading style property Extent with Invalid value ExtentType(height=LengthType(value=1.0, units=<Units.c: 'c'>), width=LengthType(value=1.0, units=<Units.c: 'c'>)) for style property <class 'ttconv.style_properties.StyleProperties.Extent'>",
+      "Region 'r3': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-1-root-auto.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (auto)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-1-root-definite.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-extent-1.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (auto auto)",
+      "Bad tts:extent value (1px auto)",
+      "Bad tts:extent value (auto 1px)",
+      "Bad tts:extent value (1c auto)",
+      "Bad tts:extent value (auto 1c)",
+      "Bad tts:extent value (1% auto)",
+      "Bad tts:extent value (auto 1%)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-image.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-length.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-measure.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (auto auto)",
+      "Bad tts:extent value (available available)",
+      "Bad tts:extent value (available fitContent)",
+      "Bad tts:extent value (fitContent available)",
+      "Bad tts:extent value (fitContent fitContent)",
+      "Bad tts:extent value (maxContent maxContent)",
+      "Bad tts:extent value (maxContent minContent)",
+      "Bad tts:extent value (minContent minContent)",
+      "Bad tts:extent value (minContent maxContent)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-region-contain.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (contain)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-region-cover.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (cover)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-region.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (contain)",
+      "Bad tts:extent value (cover)",
+      "Bad tts:extent value (auto auto)",
+      "Bad tts:extent value (available available)",
+      "Bad tts:extent value (fitContent fitContent)",
+      "Bad tts:extent value (minContent minContent)",
+      "Bad tts:extent value (maxContent maxContent)",
+      "Bad tts:extent value (1px auto)",
+      "Bad tts:extent value (auto 1px)",
+      "Bad tts:extent value (1c auto)",
+      "Bad tts:extent value (auto 1c)",
+      "Bad tts:extent value (1% auto)",
+      "Bad tts:extent value (1rw auto)",
+      "Bad tts:extent value (auto 1rh)",
+      "Bad tts:extent value (auto 1%)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-root-auto.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pixelAspectRatio is prohibited on <tt> (line 3)",
+      "Bad tts:extent value (auto)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2-root-contain.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (contain)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-extent-2.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:extent value (contain)",
+      "Bad tts:extent value (cover)",
+      "Bad tts:extent value (auto auto)",
+      "Bad tts:extent value (available available)",
+      "Bad tts:extent value (fitContent fitContent)",
+      "Bad tts:extent value (minContent minContent)",
+      "Bad tts:extent value (maxContent maxContent)",
+      "Bad tts:extent value (1px auto)",
+      "Bad tts:extent value (auto 1px)",
+      "Bad tts:extent value (1c auto)",
+      "Bad tts:extent value (auto 1c)",
+      "Bad tts:extent value (1% auto)",
+      "Bad tts:extent value (1rw auto)",
+      "Bad tts:extent value (auto 1rh)",
+      "Bad tts:extent value (auto 1%)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-embedding-family-case-sensitive.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-embedding.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-kerning.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontKerning is prohibited on <style> (line 9)",
+      "Attribute fontKerning is prohibited on <style> (line 10)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-selection-strategy-character.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-selection-strategy.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontSelectionStrategy is prohibited on <style> (line 9)",
+      "Attribute fontSelectionStrategy is prohibited on <style> (line 10)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-shear-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-shear.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute fontShear is prohibited on <style> (line 9)",
+      "Attribute fontShear is prohibited on <style> (line 10)",
+      "Attribute fontShear is prohibited on <style> (line 11)",
+      "Attribute fontShear is prohibited on <style> (line 12)",
+      "Attribute fontShear is prohibited on <style> (line 13)",
+      "Attribute fontShear is prohibited on <style> (line 14)",
+      "Attribute fontShear is prohibited on <style> (line 15)",
+      "Attribute fontShear is prohibited on <style> (line 16)",
+      "Attribute fontShear is prohibited on <style> (line 17)",
+      "Attribute fontShear is prohibited on <style> (line 18)",
+      "Attribute fontShear is prohibited on <style> (line 19)",
+      "Attribute fontShear is prohibited on <style> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-font-variant.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontVariant value (half)",
+      "Bad tts:fontVariant value (half ruby)",
+      "Bad tts:fontVariant value (half ruby sub)",
+      "Bad tts:fontVariant value (half ruby super)",
+      "Bad tts:fontVariant value (half sub)",
+      "Bad tts:fontVariant value (half sub ruby)",
+      "Bad tts:fontVariant value (half super)",
+      "Bad tts:fontVariant value (half super ruby)",
+      "Bad tts:fontVariant value (full)",
+      "Bad tts:fontVariant value (full ruby)",
+      "Bad tts:fontVariant value (full ruby sub)",
+      "Bad tts:fontVariant value (full ruby super)",
+      "Bad tts:fontVariant value (full sub)",
+      "Bad tts:fontVariant value (full sub ruby)",
+      "Bad tts:fontVariant value (full super)",
+      "Bad tts:fontVariant value (full super ruby)",
+      "Bad tts:fontVariant value (ruby)",
+      "Bad tts:fontVariant value (ruby half)",
+      "Bad tts:fontVariant value (ruby half sub)",
+      "Bad tts:fontVariant value (ruby half super)",
+      "Bad tts:fontVariant value (ruby full)",
+      "Bad tts:fontVariant value (ruby full sub)",
+      "Bad tts:fontVariant value (ruby full super)",
+      "Bad tts:fontVariant value (ruby sub)",
+      "Bad tts:fontVariant value (ruby sub half)",
+      "Bad tts:fontVariant value (ruby sub full)",
+      "Bad tts:fontVariant value (ruby super)",
+      "Bad tts:fontVariant value (ruby super half)",
+      "Bad tts:fontVariant value (ruby super full)",
+      "Bad tts:fontVariant value (sub ruby)",
+      "Bad tts:fontVariant value (sub ruby full)",
+      "Bad tts:fontVariant value (sub ruby half)",
+      "Bad tts:fontVariant value (sub full)",
+      "Bad tts:fontVariant value (sub full ruby)",
+      "Bad tts:fontVariant value (sub half)",
+      "Bad tts:fontVariant value (sub half ruby)",
+      "Bad tts:fontVariant value (super ruby)",
+      "Bad tts:fontVariant value (super ruby full)",
+      "Bad tts:fontVariant value (super ruby half)",
+      "Bad tts:fontVariant value (super full)",
+      "Bad tts:fontVariant value (super full ruby)",
+      "Bad tts:fontVariant value (super half)",
+      "Bad tts:fontVariant value (super half ruby)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-gain.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute gain is prohibited on <style> (line 9)",
+      "Attribute gain is prohibited on <style> (line 10)",
+      "Attribute gain is prohibited on <style> (line 11)",
+      "Attribute gain is prohibited on <style> (line 12)",
+      "Attribute gain is prohibited on <style> (line 13)",
+      "Attribute gain is prohibited on <style> (line 14)",
+      "Attribute gain is prohibited on <style> (line 15)",
+      "Attribute gain is prohibited on <style> (line 16)",
+      "Attribute gain is prohibited on <style> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-embedding.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-extent.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-block-png.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-block-simple-source-jpg.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-block-simple-source-png.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-body-png.xml",
+    "result": "fail",
+    "errors": [
+      "body contents does not match (metadata* set* div*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-inline-png.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-inline-simple-source-jpg.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-image-in-inline-simple-source-png.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-infer-processor-profile-method-loose.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileMethod is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-infer-processor-profile-method-strict.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileMethod is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-infer-processor-profile-source-combined.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileSource is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-infer-processor-profile-source-first.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute inferProcessorProfileSource is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-initial-duplicate.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-initial-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundClip is prohibited on <initial> (line 11)",
+      "Attribute backgroundExtent is prohibited on <initial> (line 12)",
+      "Attribute backgroundExtent is prohibited on <initial> (line 13)",
+      "Attribute backgroundImage is prohibited on <initial> (line 13)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundImage is prohibited on <initial> (line 14)",
+      "Attribute backgroundOrigin is prohibited on <initial> (line 14)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundOrigin is prohibited on <initial> (line 15)",
+      "Attribute backgroundPosition is prohibited on <initial> (line 15)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundPosition is prohibited on <initial> (line 16)",
+      "Attribute backgroundRepeat is prohibited on <initial> (line 16)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundRepeat is prohibited on <initial> (line 17)",
+      "Attribute border is prohibited on <initial> (line 17)",
+      "No style attribute specified in an initial element",
+      "Attribute border is prohibited on <initial> (line 18)",
+      "Attribute bpd is prohibited on <initial> (line 18)",
+      "No style attribute specified in an initial element",
+      "Attribute bpd is prohibited on <initial> (line 19)",
+      "Attribute fontKerning is prohibited on <initial> (line 26)",
+      "Attribute fontKerning is prohibited on <initial> (line 27)",
+      "Attribute fontSelectionStrategy is prohibited on <initial> (line 27)",
+      "No style attribute specified in an initial element",
+      "Attribute fontSelectionStrategy is prohibited on <initial> (line 28)",
+      "Attribute fontShear is prohibited on <initial> (line 28)",
+      "No style attribute specified in an initial element",
+      "Attribute fontShear is prohibited on <initial> (line 29)",
+      "Attribute ipd is prohibited on <initial> (line 33)",
+      "Attribute ipd is prohibited on <initial> (line 34)",
+      "Attribute letterSpacing is prohibited on <initial> (line 34)",
+      "No style attribute specified in an initial element",
+      "Attribute letterSpacing is prohibited on <initial> (line 35)",
+      "Attribute lineShear is prohibited on <initial> (line 36)",
+      "Attribute lineShear is prohibited on <initial> (line 37)",
+      "Bad tts:rubyAlign value (spaceBetween)",
+      "Bad tts:rubyAlign value (spaceBetween)",
+      "Attribute textOrientation is prohibited on <initial> (line 53)",
+      "Attribute textOrientation is prohibited on <initial> (line 54)",
+      "Attribute backgroundClip is prohibited on <initial> (line 61)",
+      "Attribute gain is prohibited on <initial> (line 63)",
+      "Attribute pan is prohibited on <initial> (line 63)",
+      "No style attribute specified in an initial element",
+      "Attribute pan is prohibited on <initial> (line 64)",
+      "Attribute pitch is prohibited on <initial> (line 64)",
+      "No style attribute specified in an initial element",
+      "Attribute pitch is prohibited on <initial> (line 65)",
+      "Attribute speak is prohibited on <initial> (line 65)",
+      "No style attribute specified in an initial element",
+      "Attribute speak is prohibited on <initial> (line 66)",
+      "Attribute gain is prohibited on <initial> (line 66)",
+      "No style attribute specified in an initial element"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <initial> (line 60)",
+      "Attribute (zIndex) is deprecated on <initial> (line 61)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-initial-none.xml",
+    "result": "fail",
+    "errors": [
+      "No style attribute specified in an initial element"
+    ]
+  },
+  {
+    "file": "ttml2-valid-initial-single.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundClip is prohibited on <initial> (line 11)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundExtent is prohibited on <initial> (line 13)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundImage is prohibited on <initial> (line 14)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundOrigin is prohibited on <initial> (line 15)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundPosition is prohibited on <initial> (line 16)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundRepeat is prohibited on <initial> (line 17)",
+      "No style attribute specified in an initial element",
+      "Attribute border is prohibited on <initial> (line 18)",
+      "No style attribute specified in an initial element",
+      "Attribute bpd is prohibited on <initial> (line 19)",
+      "No style attribute specified in an initial element",
+      "Attribute fontKerning is prohibited on <initial> (line 27)",
+      "No style attribute specified in an initial element",
+      "Attribute fontSelectionStrategy is prohibited on <initial> (line 28)",
+      "No style attribute specified in an initial element",
+      "Attribute fontShear is prohibited on <initial> (line 29)",
+      "No style attribute specified in an initial element",
+      "Attribute ipd is prohibited on <initial> (line 34)",
+      "No style attribute specified in an initial element",
+      "Attribute letterSpacing is prohibited on <initial> (line 35)",
+      "No style attribute specified in an initial element",
+      "Attribute lineShear is prohibited on <initial> (line 37)",
+      "No style attribute specified in an initial element",
+      "Bad tts:rubyAlign value (spaceBetween)",
+      "Attribute textOrientation is prohibited on <initial> (line 54)",
+      "No style attribute specified in an initial element",
+      "Attribute gain is prohibited on <initial> (line 63)",
+      "No style attribute specified in an initial element",
+      "Attribute pan is prohibited on <initial> (line 64)",
+      "No style attribute specified in an initial element",
+      "Attribute pitch is prohibited on <initial> (line 65)",
+      "No style attribute specified in an initial element",
+      "Attribute speak is prohibited on <initial> (line 66)",
+      "No style attribute specified in an initial element"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <initial> (line 61)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ipd-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <body> (line 9)",
+      "Attribute ipd is prohibited on <div> (line 10)",
+      "Attribute ipd is prohibited on <p> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ipd-inline-block.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:display value (inlineBlock)",
+      "Attribute ipd is prohibited on <span> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ipd-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <span> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ipd.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute ipd is prohibited on <style> (line 11)",
+      "Attribute ipd is prohibited on <style> (line 12)",
+      "Attribute ipd is prohibited on <style> (line 13)",
+      "Attribute ipd is prohibited on <style> (line 14)",
+      "Attribute ipd is prohibited on <style> (line 15)",
+      "Attribute ipd is prohibited on <style> (line 16)",
+      "Attribute ipd is prohibited on <style> (line 17)",
+      "Attribute ipd is prohibited on <style> (line 18)",
+      "Attribute ipd is prohibited on <style> (line 19)",
+      "Attribute ipd is prohibited on <style> (line 20)",
+      "Attribute ipd is prohibited on <style> (line 21)",
+      "Attribute ipd is prohibited on <style> (line 22)",
+      "Attribute ipd is prohibited on <style> (line 23)",
+      "Attribute ipd is prohibited on <style> (line 24)",
+      "Attribute ipd is prohibited on <style> (line 25)",
+      "Attribute ipd is prohibited on <style> (line 26)",
+      "Attribute ipd is prohibited on <style> (line 27)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-isd-sequence-size-non-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-valid-isd-sequence-size-zero.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-valid-isd-sequence-version-2.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-valid-isd-single-version-2.xml",
+    "result": "fail",
+    "errors": [
+      "Root element must be tt"
+    ]
+  },
+  {
+    "file": "ttml2-valid-length-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-length-2-root-container-relative.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundExtent is prohibited on <initial> (line 10)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundPosition is prohibited on <initial> (line 11)",
+      "No style attribute specified in an initial element",
+      "Attribute border is prohibited on <initial> (line 12)",
+      "No style attribute specified in an initial element",
+      "Attribute bpd is prohibited on <initial> (line 13)",
+      "No style attribute specified in an initial element",
+      "Attribute ipd is prohibited on <initial> (line 17)",
+      "No style attribute specified in an initial element",
+      "Attribute letterSpacing is prohibited on <initial> (line 18)",
+      "No style attribute specified in an initial element"
+    ]
+  },
+  {
+    "file": "ttml2-valid-length-2.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundExtent is prohibited on <initial> (line 10)",
+      "No style attribute specified in an initial element",
+      "Attribute backgroundPosition is prohibited on <initial> (line 11)",
+      "No style attribute specified in an initial element",
+      "Attribute border is prohibited on <initial> (line 12)",
+      "No style attribute specified in an initial element",
+      "Attribute bpd is prohibited on <initial> (line 13)",
+      "No style attribute specified in an initial element",
+      "Attribute ipd is prohibited on <initial> (line 17)",
+      "No style attribute specified in an initial element",
+      "Attribute letterSpacing is prohibited on <initial> (line 18)",
+      "No style attribute specified in an initial element"
+    ]
+  },
+  {
+    "file": "ttml2-valid-length-real-version-2.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:fontSize value (0.px)",
+      "Bad tts:fontSize value (0.%)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-letter-spacing.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute letterSpacing is prohibited on <style> (line 11)",
+      "Attribute letterSpacing is prohibited on <style> (line 12)",
+      "Attribute letterSpacing is prohibited on <style> (line 13)",
+      "Attribute letterSpacing is prohibited on <style> (line 14)",
+      "Attribute letterSpacing is prohibited on <style> (line 15)",
+      "Attribute letterSpacing is prohibited on <style> (line 16)",
+      "Attribute letterSpacing is prohibited on <style> (line 17)",
+      "Attribute letterSpacing is prohibited on <style> (line 18)",
+      "Attribute letterSpacing is prohibited on <style> (line 19)",
+      "Attribute letterSpacing is prohibited on <style> (line 20)",
+      "Attribute letterSpacing is prohibited on <style> (line 21)",
+      "Attribute letterSpacing is prohibited on <style> (line 22)",
+      "Attribute letterSpacing is prohibited on <style> (line 23)",
+      "Attribute letterSpacing is prohibited on <style> (line 24)",
+      "Attribute letterSpacing is prohibited on <style> (line 25)",
+      "Attribute letterSpacing is prohibited on <style> (line 26)",
+      "Attribute letterSpacing is prohibited on <style> (line 27)",
+      "Attribute letterSpacing is prohibited on <style> (line 28)",
+      "Attribute letterSpacing is prohibited on <style> (line 29)",
+      "Attribute letterSpacing is prohibited on <style> (line 30)",
+      "Attribute letterSpacing is prohibited on <style> (line 31)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-line-shear-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <style> (line 9)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-line-shear.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute lineShear is prohibited on <style> (line 9)",
+      "Attribute lineShear is prohibited on <style> (line 10)",
+      "Attribute lineShear is prohibited on <style> (line 11)",
+      "Attribute lineShear is prohibited on <style> (line 12)",
+      "Attribute lineShear is prohibited on <style> (line 13)",
+      "Attribute lineShear is prohibited on <style> (line 14)",
+      "Attribute lineShear is prohibited on <style> (line 15)",
+      "Attribute lineShear is prohibited on <style> (line 16)",
+      "Attribute lineShear is prohibited on <style> (line 17)",
+      "Attribute lineShear is prohibited on <style> (line 18)",
+      "Attribute lineShear is prohibited on <style> (line 19)",
+      "Attribute lineShear is prohibited on <style> (line 20)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-luminance-gain.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:luminanceGain value (.0)",
+      "Bad tts:luminanceGain value (.1)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-metadata-item-named.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-metadata-item-qualified.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-opacity-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute opacity is not applicable to <body> (line 8)",
+      "Attribute opacity is not applicable to <div> (line 9)",
+      "Attribute opacity is not applicable to <p> (line 10)",
+      "Attribute opacity is not applicable to <p> (line 11)",
+      "Attribute opacity is not applicable to <p> (line 12)",
+      "Attribute opacity is not applicable to <div> (line 14)",
+      "Attribute opacity is not applicable to <p> (line 15)",
+      "Attribute opacity is not applicable to <p> (line 16)",
+      "Attribute opacity is not applicable to <p> (line 17)",
+      "Attribute opacity is not applicable to <div> (line 19)",
+      "Attribute opacity is not applicable to <p> (line 20)",
+      "Attribute opacity is not applicable to <p> (line 21)",
+      "Attribute opacity is not applicable to <p> (line 22)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-opacity-image-block.xml",
+    "result": "fail",
+    "errors": [
+      "body contents does not match (metadata* set* div*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-opacity-image-inline.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-opacity-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute opacity is not applicable to <span> (line 10)",
+      "Attribute opacity is not applicable to <span> (line 11)",
+      "Attribute opacity is not applicable to <span> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-opacity-out-of-range.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-opacity-region.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-opacity.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-padding-block.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute padding is not applicable to <body> (line 10)",
+      "Attribute padding is not applicable to <div> (line 11)",
+      "Attribute padding is not applicable to <p> (line 12)",
+      "Attribute padding is not applicable to <p> (line 13)",
+      "Attribute padding is not applicable to <p> (line 14)",
+      "Attribute padding is not applicable to <p> (line 15)",
+      "Attribute padding is not applicable to <p> (line 16)",
+      "Attribute padding is not applicable to <p> (line 17)",
+      "Attribute padding is not applicable to <div> (line 19)",
+      "Attribute padding is not applicable to <p> (line 20)",
+      "Attribute padding is not applicable to <p> (line 21)",
+      "Attribute padding is not applicable to <p> (line 22)",
+      "Attribute padding is not applicable to <p> (line 23)",
+      "Attribute padding is not applicable to <p> (line 24)",
+      "Attribute padding is not applicable to <p> (line 25)",
+      "Attribute padding is not applicable to <div> (line 27)",
+      "Attribute padding is not applicable to <p> (line 28)",
+      "Attribute padding is not applicable to <p> (line 29)",
+      "Attribute padding is not applicable to <p> (line 30)",
+      "Attribute padding is not applicable to <p> (line 31)",
+      "Attribute padding is not applicable to <p> (line 32)",
+      "Attribute padding is not applicable to <p> (line 33)",
+      "Attribute padding is not applicable to <div> (line 35)",
+      "Attribute padding is not applicable to <p> (line 36)",
+      "Attribute padding is not applicable to <p> (line 37)",
+      "Attribute padding is not applicable to <p> (line 38)",
+      "Attribute padding is not applicable to <p> (line 39)",
+      "Attribute padding is not applicable to <p> (line 40)",
+      "Attribute padding is not applicable to <p> (line 41)",
+      "Attribute padding is not applicable to <div> (line 43)",
+      "Attribute padding is not applicable to <p> (line 44)",
+      "Attribute padding is not applicable to <p> (line 45)",
+      "Attribute padding is not applicable to <p> (line 46)",
+      "Attribute padding is not applicable to <p> (line 47)",
+      "Attribute padding is not applicable to <p> (line 48)",
+      "Attribute padding is not applicable to <p> (line 49)",
+      "Attribute padding is not applicable to <div> (line 51)",
+      "Attribute padding is not applicable to <p> (line 52)",
+      "Attribute padding is not applicable to <p> (line 53)",
+      "Attribute padding is not applicable to <p> (line 54)",
+      "Attribute padding is not applicable to <p> (line 55)",
+      "Attribute padding is not applicable to <p> (line 56)",
+      "Attribute padding is not applicable to <p> (line 57)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-padding-inline.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute padding is not applicable to <span> (line 12)",
+      "Attribute padding is not applicable to <span> (line 13)",
+      "Attribute padding is not applicable to <span> (line 14)",
+      "Attribute padding is not applicable to <span> (line 15)",
+      "Attribute padding is not applicable to <span> (line 16)",
+      "Attribute padding is not applicable to <span> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-padding-region.xml",
+    "result": "fail",
+    "errors": [
+      "Error reading style property Padding with Invalid value PaddingType(before=LengthType(value=1.1, units=<Units.c: 'c'>), end=LengthType(value=1.2, units=<Units.c: 'c'>), after=LengthType(value=1.3, units=<Units.c: 'c'>), start=LengthType(value=1.4, units=<Units.c: 'c'>)) for style property <class 'ttconv.style_properties.StyleProperties.Padding'>",
+      "Error reading style property Padding with Invalid value PaddingType(before=LengthType(value=1.1, units=<Units.c: 'c'>), end=LengthType(value=1.2, units=<Units.em: 'em'>), after=LengthType(value=1.3, units=<Units.px: 'px'>), start=LengthType(value=1.4, units=<Units.pct: '%'>)) for style property <class 'ttconv.style_properties.StyleProperties.Padding'>",
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-padding.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-pan.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pan is prohibited on <style> (line 9)",
+      "Attribute pan is prohibited on <style> (line 10)",
+      "Attribute pan is prohibited on <style> (line 11)",
+      "Attribute pan is prohibited on <style> (line 12)",
+      "Attribute pan is prohibited on <style> (line 13)",
+      "Attribute pan is prohibited on <style> (line 14)",
+      "Attribute pan is prohibited on <style> (line 15)",
+      "Attribute pan is prohibited on <style> (line 16)",
+      "Attribute pan is prohibited on <style> (line 17)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-permit-feature-narrowing-allow.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureNarrowing is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-permit-feature-narrowing-disallow.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureNarrowing is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-permit-feature-widening-allow.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureWidening is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-permit-feature-widening-disallow.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute permitFeatureWidening is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-pitch.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute pitch is prohibited on <style> (line 10)",
+      "Attribute pitch is prohibited on <style> (line 11)",
+      "Attribute pitch is prohibited on <style> (line 12)",
+      "Attribute pitch is prohibited on <style> (line 13)",
+      "Attribute pitch is prohibited on <style> (line 14)",
+      "Attribute pitch is prohibited on <style> (line 15)",
+      "Attribute pitch is prohibited on <style> (line 16)",
+      "Attribute pitch is prohibited on <style> (line 17)",
+      "Attribute pitch is prohibited on <style> (line 18)",
+      "Attribute pitch is prohibited on <style> (line 20)",
+      "Attribute pitch is prohibited on <style> (line 21)",
+      "Attribute pitch is prohibited on <style> (line 22)",
+      "Attribute pitch is prohibited on <style> (line 23)",
+      "Attribute pitch is prohibited on <style> (line 24)",
+      "Attribute pitch is prohibited on <style> (line 25)",
+      "Attribute pitch is prohibited on <style> (line 26)",
+      "Attribute pitch is prohibited on <style> (line 27)",
+      "Attribute pitch is prohibited on <style> (line 28)",
+      "Attribute pitch is prohibited on <style> (line 30)",
+      "Attribute pitch is prohibited on <style> (line 31)",
+      "Attribute pitch is prohibited on <style> (line 32)",
+      "Attribute pitch is prohibited on <style> (line 33)",
+      "Attribute pitch is prohibited on <style> (line 34)",
+      "Attribute pitch is prohibited on <style> (line 35)",
+      "Attribute pitch is prohibited on <style> (line 36)",
+      "Attribute pitch is prohibited on <style> (line 37)",
+      "Attribute pitch is prohibited on <style> (line 38)",
+      "Attribute pitch is prohibited on <style> (line 39)",
+      "Attribute pitch is prohibited on <style> (line 40)",
+      "Attribute pitch is prohibited on <style> (line 41)",
+      "Attribute pitch is prohibited on <style> (line 42)",
+      "Attribute pitch is prohibited on <style> (line 43)",
+      "Attribute pitch is prohibited on <style> (line 44)",
+      "Attribute pitch is prohibited on <style> (line 45)",
+      "Attribute pitch is prohibited on <style> (line 46)",
+      "Attribute pitch is prohibited on <style> (line 47)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-position.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-presentation-1.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-presentation-2.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-presentation-audio.xml",
+    "result": "fail",
+    "errors": [
+      "Invalid feature designator 'http://www.w3.org/ns/ttml/feature/#presentation-audio'"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profile-combination-ignore.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profile-combination-least-restrictive.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profile-combination-most-restrictive.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profile-combination-replace.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfileCombination is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profile-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)",
+      "Attribute type is prohibited on <profile> (line 7)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profile-nested.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)",
+      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profiles-quantified-all-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profiles-quantified-all-single.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profiles-quantified-any-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profiles-quantified-any-single.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profiles-unquantified-multiple.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-processor-profiles-unquantified-single.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute processorProfiles is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-combine-ignore.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-combine-least-restrictive.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-combine-most-restrictive.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-combine-replace.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute combine is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-designator.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute designator is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-type-content.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-type-processor.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-profile-use.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-region-implied-animation.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute disparity is not applicable to <div> (line 13)",
+      "Attribute extent is not applicable to <div> (line 14)",
+      "Attribute origin is not applicable to <div> (line 15)",
+      "Attribute position is not applicable to <div> (line 16)",
+      "Attribute disparity is not applicable to <p> (line 18)",
+      "Attribute extent is not applicable to <p> (line 19)",
+      "Attribute origin is not applicable to <p> (line 20)",
+      "Attribute position is not applicable to <p> (line 21)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-region-inline.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-region-timing.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-resources-all.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ruby-align-minimal.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value (start)",
+      "Bad tts:rubyAlign value (end)",
+      "Bad tts:rubyAlign value (spaceBetween)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ruby-align-with-base.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value (withBase)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ruby-align.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:rubyAlign value (start)",
+      "Bad tts:rubyAlign value (end)",
+      "Bad tts:rubyAlign value (spaceBetween)",
+      "Bad tts:rubyAlign value (withBase)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-ruby-position.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-ruby-reserve.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-ruby-span-delimiters.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-ruby-span-shortcuts-delimiters.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-ruby-span-shortcuts.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-ruby-span.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-ruby.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-set-fill.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-set-multiple-styles.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-set-repeat-count.xml",
+    "result": "fail",
+    "errors": [
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-set.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute {http://www.w3.org/ns/ttml#styling}opacity is not applicable to {http://www.w3.org/ns/ttml}div",
+      "Attribute {http://www.w3.org/ns/ttml#styling}display is not applicable to {http://www.w3.org/ns/ttml}br"
+    ],
+    "warnings": [
+      "Attribute (zIndex) is deprecated on <set> (line 10)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-shear-real-syntax.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:shear value (0.%)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-shear.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-speak-implied-audio-disabled.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <body> (line 8)",
+      "body contents does not match (metadata* set* div*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-speak-implied-audio-source.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <span> (line 12)",
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-speak-implied-audio.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <span> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-speak.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute speak is prohibited on <style> (line 9)",
+      "Attribute speak is prohibited on <style> (line 10)",
+      "Attribute speak is prohibited on <style> (line 11)",
+      "Attribute speak is prohibited on <style> (line 12)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-speech.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute condition is prohibited on <p> (line 15)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-text-align-absolute.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-text-align-justify.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textAlign value (justify)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-text-align-relative.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-text-combine.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-text-emphasis-color.xml",
+    "result": "fail",
+    "errors": [
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (current)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)",
+      "tts:textEmphasis emphasis-color component is not permitted (red)",
+      "tts:textEmphasis emphasis-color component is not permitted (green)",
+      "tts:textEmphasis emphasis-color component is not permitted (blue)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-text-emphasis-minimal.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-text-emphasis-quoted-string.xml",
+    "result": "fail",
+    "errors": [
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted ('\u25b2')",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")",
+      "tts:textEmphasis emphasis-style quoted-string component is not permitted (\"\u25b2\")"
+    ]
+  },
+  {
+    "file": "ttml2-valid-text-orientation.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute textOrientation is prohibited on <style> (line 9)",
+      "Attribute textOrientation is prohibited on <style> (line 10)",
+      "Attribute textOrientation is prohibited on <style> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-text-shadow.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:textShadow value (1px 1px, 2px 2px)",
+      "Bad tts:textShadow value (1px 1px red, 2px 2px red)",
+      "Bad tts:textShadow value (1px 1px 1px, 2px 2px 2px)",
+      "Bad tts:textShadow value (1px 1px 1px red, 2px 2px 2px red)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-transformation-1.xml",
+    "result": "fail",
+    "errors": [
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-transformation-2.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute type is prohibited on <profile> (line 6)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-unicode-bidi-1.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-unicode-bidi-2.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value (isolate)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-unicode-bidi-isolate.xml",
+    "result": "fail",
+    "errors": [
+      "Bad tts:unicodeBidi value (isolate)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-validation-action-abort.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validationAction is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-validation-action-ignore.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validationAction is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-validation-action-warn.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validationAction is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-validation-optional.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-validation-prohibited.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-validation-required.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute validation is prohibited on <tt> (line 3)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-visibility-image.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-visibility.xml",
+    "result": "pass"
+  },
+  {
+    "file": "ttml2-valid-wall-clock-date-time.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (wallclock(1970-01-01T00:00))",
+      "Bad begin attribute value (wallclock(1970-01-01T00:00:00))",
+      "Bad begin attribute value (wallclock(1970-01-01T00:00:00.0))",
+      "Bad begin attribute value (wallclock(1970-01-01T23:59:59))",
+      "Bad begin attribute value (wallclock(1970-01-01T23:59:59.0))",
+      "Bad begin attribute value (wallclock(1970-12-31T00:00:00))",
+      "Bad begin attribute value (wallclock(1970-12-31T00:00:00.0))",
+      "Bad begin attribute value (wallclock(1970-12-31T23:59:59))",
+      "Bad begin attribute value (wallclock(1970-12-31T23:59:59.999999999))",
+      "Bad begin attribute value (wallclock(1970-12-31T23:59:60))",
+      "Bad begin attribute value (wallclock(1970-12-31T23:59:60.0))",
+      "Bad begin attribute value (wallclock(9999-01-01T00:00))",
+      "Bad begin attribute value (wallclock(9999-01-01T00:00:00))",
+      "Bad begin attribute value (wallclock(9999-01-01T00:00:00.0))",
+      "Bad begin attribute value (wallclock(9999-01-01T23:59))",
+      "Bad begin attribute value (wallclock(9999-01-01T23:59:59))",
+      "Bad begin attribute value (wallclock(9999-01-01T23:59:59.0))",
+      "Bad begin attribute value (wallclock(9999-12-31T00:00:00))",
+      "Bad begin attribute value (wallclock(9999-12-31T00:00:00.0))",
+      "Bad begin attribute value (wallclock(9999-12-31T23:59:59))",
+      "Bad begin attribute value (wallclock(9999-12-31T23:59:59.999999999))",
+      "Bad begin attribute value (wallclock(9999-12-31T23:59:60))",
+      "Bad begin attribute value (wallclock(9999-12-31T23:59:60.0))",
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml2-valid-wall-clock-date.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (wallclock(1970-01-01))",
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml2-valid-wall-clock-wall-time.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute clockMode is prohibited on <tt> (line 3)",
+      "Bad begin attribute value (wallclock(00:00:00))",
+      "Bad begin attribute value (wallclock(00:00:00.0))",
+      "Bad begin attribute value (wallclock(23:59:59))",
+      "Bad begin attribute value (wallclock(23:59:59.999999999))",
+      "Bad begin attribute value (wallclock(23:59:60))",
+      "Bad begin attribute value (wallclock(23:59:60.0))",
+      "Time base TimeBase.clock is not supported"
+    ]
+  },
+  {
+    "file": "ttml2-valid-xlink-href-image-in-block.xml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-xlink-href-image-in-inline.xml",
+    "result": "fail",
+    "errors": [
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-xlink-href-span.xml",
+    "result": "fail",
+    "errors": [
+      "Attribute href is prohibited on <span> (line 11)"
+    ]
+  },
+  {
+    "file": "ttml2-valid-xml-id-missing.xml",
+    "result": "fail",
+    "errors": [
+      "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+    ]
+  }
+]

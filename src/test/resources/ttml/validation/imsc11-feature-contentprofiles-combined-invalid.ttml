@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #contentProfiles-combined -->
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    ttp:contentProfileCombination="mostRestrictive"
+    ttp:inferProcessorProfileSource="combined"
+    tts:extent="1280px 720px"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <metadata>
+      <ttm:desc>#contentProfiles-combined</ttm:desc>
+    </metadata>
+    <profile xmlns="http://www.w3.org/ns/ttml#parameter" type="content">
+      <extensions>
+        <extension value="optional">#unsupported</extension>
+      </extensions>
+    </profile>
+    <profile xmlns="http://www.w3.org/ns/ttml#parameter" type="content">
+      <extensions>
+        <extension value="required">#unsupported</extension>
+      </extensions>
+    </profile>
+    <styling>
+      <style xml:id="sBody" tts:fontSize="18px" tts:lineHeight="22px" tts:color="black" tts:textAlign="center"/>
+      <style xml:id="sBackground" tts:backgroundColor="#A0A0A0"/>
+    </styling>
+    <layout>
+      <region xml:id="area1" style="sBackground" tts:extent="600px 128px" tts:position="center" tts:displayAlign="center"/>
+    </layout>
+  </head>
+  <body style="sBody">
+    <div region="area1" begin="0s" end="1s">
+      <p>Should not appear on implementation that performs full profile processing without override.</p>
+    </div>
+  </body>
+</tt>

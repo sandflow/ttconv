@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    xmlns:ebutts="urn:ebu:tt:style" xmlns:ebuttm="urn:ebu:tt:metadata" xml:lang="sk"
+    ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text" ttp:timeBase="media"
+    ttp:frameRate="25">
+    <head>
+        <styling>
+            <style xml:id="default" tts:color="#EBEBEB" tts:backgroundColor="transparent"
+                tts:fontFamily="proportionalSansSerif" tts:fontSize="80%" tts:fontWeight="normal"
+                tts:fontStyle="normal" tts:textOutline="#101010 3%"/>
+        </styling>
+        <layout>
+            <region xml:id="Region_Top" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="2.5% 15%" tts:extent="95% 70%"
+                tts:textAlign="center" tts:displayAlign="before"/>
+            <region xml:id="Region_Bottom" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="2.5% 15%" tts:extent="95% 70%"
+                tts:textAlign="center" tts:displayAlign="after"/>
+        </layout>
+    </head>
+    <body>
+        <div>
+            <p begin="01:01:16.202" end="01:01:19.615" style="default" region="Region_Bottom">PRED DVOMA DŇAMI</p>
+            <p begin="01:01:58.126" end="01:01:59.111" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Brendan?</span></p>
+            <p begin="01:02:03.165" end="01:02:04.160" style="default" region="Region_Bottom">Emily?</p>
+            <p begin="01:02:06.000" end="01:02:07.040" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Áno.</span></p>
+            <p begin="01:02:09.060" end="01:02:10.168" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Ako sa máš?</span></p>
+            <p begin="01:02:13.428" end="01:02:15.012" style="default" region="Region_Bottom">Stále rovnako.</p>
+            <p begin="01:02:16.250" end="01:02:18.004" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Áno?</span></p>
+            <p begin="01:02:20.212" end="01:02:22.016" style="default" region="Region_Bottom"><span tts:fontStyle="italic">To je fajn.</span></p>
+            <p begin="01:02:30.642" end="01:02:32.009" style="default" region="Region_Bottom">Čo je, Emily?</p>
+            <p begin="01:02:32.865" end="01:02:36.702" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Rada ťa počujem, Brendan.</span></p>
+            <p begin="01:02:38.266" end="01:02:40.012" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Dlho sme sa nevideli.</span></p>
+            <p begin="01:02:41.918" end="01:02:42.210" style="default" region="Region_Bottom">Dva mesiace.</p>
+            <p begin="01:02:43.906" end="01:02:47.222" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Áno, zabudla som číslo</span><br/><span tts:fontStyle="italic">tvojej skrinky. Povedal mi ho Chytrák.</span></p>
+            <p begin="01:02:48.898" end="01:02:50.521" style="default" region="Region_Bottom">Čo sa niekde stretnúť?</p>
+            <p begin="01:02:52.650" end="01:02:53.232" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Nemôžem.</span></p>
+            <p begin="01:02:54.789" end="01:02:58.963" style="default" region="Region_Bottom">-Prečo nie?<br/><span tts:fontStyle="italic">-Ja som to pobabrala.</span></p>
+            <p begin="01:02:59.504" end="01:03:01.234" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Poriadne.</span></p>
+        </div>
+    </body>
+</tt>
