@@ -667,6 +667,10 @@ class ISD(model.Document):
               child_element
         )
 
+        if isd_element_child is None and isinstance(child_element, (model.Rb, model.Rbc, model.Rt, model.Rtc, model.Rp)):
+          # ruby structure elements are never pruned
+          isd_element_child = child_element.__class__(isd)
+
         if isd_element_child is not None:
           isd_element_children.append(isd_element_child)
 
@@ -687,8 +691,14 @@ class ISD(model.Document):
     
     # prune or keep the element
 
-    if isinstance(isd_element, (model.Br, model.Text,model.Rb, model.Rbc)):
+    # ruby spans are not pruned to preserve the model structure
+    if isinstance(isd_element, (model.Br, model.Text, model.Rb, model.Rbc, model.Rt, model.Rtc, model.Rp)):
       return isd_element
+
+    # ruby elements are pruned if they consists of only empty elements
+    if isinstance(isd_element, model.Ruby):
+      if _is_ruby_structure_empty(isd_element):
+        return None
 
     if isd_element.has_children():
       return isd_element
@@ -700,6 +710,14 @@ class ISD(model.Document):
       return isd_element
 
     return None
+
+def _is_ruby_structure_empty(ruby: model.ContentElement) -> bool:
+  '''Returns whether the ruby does not contain text elements'''
+  for child in ruby:
+    if not isinstance(child, (model.Rb, model.Rbc, model.Rt, model.Rtc, model.Rp)) or not _is_ruby_structure_empty(child):
+      return False
+
+  return True
 
 def _prune_empty_spans(element: model.ContentElement):
   children = list(element)
