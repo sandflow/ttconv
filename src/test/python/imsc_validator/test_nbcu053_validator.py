@@ -29,8 +29,7 @@ import json
 import unittest
 from fractions import Fraction
 
-from ttconv.imsc.validator.nbcu053.config import NBCU053ValidatorConfiguration
-from ttconv.imsc.validator.nbcu053.model import AspectRatio, FrameRate, validate
+from ttconv.imsc.validator.nbcu053.model import AspectRatio, FrameRate, NBCU053ValidatorConfiguration, validate
 
 class FrameRateTests(unittest.TestCase):
 
@@ -100,112 +99,67 @@ class NBCU053ValidatorDocumentTests(unittest.TestCase):
 
   def test_25_sdr_doc(self):
     with open("src/test/resources/ttml/nbcu/valid/nbcu053-25-sdr.ttml", "rb") as f:
-      self.assertTrue(validate(f, expected_frame_rate=FrameRate.FPS_25))
+      self.assertTrue(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_25)))
 
   def test_25_hdr_doc(self):
     with open("src/test/resources/ttml/nbcu/valid/nbcu053-25-hdr.ttml", "rb") as f:
-      self.assertTrue(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_25,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertTrue(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_25, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_doc(self):
     with open("src/test/resources/ttml/nbcu/valid/nbcu053-2398-hdr-ja.ttml", "rb") as f:
-      self.assertTrue(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertTrue(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_display_aspect_ratio_doc(self):
     with open("src/test/resources/ttml/nbcu/valid/nbcu053-2398-hdr-ja-display-aspect-ratio.ttml", "rb") as f:
-      self.assertTrue(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertTrue(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_vertical_id_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-vertical-id.ttml", "rb") as f:
-      self.assertFalse(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_vertical_writingmode_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-vertical-writingmode.ttml", "rb") as f:
-      self.assertFalse(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_display_aspect_ratio_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-display-aspect-ratio.ttml", "rb") as f:
-      self.assertFalse(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_framerate_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-framerate.ttml", "rb") as f:
-      self.assertFalse(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_frameratemultiplier_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-frameratemultiplier.ttml", "rb") as f:
-      self.assertFalse(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_vertical_origin_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-vertical-origin.ttml", "rb") as f:
-      self.assertFalse(validate(
-        f,
-        expected_frame_rate=FrameRate.FPS_23_98,
-        hdr=True,
-        aspect_ratio=AspectRatio.RATIO_2_39
-      ))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True, aspect_ratio=AspectRatio.RATIO_2_39)))
 
   def test_2398_hdr_ja_bad_region_origin_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-region-origin.ttml", "rb") as f:
-      self.assertFalse(validate(f, expected_frame_rate=FrameRate.FPS_23_98, hdr=True))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True)))
 
   def test_2398_hdr_ja_bad_region_extent_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-region-extent.ttml", "rb") as f:
-      self.assertFalse(validate(f, expected_frame_rate=FrameRate.FPS_23_98, hdr=True))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True)))
 
   def test_2398_hdr_ja_bad_region_extent_value_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-bad-region-extent-value.ttml", "rb") as f:
-      self.assertFalse(validate(f, expected_frame_rate=FrameRate.FPS_23_98, hdr=True))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True)))
 
   def test_2398_hdr_ja_missing_aspect_ratio_param(self):
     with open("src/test/resources/ttml/nbcu/valid/nbcu053-2398-hdr-ja.ttml", "rb") as f:
-      self.assertFalse(validate(f, expected_frame_rate=FrameRate.FPS_23_98, hdr=True))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True)))
 
   def test_2398_hdr_ja_missing_luminancegain_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-2398-hdr-ja-missing-luminancegain.ttml", "rb") as f:
-      self.assertFalse(validate(f, expected_frame_rate=FrameRate.FPS_23_98, hdr=True))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_23_98, hdr=True)))
 
   def test_25_sdr_bad_luminancegain_doc(self):
     with open("src/test/resources/ttml/nbcu/invalid/nbcu053-25-sdr-bad-luminancegain.ttml", "rb") as f:
-      self.assertFalse(validate(f, expected_frame_rate=FrameRate.FPS_25))
+      self.assertFalse(validate(f, NBCU053ValidatorConfiguration(frame_rate=FrameRate.FPS_25)))
 
 if __name__ == '__main__':
   unittest.main()

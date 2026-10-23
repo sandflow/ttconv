@@ -151,7 +151,7 @@ def _validate(doc: str) -> typing.Tuple[bool, typing.List[str]]:
 def _validate_full(doc: str) -> typing.Tuple[bool, typing.List[str]]:
   '''Validates against IMSC 1.1 and then the Rosetta constraints'''
   handler = _RecordingHandler()
-  result = validate(io.BytesIO(doc.encode("utf-8")), handler)
+  result = validate(io.BytesIO(doc.encode("utf-8")), event_handler=handler)
   return result, handler.errors
 
 class RosettaValidatorTests(unittest.TestCase):
@@ -401,7 +401,7 @@ class RosettaExampleTests(unittest.TestCase):
     for name in names:
       with self.subTest(name):
         handler = _RecordingHandler()
-        result = validate(io.BytesIO(_read_example(name).encode("utf-8")), handler)
+        result = validate(io.BytesIO(_read_example(name).encode("utf-8")), event_handler=handler)
         self.assertEqual(handler.errors, [])
         # the only warning is the deprecation of ittm:altText, which metadata.imscr uses on purpose
         self.assertEqual([w for w in handler.warnings if w != "ittm:altText element is deprecated"], [])

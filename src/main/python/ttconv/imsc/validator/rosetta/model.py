@@ -34,6 +34,7 @@ import io
 import re
 import typing
 
+from ttconv.config import ModuleConfiguration
 from ttconv.imsc.namespaces import QName
 import ttconv.imsc.namespaces as NS
 from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary, attribute
@@ -650,13 +651,17 @@ def _validate_imscr(f: typing.BinaryIO, event_handler: typing.Optional[EventHand
 
   return counting_handler.error_count == 0
 
-def validate(f: typing.BinaryIO, event_handler: typing.Optional[EventHandler] = None) -> bool:
+def validate(
+  f: typing.BinaryIO,
+  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
+  event_handler: typing.Optional[EventHandler] = None
+) -> bool:
   '''Validates `f` and returns whether no ERROR-or-above records were logged.
 
   `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
   data = f.read()
 
-  if not imsc11.validate(io.BytesIO(data), event_handler):
+  if not imsc11.validate(io.BytesIO(data), event_handler=event_handler):
     return False
 
   return _validate_imscr(io.BytesIO(data), event_handler)

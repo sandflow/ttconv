@@ -94,7 +94,7 @@ def _validate_ebuttd_only(doc: str) -> typing.Tuple[bool, typing.List[str], typi
 def _validate_full(doc: str) -> typing.Tuple[bool, typing.List[str], typing.List[str]]:
   '''Validates against IMSC 1.1 and then the EBU-TT-D constraints'''
   handler = _RecordingHandler()
-  result = validate(io.BytesIO(doc.encode("utf-8")), handler)
+  result = validate(io.BytesIO(doc.encode("utf-8")), event_handler=handler)
   return result, handler.errors, handler.warnings
 
 class EBUTTDValidatorTestCase(unittest.TestCase):
@@ -130,7 +130,7 @@ class DocumentTests(EBUTTDValidatorTestCase):
       with self.subTest(name):
         handler = _RecordingHandler()
         with open(os.path.join(_RESOURCES_DIR, "valid", name), "rb") as f:
-          self.assertTrue(validate(f, handler))
+          self.assertTrue(validate(f, event_handler=handler))
         self.assertEqual(handler.errors, [])
 
   def test_irt_samples(self):
@@ -140,7 +140,7 @@ class DocumentTests(EBUTTDValidatorTestCase):
       with self.subTest(name):
         handler = _RecordingHandler()
         with open(os.path.join(_IRT_SAMPLES_DIR, name), "rb") as f:
-          self.assertTrue(validate(f, handler))
+          self.assertTrue(validate(f, event_handler=handler))
         self.assertEqual(handler.errors, [])
 
   def test_invalid_files(self):
@@ -148,7 +148,7 @@ class DocumentTests(EBUTTDValidatorTestCase):
       with self.subTest(name):
         handler = _RecordingHandler()
         with open(os.path.join(_RESOURCES_DIR, "invalid", name), "rb") as f:
-          self.assertFalse(validate(f, handler))
+          self.assertFalse(validate(f, event_handler=handler))
         self.assertNotEqual(handler.errors, [])
 
   def test_imsc11_validation_fails_first(self):

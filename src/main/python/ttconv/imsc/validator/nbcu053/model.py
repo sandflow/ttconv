@@ -27,14 +27,17 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from enum import Enum
 from fractions import Fraction
 import io
+import json
 import math
 import typing
 from typing import Optional
 import xml.etree.ElementTree as ET
 
+from ttconv.config import ModuleConfiguration
 from ttconv.isd import ISD
 import ttconv.imsc.reader as imsc_reader
 import ttconv.model as model
@@ -177,6 +180,43 @@ class AspectRatio(Enum):
   RATIO_0_56 = "0.56"  # 9:16
   RATIO_0_80 = "0.80"  # 4:5
   RATIO_1_00 = "1.00"  # 1:1
+
+def _decode_frame_rate(value: str) -> FrameRate:
+  try:
+    if isinstance(value, str):
+      return FrameRate.from_text(value)
+  except ValueError:
+    pass
+
+  raise ValueError(f"frame_rate shall be one of {', '.join(json.dumps(r.text) for r in FrameRate)}, not {json.dumps(value)}")
+
+def _decode_aspect_ratio(value: typing.Optional[str]) -> typing.Optional[AspectRatio]:
+  if value is None:
+    return None
+
+  if isinstance(value, str):
+    for ratio in AspectRatio:
+      if ratio.value == value:
+        return ratio
+
+  raise ValueError(f"aspect_ratio shall be one of {', '.join(json.dumps(r.value) for r in AspectRatio)}, not {json.dumps(value)}")
+
+@dataclass
+class NBCU053ValidatorConfiguration(ModuleConfiguration):
+  """NBCU-053 validator configuration"""
+
+  @classmethod
+  def name(cls):
+    return "nbcu053"
+
+  # frame rate of the document: "23.98", "25" or "29.97"
+  frame_rate: FrameRate = field(metadata={"decoder": _decode_frame_rate})
+
+  # the document is an HDR document
+  hdr: bool = field(default=False, metadata={"decoder": bool})
+
+  # display aspect ratio of the media, as a string, e.g. "2.39". It is required if the document has vertical text.
+  aspect_ratio: typing.Optional[AspectRatio] = field(default=None, metadata={"decoder": _decode_aspect_ratio})
 
 _EXPECTED_VERT_REGION_DIMS = {
   AspectRatio.RATIO_2_66: (_make_pct_origin(5, 23), _make_pct_extent(88, 54)),
@@ -383,17 +423,23 @@ def _validate_doc_styles(
 
 def validate(
   f: typing.BinaryIO,
-  expected_frame_rate: FrameRate,
-  hdr: bool = False,
-  aspect_ratio: typing.Optional[AspectRatio] = None,
+  config: typing.Optional[ModuleConfiguration] = None,
   event_handler: typing.Optional[EventHandler] = None
 ) -> bool:
-  '''Validates `f` and returns whether no ERROR-or-above records were logged.
+  '''Validates `f` using `config`, which SHALL be an `NBCU053ValidatorConfiguration`, and returns whether no ERROR-or-above
+  records were logged.
 
   `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.
 
-  `aspect_ratio` SHALL be provided if the document contains vertical text regions.
+  `config.aspect_ratio` SHALL be provided if the document contains vertical text regions.
   '''
+
+  if not isinstance(config, NBCU053ValidatorConfiguration):
+    raise ValueError(f"the {NBCU053ValidatorConfiguration.name()} model requires an {NBCU053ValidatorConfiguration.__name__}")
+
+  expected_frame_rate = config.frame_rate
+  hdr = config.hdr
+  aspect_ratio = config.aspect_ratio
 
   data = f.read()
   counting_handler = imsc11_model.ErrorCountingEventHandler(event_handler)

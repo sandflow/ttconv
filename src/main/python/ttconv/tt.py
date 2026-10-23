@@ -25,7 +25,6 @@
 
 '''ttconv tt'''
 
-import functools
 import json
 import logging
 import os
@@ -42,7 +41,7 @@ import ttconv.imsc.writer as imsc_writer
 import ttconv.imsc.validator.ebuttd.model as ebuttd_model
 import ttconv.imsc.validator.imsc11_model as imsc11_model
 import ttconv.imsc.validator.nbcu053.model as nbcu053_model
-from ttconv.imsc.validator.nbcu053.config import NBCU053ValidatorConfiguration
+from ttconv.imsc.validator.nbcu053.model import NBCU053ValidatorConfiguration
 import ttconv.imsc.validator.rosetta.model as rosetta_model
 import ttconv.scc.reader as scc_reader
 import ttconv.scc.writer as scc_writer
@@ -488,14 +487,24 @@ def convert(args):
 
 
 class ValidateModels(Enum):
-  '''Enumerates the models that a document can be validated against'''
-  IMSC11TEXT = "imsc11text"
-  NBCU053 = "nbcu053"
-  EBUTTD = "ebuttd"
-  ROSETTA = "rosetta"
+  '''Enumerates the models that a document can be validated against. The value of each is the name of the model, its validation
+  function and its configuration class, or `None` if the model is not configurable.'''
+  IMSC11TEXT = ("imsc11text", imsc11_model.validate, None)
+  NBCU053 = ("nbcu053", nbcu053_model.validate, NBCU053ValidatorConfiguration)
+  EBUTTD = ("ebuttd", ebuttd_model.validate, None)
+  ROSETTA = ("rosetta", rosetta_model.validate, None)
+
+  def __new__(cls, text: str, *_args):
+    member = object.__new__(cls)
+    member._value_ = text
+    return member
+
+  def __init__(self, _text: str, validate: typing.Callable[..., bool], config_class: typing.Optional[typing.Type[ModuleConfiguration]]):
+    self.validate = validate
+    self.config_class = config_class
 
   def __str__(self):
-    return self.value
+    return self._value_
 
 VALIDATE_LOG_LEVELS: typing.Dict[str, int] = {
   "debug": logging.DEBUG,
@@ -535,33 +544,21 @@ def validate(args) -> int:
   root_logger.setLevel(log_level)
   root_logger.addHandler(handler)
 
-  if args.model is ValidateModels.IMSC11TEXT:
-    model_validate = imsc11_model.validate
-  elif args.model is ValidateModels.ROSETTA:
-    model_validate = rosetta_model.validate
-  elif args.model is ValidateModels.EBUTTD:
-    model_validate = ebuttd_model.validate
-  elif args.model is ValidateModels.NBCU053:
+  config = None
+
+  config_class = args.model.config_class
+  if config_class is not None:
     try:
-      config = read_config_from_json(NBCU053ValidatorConfiguration, load_json_config(args))
+      config = read_config_from_json(config_class, load_json_config(args))
     except ValueError as e:
-      die(f"invalid {NBCU053ValidatorConfiguration.name()} configuration: {' '.join(str(arg) for arg in e.args)}")
+      die(f"invalid {config_class.name()} configuration: {' '.join(str(arg) for arg in e.args)}")
 
     if config is None:
-      die(f"the {NBCU053ValidatorConfiguration.name()} model requires a {NBCU053ValidatorConfiguration.name()} configuration")
-
-    model_validate = functools.partial(
-      nbcu053_model.validate,
-      expected_frame_rate=config.frame_rate,
-      hdr=config.hdr,
-      aspect_ratio=config.aspect_ratio
-    )
-  else:
-    die(f"unknown model {args.model}")
+      die(f"the {args.model} model requires a {config_class.name()} configuration")
 
   try:
     with open(args.file, "rb") as f:
-      if not model_validate(f):
+      if not args.model.validate(f, config):
         return 1
   except OSError as e:
     die(f"can't open '{args.file}': {e}")

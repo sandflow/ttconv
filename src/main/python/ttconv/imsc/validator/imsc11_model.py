@@ -30,6 +30,7 @@ from typing import List
 import typing
 import xml.etree.ElementTree as ET
 
+from ttconv.config import ModuleConfiguration
 from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.namespaces
@@ -945,7 +946,11 @@ class TT(IMSCElement):
       if target_id not in ctx.sig_agent_ids:
         ctx.event_handler.error("No significant agent with xml:id '%s' exists", target_id)
 
-def validate(f: typing.BinaryIO, event_handler: typing.Optional[EventHandler] = None) -> bool:
+def validate(
+  f: typing.BinaryIO,
+  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
+  event_handler: typing.Optional[EventHandler] = None
+) -> bool:
   '''Validates `f` and returns whether no ERROR-or-above records were logged.'''
   counting_handler = ErrorCountingEventHandler(event_handler)
 
