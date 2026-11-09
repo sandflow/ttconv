@@ -409,16 +409,16 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
       # reflow text
       reflowed_lines: List[str] = []
       while len(text) > MAX_LINEWIDTH:
-        break_i = MAX_LINEWIDTH
+        # break at the last space that leaves at most MAX_LINEWIDTH characters in the row, and drop it
+        break_i = text.rfind(' ', 1, MAX_LINEWIDTH + 1)
 
-        for i in range(len(text) - 2, 0, -1):
-          c = text[i]
-          if c == ord(' ') and i < MAX_LINEWIDTH:
-            break_i = i
-            break
-
-        reflowed_lines.append(text[:break_i])
-        text = text[break_i + 1:]
+        if break_i > 0:
+          reflowed_lines.append(text[:break_i])
+          text = text[break_i + 1:]
+        else:
+          # no space to break at: cut the word at the last column, and keep every character
+          reflowed_lines.append(text[:MAX_LINEWIDTH])
+          text = text[MAX_LINEWIDTH:]
 
       reflowed_lines.append(text)
 

@@ -123,6 +123,34 @@ class SccWriterConfigurationTest(unittest.TestCase):
 
 class SCCWriterTest(unittest.TestCase):
 
+  def _reflowed_rows(self, text: str) -> list:
+    ttml_doc_str = f"""<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
+  <body>
+    <div>
+      <p begin="150f" end="270f">{text}</p>
+     </div>
+  </body>
+</tt>"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration())
+
+    doc = scc_reader.to_model(scc_from_model)
+    p = list(list(doc.get_body())[0])[0]
+    return [list(child)[0].get_text() for child in p if isinstance(child, Span)]
+
+  def test_reflow_breaks_a_long_line_at_a_space(self):
+    # CTA-608-E C.13: a row has 32 columns. A longer line is reflowed, at a space, without losing a character
+    self.assertEqual(["The quick brown fox jumps over", "the lazy dog today"],
+                     self._reflowed_rows("The quick brown fox jumps over the lazy dog today"))
+
+  def test_reflow_cuts_a_long_word_without_losing_a_character(self):
+    self.assertEqual(["ABCDEFGHIJKLMNOPQRSTUVWXYZ012345", "6789ABCD"],
+                     self._reflowed_rows("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCD"))
+
   def test_basic(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
