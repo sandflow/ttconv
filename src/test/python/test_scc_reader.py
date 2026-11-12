@@ -1564,7 +1564,7 @@ Scenarist_SCC V1.0
     scc_content = """\
 Scenarist_SCC V1.0
 
-00:00:00:00	9420 9420 94ae 94ae 1540 1540 1020 1020 2080 c162 9128 9128 e364 942f 942f
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 1020 1020 2080 c162 91a8 91a8 e364 942f 942f
 """
 
     doc = to_model(scc_content)
