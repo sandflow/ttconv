@@ -1541,6 +1541,29 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[0], "caption1", "01:03:28:21", None, "HEY, THERE.")
     self.assertEqual(region_1, p_list[0].get_region())
 
+  def test_scc_pop_on_repeated_eoc_unique_ids(self):
+    # swapping memories back and forth with EOC re-displays captions: each one must get a new id
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 9470 9470 c162 942f 942f
+
+00:00:01:00	9420 9420 9470 9470 e364 942f 942f
+
+00:00:02:00	942f 942f
+
+00:00:03:00	942f 942f
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(4, len(p_list))
+    self.assertEqual(["caption1", "caption2", "caption3", "caption4"], [p.get_id() for p in p_list])
+    self.assertEqual(["Ab", "cd", "Ab", "cd"], [list(list(p)[0])[0].get_text() for p in p_list])
+
 
 if __name__ == '__main__':
   unittest.main()

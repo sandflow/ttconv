@@ -95,8 +95,6 @@ class SccContext:
   def new_active_caption(self, begin_time_code: SmpteTimeCode, caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
     """Initializes a new caption being displayed"""
     self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, caption_style)
-    self.count += 1
-    self.active_caption.set_id("caption" + str(self.count))
     self.active_caption.set_begin(begin_time_code)
 
   def new_buffered_caption(self):
@@ -137,10 +135,6 @@ class SccContext:
         self.push_active_caption_to_model(time_code)
 
     # Send the current buffered caption to the active captions list
-    if not self.buffered_caption.get_id():
-      self.count += 1
-      self.buffered_caption.set_id("caption" + str(self.count))
-
     self.active_caption = self.buffered_caption
     self.new_buffered_caption()
 
@@ -159,6 +153,9 @@ class SccContext:
         self.active_caption = None
 
       if not previous_caption.is_empty():
+        # number captions as they are added to the model so that ids are unique and sequential
+        self.count += 1
+        previous_caption.set_id("caption" + str(self.count))
         self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def backspace(self, time_code: SmpteTimeCode):
@@ -395,7 +392,6 @@ class SccContext:
           return
 
         if self.active_caption.get_current_text().is_empty():
-          self.count -= 1
           previous_lines = []
         else:
           # Push active caption to model (but don't erase it)
