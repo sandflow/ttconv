@@ -326,6 +326,13 @@ class SccContext:
       self.current_style = SccCaptionStyle.PaintOn
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
+      
+      if self.current_style is not SccCaptionStyle.RollUp:
+        # Switching to roll-up style erases both display and non-display memories
+        # (CTA-608-E C.10)
+        self.push_active_caption_to_model(time_code)
+        self.new_buffered_caption()
+
       # Start a new Roll-Up caption
       self.current_style = SccCaptionStyle.RollUp
 
