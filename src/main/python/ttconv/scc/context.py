@@ -85,6 +85,7 @@ class SccContext:
 
     self.current_text_decoration = None
     self.current_color = None
+    self.current_background = None
     self.current_font_style = None
 
     # Text alignment
@@ -240,6 +241,7 @@ class SccContext:
     self.current_color = pac.get_color()
     self.current_font_style = pac.get_font_style()
     self.current_text_decoration = pac.get_text_decoration()
+    self.current_background = None
 
     if self.has_active_caption():
       self.active_cursor = self.active_caption.get_cursor()
@@ -310,12 +312,10 @@ class SccContext:
       processed_caption.new_caption_text()
 
     if attribute_code.is_background():
-      processed_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
+      self.current_background = attribute_code.get_color()
     else:
-      processed_caption.get_current_text().add_style_property(StyleProperties.Color, attribute_code.get_color())
-
-    processed_caption.get_current_text().add_style_property(StyleProperties.TextDecoration,
-                                                            attribute_code.get_text_decoration())
+      self.current_color = attribute_code.get_color()
+      self.current_text_decoration = attribute_code.get_text_decoration()
 
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
@@ -411,6 +411,9 @@ class SccContext:
 
         self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
 
+      # a background attribute remains in effect until the end of the row
+      self.current_background = None
+
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
       # The DER may be issued from any point on a row to delete all displayable characters, transparent
@@ -462,6 +465,8 @@ class SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+      if self.current_background is not None:
+        self.active_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, self.current_background)
 
     elif self.current_style is SccCaptionStyle.RollUp:
       if not self.has_active_caption():
@@ -473,6 +478,8 @@ class SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+      if self.current_background is not None:
+        self.active_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, self.current_background)
 
     elif self.current_style is SccCaptionStyle.PopOn:
       self.buffered_caption.append_text(word)
@@ -480,6 +487,8 @@ class SccContext:
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+      if self.current_background is not None:
+        self.buffered_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, self.current_background)
 
     if self.has_active_caption():
       self.active_cursor = self.active_caption.get_cursor()
