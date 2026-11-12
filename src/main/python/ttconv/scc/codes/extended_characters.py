@@ -48,7 +48,7 @@ class SccExtendedCharacter(SccCode):
   # Miscellaneous extended characters
   ASTERISK = (0x1228, 0x1A28, '\u002A')  # * Asterisk
   NEUTRAL_SINGLE_QUOTATION_MARK = (0x1229, 0x1A29, '\u0027')  # ' plain single quote
-  BOX_DRAWINGS_HEAVY_HORIZONTAL = (0x122A, 0x1A2A, '\u2501')  # — em dash
+  EM_DASH = (0x122A, 0x1A2A, '\u2014')  # — em dash
   COPYRIGHT_SIGN = (0x122B, 0x1A2B, '\u00A9')  # © Copyright
   SERVICE_MARK = (0x122C, 0x1A2C, '\u2120')  # SM Servicemark
   BULLET = (0x122D, 0x1A2D, '\u2022')  # ● round bullet
@@ -86,7 +86,7 @@ class SccExtendedCharacter(SccCode):
   BRACE_OPENING = (0x1329, 0x1B29, '\u007B')  # { opening brace
   BRACE_CLOSING = (0x132A, 0x1B2A, '\u007D')  # } closing brace
   REVERSE_SOLIDUS = (0x132B, 0x1B2B, '\u005C')  # \ backslash
-  LATIN_SMALL_LETTER_TURNED_V = (0x132C, 0x1B2C, '\u028C')  # ^ caret
+  CIRCUMFLEX_ACCENT = (0x132C, 0x1B2C, '\u005E')  # ^ caret
   LOW_LINE = (0x132D, 0x1B2D, '\u005F')  # _ Underbar
   VERTICAL_LINE = (0x132E, 0x1B2E, '\u007C')  # | pipe
   TILDE = (0x132F, 0x1B2F, '\u007E')  # ~ tilde
@@ -99,17 +99,17 @@ class SccExtendedCharacter(SccCode):
   ESZETT = (0x1334, 0x1B34, '\u00DF')  # ß eszett (mall sharp s)
   YEN_SIGN = (0x1335, 0x1B35, '\u00A5')  # ¥ yen
   CURRENCY_SIGN = (0x1336, 0x1B36, '\u00A4')  # ¤ non-specific currency sign
-  BOX_DRAWINGS_HEAVY_VERTICAL = (0x1337, 0x1B37, '\u2503')  # | Vertical bar
+  BOX_DRAWINGS_LIGHT_VERTICAL = (0x1337, 0x1B37, '\u2502')  # | Vertical bar
 
   # Danish extended characters
   LATIN_CAPITAL_LETTER_A_WITH_RING_ABOVE = (0x1338, 0x1B38, '\u00C5')  # Å capital A with ring
   LATIN_SMALL_LETTER_A_WITH_RING_ABOVE = (0x1339, 0x1B39, '\u00E5')  # å small a with ring
   LATIN_CAPITAL_LETTER_O_WITH_STROKE = (0x133A, 0x1B3A, '\u00D8')  # Ø capital O with slash
   LATIN_SMALL_LETTER_O_WITH_STROKE = (0x133B, 0x1B3B, '\u00F8')  # ø small o with slash
-  BOX_DRAWINGS_HEAVY_DOWN_AND_RIGHT = (0x133C, 0x1B3C, '\u250F')  # ⎡ upper left corner
-  BOX_DRAWINGS_HEAVY_DOWN_AND_LEFT = (0x133D, 0x1B3D, '\u2513')  # ⎤ upper right corner
-  BOX_DRAWINGS_HEAVY_UP_AND_RIGHT = (0x133E, 0x1B3E, '\u2517')  # ⎣ lower left corner
-  BOX_DRAWINGS_HEAVY_UP_AND_LEFT = (0x133F, 0x1B3F, '\u251B')  # ⎦ lower right corner
+  BOX_DRAWINGS_LIGHT_DOWN_AND_RIGHT = (0x133C, 0x1B3C, '\u250C')  # ⎡ upper left corner
+  BOX_DRAWINGS_LIGHT_DOWN_AND_LEFT = (0x133D, 0x1B3D, '\u2510')  # ⎤ upper right corner
+  BOX_DRAWINGS_LIGHT_UP_AND_RIGHT = (0x133E, 0x1B3E, '\u2514')  # ⎣ lower left corner
+  BOX_DRAWINGS_LIGHT_UP_AND_LEFT = (0x133F, 0x1B3F, '\u2518')  # ⎦ lower right corner
 
   def __init__(self, channel_1: int, channel_2: int, unicode: chr):
     super().__init__(channel_1, channel_2)
