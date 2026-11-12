@@ -3,3 +3,12 @@
 	url = https://github.com/w3c/imsc-tests
 [submodule "imsc-tests/"]
 	url = https://github.com/sandflow/imsc-tests.git
+[submodule "src/test/resources/ttml/ttml1-tests"]
+	path = src/test/resources/ttml/ttml1-tests
+	url = https://github.com/w3c/ttml1-tests.git
+[submodule "src/test/resources/ttml/ttml2-tests"]
+	path = src/test/resources/ttml/ttml2-tests
+	url = https://github.com/w3c/ttml2-tests.git
+[submodule "src/test/resources/ttml/ebuttd/irt-ebu-tt-d-application-samples"]
+	path = src/test/resources/ttml/ebuttd/irt-ebu-tt-d-application-samples
+	url = https://github.com/IRT-Open-Source/irt-ebu-tt-d-application-samples.git

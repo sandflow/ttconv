@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="fr"
+xmlns="http://www.w3.org/ns/ttml"
+xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+ttp:profile="http://www.w3.org/ns/ttml/profile/imsc1/image"
+xmlns:tts="http://www.w3.org/ns/ttml#styling"
+xmlns:smpte="http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt" tts:extent="320px 240px">
+    <head>
+        <layout>
+            <region xml:id="area1" tts:origin="20px 215px" tts:extent="180px 20px"/>
+        </layout>
+    </head>
+    <body>
+        <div begin="1s" end="9s" region="area1" smpte:backgroundImage="altText1-img.png">
+        </div>
+    </body>
+</tt>

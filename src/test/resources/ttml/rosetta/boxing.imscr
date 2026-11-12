@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttm="http://www.w3.org/ns/ttml#metadata" xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:ebutts="urn:ebu:tt:style"
+    xmlns:itts="http://www.w3.org/ns/ttml/profile/imsc1#styling" xmlns:rosetta="https://github.com/imsc-rosetta/specification"
+    ttp:timeBase="media" ttp:cellResolution="30 15" xml:space="preserve" ttp:frameRate="25" ttp:frameRateMultiplier="1 1"
+    xml:lang="en-GB">
+  <head>
+    <metadata>
+      <rosetta:format>rosetta-imsc</rosetta:format>
+      <rosetta:version>0.0.0</rosetta:version>
+    </metadata>
+    <styling>
+      <style xml:id="r_default" tts:overflow="visible" tts:backgroundColor="#00000000" tts:showBackground="whenActive" tts:fontStyle="normal" tts:fontWeight="normal" tts:fontFamily="proportionalSansSerif" tts:wrapOption="noWrap" style="_r_default"/>
+      <style xml:id="r_vertical" tts:writingMode="tbrl" style="_r_vertical"/>
+      <style xml:id="d_default" style="_d_default"/>
+      <style xml:id="p_font2" tts:fontFamily="proportionalSansSerif" tts:lineHeight="125%" tts:fontSize="100%"/>
+      <style xml:id="s_fg_white" tts:color="#FFFFFF"/>
+      <style xml:id="p_al_center" ebutts:multiRowAlign="center" tts:textAlign="center"/>
+      <style xml:id="_d_default"/>
+      <style xml:id="_r_default" tts:fontSize="5.333rh" tts:lineHeight="125%" ebutts:linePadding="0.25c" tts:luminanceGain="1.0" itts:fillLineGap="false" style="s_fg_white p_al_center"/>
+      <style xml:id="_r_vertical"/>
+      <style xml:id="_r_quantisationregion" tts:origin="10% 10%" tts:extent="80% 80%" tts:fontSize="5.333rh" tts:lineHeight="125%"/>
+      <style xml:id="ps_bg_boxedred" tts:backgroundColor="#FF0000"/>
+      <style xml:id="ps_bg_boxedblue" tts:backgroundColor="#0000FF"/>
+      <style xml:id="ps_bg_ghostboxedred" tts:backgroundColor="#FF000080"/>
+    </styling>
+    <layout>
+      <region xml:id="R0" tts:origin="10% 70%" tts:extent="80% 20%" tts:displayAlign="after" style="r_default"/>
+    </layout>
+  </head>
+  <body>
+    <div xml:id="e_1" region="R0" begin="00:00:01.000" end="00:00:02.000" style="d_default">
+      <p style="p_font2"><span style="ps_bg_boxedred">a</span><span><br/></span><span style="ps_bg_boxedblue">b</span></p>
+    </div>
+    <div xml:id="e_2" region="R0" begin="00:00:03.000" end="00:00:04.000" style="d_default">
+      <p style="p_font2"><span style="ps_bg_boxedred">c</span></p>
+    </div>
+    <div xml:id="e_3" region="R0" begin="00:00:05.000" end="00:00:06.000" style="d_default">
+      <p style="p_font2"><span style="ps_bg_ghostboxedred">d</span></p>
+    </div>
+    <div xml:id="e_4" region="R0" begin="00:00:07.000" end="00:00:08.000" style="d_default">
+      <p style="p_font2 ps_bg_boxedred"><span style="ps_bg_boxedred">e</span></p>
+    </div>
+    <div xml:id="e_5" region="R0" begin="00:00:09.000" end="00:00:10.000" style="d_default">
+      <p style="p_font2 ps_bg_boxedred"><span>f</span></p>
+      <p style="p_font2 ps_bg_boxedblue"><span>g</span></p>
+    </div>
+    <div xml:id="e_6" region="R0" begin="00:00:11.000" end="00:00:12.000" style="d_default">
+      <p style="p_font2 ps_bg_boxedred"><span>h</span><span style="ps_bg_boxedblue">i</span></p>
+    </div>
+  </body>
+</tt>

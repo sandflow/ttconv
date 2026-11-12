@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #set-repeat -->
+<tt xml:lang="" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <animation>
+      <set repeatCount="indefinite"/>
+      <set repeatCount="0"/>
+      <set repeatCount="1"/>
+      <set repeatCount="10"/>
+      <set repeatCount="999999999"/>
+      <set repeatCount="0.0"/>
+      <set repeatCount="1.0"/>
+      <set repeatCount="10.0"/>
+      <set repeatCount="999999999.999999999"/>
+      <set repeatCount="0.1"/>
+      <set repeatCount="1.1"/>
+      <set repeatCount="10.1"/>
+      <set repeatCount=".0"/>
+      <set repeatCount=".1"/>
+      <set repeatCount=".999999999"/>
+    </animation>
+  </head>
+</tt>

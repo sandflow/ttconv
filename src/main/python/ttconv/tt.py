@@ -38,6 +38,11 @@ from ttconv.filters.document_filter import DocumentFilter
 
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
+import ttconv.imsc.validator.ebuttd.model as ebuttd_model
+import ttconv.imsc.validator.imsc11_model as imsc11_model
+import ttconv.imsc.validator.nbcu053.model as nbcu053_model
+from ttconv.imsc.validator.nbcu053.model import NBCU053ValidatorConfiguration
+import ttconv.imsc.validator.rosetta.model as rosetta_model
 import ttconv.scc.reader as scc_reader
 import ttconv.scc.writer as scc_writer
 import ttconv.srt.writer as srt_writer
@@ -63,7 +68,6 @@ CONFIGURATIONS = [
   SccReaderConfiguration,
   SRTReaderConfiguration,
 ]
-
 
 class ProgressConsoleHandler(logging.StreamHandler):
   """
@@ -201,6 +205,19 @@ class FileTypes(Enum):
     return FileTypes(file_type.lower())
 
 
+def load_json_config(args) -> typing.Optional[dict]:
+  """Returns the configuration given by the --config and --config_file arguments, if any. Loading config data from a file takes
+  priority over data passed in as a json string."""
+  json_config_data = None
+
+  if args.config is not None:
+    json_config_data = json.loads(args.config)
+  if args.config_file is not None:
+    with open(args.config_file) as json_file:
+      json_config_data = json.load(json_file)
+
+  return json_config_data
+
 def read_config_from_json(config_class, json_data) -> typing.Optional[ModuleConfiguration]:
   """Returns a requested configuration from json data"""
   if config_class is None or json_data is None:
@@ -273,15 +290,7 @@ def convert(args):
   inputfile = args.input
   outputfile = args.output
 
-  # Note - Loading config data from a file takes priority over 
-  # data passed in as a json string
-  json_config_data = None
-
-  if args.config is not None:
-    json_config_data = json.loads(args.config)
-  if args.config_file is not None:
-    with open(args.config_file) as json_file:
-      json_config_data = json.load(json_file)
+  json_config_data = load_json_config(args)
 
   general_config : GeneralConfiguration = read_config_from_json(GeneralConfiguration, json_config_data)
 
@@ -477,6 +486,86 @@ def convert(args):
     die(exit_str)
 
 
+class ValidateModels(Enum):
+  '''Enumerates the models that a document can be validated against. The value of each is the name of the model, its validation
+  function and its configuration class, or `None` if the model is not configurable.'''
+  IMSC11TEXT = ("imsc11text", imsc11_model.validate, None)
+  NBCU053 = ("nbcu053", nbcu053_model.validate, NBCU053ValidatorConfiguration)
+  EBUTTD = ("ebuttd", ebuttd_model.validate, None)
+  ROSETTA = ("rosetta", rosetta_model.validate, None)
+
+  def __new__(cls, text: str, *_args):
+    member = object.__new__(cls)
+    member._value_ = text
+    return member
+
+  def __init__(self, _text: str, validate: typing.Callable[..., bool], config_class: typing.Optional[typing.Type[ModuleConfiguration]]):
+    self.validate = validate
+    self.config_class = config_class
+
+  def __str__(self):
+    return self._value_
+
+VALIDATE_LOG_LEVELS: typing.Dict[str, int] = {
+  "debug": logging.DEBUG,
+  "info": logging.INFO,
+  "warning": logging.WARNING,
+  "error": logging.ERROR
+}
+
+@subcommand([
+  argument("file", help="path to the TTML document to validate"),
+  argument(
+    "-m", "--model",
+    type=ValidateModels,
+    choices=list(ValidateModels),
+    default=ValidateModels.IMSC11TEXT,
+    help="model to validate against (default: %(default)s)"
+  ),
+  argument(
+    "-l", "--log-level",
+    choices=sorted(VALIDATE_LOG_LEVELS, key=lambda name: VALIDATE_LOG_LEVELS[name]),
+    default="error",
+    help="minimum severity of log messages to print (default: %(default)s)"
+  ),
+  argument("--config", help="Configuration in json. Overridden by --config_file.", required=False),
+  argument("--config_file", help="Configuration file. Overrides --config.", required=False)
+])
+def validate(args) -> int:
+  '''Validates a TTML document against a model (default: IMSC 1.1)'''
+
+  log_level = VALIDATE_LOG_LEVELS[args.log_level]
+
+  handler = logging.StreamHandler()
+  handler.setLevel(log_level)
+  handler.setFormatter(logging.Formatter("%(levelname)s:%(message)s"))
+
+  root_logger = logging.getLogger()
+  root_logger.setLevel(log_level)
+  root_logger.addHandler(handler)
+
+  config = None
+
+  config_class = args.model.config_class
+  if config_class is not None:
+    try:
+      config = read_config_from_json(config_class, load_json_config(args))
+    except ValueError as e:
+      die(f"invalid {config_class.name()} configuration: {' '.join(str(arg) for arg in e.args)}")
+
+    if config is None:
+      die(f"the {args.model} model requires a {config_class.name()} configuration")
+
+  try:
+    with open(args.file, "rb") as f:
+      if not args.model.validate(f, config):
+        return 1
+  except OSError as e:
+    die(f"can't open '{args.file}': {e}")
+
+  return 0
+
+
 # Ensure that the handler is added only once/globally
 # Otherwise the handler will be called multiple times
 progress = ProgressConsoleHandler()
@@ -490,9 +579,9 @@ def main(argv=None):
   args = cli.parse_args(argv if argv is not None else sys.argv[1:])
   if args.subcommand is None:
     cli.print_help()
-  else:
-    args.func(args)
+    return None
+  return args.func(args)
 
 
 if __name__ == "__main__":
-  main()
+  sys.exit(main())

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #extent-measure -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    ttp:cellResolution="64 24"
+    tts:extent="1280px 720px"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <style tts:extent="auto auto"/>
+      <style tts:extent="available available"/>
+      <style tts:extent="available fitContent"/>
+      <style tts:extent="fitContent available"/>
+      <style tts:extent="fitContent fitContent"/>
+      <style tts:extent="maxContent maxContent"/>
+      <style tts:extent="maxContent minContent"/>
+      <style tts:extent="minContent minContent"/>
+      <style tts:extent="minContent maxContent"/>
+    </styling>
+  </head>
+</tt>

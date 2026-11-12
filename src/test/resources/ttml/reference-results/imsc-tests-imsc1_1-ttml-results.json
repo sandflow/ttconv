@@ -1,0 +1,179 @@
+[
+  {
+    "file": "disparity001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "displayAspectRatio001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "displayAspectRatio002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "displayAspectRatio003.ttml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <div> (line 14)"
+    ]
+  },
+  {
+    "file": "displayAspectRatio004.ttml",
+    "result": "fail",
+    "errors": [
+      "Attribute backgroundImage is prohibited on <div> (line 14)"
+    ]
+  },
+  {
+    "file": "image001.ttml",
+    "result": "fail",
+    "errors": [
+      "div contents does not match (metadata* set* (div | p)*)"
+    ]
+  },
+  {
+    "file": "initial001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "initial002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "lengthRootContainerRelative001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "lengthRootContainerRelative002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "lengthRootContainerRelative003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "lengthRootContainerRelative004.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "lengthRootContainerRelative005.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "lengthRootContainerRelative006.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "linepadding002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "luminanceGain001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "position001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "position002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "position003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "ruby001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "ruby002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "ruby003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "ruby004.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "ruby005.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "ruby006.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyAlign001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyAlign002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyAlign003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyAlign004.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyReserve001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyReserve002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "rubyReserve003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "shear001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "shear002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "shear003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textCombine001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textCombine002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textEmphasis001.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textEmphasis002.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textEmphasis003.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textEmphasis004.ttml",
+    "result": "pass"
+  },
+  {
+    "file": "textShadow001.ttml",
+    "result": "pass"
+  }
+]

@@ -216,14 +216,6 @@ def _validate_element_styles(element):
             f"only allowed on LinePadding (section 7.2.18)"
           )
 
-    # Section 8.4.13: ebutts:multiRowAlign SHALL only appear on p elements
-    if style_prop is styles.StyleProperties.MultiRowAlign \
-        and not isinstance(element, model.P):
-      raise ValueError(
-        f"{elem_name}: MultiRowAlign SHALL only appear on p elements "
-        f"(section 8.4.13)"
-      )
-
     # Section 8.4.11: textShadow SHALL NOT have more than 4 shadows
     if style_prop is styles.StyleProperties.TextShadow \
         and value is not styles.SpecialValues.none \
