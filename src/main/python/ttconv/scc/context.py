@@ -394,7 +394,8 @@ class SccContext:
           self.push_active_caption_to_model(time_code)
           return
 
-        if self.active_caption.get_current_text().is_empty():
+        if self.active_caption.is_empty():
+          # nothing is displayed: there is nothing to roll up
           self.count -= 1
           previous_lines = []
         else:
