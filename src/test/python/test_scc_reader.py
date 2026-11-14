@@ -1650,5 +1650,28 @@ Scenarist_SCC V1.0
     # ABCDEF, BS pair: ABCDE, G: ABCDEG, BS null BS: ABCD, H: ABCDH
     self.assertEqual("ABCDH", texts[-1])
 
+  def test_cr_default_styles(self):
+    # CTA-608-E C.14: a row that is created by a CR and has no PAC is white and not underlined
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	942c 942c 9425 9425 94ad 94ad 946b 946b 52ef f720 31ba 2079 e5ec ecef f720 756e 64e5 f2ec e96e e564
+
+00:00:02:00	94ad 94ad 52ef f720 32ba 2043 522c 206e ef20 d0c1 43ba 20f7 68e9 f4e5
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    last = p_list[-1]
+    spans = [child for child in last if isinstance(child, Span)]
+    self.assertEqual(2, len(spans))
+
+    self.assertEqual(NamedColors.yellow.value, spans[0].get_style(StyleProperties.Color))
+    self.assertEqual(TextDecorationType(underline=True), spans[0].get_style(StyleProperties.TextDecoration))
+
+    self.assertIn(spans[1].get_style(StyleProperties.Color), (None, NamedColors.white.value))
+    self.assertIn(spans[1].get_style(StyleProperties.TextDecoration), (None, TextDecorationType(underline=False)))
+
 if __name__ == '__main__':
   unittest.main()

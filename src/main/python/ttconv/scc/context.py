@@ -81,6 +81,7 @@ class SccContext:
     # Cursor position in the active area
     self.active_cursor: Tuple[int, int] = (0, 0)
 
+    # Current text styles, None meaning the default
     self.current_text_decoration = None
     self.current_color = None
     self.current_background = None
@@ -297,6 +298,13 @@ class SccContext:
       self.current_color = attribute_code.get_color()
       self.current_text_decoration = attribute_code.get_text_decoration()
 
+  def reset_current_char_styles(self):
+    """Resets the current character styles to their defaults"""
+    self.current_text_decoration = None
+    self.current_color = None
+    self.current_background = None
+    self.current_font_style = None
+
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
 
@@ -375,6 +383,9 @@ class SccContext:
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
 
+      # the new row starts with the default style (see CTA 608, C.14)
+      self.reset_current_char_styles()
+
       if self.has_active_caption():
         if self.active_caption.get_caption_style() is not SccCaptionStyle.RollUp:
           LOGGER.warning("Cannot roll-up active %s-styled caption, erase it instead.", self.active_caption.get_caption_style().name)
@@ -396,9 +407,6 @@ class SccContext:
         self.active_caption.set_lines(previous_lines)
 
         self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
-
-      # a background attribute remains in effect until the end of the row
-      self.current_background = None
 
     elif control_code is SccControlCode.DER:
       # Delete to End of Row (Paint-On)
