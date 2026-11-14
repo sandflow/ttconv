@@ -29,18 +29,17 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Optional, Type, Tuple
+from typing import Optional, Tuple
 
 from ttconv.model import Div
 from ttconv.scc.caption_paragraph import SccCaptionParagraph
 from ttconv.scc.caption_style import SccCaptionStyle
-from ttconv.scc.codes import SccChannel
+from ttconv.scc.codes import SccChannel, SccCode
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
-from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties
 from ttconv.time_code import SmpteTimeCode
 
@@ -63,9 +62,8 @@ class SccContext:
     self.safe_area_x_offset = safe_area_x_offset
     self.safe_area_y_offset = safe_area_y_offset
 
-    # Previously read SCC word value
-    self.previous_word: Optional[SccWord] = None
-    self.previous_word_type: Optional[Type] = None
+    # Decoded control code of the immediately preceding word, if that word was a Channel 1 control code
+    self.preceding_cc: Optional[SccCode | SccPreambleAddressCode] = None
 
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style = SccCaptionStyle.default()
@@ -252,45 +250,30 @@ class SccContext:
     font_style = mid_row_code.get_font_style()
     text_decoration = mid_row_code.get_text_decoration()
 
-    if self.previous_word_type is not SccMidRowCode:
-      # In case of multiple mid-row codes, move right only after the first code
+    # If there is already text on the current line
+    if processed_caption is not None \
+        and processed_caption.get_current_text() is not None \
+        and not processed_caption.get_current_text().is_empty():
 
-      # If there is already text on the current line
-      if processed_caption is not None \
-          and processed_caption.get_current_text() is not None \
-          and not processed_caption.get_current_text().is_empty():
+      # In case of paint-on replacing text
+      if self.current_style is SccCaptionStyle.PaintOn \
+          and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
+        processed_caption.append_text(" ")
 
-        # In case of paint-on replacing text
-        if self.current_style is SccCaptionStyle.PaintOn \
-            and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
+      else:
+        if text_decoration is None:
+          processed_caption.new_caption_text()
           processed_caption.append_text(" ")
-
         else:
-          if text_decoration is None:
-            processed_caption.new_caption_text()
-            processed_caption.append_text(" ")
-          else:
-            processed_caption.append_text(" ")
-            processed_caption.new_caption_text()
+          processed_caption.append_text(" ")
+          processed_caption.new_caption_text()
 
-      elif processed_caption is not None:
-        processed_caption.append_text(" ")
+    elif processed_caption is not None:
+      processed_caption.append_text(" ")
 
-      self.current_color = color
-      self.current_font_style = font_style
-      self.current_text_decoration = text_decoration
-
-    else:
-      if color is not None:
-        self.current_color = color
-      if font_style is not None:
-        self.current_font_style = font_style
-      if text_decoration is not None:
-        self.current_text_decoration = text_decoration
-
-      if processed_caption is not None:
-        processed_caption.append_text(" ")
-        processed_caption.new_caption_text()
+    self.current_color = color
+    self.current_font_style = font_style
+    self.current_text_decoration = text_decoration
 
     if processed_caption is not None \
         and processed_caption.get_caption_style() is SccCaptionStyle.PaintOn:

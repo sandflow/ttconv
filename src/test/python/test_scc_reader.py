@@ -1627,5 +1627,28 @@ Scenarist_SCC V1.0
     self.assertFalse([text for text in texts if "Hidden B" in text], texts)
     self.assertEqual(["Pop-on A: erased by RU2", "Roll-up: A and B erased", "Roll-up: A and B erased"], texts)
 
+  def test_scc_repeated_backspace_is_redundant_only_in_the_next_frame(self):
+    # CTA-608-E D.2: a control code that is sent twice in two consecutive frames is acted on once,
+    # a null in between makes the second one a new command
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	942c 942c 9429 9429 97e0 97e0 c1c2 43c4 4546
+
+00:00:01:00	94a1 94a1
+
+00:00:02:00	c780
+
+00:00:03:00	94a1 8080 94a1
+
+00:00:04:00	c880
+"""
+
+    doc = to_model(scc_content)
+
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in list(list(doc.get_body())[0])]
+    # ABCDEF, BS pair: ABCDE, G: ABCDEG, BS null BS: ABCD, H: ABCDH
+    self.assertEqual("ABCDH", texts[-1])
+
 if __name__ == '__main__':
   unittest.main()
