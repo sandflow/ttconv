@@ -123,6 +123,59 @@ class SccWriterConfigurationTest(unittest.TestCase):
 
 class SCCWriterTest(unittest.TestCase):
 
+  def test_reflow(self):
+    # CTA-608-E C.13: a row has 32 columns. A longer line is broken at the last space that fits,
+    # and only that space is dropped
+    a32 = "A" * 32
+    cases = [
+      # (text, expected rows)
+      ("The quick brown fox jumps over the lazy dog today", ["The quick brown fox jumps over", "the lazy dog today"]),
+      # the space right after a full row is the break
+      (a32 + " B", [a32, "B"]),
+      # the space in the last column is the break
+      ("A" * 31 + " BCDEF", ["A" * 31, "BCDEF"]),
+      # a word longer than a row is cut at the last column, without losing a character
+      ("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCD", ["ABCDEFGHIJKLMNOPQRSTUVWXYZ012345", "6789ABCD"]),
+      ("A" * 33 + " BCD", [a32, "A BCD"]),
+      ("A" * 70, [a32, a32, "A" * 6]),
+      # a leading space is not a break, since it would leave an empty row
+      (" " + "A" * 40, [" " + "A" * 31, "A" * 9]),
+      # a trailing space does not create an empty row
+      (a32 + " ", [a32]),
+      ("A" * 31 + " B ", ["A" * 31, "B"]),
+      # text that fits is not changed
+      (a32, [a32]),
+      ("", [""]),
+    ]
+
+    for text, expected in cases:
+      with self.subTest(text=text):
+        rows = scc_writer._reflow(text)
+        self.assertEqual(expected, rows)
+        self.assertTrue(all(len(row) <= scc_writer.MAX_LINEWIDTH for row in rows))
+
+  def test_reflow_round_trip(self):
+    # a line longer than a row is written as several rows and read back without losing a character
+    ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    ttp:frameRate="30" ttp:frameRateMultiplier="1000 1001">
+  <body>
+    <div>
+      <p begin="150f" end="270f">The quick brown fox jumps over the lazy dog today</p>
+     </div>
+  </body>
+</tt>"""
+
+    model = imsc_reader.to_model(et.ElementTree(et.fromstring(ttml_doc_str)))
+    scc_from_model = scc_writer.from_model(model, SccWriterConfiguration())
+
+    doc = scc_reader.to_model(scc_from_model)
+    p = list(list(doc.get_body())[0])[0]
+    rows = [list(child)[0].get_text() for child in p if isinstance(child, Span)]
+
+    self.assertEqual(["The quick brown fox jumps over", "the lazy dog today"], rows)
+
   def test_basic(self):
     ttml_doc_str = """<?xml version="1.0" encoding="UTF-8"?>
 <tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
