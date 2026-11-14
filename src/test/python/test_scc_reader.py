@@ -1541,6 +1541,47 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[0], "caption1", "01:03:28:21", None, "HEY, THERE.")
     self.assertEqual(region_1, p_list[0].get_region())
 
+  def test_scc_fg_black_attribute_preserves_bg(self):
+    # a background attribute code followed by a foreground attribute code: the text is black on white
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 2080 1020 1020 2080 97ae 97ae c2ec 61e3 6b20 f4e5 f8f4 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    text_span = spans[-1]
+    self.assertEqual("Black text", list(text_span)[0].get_text())
+    self.assertEqual(NamedColors.black.value, text_span.get_style(StyleProperties.Color))
+    self.assertEqual(NamedColors.white.value, text_span.get_style(StyleProperties.BackgroundColor))
+
+  def test_scc_bg_attribute_persists_across_mid_row_code(self):
+    # a background attribute code remains in effect after a mid-row code on the same row
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 1020 1020 2080 c162 91a8 91a8 e364 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual(2, len(spans))
+
+    self.assertEqual(" Ab", list(spans[0])[0].get_text())
+    self.assertEqual(NamedColors.white.value, spans[0].get_style(StyleProperties.Color))
+    self.assertEqual(NamedColors.white.value, spans[0].get_style(StyleProperties.BackgroundColor))
+
+    self.assertEqual(" cd", list(spans[1])[0].get_text())
+    self.assertEqual(NamedColors.red.value, spans[1].get_style(StyleProperties.Color))
+    self.assertEqual(NamedColors.white.value, spans[1].get_style(StyleProperties.BackgroundColor))
+
   def test_scc_pop_on_repeated_eoc_unique_ids(self):
     # swapping memories back and forth with EOC re-displays captions: each one must get a new id
     scc_content = """\
