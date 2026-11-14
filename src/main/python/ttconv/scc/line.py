@@ -123,9 +123,8 @@ class SccLine:
         self.time_code.add_frames()
       first = False
 
-      if context.previous_word is not None and context.previous_word.value == scc_word.value and context.previous_word.is_code():
-        context.previous_word = None
-        continue
+      cur_preceding_cc = context.preceding_cc
+      context.preceding_cc = None
 
       if scc_word.value == 0x0000:
         continue
@@ -143,31 +142,30 @@ class SccLine:
 
         context.current_channel = caption_channel
 
+        if scc_code is not None and scc_code == cur_preceding_cc:
+          # Redundant transmission of the immediately preceding control code
+          continue
+
         if isinstance(scc_code, SccPreambleAddressCode):
           debug += scc_code.debug(scc_word.value)
           context.process_preamble_address_code(scc_code, self.time_code)
-          context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccAttributeCode):
           debug += scc_code.debug(scc_word.value)
           context.process_attribute_code(scc_code, self.time_code)
-          context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccMidRowCode):
           debug += scc_code.debug(scc_word.value)
           context.process_mid_row_code(scc_code, self.time_code)
-          context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccControlCode):
           debug += scc_code.debug(scc_word.value)
           context.process_control_code(scc_code, self.time_code)
-          context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccSpecialCharacter):
           word = scc_code.get_unicode_value()
           debug += word
           context.process_text(word, self.time_code)
-          context.previous_word_type = type(scc_code)
 
         elif isinstance(scc_code, SccExtendedCharacter):
           context.backspace(self.time_code)
@@ -175,12 +173,12 @@ class SccLine:
           word = scc_code.get_unicode_value()
           debug += word
           context.process_text(word, self.time_code)
-          context.previous_word_type = type(scc_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
-          context.previous_word_type = None
+
+        context.preceding_cc = scc_code
 
       else:
         if context.current_channel is not SccChannel.CHANNEL_1:
@@ -190,9 +188,6 @@ class SccLine:
         text = scc_word.to_text()
         debug += text
         context.process_text(text, self.time_code)
-        context.previous_word_type = str
-
-      context.previous_word = scc_word
 
     LOGGER.debug(debug)
 
