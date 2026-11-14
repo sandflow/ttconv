@@ -1690,5 +1690,31 @@ Scenarist_SCC V1.0
     self.assertIn(spans[1].get_style(StyleProperties.Color), (None, NamedColors.white.value))
     self.assertIn(spans[1].get_style(StyleProperties.TextDecoration), (None, TextDecorationType(underline=False)))
 
+  def test_scc_repeated_control_code_on_a_later_line_is_not_redundant(self):
+    # CTA-608-E D.2: a control code is redundant only if it repeats the one in the immediately
+    # preceding frame, so an EOC sent once and sent again one second later is acted on twice
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9470 c1c2 942f
+
+00:00:01:00	9420 9470 c3c4
+
+00:00:02:00	942f
+
+00:00:03:00	942f
+
+00:00:04:00	942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(["AB", "CD", "AB"], [list(list(p)[0])[0].get_text() for p in p_list])
+    self.assertEqual([SmpteTimeCode.parse(tc, FPS_29_97).to_temporal_offset() for tc in ("00:00:02:00", "00:00:03:00")],
+                     [p_list[1].get_begin(), p_list[2].get_begin()])
+    self.assertEqual(SmpteTimeCode.parse("00:00:04:00", FPS_29_97).to_temporal_offset(), p_list[2].get_end())
+
+
 if __name__ == '__main__':
   unittest.main()
