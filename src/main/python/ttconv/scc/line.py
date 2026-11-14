@@ -123,8 +123,15 @@ class SccLine:
         self.time_code.add_frames()
       first = False
 
-      cur_preceding_cc = context.preceding_cc
+      # A control code is redundant only if it repeats the control code received in the immediately
+      # preceding frame (CTA-608-E D.2), which is not the case across lines that are not contiguous
+      cur_frame = self.time_code.to_frames()
+      if cur_frame - 1 == context.preceding_cc_frame:
+        cur_preceding_cc = context.preceding_cc
+      else:
+        cur_preceding_cc = None
       context.preceding_cc = None
+      context.preceding_cc_frame = None
 
       if scc_word.value == 0x0000:
         continue
@@ -179,6 +186,7 @@ class SccLine:
           LOGGER.warning("Unsupported SCC word: %s", hex(scc_word.value))
 
         context.preceding_cc = scc_code
+        context.preceding_cc_frame = cur_frame
 
       else:
         if context.current_channel is not SccChannel.CHANNEL_1:

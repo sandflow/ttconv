@@ -64,6 +64,8 @@ class SccContext:
 
     # Decoded control code of the immediately preceding word, if that word was a Channel 1 control code
     self.preceding_cc: Optional[SccCode | SccPreambleAddressCode] = None
+    # Frame number at which the preceding control code was received
+    self.preceding_cc_frame: Optional[int] = None
 
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style = SccCaptionStyle.default()
