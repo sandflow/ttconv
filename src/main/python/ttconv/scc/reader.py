@@ -31,7 +31,7 @@ import logging
 from typing import Optional
 
 from ttconv.model import ContentDocument, Body, Div, CellResolutionType, ActiveAreaType
-from ttconv.scc.caption_paragraph import SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, \
+from ttconv.scc.display_memory_snapshot import SCC_SAFE_AREA_CELL_RESOLUTION_ROWS, \
   SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS, SCC_ROOT_CELL_RESOLUTION_ROWS, SCC_ROOT_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.config import SccReaderConfiguration
 from ttconv.scc.context import SccContext

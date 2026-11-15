@@ -84,7 +84,8 @@ class SccLine:
     return SccLine(time_offset, scc_words)
 
   def get_style(self) -> Optional[SccCaptionStyle]:
-    """Analyses the line words to find SCC control codes and define the caption style, if any"""
+    """Analyses the line words to find SCC control codes and define the caption
+    style, if any"""
     scc_words = self.scc_words
     if not scc_words:
       return None
@@ -155,11 +156,11 @@ class SccLine:
 
         if isinstance(scc_code, SccPreambleAddressCode):
           debug += scc_code.debug(scc_word.value)
-          context.process_preamble_address_code(scc_code, self.time_code)
+          context.process_preamble_address_code(scc_code)
 
         elif isinstance(scc_code, SccAttributeCode):
           debug += scc_code.debug(scc_word.value)
-          context.process_attribute_code(scc_code, self.time_code)
+          context.process_attribute_code(scc_code)
 
         elif isinstance(scc_code, SccMidRowCode):
           debug += scc_code.debug(scc_word.value)
@@ -175,11 +176,9 @@ class SccLine:
           context.process_text(word, self.time_code)
 
         elif isinstance(scc_code, SccExtendedCharacter):
-          context.backspace(self.time_code)
-
           word = scc_code.get_unicode_value()
           debug += word
-          context.process_text(word, self.time_code)
+          context.process_extended_character(word, self.time_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"

@@ -28,61 +28,58 @@
 # pylint: disable=R0201,C0115,C0116,W0212
 
 import unittest
+from fractions import Fraction
+from typing import Dict, Tuple
 
 from ttconv.model import ContentDocument, CellResolutionType
-from ttconv.scc.caption_paragraph import SccCaptionParagraph, _SccParagraphRegion
+from ttconv.scc.display_memory_snapshot import SccDisplayMemorySnapshot
 from ttconv.scc.caption_style import SccCaptionStyle
+from ttconv.scc.display_memory import SccCellEvent, SccDisplayMemory, SccPen
 from ttconv.style_properties import StyleProperties, ShowBackgroundType
+
+
+def make_memory(lines: Dict[int, Tuple[int, str]]) -> SccDisplayMemory:
+  """Returns a memory with the specified text, as {row: (column, text)}"""
+  memory = SccDisplayMemory()
+  for (row, (column, text)) in lines.items():
+    for (i, char) in enumerate(text):
+      memory.set_cell(row, column + i, SccCellEvent(char, SccPen.DEFAULT, Fraction(0)))
+  return memory
 
 
 class SccParagraphRegionTest(unittest.TestCase):
 
   def test_region_prefix(self):
-    doc = ContentDocument()
-
-    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PaintOn)
-    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
-    self.assertEqual("paint", paragraph_region._get_region_prefix())
-
-    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
-    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
-    self.assertEqual("pop", paragraph_region._get_region_prefix())
-
-    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.RollUp)
-    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
-    self.assertEqual("rollup", paragraph_region._get_region_prefix())
+    for (caption_style, prefix) in ((SccCaptionStyle.PaintOn, "paint"), (SccCaptionStyle.PopOn, "pop"),
+                                    (SccCaptionStyle.RollUp, "rollup")):
+      caption = SccDisplayMemorySnapshot(SccDisplayMemory(), caption_style, None, None)
+      self.assertEqual(prefix, caption._get_region_prefix())
 
   def test_matching_region(self):
     doc = ContentDocument()
-    doc_columns = 40
-    doc_rows = 19
-    doc.set_cell_resolution(CellResolutionType(rows=doc_rows, columns=doc_columns))
+    doc.set_cell_resolution(CellResolutionType(rows=19, columns=40))
 
     safe_area_x_offset = 4
     safe_area_y_offset = 2
 
-    caption_paragraph = SccCaptionParagraph(safe_area_x_offset, safe_area_y_offset, caption_style=SccCaptionStyle.PopOn)
-    caption_paragraph.set_cursor_at(4, 7)
-    caption_paragraph.new_caption_text()
+    caption = SccDisplayMemorySnapshot(make_memory({4: (7, "A 20-char long line.")}), SccCaptionStyle.PopOn, None, None,
+                                  safe_area_x_offset=safe_area_x_offset, safe_area_y_offset=safe_area_y_offset)
 
-    caption_paragraph.get_current_text().append("A 20-char long line.")
-
-    origin = caption_paragraph.get_origin()
+    origin = caption.get_origin()
     self.assertEqual(11, origin.x.value)
     self.assertEqual(5, origin.y.value)
 
-    extent = caption_paragraph.get_extent()
+    extent = caption.get_extent()
     self.assertEqual(20, extent.width.value)
     self.assertEqual(1, extent.height.value)
 
-    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
 
-    self.assertIsNone(paragraph_region._find_matching_region())
-    region = paragraph_region._create_matching_region()
+    self.assertIsNone(caption._find_matching_region(doc))
+    region = caption._create_matching_region(doc)
 
     self.assertEqual("pop1", region.get_id())
-    self.assertTrue(paragraph_region._has_same_origin_as_region(region))
-    self.assertEqual(region, paragraph_region._find_matching_region())
+    self.assertTrue(caption._has_same_origin_as_region(region, doc))
+    self.assertEqual(region, caption._find_matching_region(doc))
 
     self.assertEqual(ShowBackgroundType.whenActive, region.get_style(StyleProperties.ShowBackground))
 
@@ -91,23 +88,23 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertEqual(50, region_extent.width.value)
     self.assertEqual(63, region_extent.height.value)
 
-    caption_paragraph.set_cursor_at(5, 7)
-    caption_paragraph.new_caption_text()
-    caption_paragraph.get_current_text().append("This is another 34-char long line.")
+    # a wider caption at the same origin extends the region, up to the right of the safe area
+    caption = SccDisplayMemorySnapshot(make_memory({4: (7, "A 20-char long line."), 5: (7, "A 25-character long line.")}),
+                                  SccCaptionStyle.PopOn, None, None,
+                                  safe_area_x_offset=safe_area_x_offset, safe_area_y_offset=safe_area_y_offset)
 
-    origin = caption_paragraph.get_origin()
+    origin = caption.get_origin()
     self.assertEqual(11, origin.x.value)
     self.assertEqual(5, origin.y.value)
 
-    extent = caption_paragraph.get_extent()
-    self.assertEqual(34, extent.width.value)
+    extent = caption.get_extent()
+    self.assertEqual(25, extent.width.value)
     self.assertEqual(2, extent.height.value)
 
-    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
 
-    self.assertEqual(region, paragraph_region._find_matching_region())
-    paragraph_region._extend_region_to_paragraph(region)
-    self.assertTrue(paragraph_region._has_same_origin_as_region(region))
+    self.assertEqual(region, caption._find_matching_region(doc))
+    caption._extend_region_to_paragraph(region, doc)
+    self.assertTrue(caption._has_same_origin_as_region(region, doc))
 
     region_extent = region.get_style(StyleProperties.Extent)
 

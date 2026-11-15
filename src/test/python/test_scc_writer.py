@@ -285,7 +285,9 @@ class SCCWriterTest(unittest.TestCase):
     b = rt_model.get_body()
     div = list(b)[0]
     p0 = list(div)[0]
-    self.assertEqual(Fraction(30 * 1001, 30000), p0.get_begin())
+    # the writer sends the CR at the begin of the cue (frame 30), and the reader displays Roll-Up characters when
+    # they are received: the first one after the CR and the PAC (frame 34)
+    self.assertEqual(Fraction(34 * 1001, 30000), p0.get_begin())
     p1 = list(div)[1]
     self.assertEqual(Fraction(150 * 1001, 30000), p1.get_begin())
     self.assertEqual(Fraction(300 * 1001, 30000), p1.get_end())

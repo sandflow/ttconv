@@ -23,17 +23,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""SCC context"""
+
+"""SCC context: a CTA-608 decoder state machine"""
 
 from __future__ import annotations
 
-import copy
 import logging
-from typing import List, Optional, Tuple
+from fractions import Fraction
+from typing import Iterable, List, Optional, Tuple
 
 from ttconv.model import Div
-from ttconv.scc.caption_line import SccCaptionLine
-from ttconv.scc.caption_paragraph import SccCaptionParagraph
+from ttconv.scc.display_memory_snapshot import SccDisplayMemorySnapshot
 from ttconv.scc.caption_style import SccCaptionStyle
 from ttconv.scc.codes import SccChannel, SccCode
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
@@ -41,16 +41,16 @@ from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
-from ttconv.style_properties import StyleProperties
+from ttconv.scc.display_memory import MEMORY_COLUMNS, SccCellEvent, SccDisplayMemory, SccPen
 from ttconv.time_code import SmpteTimeCode
-
-ROLL_UP_BASE_ROW = 15
 
 LOGGER = logging.getLogger(__name__)
 
-
 class SccContext:
-  """SCC context for reader"""
+  """CTA-608 decoder"""
+
+  # base row of the Roll-Up window, and row of the cursor, until a PAC is received
+  _DEFAULT_BASE_ROW = 15
 
   def __init__(self, safe_area_x_offset: int, safe_area_y_offset: int, config: Optional[SccReaderConfiguration] = None):
     # Caption paragraphs container
@@ -68,406 +68,274 @@ class SccContext:
     # Frame number at which the preceding control code was received
     self.preceding_cc_frame: Optional[int] = None
 
-    # Caption style (Pop-on, Roll-up, Paint-on) currently processed
-    self.current_style = SccCaptionStyle.default()
-    # Buffered caption being built
-    self.buffered_caption: SccCaptionParagraph
-    # Captions being displayed
-    self.active_caption: Optional[SccCaptionParagraph] = None
-
     # Current caption channel (default is CC1)
     self.current_channel = SccChannel.CHANNEL_1
 
-    # Roll-up caption number of lines
-    self.roll_up_depth: int = 0
-
-    # Cursor position in the active area
-    self.active_cursor: Tuple[int, int] = (0, 0)
-
-    # Current text styles, None meaning the default
-    self.current_text_decoration = None
-    self.current_color = None
-    self.current_background = None
-    self.current_font_style = None
-
-    # Text alignment
+    # Text alignment of Pop-On captions
     self.text_alignment = TextAlignment.AUTO if config is None else config.text_align
 
-    self.new_buffered_caption()
+    # Caption style (Pop-On, Roll-Up, Paint-On) selected by the last RCL, RUx or RDC code
+    self.current_style = SccCaptionStyle.default()
 
-  def new_active_caption(self, begin_time_code: SmpteTimeCode, caption_style: SccCaptionStyle) -> SccCaptionParagraph:
-    """Initializes and returns a new caption being displayed"""
-    caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, caption_style=caption_style)
-    caption.set_begin(begin_time_code)
-    self.active_caption = caption
-    return caption
+    # Memories
+    self.displayed = SccDisplayMemory()
+    self.non_displayed = SccDisplayMemory()
 
-  def new_buffered_caption(self):
-    """Resets buffered caption"""
-    self.buffered_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, caption_style=SccCaptionStyle.PopOn)
+    # Cursor, in the memory being written: rows from 1 to 15, columns from 0 to 31
+    self.row: int = self._DEFAULT_BASE_ROW
+    self.column: int = 0
 
-  def get_or_start_caption(self, time_code: SmpteTimeCode) -> SccCaptionParagraph:
-    """Returns the caption that the current style writes to: the buffered caption for Pop-On, which always
-    exists, otherwise the active caption, which is started if there is none"""
-    if self.current_style is SccCaptionStyle.PopOn:
-      # For Pop-On style, write first on a buffered caption
-      return self.buffered_caption
+    # Attributes of the characters being written
+    self.pen: SccPen = SccPen.DEFAULT
 
-    # For Paint-On and Roll-Up styles, write directly on the active caption
-    if self.active_caption is not None:
-      return self.active_caption
+    # Roll-Up window: number of rows, and bottom row
+    self.roll_up_depth: int = 0
+    self.base_row: int = self._DEFAULT_BASE_ROW
 
-    if self.current_style is SccCaptionStyle.PaintOn:
-      return self.start_paint_on_caption(time_code)
+    # Begin time and style of the caption being displayed, if any
+    self.caption_begin: Optional[Fraction] = None
+    self.caption_style: Optional[SccCaptionStyle] = None
 
-    return self.start_roll_up_caption(time_code)
+  #
+  # captions
+  #
 
-  def start_roll_up_caption(self, time_code: SmpteTimeCode, lines: Optional[List[SccCaptionLine]] = None) -> SccCaptionParagraph:
-    """Starts and returns a new Roll-Up caption, with the specified lines above the base row. The cursor is
-    at the start of the base row, including when no PAC was received, e.g. after an EDM."""
-    caption = self.new_active_caption(time_code, SccCaptionStyle.RollUp)
+  def _end_caption(self, time: Optional[Fraction]):
+    """Ends the caption being displayed, if any, and adds it to the model"""
+    if self.caption_begin is None:
+      return
 
-    if lines:
-      caption.set_lines(lines)
+    begin = self.caption_begin
+    self.caption_begin = None
 
-    caption.set_cursor_at(ROLL_UP_BASE_ROW, 0)
+    # captions that have no content or no duration are not added
+    if self.displayed.is_empty() or (time is not None and time <= begin):
+      return
 
-    return caption
+    caption = SccDisplayMemorySnapshot(self.displayed.make_copy(), self.caption_style, begin, time,
+                                       safe_area_x_offset=self.safe_area_x_offset,
+                                       safe_area_y_offset=self.safe_area_y_offset,
+                                       text_alignment=self.text_alignment)
 
-  def has_active_caption(self) -> bool:
-    """Returns whether captions are being displayed or not"""
-    # return self.active_caption.get_begin() is not None
-    return self.active_caption is not None
+    # number captions as they are added to the model so that ids are unique and sequential
+    self.count += 1
+    self.div.push_child(caption.to_paragraph(self.div.get_doc(), "caption" + str(self.count)))
 
-  def flip_buffered_to_active_captions(self, time_code: Optional[SmpteTimeCode] = None):
-    """
-    Flip the current buffered caption with the last active captions list,
-    and push to model if an end time code is specified.
-    """
-    temporary_caption = None
+  def _start_caption(self, time: Fraction, caption_style: SccCaptionStyle):
+    """Begins a caption if there is none and the displayed memory has content"""
+    if self.caption_begin is None and not self.displayed.is_empty():
+      self.caption_begin = time
+      self.caption_style = caption_style
 
-    if self.has_active_caption():
-      temporary_caption = self.active_caption
+  #
+  # memory operations
+  #
 
-      if time_code is not None:
-        # End of display of active captions
-        self.push_active_caption_to_model(time_code)
+  def _get_current_memory(self) -> SccDisplayMemory:
+    """Returns the memory written by the current caption style"""
+    return self.non_displayed if self.current_style is SccCaptionStyle.PopOn else self.displayed
 
-    # Send the current buffered caption to the active captions list
-    self.active_caption = self.buffered_caption
-    self.new_buffered_caption()
+  def _write_at_cursor(self, char: str, time: Fraction, replace_previous: bool = False):
+    """Writes a character at the cursor, and moves the cursor to the next
+    column, if any. If replace_previous is true, the character replaces the one
+    in the preceding column instead, e.g. extended characters."""
+    if replace_previous and self.column > 0:
+      self.column -= 1
 
-    if temporary_caption is not None:
-      self.buffered_caption = temporary_caption
+    memory = self._get_current_memory()
+    previous_cell = memory.get_cell(self.row, self.column)
 
-  def push_active_caption_to_model(self, time_code: SmpteTimeCode, clear_active_caption: bool = True):
-    """Sets end time to the last active caption, and pushes it into the data model"""
-    if self.has_active_caption():
-      self.active_cursor = self.active_caption.get_cursor()
-
-      previous_caption = self.active_caption
-      previous_caption.set_end(time_code)
-
-      if clear_active_caption:
-        self.active_caption = None
-
-      if not previous_caption.is_empty():
-        # number captions as they are added to the model so that ids are unique and sequential
-        self.count += 1
-        previous_caption.set_id("caption" + str(self.count))
-        self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
-
-  def backspace(self, time_code: SmpteTimeCode):
-    """Move the cursors in a column to the left"""
-    caption = self.get_or_start_caption(time_code)
-    caption.get_current_text().backspace()
-    (row, indent) = caption.get_cursor()
-    caption.set_cursor_at(row, max(indent - 1, 0))
-
-  def start_paint_on_caption(self, time_code: SmpteTimeCode) -> SccCaptionParagraph:
-    """Ends the displayed caption, if any, and starts and returns a new active caption that continues it:
-    same lines, cursor and style. Without a displayed caption, the new caption is a Paint-On caption that
-    starts at the last known cursor position."""
-    active_style = SccCaptionStyle.PaintOn
-    copied_lines = []
-    cursor = self.active_cursor
-
-    if self.has_active_caption():
-      active_style = self.active_caption.get_caption_style()
-      cursor = self.active_caption.get_cursor()
-
-      # Copy buffered lines
-      copied_lines = self.active_caption.copy_lines()
-
-      # Push active to model if there is one
-      self.push_active_caption_to_model(time_code)
-
-    # Initialize new active caption
-    caption = self.new_active_caption(time_code, active_style)
-
-    if len(copied_lines) > 0:
-      # Set remaining lines to the new active caption
-      caption.set_lines(copied_lines)
-
-    caption.set_cursor_at(cursor[0], cursor[1])
-
-    return caption
-
-  def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SmpteTimeCode):
-    """Processes SCC Preamble Address Code it to the map to model"""
-
-    pac_row = pac.get_row()
-    pac_indent = pac.get_indent()
-
-    if self.current_style is SccCaptionStyle.PaintOn:
-
-      self.start_paint_on_caption(time_code)
-
-      # Clear target row on Paint-On style
-      target_row = self.active_caption.get_lines().get(pac_row)
-      if target_row is not None:
-        target_row.clear()
-
-      self.active_caption.set_cursor_at(pac_row, pac_indent)
-
-    elif self.current_style is SccCaptionStyle.RollUp:
-
-      self.get_or_start_caption(time_code)
-
-      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
-      if pac_row in range(5, 12):
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
-        self.active_caption.new_caption_text()
-        return
-
-      # Force roll-up paragraph to belong to the same region
-      self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW, pac_indent)
-
-      self.active_caption.new_caption_text()
-
+    if replace_previous and previous_cell is not None:
+      # the replaced character was displayed for at most one frame: the new one takes its place
+      cell = SccCellEvent(char, self.pen, previous_cell.time)
     else:
-      # Pop-On: set cursor in paragraph and create line or text if necessary
-      self.buffered_caption.set_cursor_at(pac_row, pac_indent)
+      cell = SccCellEvent(char, self.pen, time)
 
-    self.current_color = pac.get_color()
-    self.current_font_style = pac.get_font_style()
-    self.current_text_decoration = pac.get_text_decoration()
-    self.current_background = None
+    if not cell.has_same_content(previous_cell):
+      if memory is self.displayed and ((previous_cell is not None and not replace_previous)
+                                       or self.caption_style is not self.current_style):
+        # replacing a displayed character, or adding one in another caption style, ends the caption
+        self._end_caption(time)
 
-    if self.has_active_caption():
-      self.active_cursor = self.active_caption.get_cursor()
+      memory.set_cell(self.row, self.column, cell)
+
+      if memory is self.displayed:
+        self._start_caption(time, self.current_style)
+
+    # characters received at the last column replace the character in that column
+    self.column = min(self.column + 1, MEMORY_COLUMNS - 1)
+
+  def _erase_at_positions(self, memory: SccDisplayMemory, positions: Iterable[Tuple[int, int]], time: Fraction):
+    """Empties the specified positions of a memory"""
+    positions = list(positions)
+
+    if memory.is_empty_at(positions):
+      return
+
+    caption_style = self.caption_style if self.caption_style is not None else self.current_style
+
+    if memory is self.displayed:
+      self._end_caption(time)
+
+    for (row, column) in positions:
+      memory.set_cell(row, column, None)
+
+    if memory is self.displayed:
+      self._start_caption(time, caption_style)
+
+  def _roll_up_window(self) -> List[int]:
+    """Returns the rows of the Roll-Up window, from top to bottom"""
+    return list(range(self.base_row - self.roll_up_depth + 1, self.base_row + 1))
+
+  def _move_roll_up_window(self, base_row: int):
+    """Moves the Roll-Up window, and the rows it displays, so that its bottom
+    row is the specified row."""
+    if base_row == self.base_row:
+      return
+
+    displayed_rows = [row for row in self.displayed.get_rows() if row in self._roll_up_window()]
+
+    offset = base_row - self.base_row
+    for row in sorted(displayed_rows, reverse=offset > 0):
+      self.displayed.move_row(row, row + offset)
+
+    self.base_row = base_row
+
+  #
+  # codes
+  #
+
+  def process_preamble_address_code(self, pac: SccPreambleAddressCode):
+    row = pac.get_row()
+
+    if self.current_style is SccCaptionStyle.RollUp:
+      # the PAC row is the new base row of the Roll-Up window, which must fit in
+      # the screen (see CTA 608, C.4)
+      self._move_roll_up_window(max(row, self.roll_up_depth))
+      row = self.base_row
+
+    self.row = row
+    self.column = pac.get_indent() if pac.get_indent() is not None else 0
+    self.pen = SccPen(color=pac.get_color(), font_style=pac.get_font_style(), text_decoration=pac.get_text_decoration())
 
   def process_mid_row_code(self, mid_row_code: SccMidRowCode, time_code: SmpteTimeCode):
-    """Processes SCC Mid-Row Code to map it to the model"""
+    time = time_code.to_temporal_offset()
 
-    processed_caption = self.get_or_start_caption(time_code)
+    new_pen = self.pen.make_copy(color=mid_row_code.get_color(),
+                                       font_style=mid_row_code.get_font_style(),
+                                       text_decoration=mid_row_code.get_text_decoration())
 
-    color = mid_row_code.get_color()
-    font_style = mid_row_code.get_font_style()
-    text_decoration = mid_row_code.get_text_decoration()
+    # the space is underlined only if the text on both sides of it is underlined
+    self.pen = new_pen.make_copy(
+      text_decoration=new_pen.text_decoration if self.pen.is_underlined() and new_pen.is_underlined() else None)
+    self._write_at_cursor(" ", time)
 
-    # If there is already text on the current line
-    if processed_caption.get_current_text() is not None \
-        and not processed_caption.get_current_text().is_empty():
+    self.pen = new_pen
 
-      # In case of paint-on replacing text
-      if self.current_style is SccCaptionStyle.PaintOn \
-          and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
-        processed_caption.append_text(" ")
-
-      else:
-        if text_decoration is None:
-          processed_caption.new_caption_text()
-          processed_caption.append_text(" ")
-        else:
-          processed_caption.append_text(" ")
-          processed_caption.new_caption_text()
-
-    else:
-      processed_caption.append_text(" ")
-
-    self.current_color = color
-    self.current_font_style = font_style
-    self.current_text_decoration = text_decoration
-
-    if processed_caption.get_caption_style() is SccCaptionStyle.PaintOn:
-      processed_caption.get_current_text().set_begin(time_code)
-
-  def process_attribute_code(self, attribute_code: SccAttributeCode, time_code: SmpteTimeCode):
-    """Processes SCC Attribute Code to map it to the model"""
-
-    processed_caption = self.get_or_start_caption(time_code)
-
-    if processed_caption.get_current_text().get_text():
-      processed_caption.new_caption_text()
-
+  def process_attribute_code(self, attribute_code: SccAttributeCode):
     if attribute_code.is_background():
-      self.current_background = attribute_code.get_color()
+      self.pen = self.pen.make_copy(background=attribute_code.get_color())
     else:
-      self.current_color = attribute_code.get_color()
-      self.current_text_decoration = attribute_code.get_text_decoration()
-
-  def reset_current_char_styles(self):
-    """Resets the current character styles to their defaults"""
-    self.current_text_decoration = None
-    self.current_color = None
-    self.current_background = None
-    self.current_font_style = None
+      self.pen = self.pen.make_copy(color=attribute_code.get_color(),
+                                          text_decoration=attribute_code.get_text_decoration())
 
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
-    """Processes SCC Control Code to map it to the model"""
+    time = time_code.to_temporal_offset()
 
     if control_code is SccControlCode.RCL:
-      # Start a new Pop-On caption
       self.current_style = SccCaptionStyle.PopOn
 
     elif control_code is SccControlCode.RDC:
-      # Start a new Paint-On caption
       self.current_style = SccCaptionStyle.PaintOn
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
-      
+      depth = {SccControlCode.RU2: 2, SccControlCode.RU3: 3, SccControlCode.RU4: 4}[control_code]
+
       if self.current_style is not SccCaptionStyle.RollUp:
-        # Switching to roll-up style erases both display and non-display memories
-        # (CTA-608-E C.10)
-        self.push_active_caption_to_model(time_code)
-        self.new_buffered_caption()
+        # Switching to Roll-Up erases both memories, and the cursor moves to the base row (CTA-608-E C.10)
+        self._end_caption(time)
+        self.displayed.clear()
+        self.non_displayed.clear()
+        self.base_row = self._DEFAULT_BASE_ROW
+        self.row = self.base_row
+        self.column = 0
 
-      # Start a new Roll-Up caption
       self.current_style = SccCaptionStyle.RollUp
+      self.roll_up_depth = depth
 
-      if control_code is SccControlCode.RU2:
-        self.roll_up_depth = 2
+      # the window must fit in the screen
+      self._move_roll_up_window(max(self.base_row, depth))
+      self.row = self.base_row
 
-      elif control_code is SccControlCode.RU3:
-        self.roll_up_depth = 3
-
-      elif control_code is SccControlCode.RU4:
-        self.roll_up_depth = 4
-
-      if not self.has_active_caption():
-        # If there is currently no active caption, initialize an empty new paragraph
-        caption = self.get_or_start_caption(time_code)
-        caption.new_caption_text()
-
-        self.active_cursor = caption.get_cursor()
+      # rows above the window are erased, e.g. when the number of rows decreases
+      self._erase_at_positions(self.displayed, [(row, column) for row in range(1, self.base_row - depth + 1)
+                                                for column in range(MEMORY_COLUMNS)], time)
 
     elif control_code is SccControlCode.EOC:
-      # Display caption (Pop-On)
-      self.buffered_caption.set_begin(time_code)
-      self.flip_buffered_to_active_captions(time_code)
-
-      if self.has_active_caption():
-        # Set text alignment
-        if self.text_alignment == TextAlignment.AUTO:
-          text_alignment = self.active_caption.guess_text_alignment()
-        else:
-          text_alignment = self.text_alignment.text_align
-
-        # Apply text alignment
-        self.active_caption.add_style_property(StyleProperties.TextAlign, text_alignment)
+      # Swap the memories
+      self._end_caption(time)
+      self.displayed, self.non_displayed = self.non_displayed, self.displayed
+      self._start_caption(time, SccCaptionStyle.PopOn)
 
     elif control_code is SccControlCode.EDM:
-      # Erase displayed captions
-      if self.has_active_caption():
-        self.push_active_caption_to_model(time_code)
+      self._end_caption(time)
+      self.displayed.clear()
 
     elif control_code is SccControlCode.ENM:
-      # Erase buffered caption
-      self.new_buffered_caption()
+      self.non_displayed.clear()
 
-    elif control_code is SccControlCode.TO1:
-      self.get_or_start_caption(time_code).indent_cursor(1)
-
-    elif control_code is SccControlCode.TO2:
-      self.get_or_start_caption(time_code).indent_cursor(2)
-
-    elif control_code is SccControlCode.TO3:
-      self.get_or_start_caption(time_code).indent_cursor(3)
+    elif control_code in (SccControlCode.TO1, SccControlCode.TO2, SccControlCode.TO3):
+      offset = {SccControlCode.TO1: 1, SccControlCode.TO2: 2, SccControlCode.TO3: 3}[control_code]
+      self.column = min(self.column + offset, MEMORY_COLUMNS - 1)
 
     elif control_code is SccControlCode.CR:
-      # Roll the displayed caption up one row (Roll-Up)
-
-      # the new row starts with the default style (see CTA 608, C.14)
-      self.reset_current_char_styles()
-
-      if self.has_active_caption():
-        if self.active_caption.get_caption_style() is not SccCaptionStyle.RollUp:
-          LOGGER.warning("Cannot roll-up active %s-styled caption, erase it instead.", self.active_caption.get_caption_style().name)
-          self.push_active_caption_to_model(time_code)
-          return
-
-        if self.active_caption.is_empty():
-          # nothing is displayed: there is nothing to roll up
-          previous_lines = []
-        else:
-          # Push active caption to model (but don't erase it)
-          self.push_active_caption_to_model(time_code, False)
-          # Roll the active caption up
-          self.active_caption.roll_up()
-          # Get the remaining lines to initialize the following caption with the expected depth
-          previous_lines = self.active_caption.get_last_caption_lines(self.roll_up_depth - 1)
-
-        # Initialize the new caption with the previous lines
-        self.start_roll_up_caption(time_code, previous_lines)
+      self._carriage_return(time)
 
     elif control_code is SccControlCode.DER:
-      # Delete to End of Row (Paint-On)
-      # The DER may be issued from any point on a row to delete all displayable characters, transparent
-      # spaces, and mid-row codes from (and including) the current cell to the end of the row.
-      # Not used in this implementation since this SCC reader does not map the text overlapping into
-      # the model (i.e. a row is erased when a PAC is received, so before a new caption is written onto it).
-      pass
+      # Erases the characters from the cursor to the end of the row
+      memory = self._get_current_memory()
+      self._erase_at_positions(memory, memory.get_row_positions(self.row, self.column), time)
 
     elif control_code is SccControlCode.BS:
-      # Backspace
-      # When a Backspace is received, the cursor moves to the left one column position erasing
-      # the character or Mid-Row Code occupying that location, unless the cursor is in Column 1
-      self.backspace(time_code)
-
-  def process_text(self, word: str, time_code: SmpteTimeCode):
-    """Processes SCC text words"""
-    if self.current_style is not SccCaptionStyle.PopOn and not self.has_active_caption():
-      LOGGER.warning("Initialize active caption buffer to handle %s text at %s", self.current_style.name, time_code)
-
-    caption = self.get_or_start_caption(time_code)
-
-    if self.current_style is SccCaptionStyle.PaintOn and word.startswith(" "):
-      if caption.get_caption_style() is not SccCaptionStyle.PaintOn:
-        self.start_paint_on_caption(time_code)
-        self.active_caption.append_text(word)
-      else:
-        caption.new_caption_text()
-        caption.append_text(word)
-        caption.get_current_text().set_begin(time_code)
-
-    elif self.current_style is SccCaptionStyle.PaintOn and word.endswith(" "):
-      caption.append_text(word)
-
-      if caption.get_caption_style() is not SccCaptionStyle.PaintOn:
-        self.start_paint_on_caption(time_code)
-      else:
-        caption.new_caption_text()
-        caption.get_current_text().set_begin(time_code)
+      # The character is erased, unless the cursor is in the first column
+      if self.column > 0:
+        self.column -= 1
+        self._erase_at_positions(self._get_current_memory(), [(self.row, self.column)], time)
 
     else:
-      caption.append_text(word)
+      LOGGER.debug("Ignored SCC control code: %s", control_code.get_name())
 
-    # the Paint-On branches above may have replaced the active caption
-    current_text = self.get_or_start_caption(time_code).get_current_text()
-    current_text.add_style_property(StyleProperties.Color, self.current_color)
-    current_text.add_style_property(StyleProperties.FontStyle, self.current_font_style)
-    current_text.add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
-    if self.current_background is not None:
-      current_text.add_style_property(StyleProperties.BackgroundColor, self.current_background)
+  def _carriage_return(self, time: Fraction):
+    """Rolls the Roll-Up window up one row"""
+    if self.current_style is not SccCaptionStyle.RollUp:
+      LOGGER.warning("Ignored CR in %s style", self.current_style.name)
+      return
 
-    if self.has_active_caption():
-      self.active_cursor = self.active_caption.get_cursor()
+    # the new row starts with the default attributes (CTA-608-E C.14)
+    self.pen = SccPen.DEFAULT
+
+    window = self._roll_up_window()
+
+    if not self.displayed.is_empty_at([(row, column) for row in window for column in range(MEMORY_COLUMNS)]):
+      self._end_caption(time)
+
+      for row in window[:-1]:
+        self.displayed.move_row(row + 1, row)
+      self.displayed.clear_row(self.base_row)
+
+      self._start_caption(time, SccCaptionStyle.RollUp)
+
+    self.row = self.base_row
+    self.column = 0
+
+  def process_text(self, word: str, time_code: SmpteTimeCode):
+    time = time_code.to_temporal_offset()
+
+    for char in word:
+      self._write_at_cursor(char, time)
+
+  def process_extended_character(self, char: str, time_code: SmpteTimeCode):
+    self._write_at_cursor(char, time_code.to_temporal_offset(), replace_previous=True)
 
   def flush(self, time_code: Optional[SmpteTimeCode] = None):
-    """Flushes the remaining current caption"""
-    if self.has_active_caption():
-      self.push_active_caption_to_model(time_code)
-
-    # Remove the buffered caption
-    self.new_buffered_caption()
+    self._end_caption(time_code.to_temporal_offset() if time_code is not None else None)
