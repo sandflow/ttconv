@@ -73,14 +73,14 @@ class SccLineTest(unittest.TestCase):
     self.assertEqual(0, len(scc_line.scc_words))
     self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	", scc_line.to_disassembly())
-    self.assertEqual(SccCaptionStyle.Unknown, scc_line.get_style())
+    self.assertIsNone(scc_line.get_style())
 
     line_str = "01:03:27:29	9024 c845 d92c 2054 c845 5245 ae80 9f9f"
     scc_line = SccLine.from_str(line_str)
     self.assertEqual(8, len(scc_line.scc_words))
     self.assertEqual(SmpteTimeCode(1, 3, 27, 29, FPS_29_97, False).to_temporal_offset(), scc_line.time_code.to_temporal_offset())
     self.assertEqual("01:03:27:29	{BBl}HEY, THERE.{??}", scc_line.to_disassembly())
-    self.assertEqual(SccCaptionStyle.Unknown, scc_line.get_style())
+    self.assertIsNone(scc_line.get_style())
 
   def test_scc_line_from_str_with_roll_up_style(self):
     line_str = "01:03:27:29	9425 9425 94ad 94ad 94c8 94c8 c845 d92c 2054 c845 5245 ae80"

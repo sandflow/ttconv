@@ -83,11 +83,12 @@ class SccLine:
     scc_words = [SccWord.from_str(hex_word) for hex_word in hex_words if hex_word]
     return SccLine(time_offset, scc_words)
 
-  def get_style(self) -> SccCaptionStyle:
-    """Analyses the line words to find SCC control codes and define the caption style"""
+  def get_style(self) -> Optional[SccCaptionStyle]:
+    """Analyses the line words to find SCC control codes and define the caption
+    style, if any"""
     scc_words = self.scc_words
     if not scc_words:
-      return SccCaptionStyle.Unknown
+      return None
 
     for word in scc_words:
       prefix = SccControlCode.find(word.value)
@@ -101,7 +102,7 @@ class SccLine:
       if prefix is SccControlCode.RCL:
         return SccCaptionStyle.PopOn
 
-    return SccCaptionStyle.Unknown
+    return None
 
   def to_disassembly(self, show_channels = False) -> str:
     """Converts SCC line into the disassembly format"""
@@ -155,11 +156,11 @@ class SccLine:
 
         if isinstance(scc_code, SccPreambleAddressCode):
           debug += scc_code.debug(scc_word.value)
-          context.process_preamble_address_code(scc_code, self.time_code)
+          context.process_preamble_address_code(scc_code)
 
         elif isinstance(scc_code, SccAttributeCode):
           debug += scc_code.debug(scc_word.value)
-          context.process_attribute_code(scc_code, self.time_code)
+          context.process_attribute_code(scc_code)
 
         elif isinstance(scc_code, SccMidRowCode):
           debug += scc_code.debug(scc_word.value)
@@ -175,11 +176,9 @@ class SccLine:
           context.process_text(word, self.time_code)
 
         elif isinstance(scc_code, SccExtendedCharacter):
-          context.backspace(self.time_code)
-
           word = scc_code.get_unicode_value()
           debug += word
-          context.process_text(word, self.time_code)
+          context.process_extended_character(word, self.time_code)
 
         else:
           debug += "[??/" + hex(scc_word.value) + "]"

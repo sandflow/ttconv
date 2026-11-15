@@ -29,7 +29,7 @@
 import unittest
 from fractions import Fraction
 from numbers import Number
-from typing import Union, Type, Optional
+from typing import List, Union, Type, Optional
 
 from ttconv import model
 from ttconv.isd import ISD
@@ -68,6 +68,34 @@ class SccReaderTest(unittest.TestCase):
         self.assertEqual(expected_child, texts[0].get_text())
       else:
         self.assertEqual(expected_child, Br)
+
+  @staticmethod
+  def get_rows(paragraph: P) -> List[str]:
+    """Returns the text of the rows of a paragraph, an empty row being an empty
+    string"""
+    rows = [""]
+    for child in paragraph:
+      if isinstance(child, Br):
+        rows.append("")
+      else:
+        rows[-1] += list(child)[0].get_text()
+    return rows
+
+  def check_captions(self, doc: model.ContentDocument, expected_captions: list):
+    """Checks the paragraphs of a document against a list of (id, begin, end,
+    rows, region id) tuples"""
+    p_list = list(list(doc.get_body())[0])
+
+    self.assertEqual([rows for (_, _, _, rows, _) in expected_captions], [self.get_rows(p) for p in p_list])
+
+    for (p, (caption_id, begin, end, _, region_id)) in zip(p_list, expected_captions):
+      self.assertEqual(caption_id, p.get_id())
+      self.check_element_timecode(p.get_begin(), begin)
+      if end is None:
+        self.assertIsNone(p.get_end())
+      else:
+        self.check_element_timecode(p.get_end(), end)
+      self.assertEqual(region_id, p.get_region().get_id())
 
   def check_element_timecode(self, timecode: Fraction, expected_timecode: str):
     self.assertEqual(SmpteTimeCode.parse(expected_timecode, FPS_29_97).to_temporal_offset(), timecode)
@@ -184,7 +212,8 @@ class SccReaderTest(unittest.TestCase):
     p_list = list(div)
     self.assertEqual(5, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "01:02:54:04", "01:02:55:14", "( horn honking )")
+    # the text starts at column 22: the characters past column 32 overwrite the last column
+    self.check_caption(p_list[0], "caption1", "01:02:54:04", "01:02:55:14", "( horn ho)")
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "01:03:28:15", "01:11:32:04", "HEY, THE®E.")
@@ -197,7 +226,8 @@ class SccReaderTest(unittest.TestCase):
                        " consectetur adipiscing elit.")
     self.assertEqual(region_4, p_list[3].get_region())
 
-    self.check_caption(p_list[4], "caption5", "01:20:56:26", "01:22:19:23", "entesque interdum lacinia sollicitudin.")
+    # the text is longer than 32 characters: the characters past column 32 overwrite the last column
+    self.check_caption(p_list[4], "caption5", "01:20:56:26", "01:22:19:23", "entesque interdum lacinia solli.")
     self.assertEqual(region_5, p_list[4].get_region())
 
     self.check_element_style(list(p_list[2])[3], StyleProperties.FontStyle, FontStyleType.italic)
@@ -284,12 +314,21 @@ Scenarist_SCC V1.0
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    # without a PAC, the text is written at the cursor, which starts on row 15
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 32, 16, doc.get_cell_resolution())
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 12, 1, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+
+    region_2 = doc.get_region("pop2")
+    self.check_region_origin(region_2, 4, 15, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 28, 2, doc.get_cell_resolution())
+
+    region_3 = doc.get_region("pop3")
+    self.check_region_origin(region_3, 32, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_3, 4, 1, doc.get_cell_resolution())
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -302,15 +341,18 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(3, len(p_list))
 
+    # the mid-row code writes a space that BS erases, and the extended character replaces the last space
     self.check_caption(p_list[0], "caption1", "00:00:03:12", "00:00:08:24", "Lorem ipsumÁ")
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "00:00:08:25", "00:00:09:28", "dolor sit amet,", Br,
                        "consectetur adipiscing elit.")
-    self.assertEqual(region_1, p_list[0].get_region())
+    self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:09:29", None, "entesque interdum lacinia sollicitudin.")
-    self.assertEqual(region_1, p_list[0].get_region())
+    # without a PAC, the text continues at the cursor, on row 15 after "consectetur adipiscing elit.", and the
+    # characters past column 32 overwrite the last column
+    self.check_caption(p_list[2], "caption3", "00:00:09:29", None, "ent.")
+    self.assertEqual(region_3, p_list[2].get_region())
 
   def test_scc_double_word_in_content(self):
     scc_content = """"Scenarist_SCC V1.0
@@ -364,45 +406,46 @@ Scenarist_SCC V1.0
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
-    self.assertIsNotNone(doc)
 
-    region_1 = doc.get_region("rollup1")
-    self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
-    self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
-    self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+    self.check_region_origin(doc.get_region("rollup1"), 4, 2, doc.get_cell_resolution())
+    self.check_region_extent(doc.get_region("rollup1"), 32, 15, doc.get_cell_resolution())
+    self.check_element_style(doc.get_region("rollup1"), StyleProperties.DisplayAlign, DisplayAlignType.after)
+    self.check_element_style(doc.get_region("rollup1"), StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    # captions whose rows all start at column 4 are in another region
+    self.check_region_origin(doc.get_region("rollup2"), 8, 2, doc.get_cell_resolution())
+    self.check_region_extent(doc.get_region("rollup2"), 28, 15, doc.get_cell_resolution())
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
+    # characters appear as they are received; a caption ends at each CR, and each time a character received
+    # past column 32 overwrites the last column
+    self.check_captions(doc, [
+      ('caption1', '00:00:00:28', '00:00:02:25', ['Lorem ipsum dolor sit amet,'], 'rollup1'),
+      ('caption2', '00:00:02:25', '00:00:04:19', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'rollup1'),
+      ('caption3', '00:00:04:19', '00:00:05:07', ['consectetur adipiscing elit.', 'Pellentesque interdum lacini'], 'rollup2'),
+      ('caption4', '00:00:05:07', '00:00:05:08', ['consectetur adipiscing elit.', 'Pellentesque interdum lacin '], 'rollup2'),
+      ('caption5', '00:00:05:08', '00:00:05:09', ['consectetur adipiscing elit.', 'Pellentesque interdum lacino'], 'rollup2'),
+      ('caption6', '00:00:05:09', '00:00:05:10', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinl'], 'rollup2'),
+      ('caption7', '00:00:05:10', '00:00:05:11', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinc'], 'rollup2'),
+      ('caption8', '00:00:05:11', '00:00:05:12', ['consectetur adipiscing elit.', 'Pellentesque interdum lacint'], 'rollup2'),
+      ('caption9', '00:00:05:12', '00:00:05:13', ['consectetur adipiscing elit.', 'Pellentesque interdum lacind'], 'rollup2'),
+      ('caption10', '00:00:05:13', '00:00:05:14', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinn'], 'rollup2'),
+      ('caption11', '00:00:05:14', '00:00:06:06', ['consectetur adipiscing elit.', 'Pellentesque interdum lacin.'], 'rollup2'),
+      ('caption12', '00:00:06:06', '00:00:06:26', ['Pellentesque interdum lacin.', 'Integer luctus et ligula ac sagi'], 'rollup1'),
+      ('caption13', '00:00:06:26', '00:00:06:27', ['Pellentesque interdum lacin.', 'Integer luctus et ligula ac sagt'], 'rollup1'),
+      ('caption14', '00:00:06:27', '00:00:06:28', ['Pellentesque interdum lacin.', 'Integer luctus et ligula ac sags'], 'rollup1'),
+      ('caption15', '00:00:06:28', None, ['Pellentesque interdum lacin.', 'Integer luctus et ligula ac sag.'], 'rollup1'),
+    ])
 
-    p_list = list(div)
-    self.assertEqual(4, len(p_list))
+    p_list = list(list(doc.get_body())[0])
 
-    expected_text = LOREM_IPSUM.splitlines()
+    # the words of the base row appear when they are received
+    self.assertEqual(["Lorem ", "ipsum ", "dolor ", "sit ", "amet,"], [list(span)[0].get_text() for span in p_list[0]])
+    self.assertIsNone(list(p_list[0])[0].get_begin())
+    self.assertEqual([3, 6, 9, 11], [round(span.get_begin() * 30000 / 1001) for span in list(p_list[0])[1:]])
 
-    self.check_caption(p_list[0], "caption1", "00:00:00:24", "00:00:02:25", expected_text[0])
-    self.assertEqual(region_1, p_list[0].get_region())
-
-    self.check_caption(p_list[1], "caption2", "00:00:02:25", "00:00:04:19", expected_text[0], Br, expected_text[1])
-    self.assertEqual(region_1, p_list[1].get_region())
-
-    self.check_caption(p_list[2], "caption3", "00:00:04:19", "00:00:06:06", expected_text[1], Br, expected_text[2])
-    self.assertEqual(region_1, p_list[2].get_region())
-
-    self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
-                             TextDecorationType(underline=True))
-
-    self.check_caption(p_list[3], "caption4", "00:00:06:06", None, expected_text[2], Br, expected_text[3])
-    self.assertEqual(region_1, p_list[3].get_region())
-
-    self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
-                             TextDecorationType(underline=True))
+    # PACs 0804 and 1504 underline the text
+    for span in [child for child in p_list[2] if isinstance(child, Span)]:
+      self.check_element_style(span, StyleProperties.TextDecoration, TextDecorationType(underline=True))
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
@@ -431,41 +474,32 @@ Scenarist_SCC V1.0
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
-    self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
-    self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    # characters appear as they are received; a caption ends at each CR, and each time a character received
+    # past column 32 overwrites the last column
+    self.check_captions(doc, [
+      ('caption1', '00:00:17:07', '00:00:18:21', ['Lorem ipsum dolor sit amet,'], 'rollup1'),
+      ('caption2', '00:00:18:21', '00:00:20:08', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'rollup1'),
+      ('caption3', '00:00:20:08', '00:00:20:28', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia so'], 'rollup1'),
+      ('caption4', '00:00:20:28', '00:00:20:29', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sl'], 'rollup1'),
+      ('caption5', '00:00:20:29', '00:00:21:00', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sc'], 'rollup1'),
+      ('caption6', '00:00:21:00', '00:00:21:01', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia st'], 'rollup1'),
+      ('caption7', '00:00:21:01', '00:00:21:02', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sd'], 'rollup1'),
+      ('caption8', '00:00:21:02', '00:00:21:03', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sn'], 'rollup1'),
+      ('caption9', '00:00:21:03', '00:00:21:26', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.'], 'rollup1'),
+      ('caption10', '00:00:21:26', '00:00:22:16', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sagi'], 'rollup1'),
+      ('caption11', '00:00:22:16', '00:00:22:17', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sagt'], 'rollup1'),
+      ('caption12', '00:00:22:17', '00:00:22:18', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sags'], 'rollup1'),
+      ('caption13', '00:00:22:18', None, ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sag.'], 'rollup1'),
+    ])
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(4, len(p_list))
-
-    expected_text = LOREM_IPSUM.splitlines()
-
-    self.check_caption(p_list[0], "caption1", "00:00:17;03", "00:00:18;21", expected_text[0])
-    self.assertEqual(region_1, p_list[0].get_region())
-
-    self.check_caption(p_list[1], "caption2", "00:00:18;21", "00:00:20;08", expected_text[0], Br, expected_text[1])
-    self.assertEqual(region_1, p_list[1].get_region())
-
-    self.check_caption(p_list[2], "caption3", "00:00:20;08", "00:00:21;26", expected_text[0], Br, expected_text[1], Br,
-                       expected_text[2])
-    self.assertEqual(region_1, p_list[2].get_region())
-
-    self.check_caption(p_list[3], "caption4", "00:00:21;26", None, expected_text[1], Br, expected_text[2], Br,
-                       expected_text[3])
-    self.assertEqual(region_1, p_list[3].get_region())
+    p_list = list(list(doc.get_body())[0])
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
@@ -500,49 +534,36 @@ Scenarist_SCC V1.0
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
-    self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
-    self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    # characters appear as they are received; a caption ends at each CR, and each time a character received
+    # past column 32 overwrites the last column
+    self.check_captions(doc, [
+      ('caption1', '00:00:35:00', '00:00:36:13', ['Lorem ipsum dolor sit amet,'], 'rollup1'),
+      ('caption2', '00:00:36:13', '00:00:44:09', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'rollup1'),
+      ('caption3', '00:00:44:09', '00:00:44:27', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia so'], 'rollup1'),
+      ('caption4', '00:00:44:27', '00:00:44:28', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sl'], 'rollup1'),
+      ('caption5', '00:00:44:28', '00:00:44:29', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sc'], 'rollup1'),
+      ('caption6', '00:00:44:29', '00:00:45:00', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia st'], 'rollup1'),
+      ('caption7', '00:00:45:00', '00:00:45:01', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sd'], 'rollup1'),
+      ('caption8', '00:00:45:01', '00:00:45:02', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia sn'], 'rollup1'),
+      ('caption9', '00:00:45:02', '00:00:47:13', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.'], 'rollup1'),
+      ('caption10', '00:00:47:13', '00:00:48:01', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sagi'], 'rollup1'),
+      ('caption11', '00:00:48:01', '00:00:48:02', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sagt'], 'rollup1'),
+      ('caption12', '00:00:48:02', '00:00:48:03', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sags'], 'rollup1'),
+      ('caption13', '00:00:48:03', '00:00:49:04', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sag.'], 'rollup1'),
+      ('caption14', '00:00:49:04', '00:00:49:22', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sag.', 'Ut at diam sit amet nulla fringi'], 'rollup1'),
+      ('caption15', '00:00:49:22', '00:00:49:23', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sag.', 'Ut at diam sit amet nulla fringl'], 'rollup1'),
+      ('caption16', '00:00:49:23', '00:00:50:24', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sag.', 'Ut at diam sit amet nulla fringa'], 'rollup1'),
+      ('caption17', '00:00:50:24', None, ['Pellentesque interdum lacinia s.', 'Integer luctus et ligula ac sag.', 'Ut at diam sit amet nulla fringa', 'vestibulum nec vitae nisi.'], 'rollup1'),
+    ])
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(6, len(p_list))
-
-    expected_text = LOREM_IPSUM.splitlines()
-
-    self.check_caption(p_list[0], "caption1", "00:00:34;28", "00:00:36;13", expected_text[0])
-    self.assertEqual(region_1, p_list[0].get_region())
-
-    self.check_caption(p_list[1], "caption2", "00:00:36;13", "00:00:44;09", expected_text[0], Br, expected_text[1])
-    self.assertEqual(region_1, p_list[1].get_region())
-
-    self.check_caption(p_list[2], "caption3", "00:00:44;09", "00:00:47;13", expected_text[0], Br, expected_text[1], Br,
-                       expected_text[2])
-    self.assertEqual(region_1, p_list[2].get_region())
-
-    self.check_caption(p_list[3], "caption4", "00:00:47;13", "00:00:49;04", expected_text[0], Br, expected_text[1], Br,
-                       expected_text[2], Br, expected_text[3])
-    self.assertEqual(region_1, p_list[3].get_region())
-
-    self.check_caption(p_list[4], "caption5", "00:00:49;04", "00:00:50;24", expected_text[1], Br, expected_text[2], Br,
-                       expected_text[3], Br, expected_text[4])
-    self.assertEqual(region_1, p_list[4].get_region())
-
-    self.check_caption(p_list[5], "caption6", "00:00:50;24", None, expected_text[2], Br, expected_text[3], Br,
-                       expected_text[4], Br, expected_text[5])
-    self.assertEqual(region_1, p_list[5].get_region())
+    p_list = list(list(doc.get_body())[0])
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
@@ -566,7 +587,7 @@ Scenarist_SCC V1.0
 
 00:00:12;07	9425 9425 94ad 94ad 9470 9470 91b0 9131 9132 9132
 
-00:00:13;07	9425 9425 94ad 94ad 9470 9470 c1c2 c3c4 c580 91bf
+00:00:13;07	9425 9425 94ad 94ad 9470 9470 c1c2 43c4 4580 91bf
 
 00:00:14;07	9425 9425 94ad 94ad 9470 9470 c180 9220 c580 92a1 4f80 92a2 2080 92a7
 
@@ -608,98 +629,51 @@ Scenarist_SCC V1.0
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
-    self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
-    self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    # characters appear as they are received, and a caption ends at each CR. When the number of rows increases,
+    # the rows that are still in memory above the window are displayed again. Special and extended characters
+    # are sent twice, and an extended character replaces the preceding character.
+    self.check_captions(doc, [
+      ('caption1', '00:00:00:28', '00:00:02:25', ['>>> HI.'], 'rollup1'),
+      ('caption2', '00:00:02:25', '00:00:04:19', ['>>> HI.', "I'M KEVIN CUNNING AND AT"], 'rollup1'),
+      ('caption3', '00:00:04:19', '00:00:06:06', ["I'M KEVIN CUNNING AND AT", "INVESTOR'S BANK WE BELIEVE IN"], 'rollup1'),
+      ('caption4', '00:00:06:06', '00:00:09:23', ["INVESTOR'S BANK WE BELIEVE IN", 'HELPING THE LOCAL NEIGHBORHOODS'], 'rollup1'),
+      ('caption5', '00:00:09:23', '00:00:11:09', ['HELPING THE LOCAL NEIGHBORHOODS', 'AND  IMPROVING  THE LIVES OF ALL'], 'rollup1'),
+      ('caption6', '00:00:11:09', '00:00:12:09', ['AND  IMPROVING  THE LIVES OF ALL', 'WE SERVE.'], 'rollup1'),
+      ('caption7', '00:00:12:09', '00:00:13:09', ['WE SERVE.', '®°½'], 'rollup1'),
+      ('caption8', '00:00:13:09', '00:00:14:09', ['®°½', 'ABCDEû'], 'rollup1'),
+      ('caption9', '00:00:14:09', '00:00:17:03', ['ABCDEû', 'ÁÉÓ¡'], 'rollup1'),
+      ('caption10', '00:00:17:03', '00:00:18:21', ['ABCDEû', 'ÁÉÓ¡', "WHERE YOU'RE STANDING NOW,"], 'rollup1'),
+      ('caption11', '00:00:18:21', '00:00:20:08', ['ÁÉÓ¡', "WHERE YOU'RE STANDING NOW,", "LOOKING OUT THERE, THAT'S ALL"], 'rollup1'),
+      ('caption12', '00:00:20:08', '00:00:21:26', ["WHERE YOU'RE STANDING NOW,", "LOOKING OUT THERE, THAT'S ALL", 'THE CROWD.'], 'rollup1'),
+      ('caption13', '00:00:21:26', '00:00:34:28', ["LOOKING OUT THERE, THAT'S ALL", 'THE CROWD.', '>> IT WAS GOOD TO BE IN THE'], 'rollup1'),
+      ('caption14', '00:00:34:28', '00:00:36:13', ["LOOKING OUT THERE, THAT'S ALL", 'THE CROWD.', '>> IT WAS GOOD TO BE IN THE', "And restore Iowa's land, water"], 'rollup1'),
+      ('caption15', '00:00:36:13', '00:00:44:09', ['THE CROWD.', '>> IT WAS GOOD TO BE IN THE', "And restore Iowa's land, water", 'And wildlife.'], 'rollup1'),
+      ('caption16', '00:00:44:09', None, ['>> IT WAS GOOD TO BE IN THE', "And restore Iowa's land, water", 'And wildlife.', '>> Bike Iowa, your source for'], 'rollup1'),
+    ])
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
+    p_list = list(list(doc.get_body())[0])
 
-    p_list = list(div)
-    self.assertEqual(16, len(p_list))
+    def spans(p: P, text: str) -> List[Span]:
+      return [child for child in p if isinstance(child, Span) and list(child)[0].get_text() == text]
 
-    self.check_caption(p_list[0], "caption1", "00:00:00;24", "00:00:02;25", ">>> HI.")
-    self.assertEqual(region_1, p_list[0].get_region())
+    # the {I} mid-row code italicizes "IMPROVING", until the {Wh} mid-row code
+    self.check_element_style(spans(p_list[4], "IMPROVING ")[0], StyleProperties.FontStyle, FontStyleType.italic)
+    self.check_element_style(spans(p_list[4], "THE ")[0], StyleProperties.FontStyle, None)
+    self.check_element_style(spans(p_list[5], " IMPROVING ")[0], StyleProperties.FontStyle, FontStyleType.italic)
 
-    self.check_caption(p_list[1], "caption2", "00:00:02;25", "00:00:04;19", ">>> HI.", Br, "I'M KEVIN CUNNING AND AT")
-    self.assertEqual(region_1, p_list[1].get_region())
-
-    self.check_caption(p_list[2], "caption3", "00:00:04;19", "00:00:06;06", "I'M KEVIN CUNNING AND AT", Br,
-                       "INVESTOR'S BANK WE BELIEVE IN")
-    self.assertEqual(region_1, p_list[2].get_region())
-
-    self.check_caption(p_list[3], "caption4", "00:00:06;06", "00:00:09;23", "INVESTOR'S BANK WE BELIEVE IN", Br,
-                       "HELPING THE LOCAL NEIGHBORHOODS")
-    self.assertEqual(region_1, p_list[3].get_region())
-
-    self.check_caption(p_list[4], "caption5", "00:00:09;23", "00:00:11;09", "HELPING THE LOCAL NEIGHBORHOODS", Br, "AND ",
-                       " IMPROVING ", " THE LIVES OF ALL")
-    self.assertEqual(region_1, p_list[4].get_region())
-
-    self.check_caption(p_list[5], "caption6", "00:00:11;09", "00:00:12;09", "AND ", " IMPROVING ", " THE LIVES OF ALL", Br,
-                       "WE SERVE.")
-    self.assertEqual(region_1, p_list[5].get_region())
-
-    self.check_caption(p_list[6], "caption7", "00:00:12;09", "00:00:13;09", "WE SERVE.", Br, "®°½")
-    self.assertEqual(region_1, p_list[6].get_region())
-
-    self.check_caption(p_list[7], "caption8", "00:00:13;09", "00:00:14;09", "®°½", Br, "ABCDEû")
-    self.assertEqual(region_1, p_list[7].get_region())
-
-    self.check_caption(p_list[8], "caption9", "00:00:14;09", "00:00:17;03", "ABCDEû", Br, "ÁÉÓ¡")
-    self.assertEqual(region_1, p_list[8].get_region())
-
-    self.check_caption(p_list[9], "caption10", "00:00:17;03", "00:00:18;21", "ABCDEû", Br, "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,")
-    self.assertEqual(region_1, p_list[9].get_region())
-
-    self.check_caption(p_list[10], "caption11", "00:00:18;21", "00:00:20;08", "ÁÉÓ¡", Br, "WHERE YOU'RE STANDING NOW,", Br,
-                       "LOOKING OUT THERE, THAT'S ALL")
-    self.assertEqual(region_1, p_list[10].get_region())
-
-    self.check_caption(p_list[11], "caption12", "00:00:20;08", "00:00:21;26", "WHERE YOU'RE STANDING NOW,", Br,
-                       "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.")
-    self.assertEqual(region_1, p_list[11].get_region())
-
-    self.check_caption(p_list[12], "caption13", "00:00:21;26", "00:00:34;28", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
-                       ">> IT WAS ", "GOOD", " TO BE IN THE")
-    self.assertEqual(region_1, p_list[12].get_region())
-
-    self.check_caption(p_list[13], "caption14", "00:00:34;28", "00:00:36;13", "LOOKING OUT THERE, THAT'S ALL", Br, "THE CROWD.", Br,
-                       ">> IT WAS ", "GOOD", " TO BE IN THE", Br, "And restore Iowa's land, water")
-    self.assertEqual(region_1, p_list[13].get_region())
-
-    self.check_caption(p_list[14], "caption15", "00:00:36;13", "00:00:44;09", "THE CROWD.", Br, ">> IT WAS ", "GOOD",
-                       " TO BE IN THE", Br,
-                       "And restore Iowa's land, water", Br, "And wildlife.")
-    self.assertEqual(region_1, p_list[14].get_region())
-
-    self.check_caption(p_list[15], "caption16", "00:00:44;09", None, ">> IT WAS ", "GOOD", " TO BE IN THE", Br,
-                       "And restore Iowa's land, water", Br, "And wildlife.", Br, ">> Bike Iowa, your source for")
-    self.assertEqual(region_1, p_list[15].get_region())
-
-    self.check_element_style(list(p_list[4])[3], StyleProperties.FontStyle, FontStyleType.italic)
-    self.check_element_style(list(p_list[5])[1], StyleProperties.FontStyle, FontStyleType.italic)
-
+    # the {BMaS} attribute code sets a semi-transparent magenta background, until the {BBk} attribute code
     semi_transparent_magenta = ColorType((255, 0, 255, 136))
-    self.check_element_style(list(p_list[12])[5], StyleProperties.BackgroundColor, semi_transparent_magenta)
-    self.check_element_style(list(p_list[13])[5], StyleProperties.BackgroundColor, semi_transparent_magenta)
-    self.check_element_style(list(p_list[14])[3], StyleProperties.BackgroundColor, semi_transparent_magenta)
-    self.check_element_style(list(p_list[15])[1], StyleProperties.BackgroundColor, semi_transparent_magenta)
-
-    for p in p_list:
-      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
-        if span.get_style(StyleProperties.BackgroundColor) != SccAttributeCode.BMS.value[2]:
-          self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
+    for p in p_list[12:16]:
+      self.check_element_style(spans(p, "GOOD")[0], StyleProperties.BackgroundColor, semi_transparent_magenta)
+      self.check_element_style(spans(p, " TO BE IN THE" if p is not p_list[12] else " TO ")[0],
+                               StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_roll_up_content_without_preamble_address_code(self):
     scc_content = """\
@@ -722,37 +696,28 @@ Scenarist_SCC V1.0
     self.assertEqual(scc_disassembly, to_disassembly(scc_content))
 
     doc = to_model(scc_content)
-    self.assertIsNotNone(doc)
 
     region_1 = doc.get_region("rollup1")
-    self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
     self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    # characters appear as they are received; a caption ends at each CR, and each time a character received
+    # past column 32 overwrites the last column
+    self.check_captions(doc, [
+      ('caption1', '00:00:34:29', '00:00:36:13', ['Lorem ipsum dolor sit amet,'], 'rollup1'),
+      ('caption2', '00:00:36:13', '00:00:44:09', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'rollup1'),
+      ('caption3', '00:00:44:09', '00:00:44:26', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia so'], 'rollup1'),
+      ('caption4', '00:00:44:26', '00:00:44:27', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia sl'], 'rollup1'),
+      ('caption5', '00:00:44:27', '00:00:44:28', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia sc'], 'rollup1'),
+      ('caption6', '00:00:44:28', '00:00:44:29', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia st'], 'rollup1'),
+      ('caption7', '00:00:44:29', '00:00:45:00', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia sd'], 'rollup1'),
+      ('caption8', '00:00:45:00', '00:00:45:01', ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia sn'], 'rollup1'),
+      ('caption9', '00:00:45:01', None, ['consectetur adipiscing elit.', 'Pellentesque interdum lacinia s.'], 'rollup1'),
+    ])
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(3, len(p_list))
-
-    expected_text = LOREM_IPSUM.splitlines()
-
-    self.check_caption(p_list[0], "caption1", "00:00:34:28", "00:00:36:13", expected_text[0])
-    self.assertEqual(region_1, p_list[0].get_region())
-
-    self.check_caption(p_list[1], "caption2", "00:00:36:13", "00:00:44:09", expected_text[0], Br, expected_text[1])
-    self.assertEqual(region_1, p_list[1].get_region())
-
-    self.check_caption(p_list[2], "caption3", "00:00:44:09", None, expected_text[1], Br,
-                       expected_text[2])
-    self.assertEqual(region_1, p_list[2].get_region())
+    p_list = list(list(doc.get_body())[0])
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
@@ -788,71 +753,67 @@ Scenarist_SCC V1.0
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    # characters appear as they are received. A PAC only moves the cursor: the following characters overwrite the
+    # displayed ones one by one, and each overwrite ends the caption. The characters past column 32 overwrite the
+    # last column.
+    self.check_captions(doc, [
+      ('caption1', '00:02:53:18', '00:02:56:04', ['Lorem ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption2', '00:02:56:04', '00:02:56:05', ['Perem ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption3', '00:02:56:05', '00:02:56:06', ['Pellm ipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption4', '00:02:56:06', '00:02:56:07', ['Pellenipsum dolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption5', '00:02:56:07', '00:02:56:08', ['Pellentesum dolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption6', '00:02:56:08', '00:02:56:09', ['Pellentesqm dolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption7', '00:02:56:09', '00:02:56:10', ['Pellentesquedolor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption8', '00:02:56:10', '00:02:56:11', ['Pellentesque ilor sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption9', '00:02:56:11', '00:02:56:12', ['Pellentesque intr sit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption10', '00:02:56:12', '00:02:56:13', ['Pellentesque intersit amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption11', '00:02:56:13', '00:02:56:14', ['Pellentesque interdut amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption12', '00:02:56:14', '00:02:56:15', ['Pellentesque interdum amet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption13', '00:02:56:15', '00:02:56:16', ['Pellentesque interdum laet,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption14', '00:02:56:16', '00:02:56:17', ['Pellentesque interdum laci,', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption15', '00:02:56:17', '00:02:56:18', ['Pellentesque interdum lacini', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption16', '00:02:56:18', '00:02:56:19', ['Pellentesque interdum lacin ', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption17', '00:02:56:19', '00:02:56:20', ['Pellentesque interdum lacino', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption18', '00:02:56:20', '00:02:56:21', ['Pellentesque interdum lacinl', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption19', '00:02:56:21', '00:02:56:22', ['Pellentesque interdum lacinc', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption20', '00:02:56:22', '00:02:56:23', ['Pellentesque interdum lacint', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption21', '00:02:56:23', '00:02:56:24', ['Pellentesque interdum lacind', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption22', '00:02:56:24', '00:02:56:25', ['Pellentesque interdum lacinn', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption23', '00:02:56:25', '00:02:56:29', ['Pellentesque interdum lacin.', 'consectetur adipiscing elit.'], 'paint1'),
+      ('caption24', '00:02:56:29', '00:02:57:00', ['Pellentesque interdum lacin.', 'Innsectetur adipiscing elit.'], 'paint1'),
+      ('caption25', '00:02:57:00', '00:02:57:01', ['Pellentesque interdum lacin.', 'Inteectetur adipiscing elit.'], 'paint1'),
+      ('caption26', '00:02:57:01', '00:02:57:02', ['Pellentesque interdum lacin.', 'Integetetur adipiscing elit.'], 'paint1'),
+      ('caption27', '00:02:57:02', '00:02:57:03', ['Pellentesque interdum lacin.', 'Integer tur adipiscing elit.'], 'paint1'),
+      ('caption28', '00:02:57:03', '00:02:57:04', ['Pellentesque interdum lacin.', 'Integer lur adipiscing elit.'], 'paint1'),
+      ('caption29', '00:02:57:04', '00:02:57:05', ['Pellentesque interdum lacin.', 'Integer luctadipiscing elit.'], 'paint1'),
+      ('caption30', '00:02:57:05', '00:02:57:06', ['Pellentesque interdum lacin.', 'Integer luctusipiscing elit.'], 'paint1'),
+      ('caption31', '00:02:57:06', '00:02:57:07', ['Pellentesque interdum lacin.', 'Integer luctus eiscing elit.'], 'paint1'),
+      ('caption32', '00:02:57:07', '00:02:57:08', ['Pellentesque interdum lacin.', 'Integer luctus et cing elit.'], 'paint1'),
+      ('caption33', '00:02:57:08', '00:02:57:09', ['Pellentesque interdum lacin.', 'Integer luctus et ling elit.'], 'paint1'),
+      ('caption34', '00:02:57:09', '00:02:57:10', ['Pellentesque interdum lacin.', 'Integer luctus et ligu elit.'], 'paint1'),
+      ('caption35', '00:02:57:10', '00:02:57:11', ['Pellentesque interdum lacin.', 'Integer luctus et ligulalit.'], 'paint1'),
+      ('caption36', '00:02:57:11', '00:02:57:12', ['Pellentesque interdum lacin.', 'Integer luctus et ligula at.'], 'paint1'),
+      ('caption37', '00:02:57:12', '00:02:57:13', ['Pellentesque interdum lacin.', 'Integer luctus et ligula ac '], 'paint1'),
+      ('caption38', '00:02:57:13', '00:02:57:14', ['Pellentesque interdum lacin.', 'Integer luctus et ligula aca'], 'paint1'),
+      ('caption39', '00:02:57:14', '00:02:57:15', ['Pellentesque interdum lacin.', 'Integer luctus et ligula aci'], 'paint1'),
+      ('caption40', '00:02:57:15', '00:02:57:16', ['Pellentesque interdum lacin.', 'Integer luctus et ligula act'], 'paint1'),
+      ('caption41', '00:02:57:16', '00:02:57:17', ['Pellentesque interdum lacin.', 'Integer luctus et ligula acs'], 'paint1'),
+      ('caption42', '00:02:57:17', None, ['Pellentesque interdum lacin.', 'Integer luctus et ligula ac.'], 'paint1'),
+    ])
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
+    p_list = list(list(doc.get_body())[0])
 
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(4, len(p_list))
-
+    # the words of the first caption appear when they are received
     paragraph = p_list[0]
-    self.check_caption(paragraph, "caption1", "00:02:53:16", "00:02:54:02", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,")
-    self.assertEqual(region_1, paragraph.get_region())
+    self.check_caption(paragraph, "caption1", "00:02:53:18", "00:02:56:04", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,",
+                       Br, "consectetur ", "adipiscing ", "elit.")
+    spans = [child for child in paragraph if isinstance(child, Span)]
+    self.assertIsNone(spans[0].get_begin())
+    self.assertEqual([3, 6, 9, 11, 16, 22, 27], [round(span.get_begin() * 30000 / 1001) for span in spans[1:]])
 
-    self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertAlmostEqual(1/29.97 * 4, float(list(paragraph)[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 7, float(list(paragraph)[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 10, float(list(paragraph)[3].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 12, float(list(paragraph)[4].get_begin()), delta=0.0001)
-
-    paragraph = p_list[1]
-    self.check_caption(paragraph, "caption2", "00:02:54:02", "00:02:56:02", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,", Br,
-                       "consectetur ", "adipiscing", " elit.")
-    self.assertEqual(region_1, paragraph.get_region())
-
-    self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertIsNone(list(paragraph)[1].get_begin())
-    self.assertIsNone(list(paragraph)[2].get_begin())
-    self.assertIsNone(list(paragraph)[3].get_begin())
-    self.assertIsNone(list(paragraph)[4].get_begin())
-    self.assertIsNone(list(paragraph)[6].get_begin())
-    self.assertAlmostEqual(1/29.97 * 7, float(list(paragraph)[7].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 13, float(list(paragraph)[8].get_begin()), delta=0.0001)
-
-    paragraph = p_list[2]
-    self.check_caption(paragraph, "caption3", "00:02:56:02", "00:02:56:27", "Pellentesque", " interdum ", "lacinia ",
-                       "sollicitudin.", Br, "consectetur ", "adipiscing", " elit.")
-    self.assertEqual(region_1, paragraph.get_region())
-
-    self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertAlmostEqual(1/29.97 * 8, float(list(paragraph)[1].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 12, float(list(paragraph)[2].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 16, float(list(paragraph)[3].get_begin()), delta=0.0001)
-    self.assertIsNone(list(paragraph)[5].get_begin())
-    self.assertIsNone(list(paragraph)[6].get_begin())
-    self.assertIsNone(list(paragraph)[7].get_begin())
-
-    paragraph = p_list[3]
-    self.check_caption(paragraph, "caption4", "00:02:56:27", None, "Pellentesque", " interdum ", "lacinia ",
-                       "sollicitudin.", Br, "Integer ", "luctus", " et ", "ligula", " ac ",
-                       "sagittis.")
-    self.assertEqual(region_1, paragraph.get_region())
-
-    self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertIsNone(list(paragraph)[1].get_begin())
-    self.assertIsNone(list(paragraph)[2].get_begin())
-    self.assertIsNone(list(paragraph)[3].get_begin())
-    self.assertIsNone(list(paragraph)[5].get_begin())
-    self.assertAlmostEqual(1/29.97 * 5, float(list(paragraph)[6].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 9, float(list(paragraph)[7].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 10, float(list(paragraph)[8].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 14, float(list(paragraph)[9].get_begin()), delta=0.0001)
-    self.assertAlmostEqual(1/29.97 * 15, float(list(paragraph)[10].get_begin()), delta=0.0001)
+    # the content that is displayed when a caption begins appears with it
+    for span in [child for child in p_list[1] if isinstance(child, Span)]:
+      self.assertIsNone(span.get_begin())
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
@@ -881,55 +842,56 @@ Scenarist_SCC V1.0
     doc = to_model(scc_content)
     self.assertIsNotNone(doc)
 
+    # without a PAC, the text is written at the cursor, which starts on row 15
     region_1 = doc.get_region("paint1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 32, 16, doc.get_cell_resolution())
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 32, 1, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
+    region_2 = doc.get_region("paint2")
+    self.assertIsNotNone(region_2)
+    self.check_region_origin(region_2, 4, 6, doc.get_cell_resolution())
+    self.check_region_extent(region_2, 32, 11, doc.get_cell_resolution())
 
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
+    # without a PAC, the text continues on the same row: the characters past column 32 overwrite the last column,
+    # and each overwrite ends the caption. The last PAC moves the cursor to row 5.
+    self.check_captions(doc, [
+      ('caption1', '00:02:53:15', '00:02:56:03', ['Lorem ipsum dolor sit amet,conse'], 'paint1'),
+      ('caption2', '00:02:56:03', '00:02:56:04', ['Lorem ipsum dolor sit amet,consc'], 'paint1'),
+      ('caption3', '00:02:56:04', '00:02:56:05', ['Lorem ipsum dolor sit amet,conse'], 'paint1'),
+      ('caption4', '00:02:56:05', '00:02:56:06', ['Lorem ipsum dolor sit amet,consu'], 'paint1'),
+      ('caption5', '00:02:56:06', '00:02:56:07', ['Lorem ipsum dolor sit amet,cons '], 'paint1'),
+      ('caption6', '00:02:56:07', '00:02:56:08', ['Lorem ipsum dolor sit amet,consd'], 'paint1'),
+      ('caption7', '00:02:56:08', '00:02:56:09', ['Lorem ipsum dolor sit amet,consp'], 'paint1'),
+      ('caption8', '00:02:56:09', '00:02:56:10', ['Lorem ipsum dolor sit amet,conss'], 'paint1'),
+      ('caption9', '00:02:56:10', '00:02:56:11', ['Lorem ipsum dolor sit amet,consi'], 'paint1'),
+      ('caption10', '00:02:56:11', '00:02:56:12', ['Lorem ipsum dolor sit amet,consg'], 'paint1'),
+      ('caption11', '00:02:56:12', '00:02:56:13', ['Lorem ipsum dolor sit amet,conse'], 'paint1'),
+      ('caption12', '00:02:56:13', '00:02:56:14', ['Lorem ipsum dolor sit amet,consi'], 'paint1'),
+      ('caption13', '00:02:56:14', '00:02:56:26', ['Lorem ipsum dolor sit amet,cons.'], 'paint1'),
+      ('caption14', '00:02:56:26', '00:02:56:27', ['Lorem ipsum dolor sit amet,conse'], 'paint1'),
+      ('caption15', '00:02:56:27', '00:02:56:28', ['Lorem ipsum dolor sit amet,consl'], 'paint1'),
+      ('caption16', '00:02:56:28', '00:02:56:29', ['Lorem ipsum dolor sit amet,consn'], 'paint1'),
+      ('caption17', '00:02:56:29', '00:02:57:00', ['Lorem ipsum dolor sit amet,conse'], 'paint1'),
+      ('caption18', '00:02:57:00', '00:02:57:01', ['Lorem ipsum dolor sit amet,consq'], 'paint1'),
+      ('caption19', '00:02:57:01', '00:02:57:02', ['Lorem ipsum dolor sit amet,conse'], 'paint1'),
+      ('caption20', '00:02:57:02', '00:02:57:03', ['Lorem ipsum dolor sit amet,consi'], 'paint1'),
+      ('caption21', '00:02:57:03', '00:02:57:04', ['Lorem ipsum dolor sit amet,const'], 'paint1'),
+      ('caption22', '00:02:57:04', '00:02:57:05', ['Lorem ipsum dolor sit amet,consr'], 'paint1'),
+      ('caption23', '00:02:57:05', '00:02:57:06', ['Lorem ipsum dolor sit amet,consu'], 'paint1'),
+      ('caption24', '00:02:57:06', None, ['lacinia sollicitudin.', '', '', '', '', '', '', '', '', '', 'Lorem ipsum dolor sit amet,cons '], 'paint2'),
+    ])
 
-    div = div_list[0]
-    self.assertIsNotNone(div)
+    p_list = list(list(doc.get_body())[0])
 
-    p_list = list(div)
-    self.assertEqual(2, len(p_list))
-
+    # the words of the first caption appear when they are received
     paragraph = p_list[0]
-    self.check_caption(paragraph, "caption1", "00:02:53:15", "00:02:57:07", "Lorem ", "ipsum ", "dolor ", "sit ",
-                       "amet,consectetur ", "adipiscing", " elit.Pellentesque", " interdum ")
-    self.assertEqual(region_1, paragraph.get_region())
-
-    self.assertIsNone(list(paragraph)[0].get_begin())
-    self.check_element_timecode(list(paragraph)[1].get_begin(), "00:00:00:02")
-    self.check_element_timecode(list(paragraph)[2].get_begin(), "00:00:00:05")
-    self.check_element_timecode(list(paragraph)[3].get_begin(), "00:00:00:08")
-    self.check_element_timecode(list(paragraph)[4].get_begin(), "00:00:00:10")
-    self.check_element_timecode(list(paragraph)[5].get_begin(), "00:00:02:21")
-    self.check_element_timecode(list(paragraph)[6].get_begin(), "00:00:02:27")
-    self.check_element_timecode(list(paragraph)[7].get_begin(), "00:00:03:17")
-
-    paragraph = p_list[1]
-
-    self.check_caption(paragraph, "caption2", "00:02:57:07", None, "Lorem ", "ipsum ", "dolor ", "sit ",
-                       "amet,consectetur ", "adipiscing", " elit.Pellentesque", " interdum ", Br, Br, Br, Br, Br, "lacinia ",
-                       "sollicitudin.")
-    self.assertEqual(region_1, paragraph.get_region())
-
-    self.assertIsNone(list(paragraph)[0].get_begin())
-    self.assertIsNone(list(paragraph)[1].get_begin())
-    self.assertIsNone(list(paragraph)[2].get_begin())
-    self.assertIsNone(list(paragraph)[3].get_begin())
-    self.assertIsNone(list(paragraph)[4].get_begin())
-    self.assertIsNone(list(paragraph)[6].get_begin())
-    self.assertIsNone(list(paragraph)[7].get_begin())
-    self.assertIsNone(list(paragraph)[13].get_begin())
-    self.check_element_timecode(list(paragraph)[14].get_begin(), "00:00:00:04")
+    self.check_caption(paragraph, "caption1", "00:02:53:15", "00:02:56:03", "Lorem ", "ipsum ", "dolor ", "sit ", "amet,conse")
+    spans = [child for child in paragraph if isinstance(child, Span)]
+    self.assertIsNone(spans[0].get_begin())
+    self.assertEqual([3, 6, 9, 11], [round(span.get_begin() * 30000 / 1001) for span in spans[1:]])
 
     for p in p_list:
       for span in [elem for elem in list(p) if isinstance(elem, Span)]:
@@ -989,34 +951,26 @@ Scenarist_SCC V1.0
     self.check_element_style(region_4, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_4, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
-
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(6, len(p_list))
-
-    self.check_caption(p_list[0], "caption1", "00:00:00:19", "00:00:01:14", "Lorem ipsum dolor sit amet,")
-    self.assertEqual(region_1, p_list[0].get_region())
-
-    self.check_caption(p_list[1], "caption2", "00:00:01:17", "00:00:02:01", "consectetur adipiscing elit.")
-    self.assertEqual(region_2, p_list[1].get_region())
-
-    self.check_caption(p_list[2], "caption3", "00:00:02:01", "00:00:02:02", "consectetur adipiscing elit.", Br)
-    self.assertEqual(region_2, p_list[2].get_region())
-
-    self.check_caption(p_list[3], "caption4", "00:00:02:03", "00:00:03:01", "Pellentesque interdum lacinia sollicitudin.")
-    self.assertEqual(region_2, p_list[3].get_region())
-
-    self.check_caption(p_list[4], "caption5", "00:00:03:02", "00:00:03:17", "Integer ", "luctus", " et ", "ligula", " ac ")
-    self.assertEqual(region_3, p_list[4].get_region())
-
-    self.check_caption(p_list[5], "caption6", "00:00:03:18", None, "sagittis.")
-    self.assertEqual(region_4, p_list[5].get_region())
+    # Roll-Up text appears as it is received, and the characters past column 32 overwrite the last column. The
+    # CR followed by an EDM displays the rolled-up row for one frame. An EDM does not move the cursor: "sagittis."
+    # continues at column 28, and is truncated.
+    self.check_captions(doc, [
+      ('caption1', '00:00:00:19', '00:00:01:14', ['Lorem ipsum dolor sit amet,'], 'pop1'),
+      ('caption2', '00:00:01:18', '00:00:02:01', ['consectetur adipiscing elit.'], 'rollup2'),
+      ('caption3', '00:00:02:01', '00:00:02:02', ['consectetur adipiscing elit.'], 'rollup2'),
+      ('caption4', '00:00:02:04', '00:00:02:20', ['Pellentesque interdum lacinia so'], 'rollup2'),
+      ('caption5', '00:00:02:20', '00:00:02:21', ['Pellentesque interdum lacinia sl'], 'rollup2'),
+      ('caption6', '00:00:02:21', '00:00:02:22', ['Pellentesque interdum lacinia sc'], 'rollup2'),
+      ('caption7', '00:00:02:22', '00:00:02:23', ['Pellentesque interdum lacinia st'], 'rollup2'),
+      ('caption8', '00:00:02:23', '00:00:02:24', ['Pellentesque interdum lacinia sd'], 'rollup2'),
+      ('caption9', '00:00:02:24', '00:00:02:25', ['Pellentesque interdum lacinia sn'], 'rollup2'),
+      ('caption10', '00:00:02:25', '00:00:03:01', ['Pellentesque interdum lacinia s.'], 'rollup2'),
+      ('caption11', '00:00:03:03', '00:00:03:17', ['Integer luctus et ligula ac '], 'paint3'),
+      ('caption12', '00:00:03:18', '00:00:03:20', ['sagi'], 'paint4'),
+      ('caption13', '00:00:03:20', '00:00:03:21', ['sagt'], 'paint4'),
+      ('caption14', '00:00:03:21', '00:00:03:22', ['sags'], 'paint4'),
+      ('caption15', '00:00:03:22', None, ['sag.'], 'paint4'),
+    ])
 
   def test_scc_content_starting_with_text(self):
     scc_content = """\
@@ -1042,8 +996,9 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 5, 16, doc.get_cell_resolution())
+    # without a PAC, the text is written at the cursor, which starts on row 15
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 5, 1, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -1096,8 +1051,9 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 6, 16, doc.get_cell_resolution())
+    # without a PAC, the text is written at the cursor, which starts on row 15
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 6, 1, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -1150,8 +1106,9 @@ Scenarist_SCC V1.0
 
     region_1 = doc.get_region("pop1")
     self.assertIsNotNone(region_1)
-    self.check_region_origin(region_1, 4, 1, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 5, 16, doc.get_cell_resolution())
+    # without a PAC, the text is written at the cursor, which starts on row 15
+    self.check_region_origin(region_1, 4, 16, doc.get_cell_resolution())
+    self.check_region_extent(region_1, 5, 1, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.before)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -1268,8 +1225,12 @@ Scenarist_SCC V1.0
     p_list = list(div)
     self.assertEqual(1, len(p_list))
 
-    self.check_caption(p_list[0], "caption1", "00:00:01:16", "00:00:02:00", "Scary!  Eeech!")
+    # "Scary!" is at column 8 and "Eeech!" at column 16 of the same row: the empty cells between them are a
+    # transparent gap
+    self.check_caption(p_list[0], "caption1", "00:00:01:16", "00:00:02:00", "Scary!", "  ", "Eeech!")
     self.assertEqual(region_1, p_list[0].get_region())
+    self.check_element_style(list(p_list[0])[1], StyleProperties.BackgroundColor, NamedColors.transparent.value)
+    self.check_element_style(list(p_list[0])[2], StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_scc_content_starting_with_tab(self):
     scc_content = """Scenarist_SCC V1.0
@@ -1341,29 +1302,17 @@ Scenarist_SCC V1.0
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
+    # the EDM does not move the cursor: the text that follows it, without a PAC, continues at column 4
     region_2 = doc.get_region("rollup2")
     self.assertIsNotNone(region_2)
-    self.check_region_origin(region_2, 4, 2, doc.get_cell_resolution())
+    self.check_region_origin(region_2, 8, 2, doc.get_cell_resolution())
     self.check_region_extent(region_2, 22, 15, doc.get_cell_resolution())
-    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.after)
-    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    body = doc.get_body()
-    self.assertIsNotNone(body)
-
-    div_list = list(body)
-    self.assertEqual(1, len(div_list))
-    div = div_list[0]
-    self.assertIsNotNone(div)
-
-    p_list = list(div)
-    self.assertEqual(2, len(p_list))
-
-    self.check_caption(p_list[0], "caption1", "10:03:20:18", "10:03:20:26", "(à d")
-    self.assertEqual(region_1, p_list[0].get_region())
-
-    self.check_caption(p_list[1], "caption2", "10:03:20:28", None, "eux voix, en anglais):")
-    self.assertEqual(region_2, p_list[1].get_region())
+    # the CRs received before RU3, in Pop-On style, are ignored, and the special character à is sent twice
+    self.check_captions(doc, [
+      ('caption1', '10:03:20:22', '10:03:20:26', ['(à d'], 'rollup1'),
+      ('caption2', '10:03:20:28', None, ['eux voix, en anglais):'], 'rollup2'),
+    ])
 
   def test_scc_text_without_style_nor_position(self):
     scc_content = """Scenarist_SCC V1.0
@@ -1502,7 +1451,8 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[0], "caption1", "11:19:24:18", "11:19:30:17", "(applaudissements)")
     self.assertEqual(region_1, p_list[0].get_region())
 
-    self.check_caption(p_list[1], "caption2", "11:19:30:18", None, ">>> Narrateur: Cette")
+    # the Roll-Up caption begins when its first character is received
+    self.check_caption(p_list[1], "caption2", "11:19:30:20", None, ">>> ", "Narrateur: ", "Cette")
     self.assertEqual(region_2, p_list[1].get_region())
 
   def test_skipping_channel_2_content(self):
@@ -1681,14 +1631,18 @@ Scenarist_SCC V1.0
 
     p_list = list(list(doc.get_body())[0])
     last = p_list[-1]
-    spans = [child for child in last if isinstance(child, Span)]
-    self.assertEqual(2, len(spans))
+    self.assertEqual(["Row 1: yellow underlined", "Row 2: CR, no PAC: white"], self.get_rows(last))
 
-    self.assertEqual(NamedColors.yellow.value, spans[0].get_style(StyleProperties.Color))
-    self.assertEqual(TextDecorationType(underline=True), spans[0].get_style(StyleProperties.TextDecoration))
+    children = list(last)
+    br_index = next(i for (i, child) in enumerate(children) if isinstance(child, Br))
 
-    self.assertIn(spans[1].get_style(StyleProperties.Color), (None, NamedColors.white.value))
-    self.assertIn(spans[1].get_style(StyleProperties.TextDecoration), (None, TextDecorationType(underline=False)))
+    for span in children[:br_index]:
+      self.assertEqual(NamedColors.yellow.value, span.get_style(StyleProperties.Color))
+      self.assertEqual(TextDecorationType(underline=True), span.get_style(StyleProperties.TextDecoration))
+
+    for span in children[br_index + 1:]:
+      self.assertIn(span.get_style(StyleProperties.Color), (None, NamedColors.white.value))
+      self.assertIn(span.get_style(StyleProperties.TextDecoration), (None, TextDecorationType(underline=False)))
 
   def test_scc_repeated_control_code_on_a_later_line_is_not_redundant(self):
     # CTA-608-E D.2: a control code is redundant only if it repeats the one in the immediately
@@ -1715,6 +1669,239 @@ Scenarist_SCC V1.0
                      [p_list[1].get_begin(), p_list[2].get_begin()])
     self.assertEqual(SmpteTimeCode.parse("00:00:04:00", FPS_29_97).to_temporal_offset(), p_list[2].get_end())
 
+  def test_scc_roll_up_text_after_edm_without_pac(self):
+    # after an EDM, roll-up text that is not preceded by a PAC is written on the base row, and rolls up
+    # on the next CR
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 9425 94ad 94ad 9470 9470 c1c2
+
+00:00:01:00	942c 942c
+
+00:00:02:00	94ad 94ad 43c4
+
+00:00:03:00	94ad 94ad 4546
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual([["AB"], ["CD"], ["CD", "EF"]], [self.get_rows(p) for p in p_list])
+
+    # all the roll-up paragraphs share the same region, at the bottom of the safe area
+    self.assertEqual(1, len({p.get_region().get_id() for p in p_list}))
+
+  def test_scc_roll_up_mid_row_code_after_edm_without_pac(self):
+    # same as above, but the text after the EDM starts with a mid-row code
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 9425 94ad 94ad 9470 9470 c1c2
+
+00:00:01:00	942c 942c
+
+00:00:02:00	94ad 94ad 91ae 91ae 43c4
+
+00:00:03:00	94ad 94ad 4546
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual([["AB"], [" CD"], [" CD", "EF"]], [self.get_rows(p) for p in p_list])
+    self.assertEqual(1, len({p.get_region().get_id() for p in p_list}))
+
+  def test_scc_paint_on_after_edm_continues_at_the_cursor(self):
+    # an EDM does not move the cursor: the Paint-On text that follows continues on the same row,
+    # whether it starts with a character or with a mid-row code
+    for mid_row_code in ("", "91ae 91ae "):
+      with self.subTest(mid_row_code=mid_row_code):
+        scc_content = f"""\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 9470 9470 c1c2
+
+00:00:01:00	942c 942c
+
+00:00:02:00	{mid_row_code}43c4
+
+00:00:03:00	942c 942c
+"""
+
+        doc = to_model(scc_content)
+
+        p_list = list(list(doc.get_body())[0])
+        self.assertEqual(2, len(p_list))
+        self.assertEqual(p_list[0].get_region().get_style(StyleProperties.Origin).y,
+                         p_list[1].get_region().get_style(StyleProperties.Origin).y)
+
+  def test_scc_pop_on_pac_on_the_same_row(self):
+    # a second PAC on the same row moves the cursor without changing the text that is already written: the
+    # empty cells between the two are a gap, and a mid-row code changes only the color of the following text
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9470 c8e5 ecec ef80 94f8 91a8 57ef f2ec 6480 942f
+
+00:00:01:00	942c
+"""
+
+    doc = to_model(scc_content)
+
+    self.check_captions(doc, [
+      ("caption1", "00:00:00:10", "00:00:01:00", ["Hello" + " " * 11 + " World"], "pop1"),
+    ])
+
+    spans = list(list(list(doc.get_body())[0])[0])
+    self.assertEqual(["Hello", " " * 11, " World"], [list(span)[0].get_text() for span in spans])
+    # indent PACs set the default color, white
+    self.check_element_style(spans[0], StyleProperties.Color, None)
+    self.check_element_style(spans[1], StyleProperties.BackgroundColor, NamedColors.transparent.value)
+    self.check_element_style(spans[2], StyleProperties.Color, NamedColors.red.value)
+
+  def test_scc_backspace_across_a_mid_row_code(self):
+    # BS erases the space of the mid-row code, then the preceding character, and the following characters are
+    # written in their place with the attributes of the mid-row code
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9470 c1c2 91a8 9421 8080 9421 43c4 942f
+
+00:00:01:00	942c
+"""
+
+    doc = to_model(scc_content)
+
+    self.check_captions(doc, [
+      ("caption1", "00:00:00:08", "00:00:01:00", ["ACD"], "pop1"),
+    ])
+
+    spans = list(list(list(doc.get_body())[0])[0])
+    self.assertEqual(["A", "CD"], [list(span)[0].get_text() for span in spans])
+    # indent PACs set the default color, white
+    self.check_element_style(spans[0], StyleProperties.Color, None)
+    self.check_element_style(spans[1], StyleProperties.Color, NamedColors.red.value)
+
+  def test_scc_backspace_in_the_first_column(self):
+    # BS does nothing when the cursor is in the first column
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9470 9421 58d9 942f
+
+00:00:01:00	942c
+"""
+
+    self.check_captions(to_model(scc_content), [
+      ("caption1", "00:00:00:04", "00:00:01:00", ["XY"], "pop1"),
+    ])
+
+  def test_scc_tab_offsets(self):
+    # tab offsets move the cursor to the right
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9470 9723 c1c2 97a1 43c4 942f
+
+00:00:01:00	942c
+"""
+
+    doc = to_model(scc_content)
+
+    self.check_captions(doc, [
+      ("caption1", "00:00:00:06", "00:00:01:00", ["AB CD"], "pop1"),
+    ])
+    self.check_region_origin(doc.get_region("pop1"), 4 + 3, 16, doc.get_cell_resolution())
+
+  def test_scc_paint_on_delete_to_end_of_row(self):
+    # DER erases the characters from the cursor to the end of the row, which ends the displayed caption
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9470 c1c2 43c4 4546 9470 97a2 9424
+
+00:00:01:00	942c
+"""
+
+    self.check_captions(to_model(scc_content), [
+      ("caption1", "00:00:00:02", "00:00:00:07", ["ABCDEF"], "paint1"),
+      ("caption2", "00:00:00:07", "00:00:01:00", ["AB"], "paint1"),
+    ])
+
+  def test_scc_roll_up_fewer_rows(self):
+    # when the number of rows of the Roll-Up window decreases, the rows above the window are erased
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9427 94ad 52ef f731 94ad 52ef f732 94ad 52ef f7b3 94ad 52ef f734
+
+00:00:01:00	9425
+
+00:00:02:00	942c
+"""
+
+    self.check_captions(to_model(scc_content), [
+      ("caption1", "00:00:00:02", "00:00:00:04", ["Row1"], "rollup1"),
+      ("caption2", "00:00:00:04", "00:00:00:07", ["Row1", "Row2"], "rollup1"),
+      ("caption3", "00:00:00:07", "00:00:00:10", ["Row1", "Row2", "Row3"], "rollup1"),
+      ("caption4", "00:00:00:10", "00:00:01:00", ["Row1", "Row2", "Row3", "Row4"], "rollup1"),
+      ("caption5", "00:00:01:00", "00:00:02:00", ["Row3", "Row4"], "rollup1"),
+    ])
+
+  def test_scc_roll_up_pac_moves_the_window(self):
+    # a PAC on another row moves the Roll-Up window and the rows it displays, which does not end the caption
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 94ad 9470 c1c2 94ad 13d0 43c4
+
+00:00:01:00	942c
+"""
+
+    self.check_captions(to_model(scc_content), [
+      ("caption1", "00:00:00:03", "00:00:00:04", ["AB"], "rollup1"),
+      ("caption2", "00:00:00:04", "00:00:01:00", ["AB", "CD"], "rollup1"),
+    ])
+
+  def test_scc_carriage_return_outside_roll_up(self):
+    # CR is ignored in Pop-On and Paint-On styles
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9470 c1c2 942f
+
+00:00:00:10	94ad
+
+00:00:00:20	9429 43c4 94ad
+
+00:00:01:00	942c
+"""
+
+    self.check_captions(to_model(scc_content), [
+      ("caption1", "00:00:00:03", "00:00:00:21", ["AB"], "pop1"),
+      ("caption2", "00:00:00:21", "00:00:01:00", ["ABCD"], "paint2"),
+    ])
+
+  def test_scc_roll_up_extended_character(self):
+    # an extended character replaces the preceding character in place, which does not end the caption
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 94ad 9470 c180 9230 c280
+
+00:00:01:00	942c
+"""
+
+    doc = to_model(scc_content)
+
+    self.check_captions(doc, [
+      ("caption1", "00:00:00:03", "00:00:01:00", ["ÀB"], "rollup1"),
+    ])
+
+    spans = list(list(list(doc.get_body())[0])[0])
+    self.assertEqual(["ÀB"], [list(span)[0].get_text() for span in spans])
+    self.assertIsNone(spans[0].get_begin())
 
 if __name__ == '__main__':
   unittest.main()
