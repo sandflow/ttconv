@@ -40,10 +40,6 @@ class SccParagraphRegionTest(unittest.TestCase):
   def test_region_prefix(self):
     doc = ContentDocument()
 
-    caption_paragraph = SccCaptionParagraph()
-    paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
-    self.assertEqual("region", paragraph_region._get_region_prefix())
-
     caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PaintOn)
     paragraph_region = _SccParagraphRegion(caption_paragraph, doc)
     self.assertEqual("paint", paragraph_region._get_region_prefix())
@@ -65,7 +61,7 @@ class SccParagraphRegionTest(unittest.TestCase):
     safe_area_x_offset = 4
     safe_area_y_offset = 2
 
-    caption_paragraph = SccCaptionParagraph(safe_area_x_offset, safe_area_y_offset)
+    caption_paragraph = SccCaptionParagraph(safe_area_x_offset, safe_area_y_offset, caption_style=SccCaptionStyle.PopOn)
     caption_paragraph.set_cursor_at(4, 7)
     caption_paragraph.new_caption_text()
 
@@ -84,7 +80,7 @@ class SccParagraphRegionTest(unittest.TestCase):
     self.assertIsNone(paragraph_region._find_matching_region())
     region = paragraph_region._create_matching_region()
 
-    self.assertEqual("region1", region.get_id())
+    self.assertEqual("pop1", region.get_id())
     self.assertTrue(paragraph_region._has_same_origin_as_region(region))
     self.assertEqual(region, paragraph_region._find_matching_region())
 

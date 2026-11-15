@@ -30,7 +30,6 @@ from enum import Enum
 
 class SccCaptionStyle(Enum):
   """SCC caption style"""
-  Unknown = 0
 
   # SCC Roll-Up captions are composed with:
   #  - RU2 or RU3 or RU4 (to select the Roll-Up style and the number of displayed rows)

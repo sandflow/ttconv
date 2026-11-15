@@ -52,13 +52,8 @@ SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 
 class SccCaptionParagraph:
   """Caption paragraph"""
 
-  @staticmethod
-  def default(caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
-    """Initializes a default caption paragraph"""
-    return SccCaptionParagraph(caption_style=caption_style)
-
-  def __init__(self, safe_area_x_offset: int = 0, safe_area_y_offset: int = 0,
-               caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
+  def __init__(self, safe_area_x_offset: int = 0, safe_area_y_offset: int = 0, *,
+               caption_style: SccCaptionStyle):
     self._caption_id: str = ""
     self._begin: Optional[SmpteTimeCode] = None
     self._end: Optional[SmpteTimeCode] = None
@@ -481,11 +476,9 @@ class _SccParagraphRegion:
     """Returns region prefix based on paragraph style"""
     if self._paragraph.get_caption_style() is SccCaptionStyle.PaintOn:
       return "paint"
-    if self._paragraph.get_caption_style() is SccCaptionStyle.PopOn:
-      return "pop"
     if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
       return "rollup"
-    return "region"
+    return "pop"
 
   def _create_matching_region(self) -> Region:
     """Creates a new region based on paragraph needs"""

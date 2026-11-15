@@ -1337,16 +1337,12 @@ Scenarist_SCC V1.0
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 4, 15, doc.get_cell_resolution())
+    # the text that follows the EDM has no PAC: it is written on the base row, in the same region
+    self.check_region_extent(region_1, 22, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
-    region_2 = doc.get_region("rollup2")
-    self.assertIsNotNone(region_2)
-    self.check_region_origin(region_2, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_2, 22, 15, doc.get_cell_resolution())
-    self.check_element_style(region_2, StyleProperties.DisplayAlign, DisplayAlignType.after)
-    self.check_element_style(region_2, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
+    self.assertIsNone(doc.get_region("rollup2"))
 
     body = doc.get_body()
     self.assertIsNotNone(body)
@@ -1363,7 +1359,7 @@ Scenarist_SCC V1.0
     self.assertEqual(region_1, p_list[0].get_region())
 
     self.check_caption(p_list[1], "caption2", "10:03:20:28", None, "eux voix, en anglais):")
-    self.assertEqual(region_2, p_list[1].get_region())
+    self.assertEqual(region_1, p_list[1].get_region())
 
   def test_scc_text_without_style_nor_position(self):
     scc_content = """Scenarist_SCC V1.0
@@ -1689,6 +1685,75 @@ Scenarist_SCC V1.0
 
     self.assertIn(spans[1].get_style(StyleProperties.Color), (None, NamedColors.white.value))
     self.assertIn(spans[1].get_style(StyleProperties.TextDecoration), (None, TextDecorationType(underline=False)))
+
+  def test_scc_roll_up_text_after_edm_without_pac(self):
+    # after an EDM, roll-up text that is not preceded by a PAC is written on the base row, and rolls up
+    # on the next CR
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 9425 94ad 94ad 9470 9470 c1c2
+
+00:00:01:00	942c 942c
+
+00:00:02:00	94ad 94ad 43c4
+
+00:00:03:00	94ad 94ad c5c6
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    content = [["/" if isinstance(child, Br) else list(child)[0].get_text() for child in p] for p in p_list]
+    self.assertEqual([["AB"], ["CD"], ["CD", "/", "EF"]], content)
+
+    # all the roll-up paragraphs share the same region, at the bottom of the safe area
+    self.assertEqual(1, len({p.get_region().get_id() for p in p_list}))
+
+  def test_scc_roll_up_mid_row_code_after_edm_without_pac(self):
+    # same as above, but the text after the EDM starts with a mid-row code
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 9425 94ad 94ad 9470 9470 c1c2
+
+00:00:01:00	942c 942c
+
+00:00:02:00	94ad 94ad 91ae 91ae 43c4
+
+00:00:03:00	94ad 94ad c5c6
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    content = [["/" if isinstance(child, Br) else list(child)[0].get_text() for child in p] for p in p_list]
+    self.assertEqual([["AB"], [" CD"], [" CD", "/", "EF"]], content)
+    self.assertEqual(1, len({p.get_region().get_id() for p in p_list}))
+
+  def test_scc_paint_on_after_edm_continues_at_the_cursor(self):
+    # an EDM does not move the cursor: the Paint-On text that follows continues on the same row,
+    # whether it starts with a character or with a mid-row code
+    for mid_row_code in ("", "91ae 91ae "):
+      with self.subTest(mid_row_code=mid_row_code):
+        scc_content = f"""\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 9470 9470 c1c2
+
+00:00:01:00	942c 942c
+
+00:00:02:00	{mid_row_code}43c4
+
+00:00:03:00	942c 942c
+"""
+
+        doc = to_model(scc_content)
+
+        p_list = list(list(doc.get_body())[0])
+        self.assertEqual(2, len(p_list))
+        self.assertEqual(p_list[0].get_region().get_style(StyleProperties.Origin).y,
+                         p_list[1].get_region().get_style(StyleProperties.Origin).y)
 
 if __name__ == '__main__':
   unittest.main()

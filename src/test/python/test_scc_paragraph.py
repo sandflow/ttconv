@@ -41,11 +41,11 @@ from ttconv.time_code import SmpteTimeCode, FPS_30
 class SccCaptionParagraphTest(unittest.TestCase):
 
   def test_content(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
     self.assertEqual(0, caption_paragraph._safe_area_x_offset)
     self.assertEqual(0, caption_paragraph._safe_area_y_offset)
 
-    caption_paragraph = SccCaptionParagraph(4, 2)
+    caption_paragraph = SccCaptionParagraph(4, 2, caption_style=SccCaptionStyle.PaintOn)
     self.assertEqual(4, caption_paragraph._safe_area_x_offset)
     self.assertEqual(2, caption_paragraph._safe_area_y_offset)
 
@@ -98,7 +98,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(5, caption_paragraph.get_current_line().get_cursor())
     self.assertEqual(5, caption_paragraph.get_current_text().get_cursor())
 
-    self.assertRaisesRegex(RuntimeError, "Cannot roll-Up Unknown-styled caption.",
+    self.assertRaisesRegex(RuntimeError, "Cannot roll-Up PaintOn-styled caption.",
                            caption_paragraph.roll_up)
 
     caption_paragraph._caption_style = SccCaptionStyle.PopOn
@@ -151,7 +151,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
       caption_paragraph.get_last_caption_lines(3))
 
   def test_paragraph_alignment_detection_left(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(0, 0)
     caption_paragraph.append_text("0123456789")
@@ -165,7 +165,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(TextAlignType.start, caption_paragraph.guess_text_alignment())
 
   def test_paragraph_alignment_detection_center(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(0, 0)
     caption_paragraph.append_text("0123456789")
@@ -179,7 +179,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(TextAlignType.center, caption_paragraph.guess_text_alignment())
 
   def test_paragraph_alignment_detection_right(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(0, 0)
     caption_paragraph.append_text("0123456789")
@@ -193,7 +193,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
 
   def test_paragraph_content_alignment_detection_left(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(0, 0)
     caption_paragraph.append_text("  0123456789")
@@ -207,7 +207,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(TextAlignType.start, caption_paragraph.guess_text_alignment())
 
   def test_paragraph_content_alignment_detection_center(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(0, 2)
     caption_paragraph.append_text("0123456789")
@@ -220,7 +220,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
     self.assertEqual(TextAlignType.center, caption_paragraph.guess_text_alignment())
 
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(0, 0)
     caption_paragraph.append_text("  0123456789")
@@ -234,7 +234,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(TextAlignType.center, caption_paragraph.guess_text_alignment())
 
   def test_paragraph_content_alignment_detection_right(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(10, 0)
     caption_paragraph.append_text("0123456789")
@@ -247,7 +247,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
 
     self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
 
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
 
     caption_paragraph.set_cursor_at(10, 0)
     caption_paragraph.append_text("0123456789")
@@ -261,7 +261,7 @@ class SccCaptionParagraphTest(unittest.TestCase):
     self.assertEqual(TextAlignType.end, caption_paragraph.guess_text_alignment())
 
   def test_to_paragraph(self):
-    caption_paragraph = SccCaptionParagraph()
+    caption_paragraph = SccCaptionParagraph(caption_style=SccCaptionStyle.PopOn)
     doc = ContentDocument()
 
     self.assertRaisesRegex(TypeError, "Element id must be a valid xml:id string", caption_paragraph.to_paragraph, doc)
