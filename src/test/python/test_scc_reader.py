@@ -1704,6 +1704,28 @@ Scenarist_SCC V1.0
                      [p_list[1].get_begin(), p_list[2].get_begin()])
     self.assertEqual(SmpteTimeCode.parse("00:00:04:00", FPS_29_97).to_temporal_offset(), p_list[2].get_end())
 
+  def test_scc_right_margin_limit(self):
+    # Encoder error: text that goes past the 32nd column. CTA-608-E C.13: the cursor can not move past the
+    # last column, a character that is written there replaces the one in the column, a tab offset stops
+    # at the last column, and a BS that follows a character in the last column moves the cursor to column 31
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:02:32:03	9420 9420 94ae 94ae 15e0 15e0 c1c2 43c4 4546 c7c8 494a cb4c cdce 4fd0 5152 d354 d5d6 5758 d9da b031 32b3 34b5 58d9 16fe 16fe 97a1 97a1 9723 9723 da80 97e0 97e0 c1c2 43c4 4546 c7c8 494a cb4c cdce 4fd0 5152 d354 d5d6 5758 d9da b031 32b3 34b5 94a1 94a1 f880 1340 1340 94a1 94a1 5180 942f 942f
+"""
+
+    with self.assertLogs("ttconv.scc.caption_paragraph", level="WARNING") as logs:
+      doc = to_model(scc_content)
+
+    self.assertEqual(1, len([log for log in logs.output if "overflows" in log]))
+
+    last = list(list(doc.get_body())[0])[-1]
+    rows = [list(child)[0].get_text() for child in last if isinstance(child, Span)]
+
+    # 32 columns: the characters after the 32nd replace the 32nd one, here ...0123 4 5 X Y become ...01234 Y
+    # on the first row, and the BS of the third row erases the column 31 before the x is written there
+    self.assertEqual(["ABCDEFGHIJKLMNOPQRSTUVWXYZ01234Y", "Z", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123x5", "Q"], rows)
+
 
 if __name__ == '__main__':
   unittest.main()
