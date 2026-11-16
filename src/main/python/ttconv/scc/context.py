@@ -382,6 +382,10 @@ class SccContext:
       # Erase buffered caption
       self.new_buffered_caption()
 
+    elif control_code is SccControlCode.FON:
+      # Flash On is displayed as a space (see 47 CFR Ch. I, § 15.119(i))
+      self.process_text(" ", time_code)
+
     elif control_code is SccControlCode.TO1:
       self.get_caption_to_process(time_code).tab_cursor(1)
 
