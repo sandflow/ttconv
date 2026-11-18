@@ -78,13 +78,14 @@ class NBCU053ValidatorConfigurationTests(unittest.TestCase):
     config = NBCU053ValidatorConfiguration.parse(json.loads('{"frame_rate": "25", "aspect_ratio": null}'))
     self.assertIsNone(config.aspect_ratio)
 
-  def test_frame_rate_is_required(self):
-    with self.assertRaises(ValueError):
-      NBCU053ValidatorConfiguration.parse({"hdr": True})
+  def test_frame_rate_is_optional(self):
+    # the frame rate is then inferred from the document
+    self.assertIsNone(NBCU053ValidatorConfiguration.parse({"hdr": True}).frame_rate)
+    self.assertIsNone(NBCU053ValidatorConfiguration.parse(json.loads('{"frame_rate": null}')).frame_rate)
 
   def test_bad_values(self):
     # frame_rate and aspect_ratio are strings from a known set: no number, and no other way of writing them
-    for bad in ({"frame_rate": 30}, {"frame_rate": "30"}, {"frame_rate": "abc"}, {"frame_rate": None}, {"frame_rate": ["25"]},
+    for bad in ({"frame_rate": 30}, {"frame_rate": "30"}, {"frame_rate": "abc"}, {"frame_rate": ["25"]},
                 {"frame_rate": 25}, {"frame_rate": 25.0}, {"frame_rate": 23.98}, {"frame_rate": "25.0"}, {"frame_rate": " 25"},
                 {"frame_rate": "23.976"}, {"frame_rate": True},
                 {"frame_rate": "25", "aspect_ratio": 2.39}, {"frame_rate": "25", "aspect_ratio": 2.4}, {"frame_rate": "25", "aspect_ratio": 1},

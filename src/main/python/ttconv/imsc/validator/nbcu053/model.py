@@ -195,7 +195,10 @@ class AspectRatio(Enum):
   RATIO_0_80 = "0.80"  # 4:5
   RATIO_1_00 = "1.00"  # 1:1
 
-def _decode_frame_rate(value: str) -> PermittedFrameRate:
+def _decode_frame_rate(value: typing.Optional[str]) -> typing.Optional[PermittedFrameRate]:
+  if value is None:
+    return None
+
   try:
     if isinstance(value, str):
       return PermittedFrameRate.from_text(value)

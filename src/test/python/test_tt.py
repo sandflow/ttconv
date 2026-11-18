@@ -366,7 +366,7 @@ class ValidateNBCU053SubcommandTest(unittest.TestCase):
   def test_invalid_document_returns_one_and_prints_error(self):
     code, stderr = self._validate(self._INVALID_DOCUMENT, "--config", self._CONFIG)
     self.assertEqual(code, 1)
-    self.assertIn("ttp:frameRate SHALL be", stderr)
+    self.assertIn("is not one of the permitted values", stderr)
 
   def test_config_file(self):
     with tempfile.TemporaryDirectory() as directory:
@@ -384,15 +384,25 @@ class ValidateNBCU053SubcommandTest(unittest.TestCase):
       code, _ = self._validate(self._VALID_DOCUMENT, "--config", self._CONFIG, "--config_file", path)
     self.assertEqual(code, 1)
 
-  def test_missing_configuration_exits(self):
-    code, stderr = self._validate(self._VALID_DOCUMENT)
-    self.assertNotIn(code, (0, None))
-    self.assertIn("requires a nbcu053 configuration", stderr)
+  def test_missing_configuration_uses_defaults(self):
+    # without a configuration, the frame rate is inferred from the document, which is SDR and has no vertical text
+    self.assertEqual(self._validate("src/test/resources/ttml/nbcu/valid/nbcu053-25-sdr.ttml"), (0, ""))
 
-  def test_missing_frame_rate_exits(self):
-    code, stderr = self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"hdr": true}}')
-    self.assertNotIn(code, (0, None))
-    self.assertIn("frame_rate", stderr)
+  def test_missing_configuration_with_vertical_text_fails(self):
+    code, stderr = self._validate(self._VALID_DOCUMENT)
+    self.assertEqual(code, 1)
+    self.assertIn("aspect_ratio parameter SHALL be specified", stderr)
+
+  def test_missing_frame_rate_is_inferred(self):
+    self.assertEqual(
+      self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"hdr": true, "aspect_ratio": "2.39"}}'),
+      (0, "")
+    )
+
+  def test_unexpected_frame_rate_fails(self):
+    code, stderr = self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"frame_rate": "25", "hdr": true, "aspect_ratio": "2.39"}}')
+    self.assertEqual(code, 1)
+    self.assertIn("is not the expected frame rate", stderr)
 
   def test_bad_frame_rate_exits(self):
     code, stderr = self._validate(self._VALID_DOCUMENT, "--config", '{"nbcu053": {"frame_rate": 30}}')
