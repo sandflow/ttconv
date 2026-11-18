@@ -38,7 +38,7 @@ from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.namespaces
 import ttconv.imsc.validator.other_attributes as other_attrs
 import ttconv.imsc.validator.style_attributes as style_attrs
-from ttconv.imsc.validator.rules import AnyRule, EmptyRule, NodeSequence, OneOrMoreRule, OptionalRule, PCDATARule, Rule, SequenceRule, ZeroOrMoreRule
+from ttconv.imsc.validator.rules import describe_node, AnyRule, EmptyRule, NodeSequence, OneOrMoreRule, OptionalRule, PCDATARule, Rule, SequenceRule, ZeroOrMoreRule
 import ttconv.imsc.validator.infoset as IS
 import ttconv.imsc.namespaces as NS
 
@@ -246,15 +246,30 @@ class IMSCElement(Rule):
                 ctx.event_handler.error("Referential style %s is not applicable to <%s> (line %s)", ref_style.local_name, e.get_name().qname.local_name, e.get_line_number())
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
-    # TODO: report line numbers contained in element
-    # TODO: report pattern that is failing
-    if hasattr(self, "content_model") and \
-      not self.content_model.match_all(
-        NodeSequence(element.get_children(),
-                     mixed_content=self.mixed_content,
-                     non_foreign_ns=self.non_foreign_namespaces),
-                     ctx):
-      ctx.event_handler.error(f"{self.pattern()} contents does not match {self.content_model.pattern()}")
+    if not hasattr(self, "content_model"):
+      return
+
+    is_valid = self.content_model.match_all(
+      NodeSequence(element.get_children(), mixed_content=self.mixed_content, non_foreign_ns=self.non_foreign_namespaces),
+      ctx
+    )
+
+    if is_valid:
+      return
+
+    if is_valid.matched:
+      # the content model matched the nodes that precede the first node that was not consumed
+      ctx.event_handler.error(
+        "%s contents does not match %s (line %s): unexpected %s",
+        self.pattern(), self.content_model.pattern(), element.get_line_number(), describe_node(is_valid.unconsumed)
+      )
+    else:
+      # the content model did not match at all, so the first node that was not consumed is not necessarily at fault
+      # TODO: report the pattern that is failing
+      ctx.event_handler.error(
+        "%s contents does not match %s (line %s)",
+        self.pattern(), self.content_model.pattern(), element.get_line_number()
+      )
 
   def match(self, their_seq: NodeSequence, ctx: IMSCValidationContext) -> bool:
     if not self.is_instance(their_seq, ctx):

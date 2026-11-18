@@ -166,7 +166,7 @@ class Infoset:
 
     def data(self, text):
       if self.elem_stack and text:
-        self.elem_stack[-1].children.append(Text(text))
+        self.elem_stack[-1].children.append(Text(text, self.elem_stack[-1]))
 
   @classmethod
   def _from_handler(cls, handler: Infoset._Handler) -> Infoset:

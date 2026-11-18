@@ -1763,7 +1763,7 @@
     "file": "ttml1-invld-metadata-non-element-content.xml",
     "result": "fail",
     "errors": [
-      "metadata contents does not match (agent | name | actor | copyright | desc | title | item | altText | data | information | FOREIGN)*"
+      "metadata contents does not match (agent | name | actor | copyright | desc | title | item | altText | data | information | FOREIGN)* (line 7): unexpected text \"Illegal Text\" (line 7)"
     ]
   },
   {

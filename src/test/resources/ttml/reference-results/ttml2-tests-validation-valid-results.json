@@ -3,77 +3,77 @@
     "file": "ttml2-valid-animate-discrete.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-animate-fill.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-animate-linear.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-animate-out-of-line.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-animate-paced.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-animate-repeat-count.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-animate-spline.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-audio-embedding.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <resources> (line 7)"
     ]
   },
   {
     "file": "ttml2-valid-audio-in-block.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <audio> (line 11)"
     ]
   },
   {
     "file": "ttml2-valid-audio-in-body.xml",
     "result": "fail",
     "errors": [
-      "body contents does not match (metadata* set* div*)"
+      "body contents does not match (metadata* set* div*) (line 8): unexpected <audio> (line 9)"
     ]
   },
   {
     "file": "ttml2-valid-audio-in-inline.xml",
     "result": "fail",
     "errors": [
-      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 12): unexpected <audio> (line 13)"
     ]
   },
   {
@@ -221,7 +221,7 @@
       "Attribute base is prohibited on <item> (line 14)",
       "Attribute base is prohibited on <title> (line 15)",
       "Attribute base is prohibited on <profile> (line 17)",
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <resources> (line 18)",
       "Attribute base is prohibited on <body> (line 38)",
       "Attribute base is prohibited on <div> (line 39)",
       "Attribute base is prohibited on <p> (line 40)",
@@ -530,7 +530,7 @@
     "result": "fail",
     "errors": [
       "Attribute type is prohibited on <profile> (line 6)",
-      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+      "profile contents does not match (metadata* ((features* extensions*) | profile*)) (line 6): unexpected <profile> (line 7)"
     ]
   },
   {
@@ -559,63 +559,63 @@
     "file": "ttml2-valid-data-embedding-chunked-zero-length.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-chunked.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-reference-missing-type.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-reference-with-metadata.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-reference.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-simple-with-lwsp.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-simple-zero-length.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-simple.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-data-embedding-sourced.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <resources> (line 8)"
     ]
   },
   {
@@ -665,7 +665,7 @@
       "Attribute displayAlign is not applicable to <body> (line 8)",
       "Attribute displayAlign is not applicable to <div> (line 9)",
       "Attribute displayAlign is not applicable to <p> (line 10)",
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 9): unexpected <image> (line 11)"
     ]
   },
   {
@@ -741,14 +741,14 @@
     "file": "ttml2-valid-extent-2-image.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
     "file": "ttml2-valid-extent-2-length.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 13): unexpected <image> (line 14)"
     ]
   },
   {
@@ -841,14 +841,14 @@
     "file": "ttml2-valid-font-embedding-family-case-sensitive.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <resources> (line 7)"
     ]
   },
   {
     "file": "ttml2-valid-font-embedding.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <resources> (line 7)"
     ]
   },
   {
@@ -967,63 +967,63 @@
     "file": "ttml2-valid-image-embedding.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <resources> (line 7)"
     ]
   },
   {
     "file": "ttml2-valid-image-extent.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-block-png.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-block-simple-source-jpg.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-block-simple-source-png.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-body-png.xml",
     "result": "fail",
     "errors": [
-      "body contents does not match (metadata* set* div*)"
+      "body contents does not match (metadata* set* div*) (line 6): unexpected <image> (line 7)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-inline-png.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 11): unexpected <image> (line 12)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-inline-simple-source-jpg.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 11): unexpected <image> (line 12)"
     ]
   },
   {
     "file": "ttml2-valid-image-in-inline-simple-source-png.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 11): unexpected <image> (line 12)"
     ]
   },
   {
@@ -1390,14 +1390,14 @@
     "file": "ttml2-valid-opacity-image-block.xml",
     "result": "fail",
     "errors": [
-      "body contents does not match (metadata* set* div*)"
+      "body contents does not match (metadata* set* div*) (line 8): unexpected <image> (line 9)"
     ]
   },
   {
     "file": "ttml2-valid-opacity-image-inline.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
@@ -1649,7 +1649,7 @@
     "result": "fail",
     "errors": [
       "Attribute type is prohibited on <profile> (line 6)",
-      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+      "profile contents does not match (metadata* ((features* extensions*) | profile*)) (line 6): unexpected <profile> (line 7)"
     ]
   },
   {
@@ -1765,8 +1765,8 @@
     "file": "ttml2-valid-region-inline.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 8): unexpected <region> (line 9)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 12): unexpected <region> (line 13)"
     ]
   },
   {
@@ -1780,7 +1780,7 @@
     "file": "ttml2-valid-resources-all.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <resources> (line 7)"
     ]
   },
   {
@@ -1841,21 +1841,21 @@
     "file": "ttml2-valid-set-fill.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-set-multiple-styles.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
     "file": "ttml2-valid-set-repeat-count.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 7): unexpected <animation> (line 8)"
     ]
   },
   {
@@ -1885,7 +1885,7 @@
     "result": "fail",
     "errors": [
       "Attribute speak is prohibited on <body> (line 8)",
-      "body contents does not match (metadata* set* div*)"
+      "body contents does not match (metadata* set* div*) (line 8): unexpected <audio> (line 9)"
     ]
   },
   {
@@ -1893,7 +1893,7 @@
     "result": "fail",
     "errors": [
       "Attribute speak is prohibited on <span> (line 12)",
-      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 12): unexpected <audio> (line 13)"
     ]
   },
   {
@@ -2099,7 +2099,7 @@
     "file": "ttml2-valid-visibility-image.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
@@ -2164,14 +2164,14 @@
     "file": "ttml2-valid-xlink-href-image-in-block.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 9): unexpected <image> (line 10)"
     ]
   },
   {
     "file": "ttml2-valid-xlink-href-image-in-inline.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 10): unexpected <image> (line 11)"
     ]
   },
   {
@@ -2186,7 +2186,7 @@
     "result": "fail",
     "errors": [
       "Required attribute `{http://www.w3.org/XML/1998/namespace}id` missing",
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)"
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 6): unexpected <animation> (line 10)"
     ]
   }
 ]

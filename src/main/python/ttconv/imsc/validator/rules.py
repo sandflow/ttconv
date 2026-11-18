@@ -26,6 +26,7 @@
 """Utility classes to build the TTML element grammar"""
 
 from __future__ import annotations
+import dataclasses
 import ttconv.imsc.validator.infoset as IS
 import typing
 
@@ -87,6 +88,36 @@ class NodeSequence:
     return len(self._nodes) - self._index
 
 
+def describe_node(node: IS.Element | IS.Text) -> str:
+  """Describes `node` for use in error messages."""
+  if isinstance(node, IS.Element):
+    name = node.get_name()
+    qualified_name = f"{name.prefix}:{name.qname.local_name}" if name.prefix else name.qname.local_name
+    return f"<{qualified_name}> (line {node.get_line_number()})"
+
+  text = node.value.strip()
+  if len(text) > 20:
+    # trim text to a reasonable sample
+    text = text[:20] + "…"
+  # Text nodes do not have line numbers, so that of their parent is used.
+  line = node.parent.get_line_number() if node.parent is not None else None
+  return f"text \"{text}\" (line {line})"
+
+@dataclasses.dataclass(frozen=True)
+class MatchAllResult:
+  """Result of `Rule.match_all()`, which is truthy if and only if the rule matched all the nodes"""
+
+  # whether the rule matched the beginning of the sequence
+  matched: bool
+
+  # first node that was not consumed, or None if all nodes were consumed. If
+  # `matched` is False, this is the first node of the sequence since a rule that
+  # fails to match does not consume any node.
+  unconsumed: IS.Element | IS.Text | None
+
+  def __bool__(self) -> bool:
+    return self.matched and self.unconsumed is None
+
 class Rule:
   """Base class for IMSC validation rules"""
   def match(self, their_seq: NodeSequence, ctx: typing.Any) -> bool:
@@ -101,19 +132,16 @@ class Rule:
     """
     raise NotImplementedError
   
-  def match_all(self, their_seq: NodeSequence, ctx: typing.Any) -> bool:
-    """Attempts to match tne entirety of their_seq against this rule.
+  def match_all(self, their_seq: NodeSequence, ctx: typing.Any) -> MatchAllResult:
+    """Attempts to match the entirety of their_seq against this rule.
 
-    Returns True if the rule matches, False otherwise.
+    Returns a `MatchAllResult` that is truthy if and only if the rule matches
+    all the nodes, and that holds the first node that was not consumed, if any.
     """
 
-    if not self.match(their_seq, ctx):
-      return False
-    
-    if their_seq.peek() is not None:
-      return False
-    
-    return True
+    matched = self.match(their_seq, ctx)
+
+    return MatchAllResult(matched, their_seq.peek())
 
   def pattern(self) -> str:
     raise NotImplementedError

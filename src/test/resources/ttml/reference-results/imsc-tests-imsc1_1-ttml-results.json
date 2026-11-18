@@ -29,7 +29,7 @@
     "file": "image001.ttml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 17): unexpected <image> (line 20)"
     ]
   },
   {

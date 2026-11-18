@@ -3,72 +3,72 @@
     "file": "ttml2-prstn-animate-audio-gain.xml",
     "result": "fail",
     "errors": [
-      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 17): unexpected <animate> (line 18)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-audio-pan.xml",
     "result": "fail",
     "errors": [
-      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "span contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 17): unexpected <animate> (line 18)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-fill.xml",
     "result": "fail",
     "errors": [
-      "region contents does not match (metadata | style | set | FOREIGN)*",
-      "region contents does not match (metadata | style | set | FOREIGN)*"
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 22): unexpected <animate> (line 23)",
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 25): unexpected <animate> (line 26)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-linear-color.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 25): unexpected <animate> (line 26)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-linear-opacity.xml",
     "result": "fail",
     "errors": [
-      "region contents does not match (metadata | style | set | FOREIGN)*"
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 21): unexpected <animate> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-linear-position.xml",
     "result": "fail",
     "errors": [
-      "region contents does not match (metadata | style | set | FOREIGN)*"
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 21): unexpected <animate> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-paced-position.xml",
     "result": "fail",
     "errors": [
-      "region contents does not match (metadata | style | set | FOREIGN)*"
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 21): unexpected <animate> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-repeat.xml",
     "result": "fail",
     "errors": [
-      "region contents does not match (metadata | style | set | FOREIGN)*",
-      "region contents does not match (metadata | style | set | FOREIGN)*"
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 22): unexpected <animate> (line 23)",
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 25): unexpected <animate> (line 26)"
     ]
   },
   {
     "file": "ttml2-prstn-animate-spline-position.xml",
     "result": "fail",
     "errors": [
-      "region contents does not match (metadata | style | set | FOREIGN)*"
+      "region contents does not match (metadata | style | set | FOREIGN)* (line 21): unexpected <animate> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-animation-out-of-line.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 10): unexpected <animation> (line 23)",
       "Attribute animate is prohibited on <div> (line 28)"
     ]
   },
@@ -76,22 +76,22 @@
     "file": "ttml2-prstn-audio-clip-begin-end.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 18): unexpected <audio> (line 19)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-embedding-chunked.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 23): unexpected <audio> (line 24)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-embedding-sourced.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
-      "div contents does not match (metadata* set* (div | p)*)",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 10): unexpected <resources> (line 14)",
+      "div contents does not match (metadata* set* (div | p)*) (line 32): unexpected <audio> (line 33)",
       "No referenceable style element with xml:id 'sBody' exists",
       "No referenceable region element with xml:id 'area1' exists"
     ]
@@ -100,50 +100,50 @@
     "file": "ttml2-prstn-audio-gain-mix.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 12): unexpected <audio> (line 16)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-gain-on-audio.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 13): unexpected <audio> (line 14)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 17): unexpected <audio> (line 18)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 21): unexpected <audio> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-gain-on-p.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 13): unexpected <audio> (line 14)",
       "Attribute gain is prohibited on <p> (line 17)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 17): unexpected <audio> (line 18)",
       "Attribute gain is prohibited on <p> (line 21)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 21): unexpected <audio> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-in-body.xml",
     "result": "fail",
     "errors": [
-      "body contents does not match (metadata* set* div*)"
+      "body contents does not match (metadata* set* div*) (line 8): unexpected <audio> (line 9)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-pan-mix.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 12): unexpected <audio> (line 16)"
     ]
   },
   {
     "file": "ttml2-prstn-audio-pan-on-audio.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 13): unexpected <audio> (line 14)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 17): unexpected <audio> (line 18)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 21): unexpected <audio> (line 22)"
     ]
   },
   {
@@ -151,11 +151,11 @@
     "result": "fail",
     "errors": [
       "Attribute pan is prohibited on <p> (line 13)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 13): unexpected <audio> (line 14)",
       "Attribute pan is prohibited on <p> (line 17)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 17): unexpected <audio> (line 18)",
       "Attribute pan is prohibited on <p> (line 21)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 21): unexpected <audio> (line 22)"
     ]
   },
   {
@@ -362,7 +362,7 @@
     "result": "fail",
     "errors": [
       "Attribute base is prohibited on <body> (line 18)",
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 19): unexpected <image> (line 20)"
     ]
   },
   {
@@ -531,14 +531,14 @@
     "file": "ttml2-prstn-display-aspect-ratio-imsc11-3.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 21): unexpected <image> (line 22)"
     ]
   },
   {
     "file": "ttml2-prstn-display-aspect-ratio-imsc11-4.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 21): unexpected <image> (line 22)"
     ]
   },
   {
@@ -554,23 +554,23 @@
     "file": "ttml2-prstn-extent-image-contain.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 20): unexpected <image> (line 21)"
     ]
   },
   {
     "file": "ttml2-prstn-extent-image-cover.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 20): unexpected <image> (line 21)"
     ]
   },
   {
     "file": "ttml2-prstn-extent-image.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)",
-      "div contents does not match (metadata* set* (div | p)*)",
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 21): unexpected <image> (line 22)",
+      "div contents does not match (metadata* set* (div | p)*) (line 24): unexpected <image> (line 25)",
+      "div contents does not match (metadata* set* (div | p)*) (line 27): unexpected <image> (line 28)"
     ]
   },
   {
@@ -709,15 +709,15 @@
     "file": "ttml2-prstn-image-embedding-chunked.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 19): unexpected <image> (line 20)"
     ]
   },
   {
     "file": "ttml2-prstn-image-embedding-sourced.xml",
     "result": "fail",
     "errors": [
-      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?)",
-      "div contents does not match (metadata* set* (div | p)*)",
+      "head contents does not match ((metadata | agent | copyright | desc | title | item | profile)* styling? layout?) (line 10): unexpected <resources> (line 14)",
+      "div contents does not match (metadata* set* (div | p)*) (line 167): unexpected <image> (line 168)",
       "No referenceable region element with xml:id 'area1' exists"
     ]
   },
@@ -725,14 +725,14 @@
     "file": "ttml2-prstn-image-imsc11-1.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 20): unexpected <image> (line 21)"
     ]
   },
   {
     "file": "ttml2-prstn-image-in-body.xml",
     "result": "fail",
     "errors": [
-      "body contents does not match (metadata* set* div*)"
+      "body contents does not match (metadata* set* div*) (line 19): unexpected <image> (line 20)"
     ]
   },
   {
@@ -874,7 +874,7 @@
     "file": "ttml2-prstn-metadata-item.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 27): unexpected <ttm:item> (line 28)"
     ]
   },
   {
@@ -890,18 +890,18 @@
     "file": "ttml2-prstn-opacity-image-block.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)",
-      "div contents does not match (metadata* set* (div | p)*)",
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 32): unexpected <image> (line 33)",
+      "div contents does not match (metadata* set* (div | p)*) (line 36): unexpected <image> (line 37)",
+      "div contents does not match (metadata* set* (div | p)*) (line 40): unexpected <image> (line 41)"
     ]
   },
   {
     "file": "ttml2-prstn-opacity-image-inline.xml",
     "result": "fail",
     "errors": [
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)",
-      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*)"
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 34): unexpected <image> (line 34)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 38): unexpected <image> (line 38)",
+      "p contents does not match (metadata* set* (ruby | span | br | set | #PCDATA)*) (line 42): unexpected <image> (line 42)"
     ]
   },
   {
@@ -993,7 +993,7 @@
     "errors": [
       "Attribute type is prohibited on <profile> (line 13)",
       "Attribute combine is prohibited on <profile> (line 13)",
-      "profile contents does not match (metadata* ((features* extensions*) | profile*))"
+      "profile contents does not match (metadata* ((features* extensions*) | profile*)) (line 13): unexpected <profile> (line 14)"
     ]
   },
   {
@@ -1010,7 +1010,7 @@
     "file": "ttml2-prstn-region-inline.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 22): unexpected <region> (line 23)"
     ]
   },
   {
@@ -1071,7 +1071,7 @@
     "file": "ttml2-prstn-ruby-imsc11-4.xml",
     "result": "fail",
     "errors": [
-      "rt contents does not match (span | #PCDATA)*"
+      "rt contents does not match (span | #PCDATA)* (line 28): unexpected <span> (line 28)"
     ]
   },
   {
@@ -1235,15 +1235,15 @@
     "file": "ttml2-prstn-visibility-image.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)",
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 21): unexpected <image> (line 22)",
+      "div contents does not match (metadata* set* (div | p)*) (line 24): unexpected <image> (line 25)"
     ]
   },
   {
     "file": "ttml2-prstn-xlink-image.xml",
     "result": "fail",
     "errors": [
-      "div contents does not match (metadata* set* (div | p)*)"
+      "div contents does not match (metadata* set* (div | p)*) (line 20): unexpected <image> (line 21)"
     ]
   },
   {

@@ -25,11 +25,13 @@
 
 '''Unit tests for ttconv.imsc.validator.rules'''
 
+import io
 import unittest
 import ttconv.imsc.validator.infoset as IS
 import ttconv.imsc.namespaces as NS
+from ttconv.imsc.validator.event_handler import EventHandler
 from ttconv.imsc.validator.rules import (
-  NodeSequence, AnyRule, OptionalRule, PCDATARule, Rule, SequenceRule, UnorderedRule, ZeroOrMoreRule
+  describe_node, NodeSequence, AnyRule, OptionalRule, PCDATARule, Rule, SequenceRule, UnorderedRule, ZeroOrMoreRule
 )
 
 
@@ -371,6 +373,57 @@ class TestValidateAll(unittest.TestCase):
   def test_returns_false_when_rule_does_not_match(self):
     seq = NodeSequence([E1])
     self.assertFalse(_SingleTextRule().match_all(seq, None))
+
+  def test_result_when_sequence_fully_consumed(self):
+    result = _SingleTextRule().match_all(NodeSequence([T1]), None)
+    self.assertTrue(result.matched)
+    self.assertIsNone(result.unconsumed)
+
+  def test_result_holds_first_unconsumed_node(self):
+    result = ZeroOrMoreRule(_SingleTextRule()).match_all(NodeSequence([T1, T2, E1, E2]), None)
+    self.assertFalse(result)
+    self.assertTrue(result.matched)
+    self.assertIs(result.unconsumed, E1)
+
+  def test_result_skips_whitespace_before_unconsumed_node(self):
+    result = _SingleTextRule().match_all(NodeSequence([T1, WS, E1]), None)
+    self.assertFalse(result)
+    self.assertIs(result.unconsumed, E1)
+
+  def test_result_when_rule_does_not_match(self):
+    result = _SingleTextRule().match_all(NodeSequence([E1, T1]), None)
+    self.assertFalse(result)
+    self.assertFalse(result.matched)
+    self.assertIs(result.unconsumed, E1)
+
+  def test_result_when_rule_does_not_match_empty_sequence(self):
+    result = _SingleTextRule().match_all(NodeSequence([]), None)
+    self.assertFalse(result)
+    self.assertFalse(result.matched)
+    self.assertIsNone(result.unconsumed)
+
+
+class TestDescribeNode(unittest.TestCase):
+
+  def test_element_without_prefix(self):
+    e = IS.Element(IS.Name(None, NS.QName(NS.TTML, "p")), line_number=12)
+    self.assertEqual(describe_node(e), "<p> (line 12)")
+
+  def test_element_with_prefix(self):
+    e = IS.Element(IS.Name("smpte", NS.QName(NS.SMPTE, "information")), line_number=6)
+    self.assertEqual(describe_node(e), "<smpte:information> (line 6)")
+
+  def test_text_uses_parent_line(self):
+    parent = IS.Element(IS.Name(None, NS.QName(NS.TTML, "div")), line_number=8)
+    self.assertEqual(describe_node(IS.Text("  Hello  ", parent)), "text \"Hello\" (line 8)")
+
+  def test_long_text_is_truncated(self):
+    self.assertEqual(describe_node(IS.Text("Some stray text that is long")), "text \"Some stray text that…\" (line None)")
+
+  def test_parsed_text_has_parent(self):
+    infoset = IS.Infoset.fromFile(io.BytesIO(b'<tt xmlns="http://www.w3.org/ns/ttml">\n<body>stray</body></tt>'), EventHandler())
+    body = infoset.root.get_children_by_qname(NS.QName(NS.TTML, "body"))[0]
+    self.assertEqual(describe_node(body.get_children()[0]), "text \"stray\" (line 2)")
 
 
 if __name__ == "__main__":
