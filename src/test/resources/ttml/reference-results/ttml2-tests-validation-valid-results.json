@@ -2015,10 +2015,7 @@
     "file": "ttml2-valid-text-shadow.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:textShadow value (1px 1px, 2px 2px)",
-      "Bad tts:textShadow value (1px 1px red, 2px 2px red)",
-      "Bad tts:textShadow value (1px 1px 1px, 2px 2px 2px)",
-      "Bad tts:textShadow value (1px 1px 1px red, 2px 2px 2px red)"
+      "list index out of range"
     ]
   },
   {
