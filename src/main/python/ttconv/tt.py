@@ -544,17 +544,21 @@ def validate(args) -> int:
   root_logger.setLevel(log_level)
   root_logger.addHandler(handler)
 
+  # the progress handler is only meant for conversion
+  LOGGER.removeHandler(progress)
+  LOGGER.setLevel(logging.NOTSET)
+
   config = None
 
   config_class = args.model.config_class
   if config_class is not None:
     try:
       config = read_config_from_json(config_class, load_json_config(args))
+      if config is None:
+        config = config_class()
     except ValueError as e:
       die(f"invalid {config_class.name()} configuration: {' '.join(str(arg) for arg in e.args)}")
 
-    if config is None:
-      die(f"the {args.model} model requires a {config_class.name()} configuration")
 
   try:
     with open(args.file, "rb") as f:

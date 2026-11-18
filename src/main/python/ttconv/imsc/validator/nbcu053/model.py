@@ -49,9 +49,8 @@ import ttconv.imsc.validator.infoset as IS
 from ttconv.imsc.validator.lang_helper import get_primary_language_subtag
 import ttconv.imsc.validator.other_attributes as other_attrs
 
-class FrameRate(Enum):
-  '''The frame rates permitted by NBCU-053. The value of each is the expected ttp:frameRate, the expected ttp:frameRateMultiplier
-  and the text that denotes the frame rate, e.g., in a configuration.'''
+class PermittedFrameRate(Enum):
+  '''The frame rates permitted by NBCU-053'''
   FPS_23_98 = (24, Fraction(1000, 1001), "23.98")
   FPS_25 = (25, Fraction(1, 1), "25")
   FPS_29_97 = (30, Fraction(1000, 1001), "29.97")
@@ -62,7 +61,18 @@ class FrameRate(Enum):
     self.text = text
 
   @classmethod
-  def from_text(cls, text: str) -> FrameRate:
+  def from_params(cls, nominal_frame_rate: int, frame_rate_multiplier: Fraction) -> typing.Optional[PermittedFrameRate]:
+    '''Returns the frame rate with the specified `nominal_frame_rate` and `frame_rate_multiplier`, or `None`
+    if no such frame rate exists'''
+    for frame_rate in cls:
+      if frame_rate.nominal_frame_rate == nominal_frame_rate and \
+        frame_rate.frame_rate_multiplier == frame_rate_multiplier:
+        return frame_rate
+
+    return None
+
+  @classmethod
+  def from_text(cls, text: str) -> PermittedFrameRate:
     '''Returns the frame rate that `text` denotes, or raises `ValueError`'''
     for frame_rate in cls:
       if frame_rate.text == text:
@@ -70,8 +80,9 @@ class FrameRate(Enum):
 
     raise ValueError(f"`{text}` is not a permitted frame rate")
 
-def _validate_root_parameters(root: IS.Element, expected_frame_rate: FrameRate,
-                              aspect_ratio: typing.Optional[AspectRatio]):
+def _validate_root_parameters(root: IS.Element, expected_frame_rate: Optional[PermittedFrameRate],
+                              aspect_ratio: typing.Optional[AspectRatio],
+                              event_handler: EventHandler):
   dar_attr = root.get_attribute(other_attrs.DisplayAspectRatioAttribute.qname)
   if dar_attr is not None and aspect_ratio is not None:
     dar = other_attrs.DisplayAspectRatioAttribute.extract(dar_attr.value)
@@ -89,27 +100,30 @@ def _validate_root_parameters(root: IS.Element, expected_frame_rate: FrameRate,
       f"ttp:timeBase SHALL be 'media', found '{time_base_attr.value}'"
     )
 
-  expected_nominal_fps = expected_frame_rate.nominal_frame_rate
-  expected_fps_mult = expected_frame_rate.frame_rate_multiplier
-
   nominal_fps_attr = root.get_attribute(other_attrs.FrameRateAttribute.qname)
   nominal_fps = 30
   if nominal_fps_attr is not None:
     nominal_fps = other_attrs.FrameRateAttribute.extract(nominal_fps_attr.value)
-  if nominal_fps != expected_nominal_fps:
-    raise ValueError(
-      f"ttp:frameRate SHALL be '{expected_nominal_fps}', found '{nominal_fps}'"
-    )
 
   fps_mult_attr = root.get_attribute(other_attrs.FrameRateMultiplierAttribute.qname)
   fps_mult = Fraction(1)
   if fps_mult_attr is not None:
     fps_mult = other_attrs.FrameRateMultiplierAttribute.extract(fps_mult_attr.value)
-  if fps_mult != expected_fps_mult:
+
+  frame_rate = PermittedFrameRate.from_params(nominal_fps, fps_mult)
+
+  if frame_rate is None:
     raise ValueError(
-      f"ttp:frameRateMultiplier SHALL be "
-      f"'{expected_fps_mult.numerator} {expected_fps_mult.denominator}', found '{fps_mult}'"
-    )
+          f"The frame rate '{nominal_fps} * {fps_mult}' is not one of the permitted values."
+        )
+
+  if expected_frame_rate is not None and expected_frame_rate  != frame_rate:
+    raise ValueError(
+          f"The frame rate '{frame_rate}' is not the expected frame rate '{expected_frame_rate}'."
+        )
+
+  if expected_frame_rate is None:
+      event_handler.info(f'No expected frame rate supplied, inferring a frame rate of {frame_rate} from the file.')
 
 _EXPECTED_COLOR_SDR = styles.ColorType((0xEB, 0xEB, 0xEB, 255))  # tts:color="#EBEBEB"
 _EXPECTED_COLOR_HDR = styles.ColorType((0x92, 0x92, 0x92, 255))  # tts:color="#929292"
@@ -181,14 +195,14 @@ class AspectRatio(Enum):
   RATIO_0_80 = "0.80"  # 4:5
   RATIO_1_00 = "1.00"  # 1:1
 
-def _decode_frame_rate(value: str) -> FrameRate:
+def _decode_frame_rate(value: str) -> PermittedFrameRate:
   try:
     if isinstance(value, str):
-      return FrameRate.from_text(value)
+      return PermittedFrameRate.from_text(value)
   except ValueError:
     pass
 
-  raise ValueError(f"frame_rate shall be one of {', '.join(json.dumps(r.text) for r in FrameRate)}, not {json.dumps(value)}")
+  raise ValueError(f"frame_rate shall be one of {', '.join(json.dumps(r.text) for r in PermittedFrameRate)}, not {json.dumps(value)}")
 
 def _decode_aspect_ratio(value: typing.Optional[str]) -> typing.Optional[AspectRatio]:
   if value is None:
@@ -209,8 +223,8 @@ class NBCU053ValidatorConfiguration(ModuleConfiguration):
   def name(cls):
     return "nbcu053"
 
-  # frame rate of the document: "23.98", "25" or "29.97"
-  frame_rate: FrameRate = field(metadata={"decoder": _decode_frame_rate})
+  # frame rate of the document: None, "23.98", "25" or "29.97"
+  frame_rate: Optional[PermittedFrameRate] = field(default=None, metadata={"decoder": _decode_frame_rate})
 
   # the document is an HDR document
   hdr: bool = field(default=False, metadata={"decoder": bool})
@@ -426,15 +440,16 @@ def validate(
   config: typing.Optional[ModuleConfiguration] = None,
   event_handler: typing.Optional[EventHandler] = None
 ) -> bool:
-  '''Validates `f` using `config`, which SHALL be an `NBCU053ValidatorConfiguration`, and returns whether no ERROR-or-above
-  records were logged.
+  '''Validates `f` using `config`
 
   `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.
 
   `config.aspect_ratio` SHALL be provided if the document contains vertical text regions.
   '''
 
-  if not isinstance(config, NBCU053ValidatorConfiguration):
+  if config is None:
+    config = NBCU053ValidatorConfiguration()
+  elif not isinstance(config, NBCU053ValidatorConfiguration):
     raise ValueError(f"the {NBCU053ValidatorConfiguration.name()} model requires an {NBCU053ValidatorConfiguration.__name__}")
 
   expected_frame_rate = config.frame_rate
@@ -447,7 +462,8 @@ def validate(
   try:
 
     # first confirm the document is a conformant IMSC 1.1 document
-    if not imsc11_model.validate(io.BytesIO(data), counting_handler):
+    # TODO: share the ISD with the later checks
+    if not imsc11_model.validate(io.BytesIO(data), None, counting_handler):
       return False
 
     infoset = IS.Infoset.fromFile(io.BytesIO(data), counting_handler)
@@ -455,7 +471,7 @@ def validate(
       counting_handler.error("Invalid empty document")
       return False
 
-    _validate_root_parameters(infoset.root, expected_frame_rate, aspect_ratio)
+    _validate_root_parameters(infoset.root, expected_frame_rate, aspect_ratio, counting_handler)
 
     if infoset.root.get_attribute(other_attrs.DisplayAspectRatioAttribute.qname) is not None:
       expected_vert_pos = (_EXPECTED_ORIGIN, _EXPECTED_EXTENT)
