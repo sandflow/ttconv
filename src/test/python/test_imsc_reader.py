@@ -283,6 +283,29 @@ class IMSCReaderTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       imsc_styles.StyleProperties.LineHeight.extract(None, "-150%")
 
+  def test_text_shadow(self):
+    px = lambda v: styles.LengthType(v, styles.LengthType.Units.px)
+    red = styles.NamedColors.red.value
+    shadow = styles.TextShadowType.Shadow
+
+    self.assertIs(imsc_styles.StyleProperties.TextShadow.extract(None, "none"), styles.SpecialValues.none)
+
+    for value, expected in (
+      ("1px 1px", (shadow(px(1), px(1)),)),
+      ("1px 1px red", (shadow(px(1), px(1), color=red),)),
+      ("1px 1px 2px", (shadow(px(1), px(1), px(2)),)),
+      ("1px 1px 2px rgb(255, 0, 0)", (shadow(px(1), px(1), px(2), red),)),
+      ("1px 1px,2px 2px", (shadow(px(1), px(1)), shadow(px(2), px(2)))),
+      ("1px 1px, 2px 2px 3px red", (shadow(px(1), px(1)), shadow(px(2), px(2), px(3), red))),
+    ):
+      with self.subTest(value):
+        self.assertEqual(imsc_styles.StyleProperties.TextShadow.extract(None, value), styles.TextShadowType(expected))
+
+    for value in ("", "1px", "1px 1px,", "1px 1px,,2px 2px", "1px 1px 2px 3px red", "1px 1px rgb(255,0,0"):
+      with self.subTest(value):
+        with self.assertRaises(ValueError):
+          imsc_styles.StyleProperties.TextShadow.extract(None, value)
+
   def test_cell_resolution(self):
     xml_str = """<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"

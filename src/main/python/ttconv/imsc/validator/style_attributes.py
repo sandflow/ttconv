@@ -561,59 +561,10 @@ class TextShadow:
   is_inherited = True
 
   @staticmethod
-  def _extract_shadows(value: str) -> typing.Optional[typing.List[typing.List[str]]]:
-    '''Splits `value` into a list of `<shadow>` values. Returns `None` if a shadow
-    is empty or parentheses are unbalanced.'''
-    shadows = []
-    components = []
-    component = ""
-    in_parens = False
-
-    for c in value:
-      if in_parens:
-        # within a color function: everything is part of the component until the closing parenthesis
-        component += c
-        if c == ")":
-          in_parens = False
-        elif c == "(":
-          return None
-      elif c == "(":
-        component += c
-        in_parens = True
-      elif c == ")":
-        return None
-      elif c in ", \t\r\n":
-        # end of component
-        if component:
-          components.append(component)
-          component = ""
-        # end of shadow
-        if c == ",":
-          if not components:
-            return None
-          shadows.append(components)
-          components = []
-      else:
-        component += c
-
-    if in_parens:
-      return None
-
-    if component:
-      components.append(component)
-
-    if not components:
-      return None
-
-    shadows.append(components)
-
-    return shadows
-
-  @staticmethod
   def validate(value: str, _ctx: ValidationContext):
     if value == "none":
       return
-    shadows = TextShadow._extract_shadows(value)
+    shadows = imsc_utils.extract_shadows(value)
     if shadows is None:
       raise ValueError("Bad tts:textShadow value (%s)" % value)
     for components in shadows:

@@ -2013,10 +2013,7 @@
   },
   {
     "file": "ttml2-valid-text-shadow.xml",
-    "result": "fail",
-    "errors": [
-      "list index out of range"
-    ]
+    "result": "pass"
   },
   {
     "file": "ttml2-valid-transformation-1.xml",
