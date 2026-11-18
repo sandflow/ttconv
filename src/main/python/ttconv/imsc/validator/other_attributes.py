@@ -682,7 +682,7 @@ class MetadataRoleAttribute:
 @attribute
 class SMPTEEncodingAttribute:
   '''encoding attribute of the smpte:data and smpte:image elements (SMPTE ST
-  2052-1, 5.7.2 and 5.7.3)
+  2052-1:2010, 5.7.2 and 5.7.3)
   '''
   qname = QName(None, "encoding")
 
@@ -693,7 +693,7 @@ class SMPTEEncodingAttribute:
 
 @attribute
 class SMPTEDataTypeAttribute:
-  '''datatype attribute of the smpte:data element (SMPTE ST 2052-1, 5.7.2)
+  '''datatype attribute of the smpte:data element (SMPTE ST 2052-1:2010, 5.7.2)
   '''
   qname = QName(None, "datatype")
 
@@ -704,7 +704,7 @@ class SMPTEDataTypeAttribute:
 
 @attribute
 class SMPTEOriginAttribute:
-  '''origin attribute of the smpte:information element (SMPTE ST 2052-1, 5.7.4)
+  '''origin attribute of the smpte:information element (SMPTE ST 2052-1:2010, 5.7.4)
   '''
   qname = QName(None, "origin")
 
@@ -715,7 +715,7 @@ class SMPTEOriginAttribute:
 
 @attribute
 class SMPTEThresholdAttribute:
-  '''threshold attribute of the smpte:information element (SMPTE ST 2052-1, 5.7.4)
+  '''threshold attribute of the smpte:information element (SMPTE ST 2052-1:2010, 5.7.4)
   '''
   qname = QName(None, "threshold")
 
@@ -728,7 +728,7 @@ class SMPTEThresholdAttribute:
 
 @attribute
 class SMPTEModeAttribute:
-  '''mode attribute of the smpte:information element (SMPTE ST 2052-1, 5.7.4)
+  '''mode attribute of the smpte:information element (SMPTE ST 2052-1:2010, 5.7.4)
   '''
   qname = QName(None, "mode")
 

@@ -4,7 +4,7 @@
     xmlns:ttm="http://www.w3.org/ns/ttml#metadata">
   <head>
     <metadata>
-      <smpte:data datatype="x-example"><ttm:desc>Not text</ttm:desc></smpte:data>
+      <smpte:data encoding="Base64" datatype="x-example"><ttm:desc>Not text</ttm:desc></smpte:data>
     </metadata>
   </head>
 </tt>

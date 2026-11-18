@@ -88,6 +88,7 @@ class IMSCValidationContext(other_attrs.ValidationContext):
   element_stack: List[IS.Element] = field(default_factory=lambda: [])
   rule_stack: List[Rule] = field(default_factory=lambda: [])
   style_defs: typing.Dict[str, StyleDefinition] = field(default_factory=dict)
+  has_smpte_data: bool = False
   has_smpte_information: bool = False
 
 PARAMETER_ATTRIBUTES = AttributeVocabulary(
@@ -400,19 +401,32 @@ class AltText(IMSCElement):
     ctx.event_handler.warn("ittm:altText element is deprecated")
 
 class SMPTEData(IMSCElement):
-  '''smpte:data element (SMPTE ST 2052-1, 5.7.2)'''
+  '''smpte:data element (SMPTE ST 2052-1:2010, 5.7.2)'''
   qname = ttconv.imsc.namespaces.QName(NS.SMPTE, "data")
   content_model: Rule = PCDATARule()
-  optional_attributes = AttributeVocabulary(
+  required_attributes = AttributeVocabulary(
     other_attrs.SMPTEEncodingAttribute,
     other_attrs.SMPTEDataTypeAttribute,
+    )
+  optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
     )
+
+  def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
+    super().validate_attributes(e, ctx)
+
+    # smpte:data can only appear once and as a child of metadata in head
+    if len(ctx.element_stack) < 2 or ctx.element_stack[-2].get_name().qname != Head.qname:
+      ctx.event_handler.error("smpte:data SHALL be a child of a <metadata> element that is a child of <head> (line %s)", e.get_line_number())
+
+    if ctx.has_smpte_data:
+      ctx.event_handler.error("Only a single smpte:data element SHALL be present (line %s)", e.get_line_number())
+    ctx.has_smpte_data = True
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     super().validate_contents(element, ctx)
 
-    # Base64 is the only encoding defined by SMPTE ST 2052-1.
+    # Base64 is the only encoding defined by SMPTE ST 2052-1:2010.
     encoding = element.get_attribute(other_attrs.SMPTEEncodingAttribute.qname)
     if encoding is not None and encoding.value != "Base64":
       return
@@ -424,7 +438,7 @@ class SMPTEData(IMSCElement):
       ctx.event_handler.error("smpte:data contents is not valid Base64 (line %s)", element.get_line_number())
 
 class SMPTEInformation(IMSCElement):
-  '''smpte:information element (SMPTE ST 2052-1, 5.7.4). Attributes in other
+  '''smpte:information element (SMPTE ST 2052-1:2010, 5.7.4). Attributes in other
   namespaces, e.g., `m608:channel`, are foreign and therefore not validated.'''
   qname = ttconv.imsc.namespaces.QName(NS.SMPTE, "information")
   content_model: Rule = EmptyRule()
