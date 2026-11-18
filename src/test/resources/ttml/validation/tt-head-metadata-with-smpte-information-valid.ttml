@@ -1,0 +1,10 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:smpte="http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt"
+    xmlns:m608="http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt#cea608">
+  <head>
+    <metadata>
+      <smpte:information origin="http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt#cea608" mode="Preserved" threshold="0.05" m608:channel="CC1" m608:programName="Demo"/>
+    </metadata>
+  </head>
+</tt>

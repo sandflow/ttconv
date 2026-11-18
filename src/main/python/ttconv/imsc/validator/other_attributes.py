@@ -678,3 +678,61 @@ class MetadataRoleAttribute:
       if token in MetadataRoleAttribute._ROLE_TOKENS or token.startswith("x-"):
         continue
       raise ValueError("Bad ttm:role value (%s)" % token)
+
+@attribute
+class SMPTEEncodingAttribute:
+  '''encoding attribute of the smpte:data and smpte:image elements (SMPTE ST
+  2052-1, 5.7.2 and 5.7.3)
+  '''
+  qname = QName(None, "encoding")
+
+  @staticmethod
+  def validate(value, _):
+    if value != "Base64":
+      raise ValueError("Bad encoding value (%s)" % value)
+
+@attribute
+class SMPTEDataTypeAttribute:
+  '''datatype attribute of the smpte:data element (SMPTE ST 2052-1, 5.7.2)
+  '''
+  qname = QName(None, "datatype")
+
+  @staticmethod
+  def validate(value, _):
+    if len(value) == 0:
+      raise ValueError("Empty datatype value")
+
+@attribute
+class SMPTEOriginAttribute:
+  '''origin attribute of the smpte:information element (SMPTE ST 2052-1, 5.7.4)
+  '''
+  qname = QName(None, "origin")
+
+  @staticmethod
+  def validate(value, _):
+    if value != "NONE" and not is_uri(value):
+      raise ValueError("Bad origin value: `%s` is neither NONE nor a URI" % value)
+
+@attribute
+class SMPTEThresholdAttribute:
+  '''threshold attribute of the smpte:information element (SMPTE ST 2052-1, 5.7.4)
+  '''
+  qname = QName(None, "threshold")
+
+  _THRESHOLD_RE = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
+
+  @staticmethod
+  def validate(value, _):
+    if SMPTEThresholdAttribute._THRESHOLD_RE.match(value) is None:
+      raise ValueError("Bad threshold value (%s)" % value)
+
+@attribute
+class SMPTEModeAttribute:
+  '''mode attribute of the smpte:information element (SMPTE ST 2052-1, 5.7.4)
+  '''
+  qname = QName(None, "mode")
+
+  @staticmethod
+  def validate(value, _):
+    if value not in ("Enhanced", "Preserved"):
+      raise ValueError("Bad mode value (%s)" % value)

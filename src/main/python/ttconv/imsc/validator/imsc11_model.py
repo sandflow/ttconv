@@ -24,6 +24,8 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import annotations
+import base64
+import binascii
 from dataclasses import dataclass, field
 import io
 from typing import List
@@ -86,6 +88,7 @@ class IMSCValidationContext(other_attrs.ValidationContext):
   element_stack: List[IS.Element] = field(default_factory=lambda: [])
   rule_stack: List[Rule] = field(default_factory=lambda: [])
   style_defs: typing.Dict[str, StyleDefinition] = field(default_factory=dict)
+  has_smpte_information: bool = False
 
 PARAMETER_ATTRIBUTES = AttributeVocabulary(
   other_attrs.ActiveAreaAttribute,
@@ -396,6 +399,53 @@ class AltText(IMSCElement):
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     ctx.event_handler.warn("ittm:altText element is deprecated")
 
+class SMPTEData(IMSCElement):
+  '''smpte:data element (SMPTE ST 2052-1, 5.7.2)'''
+  qname = ttconv.imsc.namespaces.QName(NS.SMPTE, "data")
+  content_model: Rule = PCDATARule()
+  optional_attributes = AttributeVocabulary(
+    other_attrs.SMPTEEncodingAttribute,
+    other_attrs.SMPTEDataTypeAttribute,
+    other_attrs.XMLIDAttribute,
+    )
+
+  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
+    super().validate_contents(element, ctx)
+
+    # Base64 is the only encoding defined by SMPTE ST 2052-1.
+    encoding = element.get_attribute(other_attrs.SMPTEEncodingAttribute.qname)
+    if encoding is not None and encoding.value != "Base64":
+      return
+
+    data ="".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
+    try:
+      base64.b64decode("".join(data.split()), validate=True)
+    except binascii.Error:
+      ctx.event_handler.error("smpte:data contents is not valid Base64 (line %s)", element.get_line_number())
+
+class SMPTEInformation(IMSCElement):
+  '''smpte:information element (SMPTE ST 2052-1, 5.7.4). Attributes in other
+  namespaces, e.g., `m608:channel`, are foreign and therefore not validated.'''
+  qname = ttconv.imsc.namespaces.QName(NS.SMPTE, "information")
+  content_model: Rule = EmptyRule()
+  optional_attributes = AttributeVocabulary(
+    other_attrs.SMPTEOriginAttribute,
+    other_attrs.SMPTEThresholdAttribute,
+    other_attrs.SMPTEModeAttribute,
+    other_attrs.XMLIDAttribute,
+    )
+
+  def validate_attributes(self, e: IS.Element, ctx: IMSCValidationContext):
+    super().validate_attributes(e, ctx)
+
+    # smpte:information can only appear once and as a child of metadata in head
+    if len(ctx.element_stack) < 2 or ctx.element_stack[-2].get_name().qname != Head.qname:
+      ctx.event_handler.error("smpte:information SHALL be a child of a <metadata> element that is a child of <head> (line %s)", e.get_line_number())
+
+    if ctx.has_smpte_information:
+      ctx.event_handler.error("Only a single smpte:information element SHALL be present (line %s)", e.get_line_number())
+    ctx.has_smpte_information = True
+
 class Metadata(IMSCElement):
   qname = ttconv.imsc.namespaces.QName(NS.TTML, "metadata")
   optional_attributes = AttributeVocabulary(
@@ -404,7 +454,7 @@ class Metadata(IMSCElement):
     other_attrs.XMLSpaceAttribute,
     METADATA_ATTRIBUTES,
     )
-  content_model: Rule = ZeroOrMoreRule(AnyRule(Agent(), Name(), Actor(), Copyright(), Desc(), Title(), Item(), AltText(), ForeignElement()))
+  content_model: Rule = ZeroOrMoreRule(AnyRule(Agent(), Name(), Actor(), Copyright(), Desc(), Title(), Item(), AltText(), SMPTEData(), SMPTEInformation(), ForeignElement()))
 
 class Initial(IMSCElement):
   qname = ttconv.imsc.namespaces.QName(NS.TTML, "initial")
