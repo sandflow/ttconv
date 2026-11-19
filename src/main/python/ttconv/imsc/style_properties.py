@@ -998,13 +998,16 @@ class StyleProperties:
 
       shadows = []
 
-      for shadow in xml_attrib.split(","):
+      extracted_shadows = utils.extract_shadows(xml_attrib)
 
-        cs = shadow.split(" ")
+      if extracted_shadows is None:
+        raise ValueError("Invalid Syntax")
 
-        if len(cs) < 1 or len(cs) > 4:
+      for cs in extracted_shadows:
+
+        if len(cs) < 2 or len(cs) > 4:
           raise ValueError("Invalid Syntax")
-        
+
         x_offset = StyleProperties.ttml_length_to_model(context, cs[0])
 
         y_offset = StyleProperties.ttml_length_to_model(context, cs[1])
@@ -1022,7 +1025,7 @@ class StyleProperties:
 
             color = ttconv.utils.parse_color(cs[2])
 
-        else: # len(cs) == 4
+        elif len(cs) == 4:
 
           blur_radius = StyleProperties.ttml_length_to_model(context, cs[2])
           color = ttconv.utils.parse_color(cs[3])
