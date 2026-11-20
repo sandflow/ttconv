@@ -221,4 +221,57 @@ def parse_position(attr_value: str) -> typing.Tuple[str, styles.LengthType, str,
 
 
   return (h_edge, h_offset, v_edge, v_offset)
-  
+
+def extract_shadows(value: str) -> typing.Optional[typing.List[typing.List[str]]]:
+  '''Splits the value of a tts:textShadow attribute into a list of `<shadow>`
+  values, each a list of components, i.e. lengths and a color. Returns `None` if
+  a shadow is empty or parentheses are unbalanced.'''
+
+  shadows = []
+  components = []
+  component = ""
+  in_parens = False
+
+  for c in value:
+    if in_parens:
+      component += c
+      if c == ")":
+        in_parens = False
+      elif c == "(":
+        return None
+
+    elif c == "(":
+      component += c
+      in_parens = True
+
+    elif c == ")":
+      return None
+
+    elif c in ", \t\r\n":
+      if component:
+        # end of component
+        components.append(component)
+        component = ""
+
+      if c == ",":
+        # end of shadow
+        if not components:
+          return None
+        shadows.append(components)
+        components = []
+
+    else:
+      component += c
+
+  if in_parens:
+    return None
+
+  if component:
+    components.append(component)
+
+  if not components:
+    return None
+
+  shadows.append(components)
+
+  return shadows
