@@ -209,21 +209,23 @@ class ISD(model.Document):
       end_offset: typing.Optional[Fraction],
       parent_begin: typing.Optional[Fraction],
       parent_end: typing.Optional[Fraction]
-    ) -> typing.Tuple[Fraction, Fraction]:
-    
-    begin_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
-                  (begin_offset if begin_offset is not None else Fraction(0))
+    ) -> typing.Tuple[Fraction, typing.Optional[Fraction]]:
+    '''Returns the absolute interval of an element. The returned times are always `Fraction` instances (or `None` for
+    an unbounded end) since `_process_element()` relies on it to compare them efficiently.'''
 
-    end_time = (parent_begin if parent_begin is not None else Fraction(0)) + \
-              end_offset if end_offset is not None else None
+    begin_time = Fraction((parent_begin if parent_begin is not None else 0) + \
+                  (begin_offset if begin_offset is not None else 0))
+
+    end_time = Fraction((parent_begin if parent_begin is not None else 0) + \
+              end_offset) if end_offset is not None else None
 
     if end_time is None:
 
-      end_time = parent_end
+      end_time = Fraction(parent_end) if parent_end is not None else None
 
     elif parent_end is not None:
 
-      end_time = min(end_time, parent_end)
+      end_time = min(end_time, Fraction(parent_end))
 
     return (begin_time, end_time)
 
@@ -367,6 +369,9 @@ class ISD(model.Document):
     '''Creates an ISD from a snapshot of a ContentDocument `doc` at a given time offset `offset`.
     A `SignificantTimes` instance generated from `doc` can be provided to speed-up the generation process.
     '''
+    # _process_element() requires a Fraction
+    offset = Fraction(offset)
+
     isd = ISD(doc)
 
     cache = (_SingleRegionDocumentCache({}, doc, None),) if sig_times is None else sig_times.cache()
@@ -484,16 +489,20 @@ class ISD(model.Document):
 
     begin_time, end_time = element_interval
 
-    if end_time is not None and end_time <= begin_time:
-      return None
-
     # update the activity cache if the element was not present
-      
+    # This is a critical path for ISD generation, and
+    #    (begin_time is not None and begin_time > absolute_offset) or
+    #    (end_time is not None and end_time <= absolute_offset)
+    # is replaced with inline arithmetic that bypasses the type checks in the 
+    # `Fraction`'s implementation of the compare operator
+
     if is_active is None:
 
       if (
-        (begin_time is not None and begin_time > absolute_offset) or
-        (end_time is not None and end_time <= absolute_offset)
+        (begin_time is not None and
+         begin_time._numerator * absolute_offset._denominator > absolute_offset._numerator * begin_time._denominator) or
+        (end_time is not None and
+         end_time._numerator * absolute_offset._denominator <= absolute_offset._numerator * end_time._denominator)
       ) :
         activity_cache[element] = False
         return None
