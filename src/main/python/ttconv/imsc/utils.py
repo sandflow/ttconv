@@ -32,6 +32,10 @@ import ttconv.style_properties as styles
 
 LOGGER = logging.getLogger(__name__)
 
+# TTML2 <lwsp>
+LWSP = r"[ \t\r\n]+"
+LWSP_RE = re.compile(LWSP)
+
 _LENGTH_RE = re.compile(r"^((?:\+|\-)?\d*(?:\.\d+)?)(px|em|c|%|rh|rw)$")
 
 def parse_length(attr_value: str) -> typing.Tuple[float, str]:
