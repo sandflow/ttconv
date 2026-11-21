@@ -317,6 +317,29 @@ class IMSCReaderTest(unittest.TestCase):
     self.assertEqual(doc.get_cell_resolution().columns, 32)
     self.assertEqual(doc.get_cell_resolution().rows, 15)
 
+  def test_lwsp(self):
+    # components of attribute values may be separated by more than one whitespace character (<lwsp>)
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        xmlns:tts="http://www.w3.org/ns/ttml#styling"
+        ttp:cellResolution="32  15">
+      <head>
+        <layout>
+          <region xml:id="r1" tts:origin="10%  20%" tts:extent="80%   30%"/>
+        </layout>
+      </head>
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    self.assertEqual(doc.get_cell_resolution().columns, 32)
+    self.assertEqual(doc.get_cell_resolution().rows, 15)
+    region = doc.get_region("r1")
+    self.assertEqual(region.get_style(styles.StyleProperties.Origin),
+      styles.CoordinateType(x=styles.LengthType(10, styles.LengthType.Units.pct), y=styles.LengthType(20, styles.LengthType.Units.pct)))
+    self.assertEqual(region.get_style(styles.StyleProperties.Extent),
+      styles.ExtentType(width=styles.LengthType(80, styles.LengthType.Units.pct), height=styles.LengthType(30, styles.LengthType.Units.pct)))
+
   def test_content_profiles(self):
     xml_str = """<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"

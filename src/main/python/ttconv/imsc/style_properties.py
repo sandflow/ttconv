@@ -218,7 +218,7 @@ class StyleProperties:
           width=styles.LengthType(1, styles.LengthType.Units.rw)
         )
 
-      s = xml_attrib.split(" ")
+      s = utils.LWSP_RE.split(xml_attrib)
 
       if len(s) != 2:
         raise ValueError("Bad tts:extent syntax")
@@ -480,7 +480,7 @@ class StyleProperties:
         )
 
       else:
-        s = xml_attrib.split(" ")
+        s = utils.LWSP_RE.split(xml_attrib)
 
         if len(s) != 2:
           raise ValueError("tts:origin has not two components")
@@ -532,7 +532,7 @@ class StyleProperties:
 
     @classmethod
     def extract(cls, context: StyleParsingContext, xml_attrib: str):
-      s = xml_attrib.split(" ")
+      s = utils.LWSP_RE.split(xml_attrib)
 
       if len(s) == 1:
 
@@ -652,7 +652,7 @@ class StyleProperties:
       if xml_attrib == "none":
         return styles.SpecialValues.none
 
-      s = xml_attrib.split(" ")
+      s = utils.LWSP_RE.split(xml_attrib)
 
       if len(s) == 0 or len(s) > 2:
         raise ValueError("Bad syntax")
@@ -784,7 +784,7 @@ class StyleProperties:
 
       else:
 
-        s = xml_attrib.split(" ")
+        s = utils.LWSP_RE.split(xml_attrib)
 
         underline = None
         line_through = None
@@ -852,7 +852,7 @@ class StyleProperties:
       color = None
       position = None
 
-      for c in xml_attrib.split(" "):
+      for c in utils.LWSP_RE.split(xml_attrib):
 
         if c == "none":
 
@@ -937,7 +937,7 @@ class StyleProperties:
       if xml_attrib == "none":
         return styles.SpecialValues.none
 
-      s = xml_attrib.split(" ")
+      s = utils.LWSP_RE.split(xml_attrib)
 
       if len(s) == 0 or len(s) > 2:
         raise ValueError("Bad syntax")
