@@ -622,15 +622,18 @@ class TT(RosettaElement, imsc11.TT):
 def validate(
   f: typing.BinaryIO,
   config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
-  event_handler: typing.Optional[EventHandler] = None
+  event_handler: typing.Optional[EventHandler] = None,
+  progress_callback: typing.Callable[[float], None] = lambda _: None
 ) -> bool:
   '''Validates `f` and returns whether no ERROR-or-above records were logged.
 
-  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
+  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.
+
+  `progress_callback` is called with the fraction, between 0 and 1, of the validation that is completed.'''
   xml_doc = f.read()
 
   # IMSC 1.1 validation
-  if not imsc11_validator.validate(io.BytesIO(xml_doc), event_handler=event_handler):
+  if not imsc11_validator.validate(io.BytesIO(xml_doc), event_handler=event_handler, progress_callback=progress_callback):
     return False
 
   # IMSC Rosetta constraints

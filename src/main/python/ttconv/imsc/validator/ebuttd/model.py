@@ -283,11 +283,14 @@ class TT(imsc11.TT):
 def validate(
   f: typing.BinaryIO,
   config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
-  event_handler: typing.Optional[EventHandler] = None
+  event_handler: typing.Optional[EventHandler] = None,
+  progress_callback: typing.Callable[[float], None] = lambda _: None
 ) -> bool:
   '''Validates `f` and returns whether no ERROR-or-above records were logged.
 
-  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
+  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.
+
+  `progress_callback` is called with the fraction, between 0 and 1, of the validation that is completed.'''
   counting_handler = ErrorCountingEventHandler(event_handler)
 
   xml_doc = f.read()
@@ -299,8 +302,9 @@ def validate(
   try:
     # the document and ISC sequence are shared between the IMSC 1.1 and EBU-TT-D
     # checks
-    doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)))
-    isd_sequence = ISD.generate_isd_sequence(doc)
+    doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
+    isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
+    progress_callback(1.0)
     imsc11_validator.validate_document(doc, isd_sequence)
   except Exception as e: # pylint: disable=broad-except
     counting_handler.error("%s", e)

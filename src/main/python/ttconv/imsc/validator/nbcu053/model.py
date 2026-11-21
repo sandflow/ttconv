@@ -441,13 +441,16 @@ def _validate_doc_styles(
 def validate(
   f: typing.BinaryIO,
   config: typing.Optional[ModuleConfiguration] = None,
-  event_handler: typing.Optional[EventHandler] = None
+  event_handler: typing.Optional[EventHandler] = None,
+  progress_callback: typing.Callable[[float], None] = lambda _: None
 ) -> bool:
   '''Validates `f` using `config`
 
   `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.
 
   `config.aspect_ratio` SHALL be provided if the document contains vertical text regions.
+
+  `progress_callback` is called with the fraction, between 0 and 1, of the validation that is completed.
   '''
 
   if config is None:
@@ -471,8 +474,9 @@ def validate(
     # IMSC 1.1 validation
     try:
       # the Document and ISD sequences are shared with NBCU053 validation
-      doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)))
-      isd_sequence = ISD.generate_isd_sequence(doc)
+      doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
+      isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
+      progress_callback(1.0)
       imsc11_validator.validate_document(doc, isd_sequence)
     except Exception as e: # pylint: disable=broad-except
       counting_handler.error("%s", e)

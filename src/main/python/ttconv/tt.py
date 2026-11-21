@@ -25,6 +25,8 @@
 
 '''ttconv tt'''
 
+from __future__ import annotations
+
 import json
 import logging
 import os
@@ -69,112 +71,89 @@ CONFIGURATIONS = [
   SRTReaderConfiguration,
 ]
 
-class ProgressConsoleHandler(logging.StreamHandler):
-  """
-  A handler class which allows the cursor to stay on
-  one line for selected messages
-  """
+class ProgressBar:
+  '''Displays the progress of an operation on the console if it is a terminal.
+  Nothing is displayed otherwise, e.g., when the console is redirected to a file.'''
 
-  class ProgressType(Enum):
-    '''Whether the progress is for reading or writing operations
-    '''
-    read = 1
-    write = 2
+  _LENGTH = 50
 
-  def __init__(self):
-    self.is_writing_progress_bar = False
-    self.last_progress_msg = ""
-    self.display_progress_bar = True
-    super().__init__()
+  active: typing.Optional[ProgressBar] = None
+
+  def __init__(
+    self,
+    label: str,
+    general_config: typing.Optional[GeneralConfiguration] = None,
+    stream: typing.Optional[typing.TextIO] = None
+  ):
+    '''The progress bar is displayed unless disabled by `general_config.progress_bar`'''
+    self.label = label
+    if stream is not None:
+      self.stream = stream
+    else:
+      self.stream = sys.stderr
+
+    if not self.stream.isatty():
+      self.enabled = False
+    elif general_config is not None and general_config.progress_bar is False:
+      self.enabled = False
+    else:
+      self.enabled = True
+    self._line = ""
+
+  def __enter__(self) -> ProgressBar:
+    return self
+
+  def __exit__(self, *_exc_info):
+    self.close()
+
+  def update(self, fraction: float):
+    '''Displays `fraction`, between 0 and 1, of the operation as completed'''
+    if not self.enabled:
+      return
+    ProgressBar.active = self
+    fraction = min(1.0, max(0.0, float(fraction)))
+    filled = int(self._LENGTH * fraction)
+    self._line = f"{self.label} |{'█' * filled}{'-' * (self._LENGTH - filled)}| {100 * fraction:3.0f}%"
+    self.stream.write("\r" + self._line)
+    self.stream.flush()
+
+  def clear(self):
+    '''Erases the progress bar, e.g., so that a log message can be written in its place'''
+    if self._line:
+      self.stream.write("\r" + " " * len(self._line) + "\r")
+
+  def redraw(self):
+    '''Displays the progress bar again after `clear()`'''
+    if self._line:
+      self.stream.write(self._line)
+      self.stream.flush()
+
+  def close(self):
+    '''Erases the progress bar, if it is displayed'''
+    if ProgressBar.active is self:
+      ProgressBar.active = None
+    if self._line:
+      self.clear()
+      self.stream.flush()
+      self._line = ""
+
+
+class ConsoleHandler(logging.StreamHandler):
+  '''Writes log messages to the console, i.e., the current `sys.stderr`, around the progress bar that is being displayed,
+  if any'''
 
   def emit(self, record):
+    self.stream = sys.stderr
+    if ProgressBar.active is not None and ProgressBar.active.stream is self.stream:
+      progress_bar = ProgressBar.active
+    else:
+      progress_bar = None
+    if progress_bar is not None:
+      progress_bar.clear()
+    super().emit(record)
+    if progress_bar is not None:
+      progress_bar.redraw()
 
-    def progress_str(progress_type: ProgressConsoleHandler.ProgressType, percent_progress: float) -> str:
-      '''Formats the progress string.'''
-
-      prefix = "Reading:" if progress_type is ProgressConsoleHandler.ProgressType.read else "Writing:"
-      suffix = 'Complete'
-      length = 50
-      fill = '█'
-      filled_length = int(length * percent_progress)
-      bar_val = fill * filled_length + '-' * (length - filled_length)
-
-      return f'\r{prefix} |{bar_val}| {100 * percent_progress:3.0f}% {suffix}'
-
-    try:
-      msg = self.format(record)
-
-      stream = self.stream
-
-      is_progress_bar_record = hasattr(record, 'progress_bar')
-      percent_progress = None
-
-      if not self.display_progress_bar and is_progress_bar_record:
-        return
-
-      if is_progress_bar_record:
-        percent_progress = getattr(record, 'percent_progress')
-        msg = progress_str(
-          getattr(record, 'progress_bar'),
-          min(1.0, abs(float(percent_progress)))
-        )
-        self.last_progress_msg = msg
-
-      if self.is_writing_progress_bar and not is_progress_bar_record:
-        # erase and over write the progress bar
-        stream.write('\r')
-        length = len(self.last_progress_msg)
-        stream.write(' ' * length)
-
-        # go to beginning of the line and write the new messages
-        stream.write('\r')
-        stream.write(msg)
-        stream.write(self.terminator)
-
-        # write the old progress information
-        stream.write(self.last_progress_msg)
-      elif is_progress_bar_record:
-        stream.write(msg)
-      else:
-        stream.write(msg)
-        stream.write(self.terminator)
-
-      if is_progress_bar_record:
-        self.is_writing_progress_bar = True
-        if percent_progress is not None and float(percent_progress) >= 1.0:
-          sys.stdout.write('\r\n')
-          self.is_writing_progress_bar = False
-
-      self.flush()
-
-    except (KeyboardInterrupt, SystemExit):
-      raise
-    except:  # pylint: disable=bare-except
-      self.handleError(record)
-
-
-def progress_callback_read(percent_progress: float):
-  '''Callback handler used by reader and writer.'''
-  LOGGER.info(
-    "%d%%",
-    percent_progress,
-    extra={
-      'progress_bar': ProgressConsoleHandler.ProgressType.read,
-      'percent_progress': percent_progress,
-    }
-  )
-
-
-def progress_callback_write(percent_progress: float):
-  '''Callback handler used by reader and writer.'''
-  LOGGER.info(
-    "%d%%",
-    percent_progress,
-    extra={
-      'progress_bar': ProgressConsoleHandler.ProgressType.write,
-      'percent_progress': percent_progress,
-    }
-  )
 
 def die(msg: str):
   LOGGER.error(msg)
@@ -294,13 +273,11 @@ def convert(args):
 
   general_config : GeneralConfiguration = read_config_from_json(GeneralConfiguration, json_config_data)
 
-  if general_config is not None:
+  if general_config is not None and general_config.log_level is not None:
+    LOGGER.setLevel(general_config.log_level)
 
-    if general_config.progress_bar is not None:
-      progress.display_progress_bar = general_config.progress_bar
-
-    if general_config.log_level is not None:
-      LOGGER.setLevel(general_config.log_level)
+  read_progress = ProgressBar("Reading:", general_config)
+  write_progress = ProgressBar("Writing:", general_config)
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -320,7 +297,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = imsc_reader.to_model(tree, progress_callback_read)
+    model = imsc_reader.to_model(tree, read_progress.update)
 
   elif reader_type is FileTypes.SCC:
     file_as_str = Path(inputfile).read_text()
@@ -333,7 +310,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = scc_reader.to_model(file_as_str, reader_config, progress_callback_read)
+    model = scc_reader.to_model(file_as_str, reader_config, read_progress.update)
 
   elif reader_type is FileTypes.STL:
     #
@@ -345,7 +322,7 @@ def convert(args):
     # Open the file and pass it to the reader
     #
     with open(inputfile, "rb") as f:
-      model = stl_reader.to_model(f, reader_config, progress_callback_read)
+      model = stl_reader.to_model(f, reader_config, read_progress.update)
 
   elif reader_type is FileTypes.SRT:
     #
@@ -357,7 +334,7 @@ def convert(args):
     # Open the file and pass it to the reader
     #
     with open(inputfile, "r", encoding="utf-8") as f:
-      model = srt_reader.to_model(f, reader_config, progress_callback_read)
+      model = srt_reader.to_model(f, reader_config, read_progress.update)
 
   elif reader_type is FileTypes.VTT:
 
@@ -365,7 +342,7 @@ def convert(args):
     # Open the file and pass it to the reader
     #
     with open(inputfile, "r", encoding="utf-8") as f:
-      model = vtt_reader.to_model(f, None, progress_callback_read)
+      model = vtt_reader.to_model(f, None, read_progress.update)
 
   else:
     if args.itype is not None:
@@ -374,6 +351,8 @@ def convert(args):
       exit_str = f'Input file {args.input} is not supported'
 
     die(exit_str)
+
+  read_progress.close()
 
   #
   # handle the case where the input file could not be read into the model
@@ -418,7 +397,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, writer_config, progress_callback_write)
+    tree_from_model = imsc_writer.from_model(model, writer_config, write_progress.update)
 
     #
     # Write out the converted file
@@ -434,7 +413,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, writer_config, progress_callback_write)
+    srt_document = srt_writer.from_model(model, writer_config, write_progress.update)
 
     #
     # Write out the converted file
@@ -451,7 +430,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    vtt_document = vtt_writer.from_model(model, writer_config, progress_callback_write)
+    vtt_document = vtt_writer.from_model(model, writer_config, write_progress.update)
 
     #
     # Write out the converted file
@@ -468,7 +447,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    scc_document = scc_writer.from_model(model, writer_config, progress_callback_write)
+    scc_document = scc_writer.from_model(model, writer_config, write_progress.update)
 
     #
     # Write out the converted file
@@ -484,6 +463,8 @@ def convert(args):
       exit_str = f'Output file is {args.output} is not supported'
 
     die(exit_str)
+
+  write_progress.close()
 
 
 class ValidateModels(Enum):
@@ -536,7 +517,7 @@ def validate(args) -> int:
 
   log_level = VALIDATE_LOG_LEVELS[args.log_level]
 
-  handler = logging.StreamHandler()
+  handler = ConsoleHandler()
   handler.setLevel(log_level)
   handler.setFormatter(logging.Formatter("%(levelname)s:%(message)s"))
 
@@ -544,25 +525,28 @@ def validate(args) -> int:
   root_logger.setLevel(log_level)
   root_logger.addHandler(handler)
 
-  # the progress handler is only meant for conversion
-  LOGGER.removeHandler(progress)
+  # log messages are written by the handler of the root logger, with their level
+  LOGGER.removeHandler(console)
   LOGGER.setLevel(logging.NOTSET)
+
+  json_config_data = load_json_config(args)
 
   config = None
 
   config_class = args.model.config_class
   if config_class is not None:
     try:
-      config = read_config_from_json(config_class, load_json_config(args))
+      config = read_config_from_json(config_class, json_config_data)
       if config is None:
         config = config_class()
     except ValueError as e:
       die(f"invalid {config_class.name()} configuration: {' '.join(str(arg) for arg in e.args)}")
 
+  general_config = read_config_from_json(GeneralConfiguration, json_config_data)
 
   try:
-    with open(args.file, "rb") as f:
-      if not args.model.validate(f, config):
+    with open(args.file, "rb") as f, ProgressBar("Validating:", general_config) as progress_bar:
+      if not args.model.validate(f, config, progress_callback=progress_bar.update):
         return 1
   except OSError as e:
     die(f"can't open '{args.file}': {e}")
@@ -572,8 +556,8 @@ def validate(args) -> int:
 
 # Ensure that the handler is added only once/globally
 # Otherwise the handler will be called multiple times
-progress = ProgressConsoleHandler()
-LOGGER.addHandler(progress)
+console = ConsoleHandler()
+LOGGER.addHandler(console)
 LOGGER.setLevel(logging.INFO)
 
 

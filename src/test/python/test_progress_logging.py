@@ -25,9 +25,12 @@
 
 '''Unit tests for logging and progress bar'''
 
+import io
 import logging
 import unittest
+from contextlib import redirect_stderr
 import ttconv.tt as tt
+from ttconv.config import GeneralConfiguration
 
 LOGGER = logging.getLogger("ttconv")
 
@@ -63,44 +66,6 @@ class IMSCAppLoggingProgressBarTest(unittest.TestCase):
                                 'INFO:ttconv:test 7'
                                 ])
 
-  def test_logging_progress_bar(self):
-
-    inputfile = "input"
-    outputfile = "output"
-    LOGGER.info("Input file is %s", inputfile)
-    LOGGER.info("Output file is %s", outputfile)
-    LOGGER.info('test 1')
-
-    tt.progress_callback_read(0)
-    LOGGER.info('test 2')
-    LOGGER.info('test 3')
-    tt.progress_callback_read(0.1)
-    tt.progress_callback_read(1)
-    LOGGER.info('test 4')
-    tt.progress_callback_write(0.3)
-    LOGGER.info('test 5')
-    tt.LOGGER.info('test 6')
-    tt.progress_callback_write(1)
-    LOGGER.info('test 7')
-
-  def test_logging_progress_bar_read_write_interlaced(self):
-    
-    LOGGER.info('Interlaced read/write')
-    tt.progress_callback_read(0)
-    tt.progress_callback_write(0)
-    tt.progress_callback_read(0.1)
-    tt.progress_callback_write(0.3)
-    tt.progress_callback_write(1)
-    tt.progress_callback_read(1)
-
-    LOGGER.info('read then write')
-    tt.progress_callback_read(0)
-    tt.progress_callback_read(0.1)
-    tt.progress_callback_read(1)
-    tt.progress_callback_write(0)
-    tt.progress_callback_write(0.3)
-    tt.progress_callback_write(1)
-
   def test_logging_progress_bar_asserts(self):
 
     with self.assertLogs('ttconv', level='INFO') as cm:
@@ -133,6 +98,91 @@ class IMSCAppLoggingProgressBarTest(unittest.TestCase):
                                 'INFO:ttconv:test 6',
                                 'INFO:ttconv:test 7'
                                 ])
+
+class _Terminal(io.StringIO):
+  '''Console that is a terminal'''
+
+  def isatty(self):
+    return True
+
+class ProgressBarTest(unittest.TestCase):
+
+  def test_not_displayed_if_not_a_terminal(self):
+    console = io.StringIO()
+    with tt.ProgressBar("Reading:", stream=console) as progress_bar:
+      progress_bar.update(0.5)
+      progress_bar.update(1)
+    self.assertEqual(console.getvalue(), "")
+
+  def test_not_displayed_if_disabled(self):
+    console = _Terminal()
+    with tt.ProgressBar("Reading:", GeneralConfiguration(progress_bar=False), stream=console) as progress_bar:
+      progress_bar.update(0.5)
+    self.assertEqual(console.getvalue(), "")
+
+  def test_displayed_on_a_terminal(self):
+    console = _Terminal()
+    with tt.ProgressBar("Reading:", stream=console) as progress_bar:
+      progress_bar.update(0.5)
+      self.assertIs(tt.ProgressBar.active, progress_bar)
+      progress_bar.update(2)
+    self.assertIsNone(tt.ProgressBar.active)
+    bar = "Reading: |" + "█" * 50 + "| 100%"
+    self.assertEqual(console.getvalue(),
+      "\rReading: |" + "█" * 25 + "-" * 25 + "|  50%" +
+      "\r" + bar +
+      # the progress bar is erased on completion
+      "\r" + " " * len(bar) + "\r")
+
+  def test_nothing_written_on_close_if_never_updated(self):
+    console = _Terminal()
+    with tt.ProgressBar("Reading:", stream=console):
+      pass
+    self.assertEqual(console.getvalue(), "")
+
+  def test_log_messages_are_written_around_the_progress_bar(self):
+    logger = logging.getLogger("ttconv.test_progress_logging")
+    logger.propagate = False
+    handler = tt.ConsoleHandler()
+    logger.addHandler(handler)
+    try:
+      with redirect_stderr(_Terminal()) as console:
+        with tt.ProgressBar("Reading:") as progress_bar:
+          progress_bar.update(0)
+          logger.warning("hello")
+      bar = "Reading: |" + "-" * 50 + "|   0%"
+      erase = "\r" + " " * len(bar) + "\r"
+      self.assertEqual(console.getvalue(), "\r" + bar + erase + "hello\n" + bar + erase)
+    finally:
+      logger.removeHandler(handler)
+
+  def test_validate_displays_progress_bar_on_a_terminal(self):
+    root_logger = logging.getLogger()
+    handlers = list(root_logger.handlers)
+    level = root_logger.level
+    try:
+      with redirect_stderr(_Terminal()) as console:
+        self.assertEqual(tt.main(["validate", "src/test/resources/ttml/validation/tt-body-div-p-two-spans-valid.ttml"]), 0)
+      bar = "Validating: |" + "█" * 50 + "| 100%"
+      self.assertIn(bar, console.getvalue())
+      # the progress bar is erased on completion
+      self.assertTrue(console.getvalue().endswith("\r" + " " * len(bar) + "\r"))
+    finally:
+      root_logger.handlers = handlers
+      root_logger.setLevel(level)
+
+  def test_validate_progress_bar_can_be_disabled(self):
+    root_logger = logging.getLogger()
+    handlers = list(root_logger.handlers)
+    level = root_logger.level
+    try:
+      with redirect_stderr(_Terminal()) as console:
+        self.assertEqual(tt.main(["validate", "--config", '{"general": {"progress_bar": false}}',
+          "src/test/resources/ttml/validation/tt-body-div-p-two-spans-valid.ttml"]), 0)
+      self.assertEqual(console.getvalue(), "")
+    finally:
+      root_logger.handlers = handlers
+      root_logger.setLevel(level)
 
 if __name__ == '__main__':
   unittest.main()

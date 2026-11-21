@@ -363,9 +363,12 @@ def validate_document(
 def validate(
   f: typing.BinaryIO,
   config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
-  event_handler: typing.Optional[EventHandler] = None
+  event_handler: typing.Optional[EventHandler] = None,
+  progress_callback: typing.Callable[[float], None] = lambda _: None
 ) -> bool:
-  '''Validates `f` and returns whether no ERROR-or-above records were logged.'''
+  '''Validates `f` and returns whether no ERROR-or-above records were logged.
+
+  `progress_callback` is called with the fraction, between 0 and 1, of the validation that is completed.'''
   counting_handler = ErrorCountingEventHandler(event_handler)
 
   xml_doc = f.read()
@@ -375,8 +378,10 @@ def validate(
 
   # the ContentDocument model is only built from a document that passes the static model check
   try:
-    doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)))
-    validate_document(doc, ISD.generate_isd_sequence(doc))
+    doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
+    isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
+    progress_callback(1.0)
+    validate_document(doc, isd_sequence)
   except Exception as e: # pylint: disable=broad-except
     counting_handler.error("%s", e)
 
