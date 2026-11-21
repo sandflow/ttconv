@@ -632,7 +632,7 @@
     "errors": [
       "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)",
       "Region 'rtlRegion': tts:extent SHALL be present on all region elements (section 8.4.2)",
-      "Regions 'ltrRegion' and 'rtlRegion' spatially overlap (at 0s)"
+      "Regions 'ltrRegion' and 'rtlRegion' spatially overlap (at 00:00:00.000)"
     ]
   },
   {

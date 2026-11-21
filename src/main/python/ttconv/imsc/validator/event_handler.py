@@ -86,6 +86,6 @@ class ContextEventHandler(EventHandler):
 
 
 def make_temporal_context(time: Fraction) -> str:
-  '''Returns the context of events that occur at `time`, in seconds.'''
-  seconds = f"{float(time):.4f}".rstrip("0").rstrip(".")
-  return f"at {seconds}s"
+  '''Returns the context of events that occur at `time`, in seconds, formatted as HH:MM:SS.fff.'''
+  ms = round(time * 1000)
+  return f"at {ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d}.{ms % 1000:03d}"

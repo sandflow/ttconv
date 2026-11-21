@@ -115,7 +115,7 @@
     "file": "ttml1-prstn-show-background.xml",
     "result": "fail",
     "errors": [
-      "ISD has 5 regions, maximum 4 allowed (at 1s)"
+      "ISD has 5 regions, maximum 4 allowed (at 00:00:01.000)"
     ]
   },
   {
