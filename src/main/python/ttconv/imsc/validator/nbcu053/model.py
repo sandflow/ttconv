@@ -43,7 +43,7 @@ from ttconv.isd import ISD
 import ttconv.model as model
 import ttconv.style_properties as styles
 
-from ttconv.imsc.validator.event_handler import EventHandler
+from ttconv.imsc.validator.event_handler import ContextEventHandler, EventHandler, make_temporal_context
 import ttconv.imsc.validator.imsc11_model as imsc11_model
 import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 import ttconv.imsc.validator.infoset as IS
@@ -89,7 +89,7 @@ def _validate_root_parameters(root: IS.Element, expected_frame_rate: Optional[Pe
     dar = other_attrs.DisplayAspectRatioAttribute.extract(dar_attr.value)
     dar_value = f"{float(dar):.2f}"
     if dar_value != aspect_ratio.value:
-      raise ValueError(
+      event_handler.error(
         f"ttp:displayAspectRatio SHALL match the aspect_ratio parameter '{aspect_ratio.value}', "
         f"found '{dar_attr.value}' ('{dar_value}')"
       )
@@ -97,7 +97,7 @@ def _validate_root_parameters(root: IS.Element, expected_frame_rate: Optional[Pe
   time_base_attr = root.get_attribute(other_attrs.TimeBaseAttribute.qname)
   if time_base_attr is not None and \
     other_attrs.TimeBaseAttribute.extract(time_base_attr.value) != other_attrs.TimeBase.media:
-    raise ValueError(
+    event_handler.error(
       f"ttp:timeBase SHALL be 'media', found '{time_base_attr.value}'"
     )
 
@@ -114,16 +114,10 @@ def _validate_root_parameters(root: IS.Element, expected_frame_rate: Optional[Pe
   frame_rate = PermittedFrameRate.from_params(nominal_fps, fps_mult)
 
   if frame_rate is None:
-    raise ValueError(
-          f"The frame rate '{nominal_fps} * {fps_mult}' is not one of the permitted values."
-        )
-
-  if expected_frame_rate is not None and expected_frame_rate  != frame_rate:
-    raise ValueError(
-          f"The frame rate '{frame_rate}' is not the expected frame rate '{expected_frame_rate}'."
-        )
-
-  if expected_frame_rate is None:
+    event_handler.error(f"The frame rate '{nominal_fps} * {fps_mult}' is not one of the permitted values.")
+  elif expected_frame_rate is not None and expected_frame_rate != frame_rate:
+    event_handler.error(f"The frame rate '{frame_rate}' is not the expected frame rate '{expected_frame_rate}'.")
+  elif expected_frame_rate is None:
       event_handler.info(f'No expected frame rate supplied, inferring a frame rate of {frame_rate} from the file.')
 
 _EXPECTED_COLOR_SDR = styles.ColorType((0xEB, 0xEB, 0xEB, 255))  # tts:color="#EBEBEB"
@@ -158,6 +152,17 @@ def _make_pct_extent(w: float, h: float) -> styles.ExtentType:
     width=styles.LengthType(w, styles.LengthType.Units.pct),
     height=styles.LengthType(h, styles.LengthType.Units.pct)
   )
+
+def _format_percent(value: float) -> str:
+  '''Formats `value` as a percentage with at most two decimals'''
+  return f"{round(value, 2):g}%"
+
+def _format_color(color: typing.Any) -> str:
+  '''Formats `color` in #RRGGBB notation, or #RRGGBBAA notation if it is not opaque'''
+  if not isinstance(color, styles.ColorType):
+    return str(color)
+  r, g, b, a = color.components
+  return f"#{r:02X}{g:02X}{b:02X}" if a == 255 else f"#{r:02X}{g:02X}{b:02X}{a:02X}"
 
 def _format_length(length: styles.LengthType) -> str:
   return f"{length.value}{length.units.value}"
@@ -318,50 +323,60 @@ def _lengths_approx_equal(a: styles.LengthType, b: styles.LengthType) -> bool:
   b_value = float(b.value)
   return math.isclose(a_value, b_value, rel_tol=0.001)
 
-def _validate_styles(element: model.ContentElement, hdr: bool):
+def _validate_styles(element: model.ContentElement, hdr: bool, event_handler: EventHandler):
   elem_name = type(element).__name__
   expected_color = _EXPECTED_COLOR_HDR if hdr else _EXPECTED_COLOR_SDR
   expected_outline_color = _EXPECTED_TEXT_OUTLINE_COLOR_HDR if hdr else _EXPECTED_TEXT_OUTLINE_COLOR_SDR
 
   bg_color = element.get_style(styles.StyleProperties.BackgroundColor)
   if bg_color is not None and bg_color != _EXPECTED_BACKGROUND_COLOR:
-    raise ValueError(f"{elem_name}: computed tts:backgroundColor SHALL be 'transparent', found '{bg_color}'")
+    event_handler.error(f"{elem_name}: computed tts:backgroundColor SHALL be 'transparent', found '{_format_color(bg_color)}'")
 
   color = element.get_style(styles.StyleProperties.Color)
   if color is not None and color != expected_color:
-    raise ValueError(f"{elem_name}: tts:color SHALL be '{expected_color}', found '{color}'")
+    event_handler.error(f"{elem_name}: tts:color SHALL be '{_format_color(expected_color)}', found '{_format_color(color)}'")
 
   font_size: typing.Optional[styles.LengthType] = element.get_style(styles.StyleProperties.FontSize)
   if font_size is not None:
     lang = element.get_lang()
     if _is_character_based_lang(lang):
       if not _lengths_approx_equal(font_size, _EXPECTED_FONT_SIZE_CHARACTER_BASED):
-        raise ValueError(
+        event_handler.error(
           f"{elem_name}: tts:fontSize SHALL be '100%' for character-based language '{lang}', "
-          f"found '{font_size.value * 15}%'."
+          f"found '{_format_percent(font_size.value * 15)}'"
         )
     elif not _lengths_approx_equal(font_size, _EXPECTED_FONT_SIZE):
-      raise ValueError(
-        f"{elem_name}: tts:fontSize SHALL be '80%' for non-character-based languages '{lang}', "
-        f"found '{font_size.value * 15}%' ."
+      event_handler.error(
+        f"{elem_name}: tts:fontSize SHALL be '80%' for non-character-based language '{lang}', "
+        f"found '{_format_percent(font_size.value * 15)}'"
       )
 
   text_outline = element.get_style(styles.StyleProperties.TextOutline)
   if text_outline is not None:
+    # the thickness of the outline is 3% of the expected font size
     if _is_character_based_lang(element.get_lang()):
       expected_thickness = _EXPECTED_TEXT_OUTLINE_THICKNESS_CHARACTER_BASED
+      expected_font_size = _EXPECTED_FONT_SIZE_CHARACTER_BASED
     else:
       expected_thickness = _EXPECTED_TEXT_OUTLINE_THICKNESS
+      expected_font_size = _EXPECTED_FONT_SIZE
     if text_outline is styles.SpecialValues.none or \
       text_outline.color != expected_outline_color or \
       not _lengths_approx_equal(text_outline.thickness, expected_thickness):
-        raise ValueError(
-          f"{elem_name}: tts:textOutline color SHALL be '{expected_outline_color}'"
-        )
+      if text_outline is styles.SpecialValues.none:
+        found = "none"
+      elif text_outline.thickness.units == expected_font_size.units:
+        found = f"{_format_color(text_outline.color)} {_format_percent(100 * text_outline.thickness.value / expected_font_size.value)}"
+      else:
+        found = f"{_format_color(text_outline.color)} {_format_length(text_outline.thickness)}"
+      event_handler.error(
+        f"{elem_name}: tts:textOutline SHALL be '{_format_color(expected_outline_color)} 3%' relative to a "
+        f"tts:fontSize of '{_format_percent(expected_font_size.value * 15)}', found '{found}'"
+      )
 
   shear = element.get_style(styles.StyleProperties.Shear)
   if shear is not None and shear != 0:
-    raise ValueError(
+    event_handler.error(
       f"{elem_name}: tts:shear SHALL NOT be used and tts:fontStyle=\"italic\" used instead."
     )
 
@@ -369,7 +384,8 @@ def _validate_styles(element: model.ContentElement, hdr: bool):
 def _validate_doc_styles(
   doc: model.ContentDocument,
   expected_vert_pos: typing.Optional[typing.Tuple[styles.CoordinateType, styles.ExtentType]],
-  hdr: bool
+  hdr: bool,
+  event_handler: EventHandler
 ):
   # currently unreachable since the IMSC 1.1 should already rejects
   # tts:writingMode outside <region>.
@@ -378,7 +394,7 @@ def _validate_doc_styles(
     for element in body.dfs_iterator():
       writing_mode = element.get_style(styles.StyleProperties.WritingMode)
       if writing_mode is not None:
-        raise ValueError(
+        event_handler.error(
           f"{type(element).__name__}: tts:writingMode SHALL only be specified on <region> elements, "
           f"found '{writing_mode.value}'"
         )
@@ -389,12 +405,12 @@ def _validate_doc_styles(
     gain = region.get_style(styles.StyleProperties.LuminanceGain)
     if hdr:
       if gain is None or gain != _EXPECTED_LUMINANCE_GAIN:
-        raise ValueError(
+        event_handler.error(
           f"In HDR files, tts:luminanceGain SHALL be present and equal to '{_EXPECTED_LUMINANCE_GAIN}', "
           f"found '{gain}'."
         )
     elif gain is not None and gain != _EXPECTED_LUMINANCE_GAIN:
-      raise ValueError(
+      event_handler.error(
         f"If present in SDR files, tts:luminanceGain SHALL be present and equal to '{_EXPECTED_LUMINANCE_GAIN}', "
         f"found '{gain}'."
       )
@@ -410,30 +426,30 @@ def _validate_doc_styles(
     if is_vertical_region or is_vertical_writing:
 
       if not (is_vertical_region and is_vertical_writing):
-        raise ValueError(
+        event_handler.error(
           f"Region '{region_id}': tts:writingMode SHALL be 'tbrl' if "
           f"xml:id 'Region_Vertical_Left' or 'Region_Vertical_Right', and vice vera"
         )
 
       if expected_vert_pos is None:
-        raise ValueError(
+        event_handler.error(
           f"Region '{region_id}': aspect_ratio parameter SHALL be specified when vertical text is present."
         )
-      if (origin, extent) != expected_vert_pos:
+      elif (origin, extent) != expected_vert_pos:
         expected_origin, expected_extent = expected_vert_pos
-        raise ValueError(
+        event_handler.error(
           f"Region '{region_id}': tts:origin/tts:extent SHALL be origin='{_format_origin(expected_origin)}' "
           f"extent='{_format_extent(expected_extent)}' for the specified aspect ratio, "
           f"found origin='{_format_origin(origin)}' extent='{_format_extent(extent)}'"
         )
     else:
       if origin != _EXPECTED_ORIGIN:
-        raise ValueError(
+        event_handler.error(
           f"Region '{region_id}': tts:origin SHALL be '{_format_origin(_EXPECTED_ORIGIN)}', "
           f"found '{_format_origin(origin)}'"
         )
       if extent != _EXPECTED_EXTENT:
-        raise ValueError(
+        event_handler.error(
           f"Region '{region_id}': tts:extent SHALL be '{_format_extent(_EXPECTED_EXTENT)}', "
           f"found '{_format_extent(extent)}'"
         )
@@ -477,9 +493,13 @@ def validate(
       doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
       isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
       progress_callback(1.0)
-      imsc11_validator.validate_document(doc, isd_sequence)
+      imsc11_validator.validate_document(doc, isd_sequence, counting_handler)
     except Exception as e: # pylint: disable=broad-except
       counting_handler.error("%s", e)
+      return False
+
+    # validation stops if the document is not a valid IMSC 1.1 document
+    if counting_handler.error_count > 0:
       return False
 
     infoset = IS.Infoset.fromFile(io.BytesIO(xml_doc), counting_handler)
@@ -491,13 +511,15 @@ def validate(
     else:
       expected_vert_pos = _EXPECTED_VERT_REGION_DIMS[aspect_ratio] if aspect_ratio is not None else None
 
-    _validate_doc_styles(doc, expected_vert_pos, hdr)
+    _validate_doc_styles(doc, expected_vert_pos, hdr, counting_handler)
 
-    for _, isd in isd_sequence:
+    isd_event_handler = ContextEventHandler(counting_handler)
+    for isd_time, isd in isd_sequence:
+      isd_event_handler.set_context(make_temporal_context(isd_time))
       for isd_region in isd.iter_regions():
-        _validate_styles(isd_region, hdr)
+        _validate_styles(isd_region, hdr, isd_event_handler)
         for element in isd_region.dfs_iterator():
-          _validate_styles(element, hdr)
+          _validate_styles(element, hdr, isd_event_handler)
 
   except ValueError as ve:
     counting_handler.error("%s", ve)

@@ -622,14 +622,17 @@
     "file": "ttml2-valid-direction-p.xml",
     "result": "fail",
     "errors": [
-      "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)"
+      "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'rtlRegion': tts:extent SHALL be present on all region elements (section 8.4.2)"
     ]
   },
   {
     "file": "ttml2-valid-direction-span.xml",
     "result": "fail",
     "errors": [
-      "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)"
+      "Region 'ltrRegion': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'rtlRegion': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Regions 'ltrRegion' and 'rtlRegion' spatially overlap (at 0s)"
     ]
   },
   {
@@ -651,7 +654,9 @@
     "file": "ttml2-valid-display-align-1-region.xml",
     "result": "fail",
     "errors": [
-      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r2': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r3': tts:extent SHALL be present on all region elements (section 8.4.2)"
     ]
   },
   {
@@ -1419,7 +1424,9 @@
     "file": "ttml2-valid-opacity-region.xml",
     "result": "fail",
     "errors": [
-      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r2': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r3': tts:extent SHALL be present on all region elements (section 8.4.2)"
     ]
   },
   {
@@ -1493,7 +1500,12 @@
     "errors": [
       "Error reading style property Padding with Invalid value PaddingType(before=LengthType(value=1.1, units=<Units.c: 'c'>), end=LengthType(value=1.2, units=<Units.c: 'c'>), after=LengthType(value=1.3, units=<Units.c: 'c'>), start=LengthType(value=1.4, units=<Units.c: 'c'>)) for style property <class 'ttconv.style_properties.StyleProperties.Padding'>",
       "Error reading style property Padding with Invalid value PaddingType(before=LengthType(value=1.1, units=<Units.c: 'c'>), end=LengthType(value=1.2, units=<Units.em: 'em'>), after=LengthType(value=1.3, units=<Units.px: 'px'>), start=LengthType(value=1.4, units=<Units.pct: '%'>)) for style property <class 'ttconv.style_properties.StyleProperties.Padding'>",
-      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r2': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r3': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r4': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r5': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r6': tts:extent SHALL be present on all region elements (section 8.4.2)"
     ]
   },
   {
@@ -1775,7 +1787,13 @@
     "file": "ttml2-valid-region-timing.xml",
     "result": "fail",
     "errors": [
-      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)"
+      "Region 'r1': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r2': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r3': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r4': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r5': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r6': tts:extent SHALL be present on all region elements (section 8.4.2)",
+      "Region 'r7': tts:extent SHALL be present on all region elements (section 8.4.2)"
     ]
   },
   {

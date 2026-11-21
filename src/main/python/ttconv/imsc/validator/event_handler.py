@@ -25,7 +25,9 @@
 
 """Defines an event handler"""
 
+from fractions import Fraction
 import logging
+import typing
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,3 +50,42 @@ class EventHandler:
 
   def fatal(self, msg: str, *args):
     LOGGER.fatal(msg, *args)
+
+
+class ContextEventHandler(EventHandler):
+  '''Forwards events to `event_handler`, with the context set by
+  `set_context()`, if any, appended to each message,
+  e.g., the time of the ISD in which the event occurs'''
+
+  def __init__(self, event_handler: EventHandler):
+    self._event_handler = event_handler
+    self._context: typing.Optional[str] = None
+
+  def set_context(self, context: typing.Optional[str]):
+    '''Sets the context of subsequent events, or removes it if `context` is `None`'''
+    self._context = context
+
+  def _format(self, msg: str, args) -> str:
+    msg = msg % args if args else msg
+    return msg if self._context is None else f"{msg} ({self._context})"
+
+  def debug(self, msg: str, *args):
+    self._event_handler.debug("%s", self._format(msg, args))
+
+  def info(self, msg: str, *args):
+    self._event_handler.info("%s", self._format(msg, args))
+
+  def warn(self, msg: str, *args):
+    self._event_handler.warn("%s", self._format(msg, args))
+
+  def error(self, msg: str, *args):
+    self._event_handler.error("%s", self._format(msg, args))
+
+  def fatal(self, msg: str, *args):
+    self._event_handler.fatal("%s", self._format(msg, args))
+
+
+def make_temporal_context(time: Fraction) -> str:
+  '''Returns the context of events that occur at `time`, in seconds.'''
+  seconds = f"{float(time):.4f}".rstrip("0").rstrip(".")
+  return f"at {seconds}s"

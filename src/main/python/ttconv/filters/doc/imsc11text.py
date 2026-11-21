@@ -38,8 +38,19 @@ from dataclasses import dataclass
 from ttconv.config import ModuleConfiguration
 from ttconv.filters.document_filter import DocumentFilter
 from ttconv.imsc.designators import IMSC_11_TEXT_PROFILE_DESIGNATOR
+from ttconv.imsc.validator.event_handler import EventHandler
 from ttconv.imsc.validator.imsc11_validator import validate_document
 import ttconv.model as model
+
+
+class _RaisingEventHandler(EventHandler):
+  '''Raises a ValueError on the first error'''
+
+  def error(self, msg: str, *args):
+    raise ValueError(msg % args if args else msg)
+
+  def fatal(self, msg: str, *args):
+    raise ValueError(msg % args if args else msg)
 
 
 @dataclass
@@ -66,7 +77,7 @@ class IMSC11TextFilter(DocumentFilter):
     super().__init__(config or IMSC11TextFilterConfig())
 
   def process(self, doc: model.ContentDocument):
-    validate_document(doc)
+    validate_document(doc, event_handler=_RaisingEventHandler())
 
     # Success: add designator to content profiles
     content_profiles = doc.get_content_profiles()

@@ -39,7 +39,7 @@ import ttconv.imsc.namespaces as NS
 import ttconv.imsc.reader as imsc_reader
 from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary
 import ttconv.imsc.validator.ebuttd.attributes as attrs
-from ttconv.imsc.validator.event_handler import EventHandler
+from ttconv.imsc.validator.event_handler import ContextEventHandler, EventHandler, make_temporal_context
 import ttconv.imsc.validator.imsc11_model as imsc11
 import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 from ttconv.imsc.validator.imsc11_model import ErrorCountingEventHandler, IMSCElement, IMSCValidationContext, \
@@ -305,9 +305,13 @@ def validate(
     doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
     isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
     progress_callback(1.0)
-    imsc11_validator.validate_document(doc, isd_sequence)
+    imsc11_validator.validate_document(doc, isd_sequence, counting_handler)
   except Exception as e: # pylint: disable=broad-except
     counting_handler.error("%s", e)
+    return False
+
+  # validation stops if the document is not a valid IMSC 1.1 document
+  if counting_handler.error_count > 0:
     return False
 
   # EBU-TT-D constraints
@@ -334,7 +338,9 @@ def validate(
   # that does not have tts:overflow="visible"
   if counting_handler.error_count == 0:
     reported_regions = set()
-    for _, isd in isd_sequence:
+    isd_event_handler = ContextEventHandler(counting_handler)
+    for isd_time, isd in isd_sequence:
+      isd_event_handler.set_context(make_temporal_context(isd_time))
       for isd_region in isd.iter_regions():
         if isd_region.get_id() in reported_regions or \
           isd_region.get_style(styles.StyleProperties.Overflow) == styles.OverflowType.visible:
@@ -342,7 +348,7 @@ def validate(
         if any(e.get_style(styles.StyleProperties.WrapOption) == styles.WrapOptionType.noWrap
                for e in isd_region.dfs_iterator()):
           reported_regions.add(isd_region.get_id())
-          counting_handler.warn("Region `%s` should specify tts:overflow=\"visible\" since it contains text with "
+          isd_event_handler.warn("Region `%s` should specify tts:overflow=\"visible\" since it contains text with "
             "tts:wrapOption=\"noWrap\"", isd_region.get_id())
 
   return counting_handler.error_count == 0

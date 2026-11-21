@@ -32,7 +32,7 @@ import xml.etree.ElementTree as ET
 
 from ttconv.config import ModuleConfiguration
 import ttconv.imsc.reader as imsc_reader
-from ttconv.imsc.validator.event_handler import EventHandler
+from ttconv.imsc.validator.event_handler import ContextEventHandler, EventHandler, make_temporal_context
 import ttconv.imsc.validator.imsc11_model as imsc11_model
 from ttconv.imsc.validator.imsc11_model import ErrorCountingEventHandler
 from ttconv.isd import ISD
@@ -131,7 +131,7 @@ def _iter_lengths(value):
         yield shadow.blur_radius
 
 
-def _validate_regions(doc):
+def _validate_regions(doc, event_handler: EventHandler):
   """Validates region-specific structural constraints across the document."""
 
   has_any_origin = False
@@ -144,7 +144,7 @@ def _validate_regions(doc):
     if extent is None:
       extent = doc.get_initial_value(styles.StyleProperties.Extent)
     if extent is None:
-      raise ValueError(
+      event_handler.error(
         f"Region '{region.get_id()}': tts:extent SHALL be present "
         f"on all region elements (section 8.4.2)"
       )
@@ -153,7 +153,7 @@ def _validate_regions(doc):
     has_origin = region.has_style(styles.StyleProperties.Origin)
     has_position = region.has_style(styles.StyleProperties.Position)
     if has_origin and has_position:
-      raise ValueError(
+      event_handler.error(
         f"Region '{region.get_id()}': tts:origin and tts:position "
         f"SHALL NOT both be present (section 8.4.7)"
       )
@@ -165,7 +165,7 @@ def _validate_regions(doc):
       if origin is not None:
         for length in (origin.x, origin.y):
           if length.units not in (styles.LengthType.Units.pct, styles.LengthType.Units.px):
-            raise ValueError(
+            event_handler.error(
               f"Region '{region.get_id()}': tts:origin SHALL use px or % "
               f"units only, found '{length.units}' (section 8.4.7)"
             )
@@ -175,23 +175,24 @@ def _validate_regions(doc):
 
   # Section 8.4.7/8.4.8: document-wide mutual exclusion
   if has_any_origin and has_any_position:
-    raise ValueError(
+    event_handler.error(
       "tts:origin and tts:position SHALL NOT both be present "
       "in a Document Instance (section 8.4.7/8.4.8)"
     )
 
 
-def _validate_element_styles(element):
+def _validate_element_styles(element, event_handler: EventHandler):
   """Validates specified styles on a ContentDocument element."""
 
   if not isinstance(element, _ALLOWED_ELEMENT_TYPES):
-    raise ValueError(f"Unsupported element type: {type(element).__name__}")
+    event_handler.error(f"Unsupported element type: {type(element).__name__}")
+    return
 
   elem_name = type(element).__name__
 
   for style_prop in element.iter_styles():
     if style_prop not in _IMSC_11_TEXT_STYLE_PROPS:
-      raise ValueError(
+      event_handler.error(
         f"{elem_name}: style property "
         f"'{style_prop.__name__}' is not in the IMSC 1.1 Text Profile"
       )
@@ -201,7 +202,7 @@ def _validate_element_styles(element):
     # Section 8.4.12: linePadding SHALL use c units only
     if style_prop is styles.StyleProperties.LinePadding \
         and value.units != styles.LengthType.Units.c:
-      raise ValueError(
+      event_handler.error(
         f"{elem_name}: LinePadding SHALL use c units only, "
         f"found '{value.units}' (section 8.4.12)"
       )
@@ -210,7 +211,7 @@ def _validate_element_styles(element):
     if style_prop is not styles.StyleProperties.LinePadding:
       for length in _iter_lengths(value):
         if length.units == styles.LengthType.Units.c:
-          raise ValueError(
+          event_handler.error(
             f"{elem_name}: {style_prop.__name__} uses 'c' unit, "
             f"only allowed on LinePadding (section 7.2.18)"
           )
@@ -219,7 +220,7 @@ def _validate_element_styles(element):
     if style_prop is styles.StyleProperties.TextShadow \
         and value is not styles.SpecialValues.none \
         and len(value.shadows) > 4:
-      raise ValueError(
+      event_handler.error(
         f"{elem_name}: TextShadow has {len(value.shadows)} shadows, "
         f"maximum 4 allowed (section 8.4.11)"
       )
@@ -260,7 +261,7 @@ def _regions_overlap(r1: ISD.Region, r2: ISD.Region) -> bool:
   return not (right1 <= left2 or right2 <= left1 or bottom1 <= top2 or bottom2 <= top1)
 
 
-def _validate_isd_element(element):
+def _validate_isd_element(element, event_handler: EventHandler):
   """Validates resolved style values on an ISD element.
 
   Checks are performed on fully resolved styles (inherited, initial,
@@ -272,7 +273,7 @@ def _validate_isd_element(element):
   ts_value = element.get_style(styles.StyleProperties.TextShadow)
   if ts_value is not None and ts_value is not styles.SpecialValues.none:
     if len(ts_value.shadows) > 4:
-      raise ValueError(
+      event_handler.error(
         f"{elem_name}: TextShadow has {len(ts_value.shadows)} "
         f"shadows, maximum 4 allowed (section 8.4.11)"
       )
@@ -282,7 +283,7 @@ def _validate_isd_element(element):
   ruby_align = element.get_style(styles.StyleProperties.RubyAlign)
   if ruby_align is not None and \
       ruby_align not in (styles.RubyAlignType.center, styles.RubyAlignType.spaceAround):
-    raise ValueError(
+    event_handler.error(
       f"{elem_name}: RubyAlign value '{ruby_align}' not allowed, "
       f"must be center or spaceAround (section 8.4.9)"
     )
@@ -294,7 +295,7 @@ def _validate_isd_element(element):
     if font_size is not None and isinstance(font_size, styles.LengthType) \
         and text_outline.thickness.units == font_size.units:
       if text_outline.thickness.value > 0.1 * font_size.value:
-        raise ValueError(
+        event_handler.error(
           f"{elem_name}: TextOutline thickness ({text_outline.thickness.value}) "
           f"exceeds 10% of fontSize ({font_size.value}) (section 8.4.10)"
         )
@@ -302,7 +303,8 @@ def _validate_isd_element(element):
 
 def validate_document(
   doc: model.ContentDocument,
-  isd_sequence: typing.Optional[IsdSequence] = None
+  isd_sequence: typing.Optional[IsdSequence] = None,
+  event_handler: typing.Optional[EventHandler] = None
 ):
   """Validates a ContentDocument against IMSC 1.1 Text Profile constraints
   per https://www.w3.org/TR/ttml-imsc1.1/ sections 6, 7.12, and 8.4.
@@ -310,21 +312,24 @@ def validate_document(
   `isd_sequence`, if provided, must be the result of
   `ISD.generate_isd_sequence(doc)`; otherwise it is generated.
 
-  Raises ValueError on the first violation found.
+  Each violation is reported to `event_handler`, with the time of the ISD in which it is found, if any.
   """
 
+  if event_handler is None:
+    event_handler = EventHandler()
+
   # ContentDocument structural checks on regions
-  _validate_regions(doc)
+  _validate_regions(doc, event_handler)
 
   # ContentDocument specified-style checks on regions
   for region in doc.iter_regions():
-    _validate_element_styles(region)
+    _validate_element_styles(region, event_handler)
 
   # ContentDocument specified-style checks on body elements
   body = doc.get_body()
   if body is not None:
     for element in body.dfs_iterator():
-      _validate_element_styles(element)
+      _validate_element_styles(element, event_handler)
 
   # Section 7.12.6: px requires tts:extent on tt is not implementable at filter
   # level because the model stores tts:extent on tt as px_resolution (with a
@@ -338,11 +343,14 @@ def validate_document(
   # ISD-based resolved style checks
   if isd_sequence is None:
     isd_sequence = ISD.generate_isd_sequence(doc)
-  for _, isd in isd_sequence:
+  isd_event_handler = ContextEventHandler(event_handler)
+  for isd_time, isd in isd_sequence:
+    isd_event_handler.set_context(make_temporal_context(isd_time))
+
     # Section 7.12.1.3: no more than 4 regions per ISD
     regions = list(isd.iter_regions())
     if len(regions) > 4:
-      raise ValueError(
+      isd_event_handler.error(
         f"ISD has {len(regions)} regions, "
         f"maximum 4 allowed"
       )
@@ -350,14 +358,14 @@ def validate_document(
     for i in range(0, len(regions)):
       for j in range(i + 1, len(regions)):
         if _regions_overlap(regions[i], regions[j]):
-          raise ValueError(
+          isd_event_handler.error(
             f"Regions '{regions[i].get_id()}' and '{regions[j].get_id()}' "
             f"spatially overlap"
           )
 
     for isd_region in regions:
       for element in isd_region.dfs_iterator():
-        _validate_isd_element(element)
+        _validate_isd_element(element, isd_event_handler)
 
 
 def validate(
@@ -381,7 +389,7 @@ def validate(
     doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
     isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
     progress_callback(1.0)
-    validate_document(doc, isd_sequence)
+    validate_document(doc, isd_sequence, counting_handler)
   except Exception as e: # pylint: disable=broad-except
     counting_handler.error("%s", e)
 

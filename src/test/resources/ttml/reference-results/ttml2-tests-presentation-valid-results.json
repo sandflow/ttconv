@@ -763,7 +763,8 @@
     "file": "ttml2-prstn-length-root-container-relative-imsc11-1.xml",
     "result": "fail",
     "errors": [
-      "Region 'r1': tts:origin SHALL use px or % units only, found 'Units.rw' (section 8.4.7)"
+      "Region 'r1': tts:origin SHALL use px or % units only, found 'Units.rw' (section 8.4.7)",
+      "Region 'r1': tts:origin SHALL use px or % units only, found 'Units.rh' (section 8.4.7)"
     ]
   },
   {
