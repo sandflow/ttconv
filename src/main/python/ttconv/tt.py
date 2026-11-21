@@ -86,7 +86,7 @@ class ProgressBar:
     stream: typing.Optional[typing.TextIO] = None
   ):
     '''The progress bar is displayed unless disabled by `general_config.progress_bar`'''
-    self.label = label
+    self._label = label
     if stream is not None:
       self.stream = stream
     else:
@@ -106,6 +106,10 @@ class ProgressBar:
   def __exit__(self, *_exc_info):
     self.close()
 
+  def set_label(self, label: str):
+    '''Sets the label that precedes the progress bar, which is displayed at the next `update()`'''
+    self._label = label
+
   def update(self, fraction: float):
     '''Displays `fraction`, between 0 and 1, of the operation as completed'''
     if not self.enabled:
@@ -113,8 +117,11 @@ class ProgressBar:
     ProgressBar.active = self
     fraction = min(1.0, max(0.0, float(fraction)))
     filled = int(self._LENGTH * fraction)
-    self._line = f"{self.label} |{'█' * filled}{'-' * (self._LENGTH - filled)}| {100 * fraction:3.0f}%"
-    self.stream.write("\r" + self._line)
+    line = f"{self._label} |{'█' * filled}{'-' * (self._LENGTH - filled)}| {100 * fraction:3.0f}%"
+    # erase what remains of the previous line, e.g., if the label is shorter
+    padding = " " * max(0, len(self._line) - len(line))
+    self._line = line
+    self.stream.write("\r" + line + padding + "\b" * len(padding))
     self.stream.flush()
 
   def clear(self):
@@ -276,8 +283,16 @@ def convert(args):
   if general_config is not None and general_config.log_level is not None:
     LOGGER.setLevel(general_config.log_level)
 
-  read_progress = ProgressBar("Reading:", general_config)
-  write_progress = ProgressBar("Writing:", general_config)
+  # reading and writing each account for half of the progress of the conversion
+  progress = ProgressBar("Reading:", general_config)
+
+  def read_progress(fraction: float):
+    progress.set_label("Reading:")
+    progress.update(0.5 * fraction)
+
+  def write_progress(fraction: float):
+    progress.set_label("Writing:")
+    progress.update(0.5 + 0.5 * fraction)
 
   LOGGER.info("Input file is %s", inputfile)
   LOGGER.info("Output file is %s", outputfile)
@@ -297,7 +312,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = imsc_reader.to_model(tree, read_progress.update)
+    model = imsc_reader.to_model(tree, read_progress)
 
   elif reader_type is FileTypes.SCC:
     file_as_str = Path(inputfile).read_text()
@@ -310,7 +325,7 @@ def convert(args):
     #
     # Pass the parsed xml to the reader
     #
-    model = scc_reader.to_model(file_as_str, reader_config, read_progress.update)
+    model = scc_reader.to_model(file_as_str, reader_config, read_progress)
 
   elif reader_type is FileTypes.STL:
     #
@@ -322,7 +337,7 @@ def convert(args):
     # Open the file and pass it to the reader
     #
     with open(inputfile, "rb") as f:
-      model = stl_reader.to_model(f, reader_config, read_progress.update)
+      model = stl_reader.to_model(f, reader_config, read_progress)
 
   elif reader_type is FileTypes.SRT:
     #
@@ -334,7 +349,7 @@ def convert(args):
     # Open the file and pass it to the reader
     #
     with open(inputfile, "r", encoding="utf-8") as f:
-      model = srt_reader.to_model(f, reader_config, read_progress.update)
+      model = srt_reader.to_model(f, reader_config, read_progress)
 
   elif reader_type is FileTypes.VTT:
 
@@ -342,7 +357,7 @@ def convert(args):
     # Open the file and pass it to the reader
     #
     with open(inputfile, "r", encoding="utf-8") as f:
-      model = vtt_reader.to_model(f, None, read_progress.update)
+      model = vtt_reader.to_model(f, None, read_progress)
 
   else:
     if args.itype is not None:
@@ -351,8 +366,6 @@ def convert(args):
       exit_str = f'Input file {args.input} is not supported'
 
     die(exit_str)
-
-  read_progress.close()
 
   #
   # handle the case where the input file could not be read into the model
@@ -397,7 +410,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    tree_from_model = imsc_writer.from_model(model, writer_config, write_progress.update)
+    tree_from_model = imsc_writer.from_model(model, writer_config, write_progress)
 
     #
     # Write out the converted file
@@ -413,7 +426,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    srt_document = srt_writer.from_model(model, writer_config, write_progress.update)
+    srt_document = srt_writer.from_model(model, writer_config, write_progress)
 
     #
     # Write out the converted file
@@ -430,7 +443,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    vtt_document = vtt_writer.from_model(model, writer_config, write_progress.update)
+    vtt_document = vtt_writer.from_model(model, writer_config, write_progress)
 
     #
     # Write out the converted file
@@ -447,7 +460,7 @@ def convert(args):
     #
     # Construct and configure the writer
     #
-    scc_document = scc_writer.from_model(model, writer_config, write_progress.update)
+    scc_document = scc_writer.from_model(model, writer_config, write_progress)
 
     #
     # Write out the converted file
@@ -464,7 +477,7 @@ def convert(args):
 
     die(exit_str)
 
-  write_progress.close()
+  progress.close()
 
 
 class ValidateModels(Enum):

@@ -134,6 +134,21 @@ class ProgressBarTest(unittest.TestCase):
       # the progress bar is erased on completion
       "\r" + " " * len(bar) + "\r")
 
+  def test_label_can_change(self):
+    console = _Terminal()
+    with tt.ProgressBar("Reading:", stream=console) as progress_bar:
+      progress_bar.update(0)
+      progress_bar.set_label("Wr:")
+      progress_bar.update(0)
+    first = "Reading: |" + "-" * 50 + "|   0%"
+    second = "Wr: |" + "-" * 50 + "|   0%"
+    padding = len(first) - len(second)
+    self.assertEqual(console.getvalue(),
+      "\r" + first +
+      # the remainder of the longer, previous line is erased
+      "\r" + second + " " * padding + "\b" * padding +
+      "\r" + " " * len(second) + "\r")
+
   def test_nothing_written_on_close_if_never_updated(self):
     console = _Terminal()
     with tt.ProgressBar("Reading:", stream=console):
