@@ -29,7 +29,8 @@ import json
 import unittest
 from fractions import Fraction
 
-from ttconv.imsc.validator.nbcu053.model import AspectRatio, PermittedFrameRate, NBCU053ValidatorConfiguration, validate
+from ttconv.imsc.validator.nbcu053.model import AspectRatio, PermittedFrameRate, NBCU053ValidatorConfiguration, validate, \
+  _is_character_based_lang
 
 class FrameRateTests(unittest.TestCase):
 
@@ -46,6 +47,20 @@ class FrameRateTests(unittest.TestCase):
       with self.subTest(bad):
         with self.assertRaises(ValueError):
           PermittedFrameRate.from_text(bad)
+
+class CharacterBasedLanguageTests(unittest.TestCase):
+
+  def test_character_based_languages(self):
+    # Cantonese (Hong Kong), Japanese, Korean, Arabic, Trad Mandarin (Taiwan), Thai
+    for lang in ("ja", "ja-JP", "ko", "ar", "ar-EG", "th", "yue", "yue-HK", "zh", "zh-HK", "zh-TW", "zh-Hant", "zh-Hant-TW",
+                 "zh-CN", "zh-Hans", "cmn-Hant-TW", "zh-yue", "ZH-hant"):
+      with self.subTest(lang):
+        self.assertTrue(_is_character_based_lang(lang))
+
+  def test_other_languages(self):
+    for lang in ("en", "ca", "eu", "sk", "he", "hi", "", None):
+      with self.subTest(lang):
+        self.assertFalse(_is_character_based_lang(lang))
 
 class NBCU053ValidatorConfigurationTests(unittest.TestCase):
 

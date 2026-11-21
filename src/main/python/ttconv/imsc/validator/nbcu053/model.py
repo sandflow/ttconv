@@ -44,10 +44,10 @@ import ttconv.model as model
 import ttconv.style_properties as styles
 
 from ttconv.imsc.validator.event_handler import ContextEventHandler, EventHandler, make_temporal_context
+from ttconv.imsc.validator.lang_helper import get_primary_language_subtag
 import ttconv.imsc.validator.imsc11_model as imsc11_model
 import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 import ttconv.imsc.validator.infoset as IS
-from ttconv.imsc.validator.lang_helper import get_primary_language_subtag
 import ttconv.imsc.validator.other_attributes as other_attrs
 
 class PermittedFrameRate(Enum):
@@ -265,56 +265,19 @@ _EXPECTED_VERT_REGION_DIMS = {
   AspectRatio.RATIO_1_00: (_make_pct_origin(10, 10), _make_pct_extent(80, 80)),
 }
 
-_NON_CHARACTER_BASED_LANGUAGES = frozenset([
-    # --- Latin Script ---
-    "cs",  # Czech
-    "da",  # Danish
-    "de",  # German
-    "en",  # English
-    "es",  # Spanish
-    "et",  # Estonian
-    "fi",  # Finnish
-    "fr",  # French
-    "hr",  # Croatian
-    "hu",  # Hungarian
-    "id",  # Indonesian
-    "is",  # Icelandic
-    "it",  # Italian
-    "lt",  # Lithuanian
-    "lv",  # Latvian
-    "nl",  # Dutch
-    "no",  # Norwegian
-    "pl",  # Polish
-    "pt",  # Portuguese
-    "ro",  # Romanian
-    "sk",  # Slovak
-    "sl",  # Slovene
-    "so",  # Somali
-    "sv",  # Swedish
-    "sw",  # Swahili
-    "tl",  # Tagalog
-    "tr",  # Turkish
-    "vi",  # Vietnamese
 
-    # --- Cyrillic Script ---
-    "be",  # Belarusian
-    "bg",  # Bulgarian
-    "kk",  # Kazakh
-    "ky",  # Kyrgyz
-    "mk",  # Macedonian
-    "mn",  # Mongolian
-    "ru",  # Russian
-    "sr",  # Serbian (Cyrillic)
-    "tg",  # Tajik
-    "uk",  # Ukrainian
-
-    # --- Greek Script ---
-    "el",  # Modern Greek
+_CHARACTER_BASED_LANGUAGES = frozenset([
+  "ja",   # Japanese
+  "ko",   # Korean
+  "ar",   # Arabic
+  "th",   # Thai
+  "zh",   # Chinese, e.g., Mandarin and Cantonese
+  "cmn",  # Mandarin
+  "yue",  # Cantonese
 ])
 
 def _is_character_based_lang(lang: Optional[str]) -> bool:
-  tag = get_primary_language_subtag(lang) if lang is not None else None
-  return tag not in _NON_CHARACTER_BASED_LANGUAGES
+  return lang is not None and get_primary_language_subtag(lang) in _CHARACTER_BASED_LANGUAGES
 
 def _lengths_approx_equal(a: styles.LengthType, b: styles.LengthType) -> bool:
   if a.units != b.units:
