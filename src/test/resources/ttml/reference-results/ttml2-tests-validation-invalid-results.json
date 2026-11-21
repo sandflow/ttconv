@@ -601,7 +601,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:disparity value (\t\n\r )",
-      "Attribute disparity is not applicable to <body> (line 8)"
+      "Attribute disparity is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -609,7 +609,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:disparity value ()",
-      "Attribute disparity is not applicable to <body> (line 8)"
+      "Attribute disparity is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -617,7 +617,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:disparity value (100px 200px)",
-      "Attribute disparity is not applicable to <body> (line 8)"
+      "Attribute disparity is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -625,14 +625,16 @@
     "result": "fail",
     "errors": [
       "Bad tts:disparity value (364.4smoot)",
-      "Attribute disparity is not applicable to <body> (line 8)"
+      "Attribute disparity is prohibited on <body> (line 8)"
     ]
   },
   {
     "file": "ttml2-invld-bad-display-align-all-space.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:displayAlign value (\t\n\r )",
+      "Bad tts:displayAlign value (\t\n\r )"
+    ],
+    "warnings": [
       "Attribute displayAlign is not applicable to <body> (line 8)"
     ]
   },
@@ -640,7 +642,9 @@
     "file": "ttml2-invld-bad-display-align-empty.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:displayAlign value ()",
+      "Bad tts:displayAlign value ()"
+    ],
+    "warnings": [
       "Attribute displayAlign is not applicable to <body> (line 8)"
     ]
   },
@@ -648,7 +652,9 @@
     "file": "ttml2-invld-bad-display-align-unknown-keyword.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:displayAlign value (unknown)",
+      "Bad tts:displayAlign value (unknown)"
+    ],
+    "warnings": [
       "Attribute displayAlign is not applicable to <body> (line 8)"
     ]
   },

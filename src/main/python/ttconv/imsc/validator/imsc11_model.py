@@ -30,9 +30,7 @@ from dataclasses import dataclass, field
 import io
 from typing import List
 import typing
-import xml.etree.ElementTree as ET
 
-from ttconv.config import ModuleConfiguration
 from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.namespaces
@@ -45,8 +43,6 @@ import ttconv.imsc.namespaces as NS
 from ttconv.imsc.validator.ttml_profile_helper import is_ttml2_feature_ns, is_ttml2_feature_designation, is_ttml2_extension_designation
 from ttconv.imsc.validator.uri_helper import is_absolute_uri, urijoin
 
-import ttconv.imsc.reader as imsc_reader
-from ttconv.filters.doc.imsc11text import IMSC11TextFilter
 
 class ErrorCountingEventHandler(EventHandler):
   '''A facade `EventHandler` to count the number of error/fatal events received.'''
@@ -183,6 +179,15 @@ NON_FOREIGN_NAMESPACES = set([
   NS.XLINK
 ])
 
+CONTENT_PROHIBITED_STYLES = AttributeVocabulary(
+  style_attrs.Disparity,
+  style_attrs.Extent,
+  style_attrs.Opacity,
+  style_attrs.Origin,
+  style_attrs.Padding,
+  style_attrs.Position,
+)
+
 class IMSCElement(Rule):
 
   qname: NS.QName
@@ -190,6 +195,20 @@ class IMSCElement(Rule):
   optional_attributes = AttributeVocabulary()
   required_attributes = AttributeVocabulary()
   applicable_styles = AttributeVocabulary()
+  prohibited_styles = AttributeVocabulary()
+
+  def check_prohibited_style(self, style: NS.QName, e: IS.Element, ctx: IMSCValidationContext, description: str) -> bool:
+    if style not in self.prohibited_styles:
+      return False
+    ctx.event_handler.error("%s %s is prohibited on <%s> (line %s)",
+      description, style.local_name, e.get_name().qname.local_name, e.get_line_number())
+    return True
+
+  def check_applicable_style(self, style: NS.QName, e: IS.Element, ctx: IMSCValidationContext, description: str):
+    if self.applicable_styles is not None and style not in self.applicable_styles:
+      ctx.event_handler.warn("%s %s is not applicable to <%s> (line %s)", description, style.local_name,
+        e.get_name().qname.local_name, e.get_line_number())
+  
   non_foreign_namespaces: typing.Optional[typing.Set[typing.Optional[str]]] = NON_FOREIGN_NAMESPACES
   # the namespaces of attributes that are validated, if different from `non_foreign_namespaces`
   non_foreign_attribute_namespaces: typing.Optional[typing.Set[typing.Optional[str]]] = None
@@ -221,10 +240,9 @@ class IMSCElement(Rule):
 
       if e.get_name().qname not in (Style.qname, Set.qname, Initial.qname) and \
             hasattr(attr_model, "is_inherited") and \
-            not attr_model.is_inherited \
-            and self.applicable_styles is not None and \
-            attr.name.qname not in self.applicable_styles:
-          ctx.event_handler.error("Attribute %s is not applicable to <%s> (line %s)", attr.name.qname.local_name, e.get_name().qname.local_name, e.get_line_number())
+            not attr_model.is_inherited:
+        if not self.check_prohibited_style(attr.name.qname, e, ctx, "Attribute"):
+          self.check_applicable_style(attr.name.qname, e, ctx, "Attribute")
 
     # check for required attributes
     for req_attr in self.required_attributes:
@@ -242,8 +260,9 @@ class IMSCElement(Rule):
               attr_model = STYLE_ATTRIBUTES.get(ref_style)
               if attr_model is None or not hasattr(attr_model, "is_inherited"):
                 continue
-              if attr_model.is_inherited is False and self.applicable_styles is not None and ref_style not in self.applicable_styles:
-                ctx.event_handler.error("Referential style %s is not applicable to <%s> (line %s)", ref_style.local_name, e.get_name().qname.local_name, e.get_line_number())
+              if attr_model.is_inherited is False:
+                if not self.check_prohibited_style(ref_style, e, ctx, "Referential style"):
+                  self.check_applicable_style(ref_style, e, ctx, "Referential style")
 
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     if not hasattr(self, "content_model"):
@@ -758,11 +777,10 @@ class Set(IMSCElement):
       return
     for attr in e.get_attributes():
       style_model = STYLE_ATTRIBUTES.get(attr.name.qname)
-      if hasattr(style_model, "is_inherited") and \
-            not style_model.is_inherited \
-            and parent_model.applicable_styles is not None and \
-            attr.name.qname not in parent_model.applicable_styles:
-          ctx.event_handler.error("Attribute %s is not applicable to %s", attr.name.qname, parent_model.qname)
+      if hasattr(style_model, "is_inherited") and not style_model.is_inherited:
+        parent = ctx.element_stack[-1]
+        if not parent_model.check_prohibited_style(attr.name.qname, parent, ctx, "Animated style"):
+          parent_model.check_applicable_style(attr.name.qname, parent, ctx, "Animated style")
 
 Region.content_model = ZeroOrMoreRule(AnyRule(Metadata(), Style(), Set(), ForeignElement()))
 
@@ -784,6 +802,7 @@ class Br(IMSCElement):
   applicable_styles = AttributeVocabulary()
 
 class Span(IMSCElement):
+  prohibited_styles = CONTENT_PROHIBITED_STYLES
   """A `span` element. Subclasses represent specific ruby roles, distinguished
   by the specified value of tts:ruby, per TTML2, 10.2.35."""
 
@@ -909,6 +928,7 @@ Span.content_model = SequenceRule(
 
 
 class P(IMSCElement):
+  prohibited_styles = CONTENT_PROHIBITED_STYLES
   qname = ttconv.imsc.namespaces.QName(NS.TTML, "p")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
@@ -948,6 +968,7 @@ class P(IMSCElement):
 
 
 class Div(IMSCElement):
+  prohibited_styles = CONTENT_PROHIBITED_STYLES
   qname = ttconv.imsc.namespaces.QName(NS.TTML, "div")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
@@ -972,6 +993,7 @@ Div.content_model = SequenceRule(
 )
 
 class Body(IMSCElement):
+  prohibited_styles = CONTENT_PROHIBITED_STYLES
   qname = ttconv.imsc.namespaces.QName(NS.TTML, "body")
   optional_attributes = AttributeVocabulary(
     other_attrs.XMLIDAttribute,
@@ -1025,33 +1047,18 @@ class TT(IMSCElement):
       if target_id not in ctx.sig_agent_ids:
         ctx.event_handler.error("No significant agent with xml:id '%s' exists", target_id)
 
-def validate(
-  f: typing.BinaryIO,
-  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
-  event_handler: typing.Optional[EventHandler] = None
-) -> bool:
-  '''Validates `f` and returns whether no ERROR-or-above records were logged.'''
+def validate_static_model(xml_doc: bytes, event_handler: typing.Optional[EventHandler] = None) -> bool:
+  '''Validates `data` against the IMSC 1.1 document structure and attribute constraints, and returns whether no
+  ERROR-or-above records were logged.'''
   counting_handler = ErrorCountingEventHandler(event_handler)
 
-  data = f.read()
-
-  infoset = IS.Infoset.fromFile(io.BytesIO(data), counting_handler)
+  infoset = IS.Infoset.fromFile(io.BytesIO(xml_doc), counting_handler)
   if infoset is None:
     return False
 
   ctx = IMSCValidationContext(namespaces=infoset.namespaces, event_handler=counting_handler)
 
   if not TT().match(NodeSequence([infoset.root]), ctx):
-    ctx.event_handler.error("Root element must be tt")
-    return ctx.event_handler.error_count == 0
+    counting_handler.error("Root element must be tt")
 
-  # ttconv's IMSC 1.1 Text Profile filter assumes a valid IMSC 1.1 file
-  if ctx.event_handler.error_count == 0:
-    try:
-      doc = imsc_reader.to_model(ET.parse(io.BytesIO(data)))
-      if doc is not None:
-        IMSC11TextFilter().process(doc)
-    except Exception as e: # pylint: disable=broad-except
-      ctx.event_handler.error("%s", e)
-
-  return ctx.event_handler.error_count == 0
+  return counting_handler.error_count == 0

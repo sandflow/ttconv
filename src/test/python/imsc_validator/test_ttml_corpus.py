@@ -32,7 +32,7 @@ import os
 import json
 import logging
 
-from ttconv.imsc.validator.imsc11_model import validate
+from ttconv.imsc.validator.imsc11_validator import validate
 
 _CORPUS_ROOT = "src/test/resources/ttml"
 _REFERENCE_RESULTS_DIR = "src/test/resources/ttml/reference-results"

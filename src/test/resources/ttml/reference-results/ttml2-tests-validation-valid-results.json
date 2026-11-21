@@ -662,10 +662,12 @@
     "file": "ttml2-valid-display-align-2-block.xml",
     "result": "fail",
     "errors": [
+      "div contents does not match (metadata* set* (div | p)*) (line 9): unexpected <image> (line 11)"
+    ],
+    "warnings": [
       "Attribute displayAlign is not applicable to <body> (line 8)",
       "Attribute displayAlign is not applicable to <div> (line 9)",
-      "Attribute displayAlign is not applicable to <p> (line 10)",
-      "div contents does not match (metadata* set* (div | p)*) (line 9): unexpected <image> (line 11)"
+      "Attribute displayAlign is not applicable to <p> (line 10)"
     ]
   },
   {
@@ -1371,19 +1373,19 @@
     "file": "ttml2-valid-opacity-block.xml",
     "result": "fail",
     "errors": [
-      "Attribute opacity is not applicable to <body> (line 8)",
-      "Attribute opacity is not applicable to <div> (line 9)",
-      "Attribute opacity is not applicable to <p> (line 10)",
-      "Attribute opacity is not applicable to <p> (line 11)",
-      "Attribute opacity is not applicable to <p> (line 12)",
-      "Attribute opacity is not applicable to <div> (line 14)",
-      "Attribute opacity is not applicable to <p> (line 15)",
-      "Attribute opacity is not applicable to <p> (line 16)",
-      "Attribute opacity is not applicable to <p> (line 17)",
-      "Attribute opacity is not applicable to <div> (line 19)",
-      "Attribute opacity is not applicable to <p> (line 20)",
-      "Attribute opacity is not applicable to <p> (line 21)",
-      "Attribute opacity is not applicable to <p> (line 22)"
+      "Attribute opacity is prohibited on <body> (line 8)",
+      "Attribute opacity is prohibited on <div> (line 9)",
+      "Attribute opacity is prohibited on <p> (line 10)",
+      "Attribute opacity is prohibited on <p> (line 11)",
+      "Attribute opacity is prohibited on <p> (line 12)",
+      "Attribute opacity is prohibited on <div> (line 14)",
+      "Attribute opacity is prohibited on <p> (line 15)",
+      "Attribute opacity is prohibited on <p> (line 16)",
+      "Attribute opacity is prohibited on <p> (line 17)",
+      "Attribute opacity is prohibited on <div> (line 19)",
+      "Attribute opacity is prohibited on <p> (line 20)",
+      "Attribute opacity is prohibited on <p> (line 21)",
+      "Attribute opacity is prohibited on <p> (line 22)"
     ]
   },
   {
@@ -1404,9 +1406,9 @@
     "file": "ttml2-valid-opacity-inline.xml",
     "result": "fail",
     "errors": [
-      "Attribute opacity is not applicable to <span> (line 10)",
-      "Attribute opacity is not applicable to <span> (line 11)",
-      "Attribute opacity is not applicable to <span> (line 12)"
+      "Attribute opacity is prohibited on <span> (line 10)",
+      "Attribute opacity is prohibited on <span> (line 11)",
+      "Attribute opacity is prohibited on <span> (line 12)"
     ]
   },
   {
@@ -1428,61 +1430,61 @@
     "file": "ttml2-valid-padding-block.xml",
     "result": "fail",
     "errors": [
-      "Attribute padding is not applicable to <body> (line 10)",
-      "Attribute padding is not applicable to <div> (line 11)",
-      "Attribute padding is not applicable to <p> (line 12)",
-      "Attribute padding is not applicable to <p> (line 13)",
-      "Attribute padding is not applicable to <p> (line 14)",
-      "Attribute padding is not applicable to <p> (line 15)",
-      "Attribute padding is not applicable to <p> (line 16)",
-      "Attribute padding is not applicable to <p> (line 17)",
-      "Attribute padding is not applicable to <div> (line 19)",
-      "Attribute padding is not applicable to <p> (line 20)",
-      "Attribute padding is not applicable to <p> (line 21)",
-      "Attribute padding is not applicable to <p> (line 22)",
-      "Attribute padding is not applicable to <p> (line 23)",
-      "Attribute padding is not applicable to <p> (line 24)",
-      "Attribute padding is not applicable to <p> (line 25)",
-      "Attribute padding is not applicable to <div> (line 27)",
-      "Attribute padding is not applicable to <p> (line 28)",
-      "Attribute padding is not applicable to <p> (line 29)",
-      "Attribute padding is not applicable to <p> (line 30)",
-      "Attribute padding is not applicable to <p> (line 31)",
-      "Attribute padding is not applicable to <p> (line 32)",
-      "Attribute padding is not applicable to <p> (line 33)",
-      "Attribute padding is not applicable to <div> (line 35)",
-      "Attribute padding is not applicable to <p> (line 36)",
-      "Attribute padding is not applicable to <p> (line 37)",
-      "Attribute padding is not applicable to <p> (line 38)",
-      "Attribute padding is not applicable to <p> (line 39)",
-      "Attribute padding is not applicable to <p> (line 40)",
-      "Attribute padding is not applicable to <p> (line 41)",
-      "Attribute padding is not applicable to <div> (line 43)",
-      "Attribute padding is not applicable to <p> (line 44)",
-      "Attribute padding is not applicable to <p> (line 45)",
-      "Attribute padding is not applicable to <p> (line 46)",
-      "Attribute padding is not applicable to <p> (line 47)",
-      "Attribute padding is not applicable to <p> (line 48)",
-      "Attribute padding is not applicable to <p> (line 49)",
-      "Attribute padding is not applicable to <div> (line 51)",
-      "Attribute padding is not applicable to <p> (line 52)",
-      "Attribute padding is not applicable to <p> (line 53)",
-      "Attribute padding is not applicable to <p> (line 54)",
-      "Attribute padding is not applicable to <p> (line 55)",
-      "Attribute padding is not applicable to <p> (line 56)",
-      "Attribute padding is not applicable to <p> (line 57)"
+      "Attribute padding is prohibited on <body> (line 10)",
+      "Attribute padding is prohibited on <div> (line 11)",
+      "Attribute padding is prohibited on <p> (line 12)",
+      "Attribute padding is prohibited on <p> (line 13)",
+      "Attribute padding is prohibited on <p> (line 14)",
+      "Attribute padding is prohibited on <p> (line 15)",
+      "Attribute padding is prohibited on <p> (line 16)",
+      "Attribute padding is prohibited on <p> (line 17)",
+      "Attribute padding is prohibited on <div> (line 19)",
+      "Attribute padding is prohibited on <p> (line 20)",
+      "Attribute padding is prohibited on <p> (line 21)",
+      "Attribute padding is prohibited on <p> (line 22)",
+      "Attribute padding is prohibited on <p> (line 23)",
+      "Attribute padding is prohibited on <p> (line 24)",
+      "Attribute padding is prohibited on <p> (line 25)",
+      "Attribute padding is prohibited on <div> (line 27)",
+      "Attribute padding is prohibited on <p> (line 28)",
+      "Attribute padding is prohibited on <p> (line 29)",
+      "Attribute padding is prohibited on <p> (line 30)",
+      "Attribute padding is prohibited on <p> (line 31)",
+      "Attribute padding is prohibited on <p> (line 32)",
+      "Attribute padding is prohibited on <p> (line 33)",
+      "Attribute padding is prohibited on <div> (line 35)",
+      "Attribute padding is prohibited on <p> (line 36)",
+      "Attribute padding is prohibited on <p> (line 37)",
+      "Attribute padding is prohibited on <p> (line 38)",
+      "Attribute padding is prohibited on <p> (line 39)",
+      "Attribute padding is prohibited on <p> (line 40)",
+      "Attribute padding is prohibited on <p> (line 41)",
+      "Attribute padding is prohibited on <div> (line 43)",
+      "Attribute padding is prohibited on <p> (line 44)",
+      "Attribute padding is prohibited on <p> (line 45)",
+      "Attribute padding is prohibited on <p> (line 46)",
+      "Attribute padding is prohibited on <p> (line 47)",
+      "Attribute padding is prohibited on <p> (line 48)",
+      "Attribute padding is prohibited on <p> (line 49)",
+      "Attribute padding is prohibited on <div> (line 51)",
+      "Attribute padding is prohibited on <p> (line 52)",
+      "Attribute padding is prohibited on <p> (line 53)",
+      "Attribute padding is prohibited on <p> (line 54)",
+      "Attribute padding is prohibited on <p> (line 55)",
+      "Attribute padding is prohibited on <p> (line 56)",
+      "Attribute padding is prohibited on <p> (line 57)"
     ]
   },
   {
     "file": "ttml2-valid-padding-inline.xml",
     "result": "fail",
     "errors": [
-      "Attribute padding is not applicable to <span> (line 12)",
-      "Attribute padding is not applicable to <span> (line 13)",
-      "Attribute padding is not applicable to <span> (line 14)",
-      "Attribute padding is not applicable to <span> (line 15)",
-      "Attribute padding is not applicable to <span> (line 16)",
-      "Attribute padding is not applicable to <span> (line 17)"
+      "Attribute padding is prohibited on <span> (line 12)",
+      "Attribute padding is prohibited on <span> (line 13)",
+      "Attribute padding is prohibited on <span> (line 14)",
+      "Attribute padding is prohibited on <span> (line 15)",
+      "Attribute padding is prohibited on <span> (line 16)",
+      "Attribute padding is prohibited on <span> (line 17)"
     ]
   },
   {
@@ -1751,14 +1753,14 @@
     "file": "ttml2-valid-region-implied-animation.xml",
     "result": "fail",
     "errors": [
-      "Attribute disparity is not applicable to <div> (line 13)",
-      "Attribute extent is not applicable to <div> (line 14)",
-      "Attribute origin is not applicable to <div> (line 15)",
-      "Attribute position is not applicable to <div> (line 16)",
-      "Attribute disparity is not applicable to <p> (line 18)",
-      "Attribute extent is not applicable to <p> (line 19)",
-      "Attribute origin is not applicable to <p> (line 20)",
-      "Attribute position is not applicable to <p> (line 21)"
+      "Attribute disparity is prohibited on <div> (line 13)",
+      "Attribute extent is prohibited on <div> (line 14)",
+      "Attribute origin is prohibited on <div> (line 15)",
+      "Attribute position is prohibited on <div> (line 16)",
+      "Attribute disparity is prohibited on <p> (line 18)",
+      "Attribute extent is prohibited on <p> (line 19)",
+      "Attribute origin is prohibited on <p> (line 20)",
+      "Attribute position is prohibited on <p> (line 21)"
     ]
   },
   {
@@ -1862,11 +1864,11 @@
     "file": "ttml2-valid-set.xml",
     "result": "fail",
     "errors": [
-      "Attribute {http://www.w3.org/ns/ttml#styling}opacity is not applicable to {http://www.w3.org/ns/ttml}div",
-      "Attribute {http://www.w3.org/ns/ttml#styling}display is not applicable to {http://www.w3.org/ns/ttml}br"
+      "Animated style opacity is prohibited on <div> (line 16)"
     ],
     "warnings": [
-      "Attribute (zIndex) is deprecated on <set> (line 10)"
+      "Attribute (zIndex) is deprecated on <set> (line 10)",
+      "Animated style display is not applicable to <br> (line 21)"
     ]
   },
   {

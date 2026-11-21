@@ -38,13 +38,14 @@ from typing import Optional
 import xml.etree.ElementTree as ET
 
 from ttconv.config import ModuleConfiguration
-from ttconv.isd import ISD
 import ttconv.imsc.reader as imsc_reader
+from ttconv.isd import ISD
 import ttconv.model as model
 import ttconv.style_properties as styles
 
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.validator.imsc11_model as imsc11_model
+import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 import ttconv.imsc.validator.infoset as IS
 from ttconv.imsc.validator.lang_helper import get_primary_language_subtag
 import ttconv.imsc.validator.other_attributes as other_attrs
@@ -370,9 +371,8 @@ def _validate_doc_styles(
   expected_vert_pos: typing.Optional[typing.Tuple[styles.CoordinateType, styles.ExtentType]],
   hdr: bool
 ):
-  # currently unreachable in practice: imsc11_model.validate() already rejects tts:writingMode
-  # outside <region> as a generic IMSC 1.1 applicability error. Kept as a backstop in case that
-  # generic check is ever relaxed.
+  # currently unreachable since the IMSC 1.1 should already rejects
+  # tts:writingMode outside <region>.
   body = doc.get_body()
   if body is not None:
     for element in body.dfs_iterator():
@@ -459,20 +459,26 @@ def validate(
   hdr = config.hdr
   aspect_ratio = config.aspect_ratio
 
-  data = f.read()
+  xml_doc = f.read()
   counting_handler = imsc11_model.ErrorCountingEventHandler(event_handler)
 
   try:
 
     # first confirm the document is a conformant IMSC 1.1 document
-    # TODO: share the ISD with the later checks
-    if not imsc11_model.validate(io.BytesIO(data), None, counting_handler):
+    if not imsc11_model.validate_static_model(xml_doc, counting_handler):
       return False
 
-    infoset = IS.Infoset.fromFile(io.BytesIO(data), counting_handler)
-    if infoset is None:
-      counting_handler.error("Invalid empty document")
+    # IMSC 1.1 validation
+    try:
+      # the Document and ISD sequences are shared with NBCU053 validation
+      doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)))
+      isd_sequence = ISD.generate_isd_sequence(doc)
+      imsc11_validator.validate_document(doc, isd_sequence)
+    except Exception as e: # pylint: disable=broad-except
+      counting_handler.error("%s", e)
       return False
+
+    infoset = IS.Infoset.fromFile(io.BytesIO(xml_doc), counting_handler)
 
     _validate_root_parameters(infoset.root, expected_frame_rate, aspect_ratio, counting_handler)
 
@@ -481,14 +487,8 @@ def validate(
     else:
       expected_vert_pos = _EXPECTED_VERT_REGION_DIMS[aspect_ratio] if aspect_ratio is not None else None
 
-    doc = imsc_reader.to_model(ET.parse(io.BytesIO(data)))
-    if doc is None:
-      counting_handler.error("Invalid empty document")
-      return False
-
     _validate_doc_styles(doc, expected_vert_pos, hdr)
 
-    isd_sequence = ISD.generate_isd_sequence(doc)
     for _, isd in isd_sequence:
       for isd_region in isd.iter_regions():
         _validate_styles(isd_region, hdr)

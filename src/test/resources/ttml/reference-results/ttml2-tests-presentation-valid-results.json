@@ -497,10 +497,12 @@
     "result": "fail",
     "errors": [
       "Attribute bpd is prohibited on <div> (line 29)",
-      "Attribute displayAlign is not applicable to <div> (line 29)",
       "Attribute bpd is prohibited on <div> (line 32)",
+      "Attribute bpd is prohibited on <div> (line 35)"
+    ],
+    "warnings": [
+      "Attribute displayAlign is not applicable to <div> (line 29)",
       "Attribute displayAlign is not applicable to <div> (line 32)",
-      "Attribute bpd is prohibited on <div> (line 35)",
       "Attribute displayAlign is not applicable to <div> (line 35)"
     ]
   },
@@ -881,9 +883,9 @@
     "file": "ttml2-prstn-opacity-block.xml",
     "result": "fail",
     "errors": [
-      "Referential style opacity is not applicable to <div> (line 32)",
-      "Referential style opacity is not applicable to <div> (line 35)",
-      "Referential style opacity is not applicable to <div> (line 38)"
+      "Referential style opacity is prohibited on <div> (line 32)",
+      "Referential style opacity is prohibited on <div> (line 35)",
+      "Referential style opacity is prohibited on <div> (line 38)"
     ]
   },
   {
@@ -908,9 +910,9 @@
     "file": "ttml2-prstn-opacity-inline.xml",
     "result": "fail",
     "errors": [
-      "Referential style opacity is not applicable to <span> (line 34)",
-      "Referential style opacity is not applicable to <span> (line 37)",
-      "Referential style opacity is not applicable to <span> (line 40)"
+      "Referential style opacity is prohibited on <span> (line 34)",
+      "Referential style opacity is prohibited on <span> (line 37)",
+      "Referential style opacity is prohibited on <span> (line 40)"
     ]
   },
   {
@@ -921,15 +923,15 @@
     "file": "ttml2-prstn-padding-block.xml",
     "result": "fail",
     "errors": [
-      "Attribute padding is not applicable to <body> (line 24)"
+      "Attribute padding is prohibited on <body> (line 24)"
     ]
   },
   {
     "file": "ttml2-prstn-padding-inline.xml",
     "result": "fail",
     "errors": [
-      "Attribute padding is not applicable to <body> (line 24)",
-      "Attribute padding is not applicable to <span> (line 26)"
+      "Attribute padding is prohibited on <body> (line 24)",
+      "Attribute padding is prohibited on <span> (line 26)"
     ]
   },
   {
@@ -1000,10 +1002,10 @@
     "file": "ttml2-prstn-region-implied-animation-position.xml",
     "result": "fail",
     "errors": [
-      "Attribute position is not applicable to <div> (line 28)",
-      "Attribute position is not applicable to <div> (line 31)",
-      "Attribute position is not applicable to <div> (line 34)",
-      "Attribute position is not applicable to <div> (line 37)"
+      "Attribute position is prohibited on <div> (line 28)",
+      "Attribute position is prohibited on <div> (line 31)",
+      "Attribute position is prohibited on <div> (line 34)",
+      "Attribute position is prohibited on <div> (line 37)"
     ]
   },
   {

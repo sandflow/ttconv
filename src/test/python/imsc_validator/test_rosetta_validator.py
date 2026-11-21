@@ -33,8 +33,7 @@ import typing
 
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.validator.rosetta.styles as styles
-from ttconv.imsc.validator.rosetta.model import validate, \
-  _validate_imscr
+from ttconv.imsc.validator.rosetta.model import validate
 
 XML_DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
 
@@ -139,20 +138,13 @@ class _RecordingHandler(EventHandler):
     self.warnings.append(msg % args if args else msg)
 
 def _validate_with_warnings(doc: str) -> typing.Tuple[bool, typing.List[str], typing.List[str]]:
-  '''Validates the Rosetta constraints only, so that `doc` need not be a valid IMSC 1.1 document'''
   handler = _RecordingHandler()
-  result = _validate_imscr(io.BytesIO(doc.encode("utf-8")), handler)
+  result = validate(io.BytesIO(doc.encode("utf-8")), event_handler=handler)
   return result, handler.errors, handler.warnings
 
 def _validate(doc: str) -> typing.Tuple[bool, typing.List[str]]:
   result, errors, _ = _validate_with_warnings(doc)
   return result, errors
-
-def _validate_full(doc: str) -> typing.Tuple[bool, typing.List[str]]:
-  '''Validates against IMSC 1.1 and then the Rosetta constraints'''
-  handler = _RecordingHandler()
-  result = validate(io.BytesIO(doc.encode("utf-8")), event_handler=handler)
-  return result, handler.errors
 
 class RosettaValidatorTests(unittest.TestCase):
 
@@ -169,22 +161,20 @@ class RosettaValidatorTests(unittest.TestCase):
 
   def test_valid(self):
     self.assert_valid(make_doc())
-    result, errors = _validate_full(make_doc())
+    result, errors = _validate(make_doc())
     self.assertEqual(errors, [])
     self.assertTrue(result)
 
   def test_imsc11_validation_fails_first(self):
     # the document is invalid for IMSC 1.1 (no xml:lang) and for Rosetta (rosetta:format), but only IMSC 1.1 is reported
     doc = make_doc(tt_open=TT_OPEN.replace(' xml:lang="en-GB"', ''), head=HEAD.replace('>rosetta-imsc<', '>other<'))
-    _, rosetta_errors = _validate(doc)
-    self.assertTrue(any("rosetta:format shall be" in e for e in rosetta_errors), rosetta_errors)
-    result, errors = _validate_full(doc)
+    result, errors = _validate(doc)
     self.assertFalse(result)
     self.assertTrue(any("Required attribute" in e for e in errors), errors)
     self.assertFalse(any("rosetta:" in e for e in errors), errors)
 
   def test_imsc11_valid_document_is_validated_against_rosetta(self):
-    result, errors = _validate_full(make_doc(head=HEAD.replace('>rosetta-imsc<', '>other<')))
+    result, errors = _validate(make_doc(head=HEAD.replace('>rosetta-imsc<', '>other<')))
     self.assertFalse(result)
     self.assertTrue(any("rosetta:format shall be" in e for e in errors), errors)
 
@@ -233,7 +223,8 @@ class RosettaValidatorTests(unittest.TestCase):
       with self.subTest(attr):
         head = re.sub(f'(<region [^>]*?) {attr}="[^"]*"', r"\1", HEAD)
         self.assertNotEqual(head, HEAD)
-        self.assert_invalid(make_doc(head=head), "Required attribute")
+        # IMSC 1.1 requires tts:extent on region (section 8.4.2)
+        self.assert_invalid(make_doc(head=head), "SHALL be present" if attr == "tts:extent" else "Required attribute")
 
   # body and div
 
@@ -306,16 +297,18 @@ class RosettaStyleTests(unittest.TestCase):
     self.assert_valid(make_doc(head=make_head("d_outline", "s_outlineblack", "d_none", "s_noneblack",
       replace={"_d_default": '<style xml:id="_d_default" style="d_outline d_none"/>'})))
     self.assert_valid(make_doc(head=make_head(replace={"_d_default": '<style xml:id="_d_default"/>'})))
-    for bad in ("s_fg_red", "d_default", "d_outline d_outline", "_r_default"):
+    # IMSC 1.1 rejects a style reference loop
+    for bad, expected in (("s_fg_red", "zero or more of"), ("d_default", "Infinite referential styling loop"),
+                          ("d_outline d_outline", "zero or more of"), ("_r_default", "zero or more of")):
       with self.subTest(bad):
         self.assert_invalid(make_doc(head=make_head("d_outline", "s_outlineblack", "s_fg_red",
-          replace={"_d_default": f'<style xml:id="_d_default" style="{bad}"/>'})), "zero or more of")
+          replace={"_d_default": f'<style xml:id="_d_default" style="{bad}"/>'})), expected)
 
   def test_r_vertical_style_references(self):
     self.assert_valid(make_doc(head=make_head("p_al_start", replace={"_r_vertical": '<style xml:id="_r_vertical" style="p_al_start"/>'})))
     for bad in ("s_fg_red", "p_al_start p_al_center", "p_al_start s_fg_red"):
       with self.subTest(bad):
-        self.assert_invalid(make_doc(head=make_head("s_fg_red", "p_al_start", "p_al_center",
+        self.assert_invalid(make_doc(head=make_head("s_fg_red", "p_al_start",
           replace={"_r_vertical": f'<style xml:id="_r_vertical" style="{bad}"/>'})), "at most one of")
 
   def test_r_vertical_style_attribute_is_optional(self):
@@ -408,8 +401,8 @@ class RosettaExampleTests(unittest.TestCase):
         self.assertTrue(result)
 
   def test_invalid_examples(self):
-    # each file in INVALID_EXAMPLES_DIR states the errors that it must produce in `EXPECT:` comments, one per line. The
-    # files need not be valid IMSC 1.1, so they are validated against the Rosetta constraints alone.
+    # each file in INVALID_EXAMPLES_DIR states the errors that it must produce in `EXPECT:` comments, one per line. A file
+    # that is not valid IMSC 1.1 expects the IMSC 1.1 errors, since validation stops before the Rosetta constraints.
     names = sorted(n for n in os.listdir(INVALID_EXAMPLES_DIR) if n.endswith(".imscr"))
     self.assertGreater(len(names), 0)
     for name in names:
@@ -425,7 +418,7 @@ class RosettaExampleTests(unittest.TestCase):
 
   def test_invalid_example(self):
     # invalid/multiple_errors.imscr is a valid IMSC 1.1 document, so validation gets as far as the Rosetta constraints
-    result, errors = _validate_full(_read_example(os.path.join("invalid", "multiple_errors.imscr")))
+    result, errors = _validate(_read_example(os.path.join("invalid", "multiple_errors.imscr")))
     self.assertFalse(result)
     self.assertEqual(len(errors), 5, errors)
     for expected in (

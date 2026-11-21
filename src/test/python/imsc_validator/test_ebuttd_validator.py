@@ -32,7 +32,7 @@ import unittest
 
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.validator.ebuttd.attributes as attrs
-from ttconv.imsc.validator.ebuttd.model import validate, _validate_ebuttd
+from ttconv.imsc.validator.ebuttd.model import validate
 
 _RESOURCES_DIR = "src/test/resources/ttml/ebuttd"
 # git submodule: https://github.com/IRT-Open-Source/irt-ebu-tt-d-application-samples
@@ -71,6 +71,9 @@ P1 = '<p xml:id="p1" region="r1" style="s1" begin="00:00:01.000" end="00:00:02.0
 
 BODY = f'<body><div>{P1}</div></body>'
 
+# body that references no style or region, for documents without them
+BODY_NO_REFS = '<body><div><p xml:id="p1" begin="00:00:01.000" end="00:00:02.000">Hello<br/>world</p></div></body>'
+
 def make_doc(tt_open: str = TT_OPEN, head: str = HEAD, body: str = BODY, decl: str = '<?xml version="1.0" encoding="UTF-8"?>\n') -> str:
   return f"{decl}{tt_open}{head}{body}</tt>"
 
@@ -85,14 +88,7 @@ class _RecordingHandler(EventHandler):
   def warn(self, msg: str, *args):
     self.warnings.append(msg % args if args else msg)
 
-def _validate_ebuttd_only(doc: str) -> typing.Tuple[bool, typing.List[str], typing.List[str]]:
-  '''Validates the EBU-TT-D constraints only, so that `doc` need not be a valid IMSC 1.1 document'''
-  handler = _RecordingHandler()
-  result = _validate_ebuttd(io.BytesIO(doc.encode("utf-8")), handler)
-  return result, handler.errors, handler.warnings
-
-def _validate_full(doc: str) -> typing.Tuple[bool, typing.List[str], typing.List[str]]:
-  '''Validates against IMSC 1.1 and then the EBU-TT-D constraints'''
+def _validate(doc: str) -> typing.Tuple[bool, typing.List[str], typing.List[str]]:
   handler = _RecordingHandler()
   result = validate(io.BytesIO(doc.encode("utf-8")), event_handler=handler)
   return result, handler.errors, handler.warnings
@@ -100,19 +96,19 @@ def _validate_full(doc: str) -> typing.Tuple[bool, typing.List[str], typing.List
 class EBUTTDValidatorTestCase(unittest.TestCase):
 
   def assert_valid(self, doc: str):
-    result, errors, _ = _validate_ebuttd_only(doc)
+    result, errors, _ = _validate(doc)
     self.assertEqual(errors, [])
     self.assertTrue(result)
 
   def assert_invalid(self, doc: str, expected: str):
     '''Asserts that validation fails with an error that contains `expected`'''
-    result, errors, _ = _validate_ebuttd_only(doc)
+    result, errors, _ = _validate(doc)
     self.assertFalse(result)
     self.assertTrue(any(expected in e for e in errors), f"Expected an error containing `{expected}`, got {errors}")
 
   def assert_warning(self, doc: str, expected: str):
     '''Asserts that validation succeeds with a warning that contains `expected`'''
-    result, errors, warnings = _validate_ebuttd_only(doc)
+    result, errors, warnings = _validate(doc)
     self.assertEqual(errors, [])
     self.assertTrue(result)
     self.assertTrue(any(expected in w for w in warnings), f"Expected a warning containing `{expected}`, got {warnings}")
@@ -121,7 +117,7 @@ class DocumentTests(EBUTTDValidatorTestCase):
 
   def test_valid(self):
     self.assert_valid(make_doc())
-    result, errors, warnings = _validate_full(make_doc())
+    result, errors, warnings = _validate(make_doc())
     self.assertEqual((errors, warnings), ([], []))
     self.assertTrue(result)
 
@@ -154,23 +150,23 @@ class DocumentTests(EBUTTDValidatorTestCase):
   def test_imsc11_validation_fails_first(self):
     # the document is invalid for IMSC 1.1 (no xml:lang) and for EBU-TT-D (no ttp:timeBase), but only IMSC 1.1 is reported
     doc = make_doc(tt_open=TT_OPEN.replace(' xml:lang="en"', '').replace(' ttp:timeBase="media"', ''))
-    result, errors, _ = _validate_full(doc)
+    result, errors, _ = _validate(doc)
     self.assertFalse(result)
     self.assertTrue(any("xml:lang" in e or "lang" in e for e in errors), errors)
     self.assertFalse(any("timeBase" in e for e in errors), errors)
 
   def test_imsc11_valid_document_is_validated_against_ebuttd(self):
-    result, errors, _ = _validate_full(make_doc(tt_open=TT_OPEN.replace(">", ' ttp:frameRate="25">', 1)))
+    result, errors, _ = _validate(make_doc(tt_open=TT_OPEN.replace(">", ' ttp:frameRate="25">', 1)))
     self.assertFalse(result)
     self.assertTrue(any("Attribute frameRate is prohibited" in e for e in errors), errors)
 
   def test_malformed_xml(self):
-    result, errors, _ = _validate_full(make_doc()[:-10])
+    result, errors, _ = _validate(make_doc()[:-10])
     self.assertFalse(result)
     self.assertTrue(errors)
 
   def test_root_is_not_tt(self):
-    result, errors, _ = _validate_ebuttd_only('<foo xmlns="http://example.com"/>')
+    result, errors, _ = _validate('<foo xmlns="http://example.com"/>')
     self.assertFalse(result)
     self.assertTrue(errors)
 
@@ -178,7 +174,7 @@ class DocumentTests(EBUTTDValidatorTestCase):
     doc = make_doc().replace("<tt ", "<tt:tt ", 1).replace("</tt>", "</tt:tt>").replace('xmlns="http://www.w3.org/ns/ttml"', 'xmlns:tt="http://www.w3.org/ns/ttml"')
     for name in ("head", "styling", "style", "layout", "region", "body", "div", "p", "br"):
       doc = doc.replace(f"<{name} ", f"<tt:{name} ").replace(f"<{name}>", f"<tt:{name}>").replace(f"</{name}>", f"</tt:{name}>").replace(f"<{name}/>", f"<tt:{name}/>")
-    result, errors, _ = _validate_full(doc)
+    result, errors, _ = _validate(doc)
     self.assertEqual(errors, [])
     self.assertTrue(result)
 
@@ -195,9 +191,10 @@ class RootTests(EBUTTDValidatorTestCase):
     self.assert_valid(make_doc(tt_open=TT_OPEN.replace('xml:lang="en"', 'xml:lang=""')))
 
   def test_time_base(self):
-    for value in ("clock", "smpte", ""):
+    # IMSC 1.1 does not support the clock and smpte time bases
+    for value, expected in (("clock", "is not supported"), ("smpte", "is not supported"), ("", "ttp:timeBase")):
       with self.subTest(value):
-        self.assert_invalid(make_doc(tt_open=TT_OPEN.replace('ttp:timeBase="media"', f'ttp:timeBase="{value}"')), "ttp:timeBase")
+        self.assert_invalid(make_doc(tt_open=TT_OPEN.replace('ttp:timeBase="media"', f'ttp:timeBase="{value}"')), expected)
 
   def test_cell_resolution(self):
     for value in ("32 15", "1 1", "100  200"):
@@ -222,15 +219,15 @@ class RootTests(EBUTTDValidatorTestCase):
         self.assert_invalid(make_doc(tt_open=TT_OPEN.replace(">", f" {attr}>", 1)), "is prohibited")
 
   def test_head_is_required(self):
-    self.assert_invalid(make_doc(head=""), "does not match")
+    self.assert_invalid(make_doc(head="", body=BODY_NO_REFS), "does not match")
 
 class HeadTests(EBUTTDValidatorTestCase):
 
   def test_styling_and_layout_are_required(self):
-    self.assert_invalid(make_doc(head=f"<head>{STYLING}</head>"), "does not match")
-    self.assert_invalid(make_doc(head=f"<head>{LAYOUT}</head>"), "does not match")
-    self.assert_invalid(make_doc(head=f"<head>{LAYOUT}{STYLING}</head>"), "does not match")
-    self.assert_invalid(make_doc(head="<head/>"), "does not match")
+    self.assert_invalid(make_doc(head=f"<head>{STYLING}</head>", body=BODY_NO_REFS), "does not match")
+    self.assert_invalid(make_doc(head=f"<head>{LAYOUT}</head>", body=BODY_NO_REFS), "does not match")
+    self.assert_invalid(make_doc(head=f"<head>{LAYOUT}{STYLING}</head>", body=BODY_NO_REFS), "does not match")
+    self.assert_invalid(make_doc(head="<head/>", body=BODY_NO_REFS), "does not match")
 
   def test_at_least_one_style(self):
     self.assert_invalid(make_doc(head=f"<head><styling/>{LAYOUT}</head>", body=""), "does not match")
@@ -286,17 +283,17 @@ class HeadTests(EBUTTDValidatorTestCase):
     def doc(conforms: str, parent: str = "metadata"):
       return make_doc(head=HEAD.replace("<head>", f"<head><{parent}>{conforms}</{parent}>"))
     urn = "<ebuttm:conformsToStandard>urn:ebu:tt:distribution:2018-04</ebuttm:conformsToStandard>"
-    result, errors, warnings = _validate_ebuttd_only(doc(urn))
+    result, errors, warnings = _validate(doc(urn))
     self.assertEqual((result, errors, warnings), (True, [], []))
     self.assert_warning(doc("<ebuttm:conformsToStandard>urn:ebu:tt:distribution:2014-01</ebuttm:conformsToStandard>"),
       "shall be `urn:ebu:tt:distribution:2018-04`")
-    self.assertEqual(_validate_ebuttd_only(doc("<ebuttm:conformsToStandard>urn:other:std</ebuttm:conformsToStandard>"))[2], [])
+    self.assertEqual(_validate(doc("<ebuttm:conformsToStandard>urn:other:std</ebuttm:conformsToStandard>"))[2], [])
     self.assert_warning(doc(f"<ebuttm:documentMetadata>{urn}</ebuttm:documentMetadata>"), "documentMetadata is deprecated")
     self.assert_warning(doc("<ebuttm:documentCopyright>(c)</ebuttm:documentCopyright>"), "documentCopyright is deprecated")
     # only the elements in /tt/head/metadata and /tt/head/metadata/ebuttm:documentMetadata are significant
     stale = "<ebuttm:conformsToStandard>urn:ebu:tt:distribution:2014-01</ebuttm:conformsToStandard><ebuttm:documentCopyright>(c)</ebuttm:documentCopyright>"
-    self.assertEqual(_validate_ebuttd_only(make_doc(body=BODY.replace("<div>", f"<div><metadata>{stale}</metadata>")))[2], [])
-    self.assertEqual(_validate_ebuttd_only(doc(f"<foo:x>{stale}</foo:x>"))[2], [])
+    self.assertEqual(_validate(make_doc(body=BODY.replace("<div>", f"<div><metadata>{stale}</metadata>")))[2], [])
+    self.assertEqual(_validate(doc(f"<foo:x>{stale}</foo:x>"))[2], [])
 
 class StyleTests(EBUTTDValidatorTestCase):
 
@@ -326,14 +323,14 @@ class StyleTests(EBUTTDValidatorTestCase):
           self.assert_valid(self.make_style_doc(attr, value))
       for value in invalid:
         with self.subTest(attr=attr, value=value):
-          result, errors, _ = _validate_ebuttd_only(self.make_style_doc(attr, value))
+          result, errors, _ = _validate(self.make_style_doc(attr, value))
           self.assertFalse(result)
           self.assertNotEqual(errors, [])
 
   def test_number_of_lengths_is_validated_by_imsc(self):
     for attr, value in (("tts:fontSize", "100% 100%"), ("tts:fontSize", "")):
       with self.subTest(attr=attr, value=value):
-        result, errors, _ = _validate_full(self.make_style_doc(attr, value))
+        result, errors, _ = _validate(self.make_style_doc(attr, value))
         self.assertFalse(result)
         self.assertNotEqual(errors, [])
 
@@ -357,12 +354,12 @@ class StyleTests(EBUTTDValidatorTestCase):
     self.assert_valid(make_doc(head=HEAD.replace('<style xml:id="s2" ', '<style foo:x="1" ebuttm:y="2" xml:id="s2" ')))
 
   def test_duplicate_id(self):
-    result, errors, _ = _validate_full(make_doc(head=HEAD.replace('xml:id="s2"', 'xml:id="s1"')))
+    result, errors, _ = _validate(make_doc(head=HEAD.replace('xml:id="s2"', 'xml:id="s1"')))
     self.assertFalse(result)
     self.assertTrue(any("Duplicate xml:id" in e for e in errors), errors)
 
   def test_style_id_shared_with_region_is_a_duplicate(self):
-    result, errors, _ = _validate_full(make_doc(head=HEAD.replace('xml:id="r1"', 'xml:id="s1"'), body=BODY.replace('region="r1"', 'region="s1"')))
+    result, errors, _ = _validate(make_doc(head=HEAD.replace('xml:id="r1"', 'xml:id="s1"'), body=BODY.replace('region="r1"', 'region="s1"')))
     self.assertFalse(result)
     self.assertTrue(any("Duplicate xml:id" in e for e in errors), errors)
 
@@ -376,7 +373,8 @@ class RegionTests(EBUTTDValidatorTestCase):
       with self.subTest(attr):
         region = '<region xml:id="r1" tts:origin="10% 10%" tts:extent="80% 30%"/>'.replace(
           {"xml:id": ' xml:id="r1"', "tts:origin": ' tts:origin="10% 10%"', "tts:extent": ' tts:extent="80% 30%"'}[attr], "")
-        self.assert_invalid(self.make_region_doc(region), "Required attribute")
+        # IMSC 1.1 requires tts:extent on region (section 8.4.2)
+        self.assert_invalid(self.make_region_doc(region), "SHALL be present" if attr == "tts:extent" else "Required attribute")
 
   def test_origin_and_extent(self):
     for origin, extent in (("0% 0%", "100% 100%"), ("0.5% 99.5%", "99.5% .5%"), ("10% 10%", "80.25% 80%"), ("0%  0%", "100%\t100%")):
@@ -386,7 +384,7 @@ class RegionTests(EBUTTDValidatorTestCase):
                            ("10 10", "80% 30%"), ("10% 10%", "80 30"), ("10c 10c", "10% 10%"), ("-1% 10%", "80% 30%"),
                            ("10% 10%", "1rh 1rw")):
       with self.subTest(origin=origin, extent=extent):
-        result, errors, _ = _validate_ebuttd_only(self.make_region_doc(f'<region xml:id="r1" tts:origin="{origin}" tts:extent="{extent}"/>'))
+        result, errors, _ = _validate(self.make_region_doc(f'<region xml:id="r1" tts:origin="{origin}" tts:extent="{extent}"/>'))
         self.assertFalse(result)
         self.assertNotEqual(errors, [])
 
@@ -410,7 +408,7 @@ class RegionTests(EBUTTDValidatorTestCase):
         ("tts:writingMode", "vertical"), ("tts:padding", "1"), ("tts:padding", "1px"), ("tts:padding", "1c"),
         ("tts:padding", "-1%"), ("tts:padding", "")):
       with self.subTest(attr=attr, value=value):
-        result, errors, _ = _validate_ebuttd_only(
+        result, errors, _ = _validate(
           self.make_region_doc(f'<region xml:id="r1" tts:origin="10% 10%" tts:extent="80% 30%" {attr}="{value}"/>'))
         self.assertFalse(result)
         self.assertNotEqual(errors, [])
@@ -419,7 +417,7 @@ class RegionTests(EBUTTDValidatorTestCase):
     for origin, extent, padding in (("10%", "80% 30%", "1%"), ("10% 10%", "80%", "1%"), ("10% 10% 10%", "80% 30%", "1%"),
                                     ("10% 10%", "80% 30%", "1% 2% 3% 4% 5%")):
       with self.subTest(origin=origin, extent=extent, padding=padding):
-        result, errors, _ = _validate_full(
+        result, errors, _ = _validate(
           self.make_region_doc(f'<region xml:id="r1" tts:origin="{origin}" tts:extent="{extent}" tts:padding="{padding}"/>'))
         self.assertFalse(result)
         self.assertNotEqual(errors, [])
@@ -430,8 +428,9 @@ class RegionTests(EBUTTDValidatorTestCase):
         ("begin", "00:00:00.000"), ("end", "00:00:01.000"), ("xml:lang", "en"), ("xml:space", "preserve"), ("tts:luminanceGain", "1"),
         ("tts:position", "10% 10%"), ("ebutts:linePadding", "1c")):
       with self.subTest(attr=attr):
+        # IMSC 1.1 prohibits tts:origin and tts:position on the same region (section 8.4.7)
         self.assert_invalid(self.make_region_doc(f'<region xml:id="r1" tts:origin="10% 10%" tts:extent="80% 30%" {attr}="{value}"/>'),
-          "is prohibited")
+          "SHALL NOT both be present" if attr == "tts:position" else "is prohibited")
 
   def test_region_content(self):
     self.assert_invalid(self.make_region_doc('<region xml:id="r1" tts:origin="10% 10%" tts:extent="80% 30%"><style xml:id="x"/></region>'),
@@ -444,10 +443,10 @@ class RegionTests(EBUTTDValidatorTestCase):
     layout = LAYOUT.replace('tts:origin="10% 60%"', 'tts:origin="10% 20%"')
     body = ('<body><div><p xml:id="p1" region="r1" begin="00:00:00" end="00:00:02">a</p>'
       '<p xml:id="p2" region="r2" begin="{begin}" end="00:00:04">b</p></div></body>')
-    result, errors, _ = _validate_full(make_doc(head=f"<head>{STYLING}{layout}</head>", body=body.format(begin="00:00:01")))
+    result, errors, _ = _validate(make_doc(head=f"<head>{STYLING}{layout}</head>", body=body.format(begin="00:00:01")))
     self.assertFalse(result)
     self.assertTrue(any("overlap" in e for e in errors), errors)
-    result, errors, _ = _validate_full(make_doc(head=f"<head>{STYLING}{layout}</head>", body=body.format(begin="00:00:02")))
+    result, errors, _ = _validate(make_doc(head=f"<head>{STYLING}{layout}</head>", body=body.format(begin="00:00:02")))
     self.assertEqual(errors, [])
     self.assertTrue(result)
 
@@ -493,7 +492,7 @@ class BodyTests(EBUTTDValidatorTestCase):
     self.assert_invalid(make_doc(body=BODY.replace('xml:id="p1" ', "")), "Required attribute")
 
   def test_duplicate_p_id(self):
-    result, errors, _ = _validate_full(make_doc(body=f"<body><div>{P1}{P1}</div></body>"))
+    result, errors, _ = _validate(make_doc(body=f"<body><div>{P1}{P1}</div></body>"))
     self.assertFalse(result)
     self.assertTrue(any("Duplicate xml:id" in e for e in errors), errors)
 
@@ -513,7 +512,9 @@ class BodyTests(EBUTTDValidatorTestCase):
           '<p xml:id="p1" region="r1" style="s1">').replace("Hello", f"<span {attr}>Hello</span>")))
     for attr in ('region="r1"', 'dur="1s"', 'tts:color="#FFFFFF"', 'tts:ruby="base"', 'timeContainer="par"', 'tts:fontStyle="italic"'):
       with self.subTest(attr=attr):
-        self.assert_invalid(make_doc(body=BODY.replace("Hello", f"<span {attr}>Hello</span>")), "is prohibited")
+        # IMSC 1.1 only allows tts:ruby="base" on a span within a ruby container
+        self.assert_invalid(make_doc(body=BODY.replace("Hello", f"<span {attr}>Hello</span>")),
+          "does not match" if attr == 'tts:ruby="base"' else "is prohibited")
 
   def test_br_attributes(self):
     self.assert_valid(make_doc(body=BODY.replace("<br/>", '<br ttm:role="x-foo"/>')))
@@ -531,7 +532,7 @@ class BodyTests(EBUTTDValidatorTestCase):
 
   def test_p_without_region(self):
     self.assert_warning(make_doc(body=BODY.replace('region="r1" ', "")), "does not reference a region")
-    result, _, warnings = _validate_ebuttd_only(make_doc(body=BODY.replace("<div>", '<div region="r1">').replace('region="r1" ', "")))
+    result, _, warnings = _validate(make_doc(body=BODY.replace("<div>", '<div region="r1">').replace('region="r1" ', "")))
     self.assertTrue(result)
     self.assertEqual(warnings, [])
 
@@ -542,7 +543,7 @@ class BodyTests(EBUTTDValidatorTestCase):
         (make_doc(head=HEAD.replace("<region ", '<region style="nope" ', 1)), "style element with xml:id 'nope'"),
       ):
       with self.subTest(expected):
-        result, errors, _ = _validate_full(doc)
+        result, errors, _ = _validate(doc)
         self.assertFalse(result)
         self.assertTrue(any(expected in e for e in errors), errors)
 
@@ -557,7 +558,7 @@ class BodyTests(EBUTTDValidatorTestCase):
     self.assert_warning(make_doc(head=head, body=BODY.replace('style="s1"', 'style="s1 nw"')), "should specify tts:overflow=\"visible\"")
     self.assert_warning(make_doc(head=head, body=BODY.replace("Hello", '<span style="nw">Hello</span>')), "tts:wrapOption=\"noWrap\"")
     self.assert_warning(make_doc(head=head, body=BODY.replace("<body>", '<body style="nw">')), "tts:wrapOption=\"noWrap\"")
-    result, _, warnings = _validate_ebuttd_only(make_doc(
+    result, _, warnings = _validate(make_doc(
       head=head.replace('<region xml:id="r1" tts:origin="10% 10%" tts:extent="80% 30%"/>',
         '<region xml:id="r1" tts:origin="10% 10%" tts:extent="80% 30%" tts:overflow="visible"/>'),
       body=BODY.replace('style="s1"', 'style="s1 nw"')))
@@ -576,15 +577,15 @@ class TimingTests(EBUTTDValidatorTestCase):
     for value in ("0:00:00", "00:0:00", "00:00:0", "00:60:00", "00:00:61", "00:00:00.", "00:00", "10s", "1.5s", "10t", "00:00:00:01",
                   "00:00:00.1s", "-00:00:01", "00:00:00,5", " 00:00:00", "00:00:00 ", "1:00:00.000", "00:00:1"):
       with self.subTest(value):
-        result, errors, _ = _validate_ebuttd_only(self.make_time_doc(value, "999:00:00"))
+        result, errors, _ = _validate(self.make_time_doc(value, "999:00:00"))
         self.assertFalse(result)
         self.assertNotEqual(errors, [])
-        result, errors, _ = _validate_ebuttd_only(self.make_time_doc("00:00:00", value))
+        result, errors, _ = _validate(self.make_time_doc("00:00:00", value))
         self.assertFalse(result)
 
   def test_fraction_should_be_limited_to_three_digits(self):
     self.assert_warning(self.make_time_doc("00:00:00.1234", "00:00:01"), "should be limited to three digits")
-    result, _, warnings = _validate_ebuttd_only(self.make_time_doc("00:00:00.123", "00:00:01.100"))
+    result, _, warnings = _validate(self.make_time_doc("00:00:00.123", "00:00:01.100"))
     self.assertTrue(result)
     self.assertEqual(warnings, [])
 

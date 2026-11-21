@@ -704,7 +704,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:extent value (\t\n\r )",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -712,7 +712,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:extent value (100px, 200px)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -720,7 +720,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:extent value ()",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -728,7 +728,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:extent value (100px 200px 300px)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -736,7 +736,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:extent value (100px)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -744,7 +744,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:extent value (100px 364.4)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -752,7 +752,7 @@
     "result": "fail",
     "errors": [
       "tts:extent lengths must be positive (100.1px -200.0px)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -760,7 +760,7 @@
     "result": "fail",
     "errors": [
       "tts:extent lengths must be positive (-100.1px 200.0px)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1148,7 +1148,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (\t\n\r )",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1156,7 +1156,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (100px, 200px)",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1164,7 +1164,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value ()",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1172,7 +1172,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (100px 200px 300px)",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1180,7 +1180,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (100px)",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1188,7 +1188,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (100px 364.4)",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1196,7 +1196,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (100px:200px)",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1204,7 +1204,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:origin value (100px 364.4smoot)",
-      "Attribute origin is not applicable to <body> (line 8)"
+      "Attribute origin is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1212,7 +1212,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value (\t\n\r )",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1220,7 +1220,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value (100px, 200px)",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1228,7 +1228,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value ()",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1236,7 +1236,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value (100px 200px 300px 400px 500px)",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1244,7 +1244,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value (100px 364.4)",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1252,7 +1252,7 @@
     "result": "fail",
     "errors": [
       "tts:extent lengths must be positive (-100.1px 200.0px)",
-      "Attribute extent is not applicable to <body> (line 8)"
+      "Attribute extent is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1260,7 +1260,7 @@
     "result": "fail",
     "errors": [
       "ebutts:linePadding must be non-negative (100.1px -200.0px)",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1268,7 +1268,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value (100px:200px)",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1276,7 +1276,7 @@
     "result": "fail",
     "errors": [
       "Bad tts:padding value (100px 364.4smoot)",
-      "Attribute padding is not applicable to <body> (line 8)"
+      "Attribute padding is prohibited on <body> (line 8)"
     ]
   },
   {
@@ -1659,7 +1659,9 @@
     "file": "ttml1-invld-bad-unicode-bidi-all-space.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:unicodeBidi value (\t\n\r )",
+      "Bad tts:unicodeBidi value (\t\n\r )"
+    ],
+    "warnings": [
       "Attribute unicodeBidi is not applicable to <body> (line 8)"
     ]
   },
@@ -1667,7 +1669,9 @@
     "file": "ttml1-invld-bad-unicode-bidi-empty.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:unicodeBidi value ()",
+      "Bad tts:unicodeBidi value ()"
+    ],
+    "warnings": [
       "Attribute unicodeBidi is not applicable to <body> (line 8)"
     ]
   },
@@ -1675,7 +1679,9 @@
     "file": "ttml1-invld-bad-unicode-bidi-unknown-keyword.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:unicodeBidi value (unknown)",
+      "Bad tts:unicodeBidi value (unknown)"
+    ],
+    "warnings": [
       "Attribute unicodeBidi is not applicable to <body> (line 8)"
     ]
   },
@@ -1683,55 +1689,55 @@
     "file": "ttml1-invld-bad-z-index-all-space.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:zIndex value (\t\n\r )",
-      "Attribute zIndex is not applicable to <body> (line 8)"
+      "Bad tts:zIndex value (\t\n\r )"
     ],
     "warnings": [
-      "Attribute (zIndex) is deprecated on <body> (line 8)"
+      "Attribute (zIndex) is deprecated on <body> (line 8)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
     ]
   },
   {
     "file": "ttml1-invld-bad-z-index-empty.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:zIndex value ()",
-      "Attribute zIndex is not applicable to <body> (line 8)"
+      "Bad tts:zIndex value ()"
     ],
     "warnings": [
-      "Attribute (zIndex) is deprecated on <body> (line 8)"
+      "Attribute (zIndex) is deprecated on <body> (line 8)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
     ]
   },
   {
     "file": "ttml1-invld-bad-z-index-extra-integer.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:zIndex value (1 2)",
-      "Attribute zIndex is not applicable to <body> (line 8)"
+      "Bad tts:zIndex value (1 2)"
     ],
     "warnings": [
-      "Attribute (zIndex) is deprecated on <body> (line 8)"
+      "Attribute (zIndex) is deprecated on <body> (line 8)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
     ]
   },
   {
     "file": "ttml1-invld-bad-z-index-non-integer-real.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:zIndex value (1.2)",
-      "Attribute zIndex is not applicable to <body> (line 8)"
+      "Bad tts:zIndex value (1.2)"
     ],
     "warnings": [
-      "Attribute (zIndex) is deprecated on <body> (line 8)"
+      "Attribute (zIndex) is deprecated on <body> (line 8)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
     ]
   },
   {
     "file": "ttml1-invld-bad-z-index-non-integer-token.xml",
     "result": "fail",
     "errors": [
-      "Bad tts:zIndex value (normal)",
-      "Attribute zIndex is not applicable to <body> (line 8)"
+      "Bad tts:zIndex value (normal)"
     ],
     "warnings": [
-      "Attribute (zIndex) is deprecated on <body> (line 8)"
+      "Attribute (zIndex) is deprecated on <body> (line 8)",
+      "Attribute zIndex is not applicable to <body> (line 8)"
     ]
   },
   {

@@ -41,6 +41,7 @@ from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary
 import ttconv.imsc.validator.ebuttd.attributes as attrs
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.validator.imsc11_model as imsc11
+import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 from ttconv.imsc.validator.imsc11_model import ErrorCountingEventHandler, IMSCElement, IMSCValidationContext, \
   METADATA_ATTRIBUTES, NON_FOREIGN_NAMESPACES
 import ttconv.imsc.validator.infoset as IS
@@ -279,16 +280,34 @@ class TT(imsc11.TT):
     if not e.has_attribute(attrs.CellResolution.qname):
       ctx.event_handler.warn("ttp:cellResolution should be specified explicitly on <tt> (line %s)", e.get_line_number())
 
-def _validate_ebuttd(f: typing.BinaryIO, event_handler: typing.Optional[EventHandler] = None) -> bool:
-  '''Validates the constraints that EBU-TT-D adds to IMSC 1.1, and returns whether no ERROR-or-above records were logged.
+def validate(
+  f: typing.BinaryIO,
+  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
+  event_handler: typing.Optional[EventHandler] = None
+) -> bool:
+  '''Validates `f` and returns whether no ERROR-or-above records were logged.
 
-  `f` is not validated against IMSC 1.1, and the results are only meaningful for a valid IMSC 1.1 document. Use `validate()`
-  unless that is known to be the case.'''
+  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
   counting_handler = ErrorCountingEventHandler(event_handler)
 
-  data = f.read()
+  xml_doc = f.read()
 
-  infoset = IS.Infoset.fromFile(io.BytesIO(data), counting_handler)
+  if not imsc11.validate_static_model(xml_doc, counting_handler):
+    return False
+
+  # IMSC 1.1 validation
+  try:
+    # the document and ISC sequence are shared between the IMSC 1.1 and EBU-TT-D
+    # checks
+    doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)))
+    isd_sequence = ISD.generate_isd_sequence(doc)
+    imsc11_validator.validate_document(doc, isd_sequence)
+  except Exception as e: # pylint: disable=broad-except
+    counting_handler.error("%s", e)
+    return False
+
+  # EBU-TT-D constraints
+  infoset = IS.Infoset.fromFile(io.BytesIO(xml_doc), counting_handler)
   if infoset is None:
     return False
 
@@ -307,39 +326,19 @@ def _validate_ebuttd(f: typing.BinaryIO, event_handler: typing.Optional[EventHan
         counting_handler.error("Element {%s}%s is not permitted in <%s> (line %s)", c.name.qname.ns, c.name.qname.local_name,
           e.name.qname.local_name, c.get_line_number())
 
-  # the ttconv model, in which styles are resolved, is only available for a valid document
+  # warn, once per region, if text that is not wrapped is presented in a region
+  # that does not have tts:overflow="visible"
   if counting_handler.error_count == 0:
-    try:
-      doc = imsc_reader.to_model(ET.parse(io.BytesIO(data)))
-      # warn, once per region, if text that is not wrapped is presented in a region that does not have tts:overflow="visible"
-      reported_regions = set()
-      isd_sequence = ISD.generate_isd_sequence(doc) if doc is not None else []
-      for _, isd in isd_sequence:
-        for isd_region in isd.iter_regions():
-          if isd_region.get_id() in reported_regions or \
-            isd_region.get_style(styles.StyleProperties.Overflow) == styles.OverflowType.visible:
-            continue
-          if any(e.get_style(styles.StyleProperties.WrapOption) == styles.WrapOptionType.noWrap
-                 for e in isd_region.dfs_iterator()):
-            reported_regions.add(isd_region.get_id())
-            counting_handler.warn("Region `%s` should specify tts:overflow=\"visible\" since it contains text with "
-              "tts:wrapOption=\"noWrap\"", isd_region.get_id())
-    except ValueError as ve:
-      counting_handler.error("%s", ve)
+    reported_regions = set()
+    for _, isd in isd_sequence:
+      for isd_region in isd.iter_regions():
+        if isd_region.get_id() in reported_regions or \
+          isd_region.get_style(styles.StyleProperties.Overflow) == styles.OverflowType.visible:
+          continue
+        if any(e.get_style(styles.StyleProperties.WrapOption) == styles.WrapOptionType.noWrap
+               for e in isd_region.dfs_iterator()):
+          reported_regions.add(isd_region.get_id())
+          counting_handler.warn("Region `%s` should specify tts:overflow=\"visible\" since it contains text with "
+            "tts:wrapOption=\"noWrap\"", isd_region.get_id())
 
   return counting_handler.error_count == 0
-
-def validate(
-  f: typing.BinaryIO,
-  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
-  event_handler: typing.Optional[EventHandler] = None
-) -> bool:
-  '''Validates `f` and returns whether no ERROR-or-above records were logged.
-
-  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
-  data = f.read()
-
-  if not imsc11.validate(io.BytesIO(data), event_handler=event_handler):
-    return False
-
-  return _validate_ebuttd(io.BytesIO(data), event_handler)

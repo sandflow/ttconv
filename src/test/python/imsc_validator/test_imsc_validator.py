@@ -30,7 +30,7 @@ import unittest
 import os
 import logging
 
-from ttconv.imsc.validator.imsc11_model import validate
+from ttconv.imsc.validator.imsc11_validator import validate
 
 LOGGER = logging.getLogger(__name__)
 

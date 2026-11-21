@@ -39,7 +39,7 @@ from ttconv.filters.document_filter import DocumentFilter
 import ttconv.imsc.reader as imsc_reader
 import ttconv.imsc.writer as imsc_writer
 import ttconv.imsc.validator.ebuttd.model as ebuttd_model
-import ttconv.imsc.validator.imsc11_model as imsc11_model
+import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 import ttconv.imsc.validator.nbcu053.model as nbcu053_model
 from ttconv.imsc.validator.nbcu053.model import NBCU053ValidatorConfiguration
 import ttconv.imsc.validator.rosetta.model as rosetta_model
@@ -489,7 +489,7 @@ def convert(args):
 class ValidateModels(Enum):
   '''Enumerates the models that a document can be validated against. The value of each is the name of the model, its validation
   function and its configuration class, or `None` if the model is not configurable.'''
-  IMSC11TEXT = ("imsc11text", imsc11_model.validate, None)
+  IMSC11TEXT = ("imsc11text", imsc11_validator.validate, None)
   NBCU053 = ("nbcu053", nbcu053_model.validate, NBCU053ValidatorConfiguration)
   EBUTTD = ("ebuttd", ebuttd_model.validate, None)
   ROSETTA = ("rosetta", rosetta_model.validate, None)

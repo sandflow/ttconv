@@ -40,6 +40,7 @@ import ttconv.imsc.namespaces as NS
 from ttconv.imsc.validator.attribute_vocabulary import AttributeVocabulary, attribute
 from ttconv.imsc.validator.event_handler import EventHandler
 import ttconv.imsc.validator.imsc11_model as imsc11
+import ttconv.imsc.validator.imsc11_validator as imsc11_validator
 from ttconv.imsc.validator.imsc11_model import ErrorCountingEventHandler, IMSCElement, IMSCValidationContext
 import ttconv.imsc.validator.infoset as IS
 import ttconv.imsc.validator.other_attributes as other_attrs
@@ -618,14 +619,24 @@ class TT(RosettaElement, imsc11.TT):
         if styles.PRbResOutside.style_id not in _get_referenced_style_ids(p):
           ctx.event_handler.error("style on <p> shall contain p_rb_res_outside since the document contains ruby (line %s)", p.get_line_number())
 
-def _validate_imscr(f: typing.BinaryIO, event_handler: typing.Optional[EventHandler] = None) -> bool:
-  '''Validates the constraints that IMSC Rosetta adds to IMSC 1.1, and returns whether no ERROR-or-above records were logged.
+def validate(
+  f: typing.BinaryIO,
+  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
+  event_handler: typing.Optional[EventHandler] = None
+) -> bool:
+  '''Validates `f` and returns whether no ERROR-or-above records were logged.
 
-  `f` is not validated against IMSC 1.1, and the results are only meaningful for a valid IMSC 1.1 document. Use `validate()`
-  unless that is known to be the case.'''
+  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
+  xml_doc = f.read()
+
+  # IMSC 1.1 validation
+  if not imsc11_validator.validate(io.BytesIO(xml_doc), event_handler=event_handler):
+    return False
+
+  # IMSC Rosetta constraints
   counting_handler = ErrorCountingEventHandler(event_handler)
 
-  infoset = RosettaInfoset.fromFile(f, counting_handler)
+  infoset = RosettaInfoset.fromFile(io.BytesIO(xml_doc), counting_handler)
   if infoset is None:
     return False
 
@@ -650,18 +661,3 @@ def _validate_imscr(f: typing.BinaryIO, event_handler: typing.Optional[EventHand
     ctx.event_handler.error("Root element must be tt")
 
   return counting_handler.error_count == 0
-
-def validate(
-  f: typing.BinaryIO,
-  config: typing.Optional[ModuleConfiguration] = None, # pylint: disable=unused-argument
-  event_handler: typing.Optional[EventHandler] = None
-) -> bool:
-  '''Validates `f` and returns whether no ERROR-or-above records were logged.
-
-  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.'''
-  data = f.read()
-
-  if not imsc11.validate(io.BytesIO(data), event_handler=event_handler):
-    return False
-
-  return _validate_imscr(io.BytesIO(data), event_handler)

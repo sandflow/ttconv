@@ -276,8 +276,8 @@
   },
   {
     "file": "DocumentExample823.ttml",
-    "result": "fail",
-    "errors": [
+    "result": "pass",
+    "warnings": [
       "Referential style displayAlign is not applicable to <p> (line 19)"
     ]
   },
@@ -285,17 +285,21 @@
     "file": "DocumentExample824.ttml",
     "result": "fail",
     "errors": [
-      "Referential style displayAlign is not applicable to <p> (line 19)",
-      "Referential style extent is not applicable to <p> (line 19)",
-      "Referential style padding is not applicable to <p> (line 19)"
+      "Referential style extent is prohibited on <p> (line 19)",
+      "Referential style padding is prohibited on <p> (line 19)"
+    ],
+    "warnings": [
+      "Referential style displayAlign is not applicable to <p> (line 19)"
     ]
   },
   {
     "file": "DocumentExample825.ttml",
     "result": "fail",
     "errors": [
-      "Referential style displayAlign is not applicable to <p> (line 19)",
-      "Referential style extent is not applicable to <p> (line 19)"
+      "Referential style extent is prohibited on <p> (line 19)"
+    ],
+    "warnings": [
+      "Referential style displayAlign is not applicable to <p> (line 19)"
     ]
   },
   {

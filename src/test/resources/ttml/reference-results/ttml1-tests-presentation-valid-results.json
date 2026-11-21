@@ -29,8 +29,8 @@
   },
   {
     "file": "ttml1-prstn-break.xml",
-    "result": "fail",
-    "errors": [
+    "result": "pass",
+    "warnings": [
       "Attribute display is not applicable to <br> (line 15)"
     ]
   },
