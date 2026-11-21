@@ -88,7 +88,7 @@ Example:
 
 `"progress_bar": true | false`
 
-A progress bar is displayed if `progress_bar` is `true` and `log_level` is `"INFO"`.
+A progress bar is displayed if `progress_bar` is `true` and the console is a terminal.
 
 Default: `true`
 
