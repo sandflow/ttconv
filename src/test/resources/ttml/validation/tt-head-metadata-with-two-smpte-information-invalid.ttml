@@ -1,0 +1,10 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:smpte="http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt">
+  <head>
+    <metadata>
+      <smpte:information/>
+      <smpte:information/>
+    </metadata>
+  </head>
+</tt>

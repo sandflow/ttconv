@@ -1,0 +1,504 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+
+# Copyright (c) Sandflow Consulting LLC
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""NBCU-053 IMSC 1.1 Validator"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from enum import Enum
+from fractions import Fraction
+import io
+import json
+import math
+import typing
+from typing import Optional
+import xml.etree.ElementTree as ET
+
+from ttconv.config import ModuleConfiguration
+import ttconv.imsc.reader as imsc_reader
+from ttconv.isd import ISD
+import ttconv.model as model
+import ttconv.style_properties as styles
+
+from ttconv.imsc.validator.event_handler import ContextEventHandler, EventHandler, make_temporal_context
+from ttconv.imsc.validator.lang_helper import get_primary_language_subtag
+import ttconv.imsc.validator.imsc11_model as imsc11_model
+import ttconv.imsc.validator.imsc11_validator as imsc11_validator
+import ttconv.imsc.validator.infoset as IS
+import ttconv.imsc.validator.other_attributes as other_attrs
+
+class PermittedFrameRate(Enum):
+  '''The frame rates permitted by NBCU-053'''
+  FPS_23_98 = (24, Fraction(1000, 1001), "23.98")
+  FPS_25 = (25, Fraction(1, 1), "25")
+  FPS_29_97 = (30, Fraction(1000, 1001), "29.97")
+
+  def __init__(self, nominal_frame_rate: int, frame_rate_multiplier: Fraction, text: str):
+    self.nominal_frame_rate = nominal_frame_rate
+    self.frame_rate_multiplier = frame_rate_multiplier
+    self.text = text
+
+  @classmethod
+  def from_params(cls, nominal_frame_rate: int, frame_rate_multiplier: Fraction) -> typing.Optional[PermittedFrameRate]:
+    '''Returns the frame rate with the specified `nominal_frame_rate` and `frame_rate_multiplier`, or `None`
+    if no such frame rate exists'''
+    for frame_rate in cls:
+      if frame_rate.nominal_frame_rate == nominal_frame_rate and \
+        frame_rate.frame_rate_multiplier == frame_rate_multiplier:
+        return frame_rate
+
+    return None
+
+  @classmethod
+  def from_text(cls, text: str) -> PermittedFrameRate:
+    '''Returns the frame rate that `text` denotes, or raises `ValueError`'''
+    for frame_rate in cls:
+      if frame_rate.text == text:
+        return frame_rate
+
+    raise ValueError(f"`{text}` is not a permitted frame rate")
+
+def _validate_root_parameters(root: IS.Element, expected_frame_rate: Optional[PermittedFrameRate],
+                              aspect_ratio: typing.Optional[AspectRatio],
+                              event_handler: EventHandler):
+  dar_attr = root.get_attribute(other_attrs.DisplayAspectRatioAttribute.qname)
+  if dar_attr is not None and aspect_ratio is not None:
+    dar = other_attrs.DisplayAspectRatioAttribute.extract(dar_attr.value)
+    dar_value = f"{float(dar):.2f}"
+    if dar_value != aspect_ratio.value:
+      event_handler.error(
+        f"ttp:displayAspectRatio SHALL match the aspect_ratio parameter '{aspect_ratio.value}', "
+        f"found '{dar_attr.value}' ('{dar_value}')"
+      )
+
+  time_base_attr = root.get_attribute(other_attrs.TimeBaseAttribute.qname)
+  if time_base_attr is not None and \
+    other_attrs.TimeBaseAttribute.extract(time_base_attr.value) != other_attrs.TimeBase.media:
+    event_handler.error(
+      f"ttp:timeBase SHALL be 'media', found '{time_base_attr.value}'"
+    )
+
+  nominal_fps_attr = root.get_attribute(other_attrs.FrameRateAttribute.qname)
+  nominal_fps = 30
+  if nominal_fps_attr is not None:
+    nominal_fps = other_attrs.FrameRateAttribute.extract(nominal_fps_attr.value)
+
+  fps_mult_attr = root.get_attribute(other_attrs.FrameRateMultiplierAttribute.qname)
+  fps_mult = Fraction(1)
+  if fps_mult_attr is not None:
+    fps_mult = other_attrs.FrameRateMultiplierAttribute.extract(fps_mult_attr.value)
+
+  frame_rate = PermittedFrameRate.from_params(nominal_fps, fps_mult)
+
+  if frame_rate is None:
+    event_handler.error(f"The frame rate '{nominal_fps} * {fps_mult}' is not one of the permitted values.")
+  elif expected_frame_rate is not None and expected_frame_rate != frame_rate:
+    event_handler.error(f"The frame rate '{frame_rate}' is not the expected frame rate '{expected_frame_rate}'.")
+  elif expected_frame_rate is None:
+      event_handler.info(f'No expected frame rate supplied, inferring a frame rate of {frame_rate} from the file.')
+
+_EXPECTED_COLOR_SDR = styles.ColorType((0xEB, 0xEB, 0xEB, 255))  # tts:color="#EBEBEB"
+_EXPECTED_COLOR_HDR = styles.ColorType((0x92, 0x92, 0x92, 255))  # tts:color="#929292"
+_EXPECTED_BACKGROUND_COLOR = styles.NamedColors.transparent.value  # tts:backgroundColor="transparent"
+_EXPECTED_TEXT_OUTLINE_COLOR_SDR = styles.ColorType((0x10, 0x10, 0x10, 255))  # tts:textOutline="#101010 3%"
+_EXPECTED_TEXT_OUTLINE_COLOR_HDR = styles.ColorType((0x00, 0x00, 0x00, 255))  # tts:textOutline="#000000 3%"
+_EXPECTED_TEXT_OUTLINE_THICKNESS = styles.LengthType(3/15*0.8, styles.LengthType.Units.rh)  # tts:textOutline="#101010 3%" of 80% at 15 rows
+_EXPECTED_TEXT_OUTLINE_THICKNESS_CHARACTER_BASED = styles.LengthType(3/15, styles.LengthType.Units.rh)  # tts:textOutline="#101010 3%" of 100% at 15 rows
+_EXPECTED_FONT_SIZE = styles.LengthType(80/15, styles.LengthType.Units.rh)  # tts:fontSize="80%" of 15 rows
+_EXPECTED_LUMINANCE_GAIN = 1.5
+_EXPECTED_FONT_SIZE_CHARACTER_BASED = styles.LengthType(100/15, styles.LengthType.Units.rh)  # tts:fontSize="100%" of 15 rows
+_EXPECTED_ORIGIN = styles.CoordinateType(
+  x=styles.LengthType(2.5, styles.LengthType.Units.pct),
+  y=styles.LengthType(15, styles.LengthType.Units.pct)
+)  # tts:origin="2.5% 15%"
+_EXPECTED_EXTENT = styles.ExtentType(
+  width=styles.LengthType(95, styles.LengthType.Units.pct),
+  height=styles.LengthType(70, styles.LengthType.Units.pct)
+)  # tts:extent="95% 70%"
+
+_VERTICAL_REGION_IDS = frozenset(["Region_Vertical_Left", "Region_Vertical_Right"])
+
+def _make_pct_origin(x: float, y: float) -> styles.CoordinateType:
+  return styles.CoordinateType(
+    x=styles.LengthType(x, styles.LengthType.Units.pct),
+    y=styles.LengthType(y, styles.LengthType.Units.pct)
+  )
+
+def _make_pct_extent(w: float, h: float) -> styles.ExtentType:
+  return styles.ExtentType(
+    width=styles.LengthType(w, styles.LengthType.Units.pct),
+    height=styles.LengthType(h, styles.LengthType.Units.pct)
+  )
+
+def _format_percent(value: float) -> str:
+  '''Formats `value` as a percentage with at most two decimals'''
+  return f"{round(value, 2):g}%"
+
+def _format_color(color: typing.Any) -> str:
+  '''Formats `color` in #RRGGBB notation, or #RRGGBBAA notation if it is not opaque'''
+  if not isinstance(color, styles.ColorType):
+    return str(color)
+  r, g, b, a = color.components
+  return f"#{r:02X}{g:02X}{b:02X}" if a == 255 else f"#{r:02X}{g:02X}{b:02X}{a:02X}"
+
+def _format_length(length: styles.LengthType) -> str:
+  return f"{length.value}{length.units.value}"
+
+def _format_origin(origin: typing.Optional[styles.CoordinateType]) -> str:
+  if origin is None:
+    return str(None)
+  return f"{_format_length(origin.x)} {_format_length(origin.y)}"
+
+def _format_extent(extent: typing.Optional[styles.ExtentType]) -> str:
+  if extent is None:
+    return str(None)
+  return f"{_format_length(extent.width)} {_format_length(extent.height)}"
+
+class AspectRatio(Enum):
+  '''Display aspect ratio groups defined by NBCU-053 section 4.3.'''
+  RATIO_2_66 = "2.66"
+  RATIO_2_55 = "2.55"
+  RATIO_2_40 = "2.40"
+  RATIO_2_39 = "2.39"
+  RATIO_2_35 = "2.35"
+  RATIO_2_20 = "2.20"
+  RATIO_2_15 = "2.15"
+  RATIO_2_00 = "2.00"
+  RATIO_1_90 = "1.90"
+  RATIO_1_85 = "1.85"
+  RATIO_1_78 = "1.78"
+  RATIO_1_66 = "1.66"
+  RATIO_1_65 = "1.65"
+  RATIO_1_50 = "1.50"
+  RATIO_1_47 = "1.47"
+  RATIO_1_44 = "1.44"
+  RATIO_1_37 = "1.37"
+  RATIO_1_33 = "1.33"
+  RATIO_0_56 = "0.56"  # 9:16
+  RATIO_0_80 = "0.80"  # 4:5
+  RATIO_1_00 = "1.00"  # 1:1
+
+def _decode_frame_rate(value: typing.Optional[str]) -> typing.Optional[PermittedFrameRate]:
+  if value is None:
+    return None
+
+  try:
+    if isinstance(value, str):
+      return PermittedFrameRate.from_text(value)
+  except ValueError:
+    pass
+
+  raise ValueError(f"frame_rate shall be one of {', '.join(json.dumps(r.text) for r in PermittedFrameRate)}, not {json.dumps(value)}")
+
+def _decode_aspect_ratio(value: typing.Optional[str]) -> typing.Optional[AspectRatio]:
+  if value is None:
+    return None
+
+  if isinstance(value, str):
+    for ratio in AspectRatio:
+      if ratio.value == value:
+        return ratio
+
+  raise ValueError(f"aspect_ratio shall be one of {', '.join(json.dumps(r.value) for r in AspectRatio)}, not {json.dumps(value)}")
+
+@dataclass
+class NBCU053ValidatorConfiguration(ModuleConfiguration):
+  """NBCU-053 validator configuration"""
+
+  @classmethod
+  def name(cls):
+    return "nbcu053"
+
+  # frame rate of the document: None, "23.98", "25" or "29.97"
+  frame_rate: Optional[PermittedFrameRate] = field(default=None, metadata={"decoder": _decode_frame_rate})
+
+  # the document is an HDR document
+  hdr: bool = field(default=False, metadata={"decoder": bool})
+
+  # display aspect ratio of the media, as a string, e.g. "2.39". It is required if the document has vertical text.
+  aspect_ratio: typing.Optional[AspectRatio] = field(default=None, metadata={"decoder": _decode_aspect_ratio})
+
+_EXPECTED_VERT_REGION_DIMS = {
+  AspectRatio.RATIO_2_66: (_make_pct_origin(5, 23), _make_pct_extent(88, 54)),
+  AspectRatio.RATIO_2_55: (_make_pct_origin(5, 21), _make_pct_extent(88, 60)),
+  AspectRatio.RATIO_2_40: (_make_pct_origin(5, 19), _make_pct_extent(88, 62)),
+  AspectRatio.RATIO_2_39: (_make_pct_origin(5, 19), _make_pct_extent(88, 62)),
+  AspectRatio.RATIO_2_35: (_make_pct_origin(5, 19), _make_pct_extent(88, 62)),
+  AspectRatio.RATIO_2_20: (_make_pct_origin(5, 16), _make_pct_extent(88, 72)),
+  AspectRatio.RATIO_2_15: (_make_pct_origin(5, 16), _make_pct_extent(88, 72)),
+  AspectRatio.RATIO_2_00: (_make_pct_origin(5, 12), _make_pct_extent(88, 78)),
+  AspectRatio.RATIO_1_90: (_make_pct_origin(5, 10), _make_pct_extent(88, 80)),
+  AspectRatio.RATIO_1_85: (_make_pct_origin(5, 10), _make_pct_extent(88, 80)),
+  AspectRatio.RATIO_1_78: (_make_pct_origin(5, 10), _make_pct_extent(88, 80)),
+  AspectRatio.RATIO_1_66: (_make_pct_origin(8.5, 10), _make_pct_extent(81, 80)),
+  AspectRatio.RATIO_1_65: (_make_pct_origin(8.5, 10), _make_pct_extent(81, 80)),
+  AspectRatio.RATIO_1_50: (_make_pct_origin(13, 10), _make_pct_extent(72, 80)),
+  AspectRatio.RATIO_1_47: (_make_pct_origin(13, 10), _make_pct_extent(72, 80)),
+  AspectRatio.RATIO_1_44: (_make_pct_origin(14, 10), _make_pct_extent(70, 80)),
+  AspectRatio.RATIO_1_37: (_make_pct_origin(16, 10), _make_pct_extent(67, 80)),
+  AspectRatio.RATIO_1_33: (_make_pct_origin(17, 10), _make_pct_extent(65, 80)),
+  AspectRatio.RATIO_0_56: (_make_pct_origin(16, 10), _make_pct_extent(68, 80)),
+  AspectRatio.RATIO_0_80: (_make_pct_origin(14, 10), _make_pct_extent(72, 80)),
+  AspectRatio.RATIO_1_00: (_make_pct_origin(10, 10), _make_pct_extent(80, 80)),
+}
+
+
+_CHARACTER_BASED_LANGUAGES = frozenset([
+  "ja",   # Japanese
+  "ko",   # Korean
+  "ar",   # Arabic
+  "th",   # Thai
+  "zh",   # Chinese, e.g., Mandarin and Cantonese
+  "cmn",  # Mandarin
+  "yue",  # Cantonese
+])
+
+def _is_character_based_lang(lang: Optional[str]) -> bool:
+  return lang is not None and get_primary_language_subtag(lang) in _CHARACTER_BASED_LANGUAGES
+
+def _lengths_approx_equal(a: styles.LengthType, b: styles.LengthType) -> bool:
+  if a.units != b.units:
+    return False
+  a_value = float(a.value)
+  b_value = float(b.value)
+  return math.isclose(a_value, b_value, rel_tol=0.001)
+
+def _validate_styles(element: model.ContentElement, hdr: bool, event_handler: EventHandler):
+  elem_name = type(element).__name__
+  expected_color = _EXPECTED_COLOR_HDR if hdr else _EXPECTED_COLOR_SDR
+  expected_outline_color = _EXPECTED_TEXT_OUTLINE_COLOR_HDR if hdr else _EXPECTED_TEXT_OUTLINE_COLOR_SDR
+
+  bg_color = element.get_style(styles.StyleProperties.BackgroundColor)
+  if bg_color is not None and bg_color != _EXPECTED_BACKGROUND_COLOR:
+    event_handler.error(f"{elem_name}: computed tts:backgroundColor SHALL be 'transparent', found '{_format_color(bg_color)}'")
+
+  color = element.get_style(styles.StyleProperties.Color)
+  if color is not None and color != expected_color:
+    event_handler.error(f"{elem_name}: tts:color SHALL be '{_format_color(expected_color)}', found '{_format_color(color)}'")
+
+  font_size: typing.Optional[styles.LengthType] = element.get_style(styles.StyleProperties.FontSize)
+  if font_size is not None:
+    lang = element.get_lang()
+    if _is_character_based_lang(lang):
+      if not _lengths_approx_equal(font_size, _EXPECTED_FONT_SIZE_CHARACTER_BASED):
+        event_handler.error(
+          f"{elem_name}: tts:fontSize SHALL be '100%' for character-based language '{lang}', "
+          f"found '{_format_percent(font_size.value * 15)}'"
+        )
+    elif not _lengths_approx_equal(font_size, _EXPECTED_FONT_SIZE):
+      event_handler.error(
+        f"{elem_name}: tts:fontSize SHALL be '80%' for non-character-based language '{lang}', "
+        f"found '{_format_percent(font_size.value * 15)}'"
+      )
+
+  text_outline = element.get_style(styles.StyleProperties.TextOutline)
+  if text_outline is not None:
+    # the thickness of the outline is 3% of the expected font size
+    if _is_character_based_lang(element.get_lang()):
+      expected_thickness = _EXPECTED_TEXT_OUTLINE_THICKNESS_CHARACTER_BASED
+      expected_font_size = _EXPECTED_FONT_SIZE_CHARACTER_BASED
+    else:
+      expected_thickness = _EXPECTED_TEXT_OUTLINE_THICKNESS
+      expected_font_size = _EXPECTED_FONT_SIZE
+    if text_outline is styles.SpecialValues.none or \
+      text_outline.color != expected_outline_color or \
+      not _lengths_approx_equal(text_outline.thickness, expected_thickness):
+      if text_outline is styles.SpecialValues.none:
+        found = "none"
+      elif text_outline.thickness.units == expected_font_size.units:
+        found = f"{_format_color(text_outline.color)} {_format_percent(100 * text_outline.thickness.value / expected_font_size.value)}"
+      else:
+        found = f"{_format_color(text_outline.color)} {_format_length(text_outline.thickness)}"
+      event_handler.error(
+        f"{elem_name}: tts:textOutline SHALL be '{_format_color(expected_outline_color)} 3%' relative to a "
+        f"tts:fontSize of '{_format_percent(expected_font_size.value * 15)}', found '{found}'"
+      )
+
+  shear = element.get_style(styles.StyleProperties.Shear)
+  if shear is not None and shear != 0:
+    event_handler.error(
+      f"{elem_name}: tts:shear SHALL NOT be used and tts:fontStyle=\"italic\" used instead."
+    )
+
+def _validate_doc_styles(
+  doc: model.ContentDocument,
+  expected_vert_pos: typing.Optional[typing.Tuple[styles.CoordinateType, styles.ExtentType]],
+  hdr: bool,
+  event_handler: EventHandler
+):
+  # currently unreachable since the IMSC 1.1 should already rejects
+  # tts:writingMode outside <region>.
+  body = doc.get_body()
+  if body is not None:
+    for element in body.dfs_iterator():
+      writing_mode = element.get_style(styles.StyleProperties.WritingMode)
+      if writing_mode is not None:
+        event_handler.error(
+          f"{type(element).__name__}: tts:writingMode SHALL only be specified on <region> elements, "
+          f"found '{writing_mode.value}'"
+        )
+
+  # region constraints
+  for region in doc.iter_regions():
+    # luminanceGain constraints
+    gain = region.get_style(styles.StyleProperties.LuminanceGain)
+    if hdr:
+      if gain is None or gain != _EXPECTED_LUMINANCE_GAIN:
+        event_handler.error(
+          f"In HDR files, tts:luminanceGain SHALL be present and equal to '{_EXPECTED_LUMINANCE_GAIN}', "
+          f"found '{gain}'."
+        )
+    elif gain is not None and gain != _EXPECTED_LUMINANCE_GAIN:
+      event_handler.error(
+        f"If present in SDR files, tts:luminanceGain SHALL be present and equal to '{_EXPECTED_LUMINANCE_GAIN}', "
+        f"found '{gain}'."
+      )
+
+    # vertical text region constraints (NBCU-053 section 4)
+    region_id = region.get_id()
+    writing_mode = region.get_style(styles.StyleProperties.WritingMode)
+    is_vertical_region = region_id in _VERTICAL_REGION_IDS
+    is_vertical_writing = writing_mode == styles.WritingModeType.tbrl
+    origin = region.get_style(styles.StyleProperties.Origin)
+    extent = region.get_style(styles.StyleProperties.Extent)
+
+    if is_vertical_region or is_vertical_writing:
+
+      if not (is_vertical_region and is_vertical_writing):
+        event_handler.error(
+          f"Region '{region_id}': tts:writingMode SHALL be 'tbrl' if "
+          f"xml:id 'Region_Vertical_Left' or 'Region_Vertical_Right', and vice vera"
+        )
+
+      if expected_vert_pos is None:
+        event_handler.error(
+          f"Region '{region_id}': aspect_ratio parameter SHALL be specified when vertical text is present."
+        )
+      elif (origin, extent) != expected_vert_pos:
+        expected_origin, expected_extent = expected_vert_pos
+        event_handler.error(
+          f"Region '{region_id}': tts:origin/tts:extent SHALL be origin='{_format_origin(expected_origin)}' "
+          f"extent='{_format_extent(expected_extent)}' for the specified aspect ratio, "
+          f"found origin='{_format_origin(origin)}' extent='{_format_extent(extent)}'"
+        )
+    else:
+      if origin != _EXPECTED_ORIGIN:
+        event_handler.error(
+          f"Region '{region_id}': tts:origin SHALL be '{_format_origin(_EXPECTED_ORIGIN)}', "
+          f"found '{_format_origin(origin)}'"
+        )
+      if extent != _EXPECTED_EXTENT:
+        event_handler.error(
+          f"Region '{region_id}': tts:extent SHALL be '{_format_extent(_EXPECTED_EXTENT)}', "
+          f"found '{_format_extent(extent)}'"
+        )
+
+# minimum duration of a subtitle on screen, in seconds
+_MIN_SUBTITLE_DURATION = Fraction(5, 6)
+
+def validate(
+  f: typing.BinaryIO,
+  config: typing.Optional[ModuleConfiguration] = None,
+  event_handler: typing.Optional[EventHandler] = None,
+  progress_callback: typing.Callable[[float], None] = lambda _: None
+) -> bool:
+  '''Validates `f` using `config`
+
+  `f` must be a valid IMSC 1.1 document, and validation stops at the first failure of the IMSC 1.1 model.
+
+  `config.aspect_ratio` SHALL be provided if the document contains vertical text regions.
+
+  `progress_callback` is called with the fraction, between 0 and 1, of the validation that is completed.
+  '''
+
+  if config is None:
+    config = NBCU053ValidatorConfiguration()
+  elif not isinstance(config, NBCU053ValidatorConfiguration):
+    raise ValueError(f"the {NBCU053ValidatorConfiguration.name()} model requires an {NBCU053ValidatorConfiguration.__name__}")
+
+  expected_frame_rate = config.frame_rate
+  hdr = config.hdr
+  aspect_ratio = config.aspect_ratio
+
+  xml_doc = f.read()
+  counting_handler = imsc11_model.ErrorCountingEventHandler(event_handler)
+
+  try:
+
+    # first confirm the document is a conformant IMSC 1.1 document
+    if not imsc11_model.validate_static_model(xml_doc, counting_handler):
+      return False
+
+    # IMSC 1.1 validation
+    try:
+      # the Document and ISD sequences are shared with NBCU053 validation
+      doc = imsc_reader.to_model(ET.parse(io.BytesIO(xml_doc)), lambda p: progress_callback(0.1 * p))
+      isd_sequence = ISD.generate_isd_sequence(doc, lambda p: progress_callback(0.1 + 0.9 * p))
+      progress_callback(1.0)
+      imsc11_validator.validate_document(doc, isd_sequence, counting_handler)
+    except Exception as e: # pylint: disable=broad-except
+      counting_handler.error("%s", e)
+      return False
+
+    # validation stops if the document is not a valid IMSC 1.1 document
+    if counting_handler.error_count > 0:
+      return False
+
+    infoset = IS.Infoset.fromFile(io.BytesIO(xml_doc), counting_handler)
+
+    _validate_root_parameters(infoset.root, expected_frame_rate, aspect_ratio, counting_handler)
+
+    if infoset.root.get_attribute(other_attrs.DisplayAspectRatioAttribute.qname) is not None:
+      expected_vert_pos = (_EXPECTED_ORIGIN, _EXPECTED_EXTENT)
+    else:
+      expected_vert_pos = _EXPECTED_VERT_REGION_DIMS[aspect_ratio] if aspect_ratio is not None else None
+
+    _validate_doc_styles(doc, expected_vert_pos, hdr, counting_handler)
+
+    isd_event_handler = ContextEventHandler(counting_handler)
+    for i, (isd_time, isd) in enumerate(isd_sequence):
+      isd_event_handler.set_context(make_temporal_context(isd_time))
+      has_content = False
+      for isd_region in isd.iter_regions():
+        has_content = has_content or len(list(isd_region)) > 0
+        _validate_styles(isd_region, hdr, isd_event_handler)
+        for element in isd_region.dfs_iterator():
+          _validate_styles(element, hdr, isd_event_handler)
+
+      # subtitles remain on screen for at least the minimum duration, i.e., until the next ISD
+      if has_content and i + 1 < len(isd_sequence):
+        cur_sub_dur = isd_sequence[i + 1][0] - isd_time
+        if cur_sub_dur < _MIN_SUBTITLE_DURATION:
+          isd_event_handler.error(
+            f"Subtitles SHALL remain on screen for at least {float(_MIN_SUBTITLE_DURATION):.3f}s, "
+            f"found {float(cur_sub_dur):.3f}s"
+          )
+
+  except ValueError as ve:
+    counting_handler.error("%s", ve)
+    return False
+
+  return counting_handler.error_count == 0

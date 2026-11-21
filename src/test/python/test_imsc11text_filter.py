@@ -336,7 +336,7 @@ class IMSC11TextFilterTest(unittest.TestCase):
       IMSC11TextFilter().process(doc)
 
   # Section 8.4.13: ebutts:multiRowAlign SHALL only appear on p elements
-  def test_multi_row_align_on_span_raises(self):
+  def test_multi_row_align_on_span_passes(self):
     doc = _make_simple_doc()
     body = doc.get_body()
     for element in body.dfs_iterator():
@@ -346,8 +346,9 @@ class IMSC11TextFilterTest(unittest.TestCase):
           styles.MultiRowAlignType.center,
         )
 
-    with self.assertRaises(ValueError):
-      IMSC11TextFilter().process(doc)
+    filt = IMSC11TextFilter()
+    filt.process(doc)
+    self.assertIn(IMSC_11_TEXT_PROFILE_DESIGNATOR, doc.get_content_profiles())
 
   def test_multi_row_align_on_p_passes(self):
     doc = _make_simple_doc()

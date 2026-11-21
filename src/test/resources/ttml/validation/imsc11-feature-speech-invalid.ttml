@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #speech -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <profile xmlns="http://www.w3.org/ns/ttml#parameter">
+      <features>
+        <!-- require support for #speech feature -->
+        <feature value="required">#speech</feature>
+      </features>
+    </profile>
+  </head>
+  <body>
+    <div>
+      <p condition="supports('#speech')">Supports #speech feature.</p>
+    </div>
+  </body>
+</tt>

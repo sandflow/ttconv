@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    xmlns:ebutts="urn:ebu:tt:style" xmlns:ebuttm="urn:ebu:tt:metadata" xml:lang="ja"
+    ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text" ttp:timeBase="media"
+    ttp:frameRate="25" ttp:frameRateMultiplier="1000 1001">
+    <head>
+        <styling>
+            <style xml:id="default" tts:color="#929292" tts:backgroundColor="transparent"
+                tts:fontFamily="proportionalSansSerif" tts:fontSize="100%" tts:fontWeight="normal"
+                tts:fontStyle="normal" tts:textOutline="#000000 3%"/>
+        </styling>
+        <layout>
+            <region xml:id="Region_Top" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="2.5% 15%" tts:extent="95% 70%"
+                tts:textAlign="center" tts:displayAlign="before" tts:luminanceGain="1.5"/>
+            <region xml:id="Region_Bottom" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="2.5% 15%" tts:extent="95% 70%"
+                tts:textAlign="center" tts:displayAlign="after" tts:luminanceGain="1.5"/>
+            <region xml:id="Region_Vertical_Left" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="5% 19%" tts:extent="88% 62%"
+                tts:textAlign="start" tts:displayAlign="after" tts:writingMode="tbrl" tts:luminanceGain="1.5"/>
+            <region xml:id="Region_Vertical_Right" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="5% 19%" tts:extent="88% 62%"
+                tts:textAlign="start" tts:displayAlign="before" tts:writingMode="tbrl" tts:luminanceGain="1.5"/>
+        </layout>
+    </head>
+    <body>
+        <div>
+            <p begin="01:26:01.160" end="01:26:02.019" style="default" region="Region_Bottom" ebutts:multiRowAlign="start">カメラが先だ</p>
+        </div>
+    </body>
+</tt>

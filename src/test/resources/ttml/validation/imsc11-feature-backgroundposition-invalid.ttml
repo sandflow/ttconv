@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #backgroundPosition -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    tts:extent="1280px 720px"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <!-- 1-component values -->
+      <style tts:backgroundPosition="1px"/>
+      <style tts:backgroundPosition="+1px"/>
+      <style tts:backgroundPosition="-1px"/>
+      <!-- 2-component values -->
+      <style tts:backgroundPosition="0% 0%"/>
+      <style tts:backgroundPosition="1px 1em"/>
+      <style tts:backgroundPosition="left 50%"/>
+      <style tts:backgroundPosition="left center"/>
+      <style tts:backgroundPosition="center left"/>
+      <style tts:backgroundPosition="center right"/>
+      <style tts:backgroundPosition="top center"/>
+      <style tts:backgroundPosition="bottom center"/>
+      <style tts:backgroundPosition="center center"/>
+      <!-- 3-component values -->
+      <style tts:backgroundPosition="center top 1px"/>
+      <style tts:backgroundPosition="top 1px center"/>
+      <style tts:backgroundPosition="left top 1px"/>
+      <style tts:backgroundPosition="right top 1px"/>
+      <style tts:backgroundPosition="center bottom 1px"/>
+      <style tts:backgroundPosition="bottom 1px center"/>
+      <style tts:backgroundPosition="left bottom 1px"/>
+      <style tts:backgroundPosition="right bottom 1px"/>
+      <style tts:backgroundPosition="center left 1px"/>
+      <style tts:backgroundPosition="left 1px center"/>
+      <style tts:backgroundPosition="top left 1px"/>
+      <style tts:backgroundPosition="bottom left 1px"/>
+      <style tts:backgroundPosition="center right 1px"/>
+      <style tts:backgroundPosition="right 1px center"/>
+      <style tts:backgroundPosition="top right 1px"/>
+      <style tts:backgroundPosition="bottom right 1px"/>
+      <!-- 4-component values -->
+      <style tts:backgroundPosition="left 1px top 100%"/>
+      <style tts:backgroundPosition="right 1px top 100%"/>
+      <style tts:backgroundPosition="left 50% bottom 1px"/>
+      <style tts:backgroundPosition="left 0% bottom 1px"/>
+      <style tts:backgroundPosition="left 100% bottom 1px"/>
+      <style tts:backgroundPosition="left 50% bottom 1px"/>
+      <style tts:backgroundPosition="left 1px top 50%"/>
+      <style tts:backgroundPosition="right 1px top 50%"/>
+      <style tts:backgroundPosition="left 50% top 1px"/>
+      <style tts:backgroundPosition="left 0% bottom 1px"/>
+      <style tts:backgroundPosition="left 0% top 1px"/>
+      <style tts:backgroundPosition="left 1px top 100%"/>
+      <style tts:backgroundPosition="left 1px top 50%"/>
+      <style tts:backgroundPosition="left 1px top 0%"/>
+      <style tts:backgroundPosition="left 100% bottom 1px"/>
+      <style tts:backgroundPosition="left 100% top 1px"/>
+      <style tts:backgroundPosition="right 1px top 100%"/>
+      <style tts:backgroundPosition="right 1px top 50%"/>
+      <style tts:backgroundPosition="right 1px top 0%"/>
+      <style tts:backgroundPosition="left 1px top 0%"/>
+      <style tts:backgroundPosition="right 1px top 0%"/>
+      <style tts:backgroundPosition="left 50% top 1px"/>
+      <style tts:backgroundPosition="left 100% top 1px"/>
+      <style tts:backgroundPosition="left 100% top 1px"/>
+      <style tts:backgroundPosition="bottom 10% left 10%"/>
+      <style tts:backgroundPosition="bottom 10% right 10%"/>
+      <style tts:backgroundPosition="top 10% left 10%"/>
+      <style tts:backgroundPosition="top 10% right 10%"/>
+    </styling>
+  </head>
+</tt>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #condition-primary -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head>
+    <styling>
+      <style condition="0 == 0"/>
+      <style condition="0.== 0"/>
+      <style condition=".0 == 0"/>
+      <style condition="0.0 == 0"/>
+      <style condition="0.0E0 == 0"/>
+      <style condition="0.0E+0 == 0"/>
+      <style condition="0.0E-0 == 0"/>
+      <style condition="1 == 1.0"/>
+      <style condition="123 == 123.0"/>
+      <style condition="123. == 123.0"/>
+      <style condition="123.456 == 123.456"/>
+      <style condition="true"/>
+      <style condition="false"/>
+      <style condition="&quot;a b c&quot; == 'a b c'"/>
+      <style condition="&quot;&apos;&quot; == &quot;&apos;&quot;"/>
+      <style condition="&apos;a b c&apos; == 'a b c'"/>
+      <style condition="&apos;&quot;&apos; == '&quot;'"/>
+      <style condition="1.1 == 1.1"/>
+      <style condition="1.1*2.2+3.3 == 5.72"/>
+      <style condition="1.1 * 2.2 + 3.3 == 5.72"/>
+      <style condition="1.1+2.2*3.3 == 8.36"/>
+      <style condition="1.1 + 2.2 * 3.3 == 8.36"/>
+    </styling>
+  </head>
+</tt>
