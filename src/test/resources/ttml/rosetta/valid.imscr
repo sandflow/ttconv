@@ -6,7 +6,7 @@
     xml:lang="en-GB">
   <head>
     <metadata>
-      <rosetta:format>rosetta-imsc</rosetta:format>
+      <rosetta:format>imsc-rosetta</rosetta:format>
       <rosetta:version>0.0.0</rosetta:version>
       <rosetta:role>SDH</rosetta:role>
       <rosetta:startOfProgramme>10:00:00.000</rosetta:startOfProgramme>

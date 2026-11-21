@@ -51,7 +51,9 @@ from ttconv.imsc.validator.rules import AnyRule, EmptyRule, NodeSequence, OneOrM
 
 ROSETTA = "https://github.com/imsc-rosetta/specification"
 
-FORMAT_NAME = "rosetta-imsc"
+FORMAT_NAME = "imsc-rosetta"
+# format name of earlier revisions of the specification, which is permitted but deprecated
+DEPRECATED_FORMAT_NAME = "rosetta-imsc"
 FORMAT_VERSION = "0.0.0"
 
 # maps the namespaces used in a Rosetta document to their mandatory prefix (`None` for the default namespace)
@@ -149,38 +151,40 @@ def _references_style_of_kind(e: IS.Element, kind: typing.Union[type, typing.Tup
   return any(isinstance(styles.StyleSpecification.get(style_id), kind) for style_id in _get_referenced_style_ids(e))
 
 class MetadataTextElement(RosettaElement):
-  '''A Rosetta metadata element that contains only text, which is unconstrained unless `check_text()` is overridden'''
+  '''A Rosetta metadata element that contains only text, which is unconstrained unless `validate_contents()` is overridden'''
   content_model = PCDATARule()
-
-  def check_text(self, text: str) -> typing.Optional[str]:
-    '''Returns the requirement that `text` does not meet, or `None` if it does'''
-    return None
-
-  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
-    super().validate_contents(element, ctx)
-    text = "".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
-    problem = self.check_text(text)
-    if problem is not None:
-      ctx.event_handler.error("rosetta:%s %s (line %s)", self.qname.local_name, problem, element.get_line_number())
 
 class Format(MetadataTextElement):
   qname = QName(ROSETTA, "format")
 
-  def check_text(self, text: str) -> typing.Optional[str]:
-    return None if text == FORMAT_NAME else f"shall be `{FORMAT_NAME}`"
+  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
+    super().validate_contents(element, ctx)
+    text = "".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
+    if text == DEPRECATED_FORMAT_NAME:
+      ctx.event_handler.warn("rosetta:format `%s` is deprecated, use `%s` instead (line %s)", DEPRECATED_FORMAT_NAME, FORMAT_NAME,
+        element.get_line_number())
+    elif text != FORMAT_NAME:
+      ctx.event_handler.error("rosetta:format shall be `%s` (line %s)", FORMAT_NAME, element.get_line_number())
 
 class Version(MetadataTextElement):
   qname = QName(ROSETTA, "version")
 
-  def check_text(self, text: str) -> typing.Optional[str]:
-    return None if text == FORMAT_VERSION else f"shall be `{FORMAT_VERSION}`"
+  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
+    super().validate_contents(element, ctx)
+    text = "".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
+    if text != FORMAT_VERSION:
+      ctx.event_handler.error("rosetta:version shall be `%s` (line %s)", FORMAT_VERSION, element.get_line_number())
 
 class EnumeratedElement(MetadataTextElement):
   '''An element whose text is one of `values`'''
   values: typing.Tuple[str, ...] = ()
 
-  def check_text(self, text: str) -> typing.Optional[str]:
-    return None if text in self.values else "shall be one of " + ", ".join(f"`{v}`" for v in self.values)
+  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
+    super().validate_contents(element, ctx)
+    text = "".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
+    if text not in self.values:
+      ctx.event_handler.error("rosetta:%s shall be one of %s (line %s)", self.qname.local_name,
+        ", ".join(f"`{v}`" for v in self.values), element.get_line_number())
 
 class Role(EnumeratedElement):
   qname = QName(ROSETTA, "role")
@@ -193,12 +197,13 @@ class OriginalFormat(EnumeratedElement):
 class TimeElement(MetadataTextElement):
   '''An element whose text is a time in HH:MM:SS.TTT format'''
 
-  def check_text(self, text: str) -> typing.Optional[str]:
+  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
+    super().validate_contents(element, ctx)
+    text = "".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
     try:
       _parse_time_ms(text)
     except ValueError:
-      return "shall be in HH:MM:SS.TTT format"
-    return None
+      ctx.event_handler.error("rosetta:%s shall be in HH:MM:SS.TTT format (line %s)", self.qname.local_name, element.get_line_number())
 
 class StartOfProgramme(TimeElement):
   qname = QName(ROSETTA, "startOfProgramme")
@@ -211,14 +216,17 @@ _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:[0-5]\d:[0-5]\d\.\d{3}Z")
 class DateElement(MetadataTextElement):
   '''An element whose text is a UTC date and time in YYYY-MM-DDTHH:MM:SS.SSSZ format'''
 
-  def check_text(self, text: str) -> typing.Optional[str]:
+  def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
+    super().validate_contents(element, ctx)
+    text = "".join(c.value for c in element.get_children() if isinstance(c, IS.Text))
     if _DATE_RE.fullmatch(text) is not None:
       try:
         datetime.datetime.strptime(text, "%Y-%m-%dT%H:%M:%S.%fZ")
-        return None
+        return
       except ValueError:
         pass
-    return "shall be a UTC date and time in YYYY-MM-DDTHH:MM:SS.SSSZ format"
+    ctx.event_handler.error("rosetta:%s shall be a UTC date and time in YYYY-MM-DDTHH:MM:SS.SSSZ format (line %s)",
+      self.qname.local_name, element.get_line_number())
 
 class Created(DateElement):
   qname = QName(ROSETTA, "created")

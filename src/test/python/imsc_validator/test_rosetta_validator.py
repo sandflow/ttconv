@@ -103,7 +103,7 @@ def make_head(*styles: str, replace: typing.Optional[typing.Dict[str, str]] = No
   )
   return (
     '<head>'
-    '<metadata><rosetta:format>rosetta-imsc</rosetta:format><rosetta:version>0.0.0</rosetta:version></metadata>'
+    '<metadata><rosetta:format>imsc-rosetta</rosetta:format><rosetta:version>0.0.0</rosetta:version></metadata>'
     f'<styling>{style_defs}</styling>'
     '<layout>'
     '<region xml:id="R0" tts:origin="10% 10%" tts:extent="80% 80%" tts:displayAlign="after" style="r_default"/>'
@@ -167,14 +167,24 @@ class RosettaValidatorTests(unittest.TestCase):
 
   def test_imsc11_validation_fails_first(self):
     # the document is invalid for IMSC 1.1 (no xml:lang) and for Rosetta (rosetta:format), but only IMSC 1.1 is reported
-    doc = make_doc(tt_open=TT_OPEN.replace(' xml:lang="en-GB"', ''), head=HEAD.replace('>rosetta-imsc<', '>other<'))
+    doc = make_doc(tt_open=TT_OPEN.replace(' xml:lang="en-GB"', ''), head=HEAD.replace('>imsc-rosetta<', '>other<'))
     result, errors = _validate(doc)
     self.assertFalse(result)
     self.assertTrue(any("Required attribute" in e for e in errors), errors)
     self.assertFalse(any("rosetta:" in e for e in errors), errors)
 
+  def test_format(self):
+    result, errors, warnings = _validate_with_warnings(make_doc())
+    self.assertTrue(result, errors)
+    self.assertEqual(warnings, [])
+
+  def test_deprecated_format_is_permitted_with_a_warning(self):
+    result, errors, warnings = _validate_with_warnings(make_doc(head=HEAD.replace('>imsc-rosetta<', '>rosetta-imsc<')))
+    self.assertTrue(result, errors)
+    self.assertTrue(any("rosetta:format `rosetta-imsc` is deprecated" in w for w in warnings), warnings)
+
   def test_imsc11_valid_document_is_validated_against_rosetta(self):
-    result, errors = _validate(make_doc(head=HEAD.replace('>rosetta-imsc<', '>other<')))
+    result, errors = _validate(make_doc(head=HEAD.replace('>imsc-rosetta<', '>other<')))
     self.assertFalse(result)
     self.assertTrue(any("rosetta:format shall be" in e for e in errors), errors)
 
