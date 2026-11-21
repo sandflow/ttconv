@@ -29,18 +29,17 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Optional, Type, Tuple
+from typing import Optional, Tuple
 
 from ttconv.model import Div
-from ttconv.scc.caption_paragraph import SccCaptionParagraph
+from ttconv.scc.caption_paragraph import SccCaptionParagraph, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS
 from ttconv.scc.caption_style import SccCaptionStyle
-from ttconv.scc.codes import SccChannel
+from ttconv.scc.codes import SccChannel, SccCode
 from ttconv.scc.codes.attribute_codes import SccAttributeCode
 from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
-from ttconv.scc.word import SccWord
 from ttconv.style_properties import StyleProperties
 from ttconv.time_code import SmpteTimeCode
 
@@ -63,9 +62,10 @@ class SccContext:
     self.safe_area_x_offset = safe_area_x_offset
     self.safe_area_y_offset = safe_area_y_offset
 
-    # Previously read SCC word value
-    self.previous_word: Optional[SccWord] = None
-    self.previous_word_type: Optional[Type] = None
+    # Decoded control code of the immediately preceding word, if that word was a Channel 1 control code
+    self.preceding_cc: Optional[SccCode | SccPreambleAddressCode] = None
+    # Frame number at which the preceding control code was received
+    self.preceding_cc_frame: Optional[int] = None
 
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style = SccCaptionStyle.default()
@@ -83,8 +83,10 @@ class SccContext:
     # Cursor position in the active area
     self.active_cursor: Tuple[int, int] = (0, 0)
 
+    # Current text styles, None meaning the default
     self.current_text_decoration = None
     self.current_color = None
+    self.current_background = None
     self.current_font_style = None
 
     # Text alignment
@@ -95,8 +97,6 @@ class SccContext:
   def new_active_caption(self, begin_time_code: SmpteTimeCode, caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
     """Initializes a new caption being displayed"""
     self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, caption_style)
-    self.count += 1
-    self.active_caption.set_id("caption" + str(self.count))
     self.active_caption.set_begin(begin_time_code)
 
   def new_buffered_caption(self):
@@ -137,10 +137,6 @@ class SccContext:
         self.push_active_caption_to_model(time_code)
 
     # Send the current buffered caption to the active captions list
-    if not self.buffered_caption.get_id():
-      self.count += 1
-      self.buffered_caption.set_id("caption" + str(self.count))
-
     self.active_caption = self.buffered_caption
     self.new_buffered_caption()
 
@@ -159,13 +155,25 @@ class SccContext:
         self.active_caption = None
 
       if not previous_caption.is_empty():
+        # number captions as they are added to the model so that ids are unique and sequential
+        self.count += 1
+        previous_caption.set_id("caption" + str(self.count))
         self.div.push_child(previous_caption.to_paragraph(self.div.get_doc()))
 
   def backspace(self, time_code: SmpteTimeCode):
     """Move the cursors in a column to the left"""
     caption = self.get_caption_to_process(time_code)
-    caption.get_current_text().backspace()
     (row, indent) = caption.get_cursor()
+
+    if indent >= SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS:
+      # After a character in the last column the cursor moves to the column before it, and the
+      # character there is erased (CTA-608-E C.13)
+      caption.set_cursor_at(row, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 2)
+      caption.append_text(" ")
+      caption.set_cursor_at(row, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 2)
+      return
+
+    caption.get_current_text().backspace()
     caption.set_cursor_at(row, max(indent - 1, 0))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
@@ -240,6 +248,7 @@ class SccContext:
     self.current_color = pac.get_color()
     self.current_font_style = pac.get_font_style()
     self.current_text_decoration = pac.get_text_decoration()
+    self.current_background = None
 
     if self.has_active_caption():
       self.active_cursor = self.active_caption.get_cursor()
@@ -253,45 +262,30 @@ class SccContext:
     font_style = mid_row_code.get_font_style()
     text_decoration = mid_row_code.get_text_decoration()
 
-    if self.previous_word_type is not SccMidRowCode:
-      # In case of multiple mid-row codes, move right only after the first code
+    # If there is already text on the current line
+    if processed_caption is not None \
+        and processed_caption.get_current_text() is not None \
+        and not processed_caption.get_current_text().is_empty():
 
-      # If there is already text on the current line
-      if processed_caption is not None \
-          and processed_caption.get_current_text() is not None \
-          and not processed_caption.get_current_text().is_empty():
+      # In case of paint-on replacing text
+      if self.current_style is SccCaptionStyle.PaintOn \
+          and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
+        processed_caption.append_text(" ")
 
-        # In case of paint-on replacing text
-        if self.current_style is SccCaptionStyle.PaintOn \
-            and processed_caption.get_current_line().get_cursor() < processed_caption.get_current_line().get_length():
+      else:
+        if text_decoration is None:
+          processed_caption.new_caption_text()
           processed_caption.append_text(" ")
-
         else:
-          if text_decoration is None:
-            processed_caption.new_caption_text()
-            processed_caption.append_text(" ")
-          else:
-            processed_caption.append_text(" ")
-            processed_caption.new_caption_text()
+          processed_caption.append_text(" ")
+          processed_caption.new_caption_text()
 
-      elif processed_caption is not None:
-        processed_caption.append_text(" ")
+    elif processed_caption is not None:
+      processed_caption.append_text(" ")
 
-      self.current_color = color
-      self.current_font_style = font_style
-      self.current_text_decoration = text_decoration
-
-    else:
-      if color is not None:
-        self.current_color = color
-      if font_style is not None:
-        self.current_font_style = font_style
-      if text_decoration is not None:
-        self.current_text_decoration = text_decoration
-
-      if processed_caption is not None:
-        processed_caption.append_text(" ")
-        processed_caption.new_caption_text()
+    self.current_color = color
+    self.current_font_style = font_style
+    self.current_text_decoration = text_decoration
 
     if processed_caption is not None \
         and processed_caption.get_caption_style() is SccCaptionStyle.PaintOn:
@@ -310,12 +304,17 @@ class SccContext:
       processed_caption.new_caption_text()
 
     if attribute_code.is_background():
-      processed_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, attribute_code.get_color())
+      self.current_background = attribute_code.get_color()
     else:
-      processed_caption.get_current_text().add_style_property(StyleProperties.Color, attribute_code.get_color())
+      self.current_color = attribute_code.get_color()
+      self.current_text_decoration = attribute_code.get_text_decoration()
 
-    processed_caption.get_current_text().add_style_property(StyleProperties.TextDecoration,
-                                                            attribute_code.get_text_decoration())
+  def reset_current_char_styles(self):
+    """Resets the current character styles to their defaults"""
+    self.current_text_decoration = None
+    self.current_color = None
+    self.current_background = None
+    self.current_font_style = None
 
   def process_control_code(self, control_code: SccControlCode, time_code: SmpteTimeCode):
     """Processes SCC Control Code to map it to the model"""
@@ -329,6 +328,13 @@ class SccContext:
       self.current_style = SccCaptionStyle.PaintOn
 
     elif control_code in (SccControlCode.RU2, SccControlCode.RU3, SccControlCode.RU4):
+      
+      if self.current_style is not SccCaptionStyle.RollUp:
+        # Switching to roll-up style erases both display and non-display memories
+        # (CTA-608-E C.10)
+        self.push_active_caption_to_model(time_code)
+        self.new_buffered_caption()
+
       # Start a new Roll-Up caption
       self.current_style = SccCaptionStyle.RollUp
 
@@ -376,17 +382,24 @@ class SccContext:
       # Erase buffered caption
       self.new_buffered_caption()
 
+    elif control_code is SccControlCode.FON:
+      # Flash On is displayed as a space (see 47 CFR Ch. I, § 15.119(i))
+      self.process_text(" ", time_code)
+
     elif control_code is SccControlCode.TO1:
-      self.get_caption_to_process(time_code).indent_cursor(1)
+      self.get_caption_to_process(time_code).tab_cursor(1)
 
     elif control_code is SccControlCode.TO2:
-      self.get_caption_to_process(time_code).indent_cursor(2)
+      self.get_caption_to_process(time_code).tab_cursor(2)
 
     elif control_code is SccControlCode.TO3:
-      self.get_caption_to_process(time_code).indent_cursor(3)
+      self.get_caption_to_process(time_code).tab_cursor(3)
 
     elif control_code is SccControlCode.CR:
       # Roll the displayed caption up one row (Roll-Up)
+
+      # the new row starts with the default style (see CTA 608, C.14)
+      self.reset_current_char_styles()
 
       if self.has_active_caption():
         if self.active_caption.get_caption_style() is not SccCaptionStyle.RollUp:
@@ -394,8 +407,8 @@ class SccContext:
           self.push_active_caption_to_model(time_code)
           return
 
-        if self.active_caption.get_current_text().is_empty():
-          self.count -= 1
+        if self.active_caption.is_empty():
+          # nothing is displayed: there is nothing to roll up
           previous_lines = []
         else:
           # Push active caption to model (but don't erase it)
@@ -462,6 +475,8 @@ class SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+      if self.current_background is not None:
+        self.active_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, self.current_background)
 
     elif self.current_style is SccCaptionStyle.RollUp:
       if not self.has_active_caption():
@@ -473,6 +488,8 @@ class SccContext:
       self.active_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.active_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.active_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+      if self.current_background is not None:
+        self.active_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, self.current_background)
 
     elif self.current_style is SccCaptionStyle.PopOn:
       self.buffered_caption.append_text(word)
@@ -480,6 +497,8 @@ class SccContext:
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.Color, self.current_color)
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.FontStyle, self.current_font_style)
       self.buffered_caption.get_current_text().add_style_property(StyleProperties.TextDecoration, self.current_text_decoration)
+      if self.current_background is not None:
+        self.buffered_caption.get_current_text().add_style_property(StyleProperties.BackgroundColor, self.current_background)
 
     if self.has_active_caption():
       self.active_cursor = self.active_caption.get_cursor()

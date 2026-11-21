@@ -27,11 +27,14 @@
 
 # pylint: disable=R0201,C0115,C0116
 
+import inspect
 import typing
 import unittest
 from fractions import Fraction
+from unittest import mock
 import ttconv.model as model
 import ttconv.style_properties as styles
+
 
 class ContentDocumentTest(unittest.TestCase):
 
@@ -355,6 +358,7 @@ class ContentDocumentTest(unittest.TestCase):
     src.set_px_resolution(model.PixelResolutionType(height=480, width=640))
     src.set_lang("fr")
     src.set_cell_resolution(model.CellResolutionType(rows=10, columns=20))
+    src.set_content_profiles({"profile1"})
 
     src.put_initial_value(styles.StyleProperties.Color, styles.ColorType((12, 23, 43, 56)))
 
@@ -367,8 +371,121 @@ class ContentDocumentTest(unittest.TestCase):
     self.assertEqual(dest.get_px_resolution(), src.get_px_resolution())
     self.assertEqual(dest.get_lang(), src.get_lang())
     self.assertEqual(dest.get_cell_resolution(), src.get_cell_resolution())
+    self.assertEqual(dest.get_content_profiles(), src.get_content_profiles())
+    self.assertIsNot(dest.get_content_profiles(), src.get_content_profiles())
 
     self.assertSequenceEqual(list(dest.iter_initial_values()), list(src.iter_initial_values()))
+
+  def test_copy_to_reads_every_property(self):
+    def all_getter(obj) -> typing.Set[str]:
+      '''Returns the names of public, zero-argument accessor methods of `obj`, i.e. methods
+      whose name starts with `get_`, `is_` or `has_` and that can be called with no arguments.
+      '''
+
+      names = set()
+
+      for name in dir(obj):
+        if not (name.startswith("get_") or name.startswith("is_") or name.startswith("has_")):
+          continue
+
+        member = getattr(obj, name)
+
+        if not callable(member):
+          continue
+
+        for p in inspect.signature(member).parameters.values():
+          if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) and p.default is inspect.Parameter.empty:
+            break
+        else:
+          names.add(name)
+
+      return names
+
+    excluded_methods = {"get_body"}
+
+    doc = model.ContentDocument()
+
+    getter_names = all_getter(doc) - excluded_methods
+
+    called = set()
+    patchers = []
+
+    for name in getter_names:
+      original = getattr(doc, name)
+
+      def side_effect(*args, _name=name, _original=original, **kwargs):
+        called.add(_name)
+        return _original(*args, **kwargs)
+
+      patcher = mock.patch.object(doc, name, side_effect=side_effect)
+      patcher.start()
+      patchers.append(patcher)
+
+    try:
+      doc.copy_to(model.ContentDocument())
+    finally:
+      for patcher in patchers:
+        patcher.stop()
+
+    missing = getter_names - called
+
+    self.assertEqual(missing, set(), f"copy_to() does not read: {sorted(missing)}")
+
+  def test_clone(self):
+    src = model.ContentDocument()
+
+    src.set_lang("fr")
+    src.set_content_profiles({"profile1"})
+    src.put_initial_value(styles.StyleProperties.Color, styles.ColorType((12, 23, 43, 56)))
+
+    region = model.Region("r1", src)
+    src.put_region(region)
+
+    body = model.Body(src)
+    src.set_body(body)
+
+    div = model.Div(src)
+    div.set_region(region)
+    body.push_child(div)
+
+    p = model.P(src)
+    p.set_id("p1")
+    div.push_child(p)
+
+    clone = src.clone()
+
+    self.assertIsNot(clone, src)
+    self.assertEqual(clone.get_lang(), src.get_lang())
+    self.assertEqual(clone.get_content_profiles(), src.get_content_profiles())
+    self.assertIsNot(clone.get_content_profiles(), src.get_content_profiles())
+    self.assertSequenceEqual(list(clone.iter_initial_values()), list(src.iter_initial_values()))
+
+    clone_region = clone.get_region("r1")
+    self.assertIsNotNone(clone_region)
+    self.assertIsNot(clone_region, region)
+    self.assertIs(clone_region.get_doc(), clone)
+
+    clone_body = clone.get_body()
+    self.assertIsNotNone(clone_body)
+    self.assertIsNot(clone_body, body)
+    self.assertIs(clone_body.get_doc(), clone)
+
+    clone_div = clone_body.first_child()
+    self.assertIs(clone_div.get_region(), clone_region)
+
+    clone_p = clone_div.first_child()
+    self.assertEqual(clone_p.get_id(), "p1")
+
+    # the original document is left untouched
+    self.assertIs(src.get_body(), body)
+    self.assertIs(div.get_region(), region)
+
+  def test_clone_no_body(self):
+    src = model.ContentDocument()
+
+    clone = src.clone()
+
+    self.assertIsNone(clone.get_body())
 
 if __name__ == '__main__':
   unittest.main()

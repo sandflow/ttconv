@@ -123,7 +123,7 @@ SCC_STANDARD_CHARACTERS_MAPPING = dict([
   (0x7C, "\u00F7"),  # ÷ Division sign
   (0x7D, "\u00D1"),  # Ñ Upper-case N with tilde
   (0x7E, "\u00F1"),  # ñ Lower-case n with tilde
-  (0x7F, "\u2588"),  # █ Solid block
+  (0x7F, "\u25A0"),  # ■ Solid block
 ])
 
 TO_SCC_BYTES = {unicode_char: scc_byte for scc_byte, unicode_char in SCC_STANDARD_CHARACTERS_MAPPING.items()}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tt xml:lang="ja" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text">
+  <head>
+    <metadata>
+      <ttm:desc>Multiline ruby with writingMode tblr (vertical, lines progressing left to right)</ttm:desc>
+    </metadata>
+    <layout>
+      <region xml:id="r1" tts:fontSize="200%" tts:origin="10% 10%" tts:extent="80% 80%" tts:displayAlign="after" tts:textAlign="center" tts:writingMode="tblr"/>
+    </layout>
+  </head>
+  <body>
+    <div region="r1">
+      <p begin="0s" end="3s">
+        <span tts:ruby="container">
+          <span tts:ruby="base">東京</span>
+          <span tts:ruby="text" tts:rubyPosition="before">とうきょう</span>
+        </span>から<span tts:ruby="container">
+          <span tts:ruby="base">大阪</span>
+          <span tts:ruby="text" tts:rubyPosition="before">おおさか</span>
+        </span>まで<br/>
+        <span tts:ruby="container">
+          <span tts:ruby="baseContainer">
+            <span tts:ruby="base">新</span>
+            <span tts:ruby="base">幹</span>
+            <span tts:ruby="base">線</span>
+          </span>
+          <span tts:ruby="textContainer" tts:rubyPosition="after">
+            <span tts:ruby="text">しん</span>
+            <span tts:ruby="text">かん</span>
+            <span tts:ruby="text">せん</span>
+          </span>
+        </span>で移動します
+      </p>
+    </div>
+  </body>
+</tt>

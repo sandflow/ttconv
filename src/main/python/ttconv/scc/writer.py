@@ -239,6 +239,27 @@ class _RollupKind(Enum):
   ROLL_UP = 1
   PAINT_ON = 2
 
+def _reflow(text: str) -> List[str]:
+  """Splits `text` into rows of at most MAX_LINEWIDTH characters (CTA-608-E C.13). A row is broken
+  at the last space that fits, and that space is dropped. A word longer than a row is cut at the last
+  column. Trailing spaces are dropped, so that no row is empty."""
+  text = text.rstrip(' ')
+
+  rows: List[str] = []
+  while len(text) > MAX_LINEWIDTH:
+    break_i = text.rfind(' ', 1, MAX_LINEWIDTH + 1)
+
+    if break_i > 0:
+      rows.append(text[:break_i])
+      text = text[break_i + 1:]
+    else:
+      rows.append(text[:MAX_LINEWIDTH])
+      text = text[MAX_LINEWIDTH:]
+
+  rows.append(text)
+
+  return rows
+
 def _process_as_rollup(captions, config, progress_callback) -> List[_Chunk]:
   chunks: List[_Chunk] = []
 
@@ -403,24 +424,8 @@ def from_model(doc: model.ContentDocument, config: Optional[SccWriterConfigurati
         LOGGER.warning("Line width exceeded at %ss", float(begin))
       else:
         raise RuntimeError(f"Line width exceeded at {float(begin)}s, reflow disabled")
-      # merge the lines of the caption and remove duplicate spaces
-      text: str = re.sub(' +', ' ', ' '.join(caption))
-
-      # reflow text
-      reflowed_lines: List[str] = []
-      while len(text) > MAX_LINEWIDTH:
-        break_i = MAX_LINEWIDTH
-
-        for i in range(len(text) - 2, 0, -1):
-          c = text[i]
-          if c == ord(' ') and i < MAX_LINEWIDTH:
-            break_i = i
-            break
-
-        reflowed_lines.append(text[:break_i])
-        text = text[break_i + 1:]
-
-      reflowed_lines.append(text)
+      # merge the lines of the caption, remove duplicate spaces and reflow
+      reflowed_lines = _reflow(re.sub(' +', ' ', ' '.join(caption)))
 
       caption.set_lines(reflowed_lines)
 

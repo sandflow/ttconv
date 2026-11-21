@@ -71,6 +71,8 @@ class SccCaptionParagraph:
 
     # Position of the cursor in the active area
     self._cursor: (int, int) = (0, 0)
+    # Whether text went past the last column since the cursor was moved
+    self._is_overflow: bool = False
     # Line where the cursor is currently positioned
     self._current_line: Optional[SccCaptionLine] = None
     # Lines per row in the active area (will be separated by line-breaks)
@@ -131,8 +133,32 @@ class SccCaptionParagraph:
 
   def append_text(self, text: str):
     """Append text to current line text content"""
+    if len(text) == 0:
+      return
+
+    cols_left = SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - self._cursor[1]
+
+    if len(text) > cols_left:
+      if not self._is_overflow:
+        self._is_overflow = True
+        LOGGER.warning("The text overflows the last column of the row %s (at %s): the characters after it replace the "
+                       "one in the last column", self._cursor[0], self._begin)
+
+      # The cursor can not move past the last column: each overflowing character replaces the one in that
+      # column, so only the last character of the text remains there (CTA-608-E C.13)
+      if cols_left == 0:
+        self._cursor = (self._cursor[0], SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 1)
+        self._update_current_line_cursor()
+        cols_left = 1
+
+      text = text[:cols_left - 1] + text[-1]
+
     self.get_current_line().add_text(text)
     self.indent_cursor(len(text))
+
+  def tab_cursor(self, nb_columns: int):
+    """Moves the cursor to the right with a tab offset, but not past the last column (CTA-608-E C.13)"""
+    self.indent_cursor(min(nb_columns, max(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 1 - self._cursor[1], 0)))
 
   def set_lines(self, lines: Union[List[SccCaptionLine], Dict[int, SccCaptionLine]]):
     """Sets paragraph lines"""
@@ -170,6 +196,7 @@ class SccCaptionParagraph:
         del self._caption_lines[self._current_line.get_row()]
 
     self._cursor = (row, indent if indent is not None else 0)
+    self._is_overflow = False
 
     if self._caption_lines.get(row) is None:
       self.new_caption_line()

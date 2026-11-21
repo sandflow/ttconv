@@ -26,8 +26,8 @@ The class hierarchy of the canonical model is summarized the following figure:
     : (Span | Br | Text)*
   
   Ruby
-    : Rb? Rt?
-    | Rb? Rp Rt? Rp
+    : (Rb Rt)?
+    | Rb Rp Rt Rp
     | Rbc Rtc Rtc?
   
   Rbc

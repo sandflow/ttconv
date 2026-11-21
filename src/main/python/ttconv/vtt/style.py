@@ -45,6 +45,12 @@ COLOR_TAG_OUT = "</c>"
 BG_COLOR_TAG_IN = "<c.{}>"
 BG_COLOR_TAG_OUT = "</c>"
 
+RUBY_TAG_IN = "<ruby>"
+RUBY_TAG_OUT = "</ruby>"
+
+RT_TAG_IN = "<rt>"
+RT_TAG_OUT = "</rt>"
+
 DEFAULT_TEXT_COLORS: Dict[str, str] = {
   "#ffffffff": "white",
   "#00ff00ff": "lime",

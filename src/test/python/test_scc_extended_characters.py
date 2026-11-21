@@ -117,12 +117,12 @@ class SccExtendedCharactersTest(unittest.TestCase):
     self.assertEqual('\u0027', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x122A)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_HORIZONTAL, extended_char)
-    self.assertEqual('\u2501', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.EM_DASH, extended_char)
+    self.assertEqual('\u2014', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1A2A)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_HORIZONTAL, extended_char)
-    self.assertEqual('\u2501', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.EM_DASH, extended_char)
+    self.assertEqual('\u2014', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x122B)
     self.assertEqual(SccExtendedCharacter.COPYRIGHT_SIGN, extended_char)
@@ -391,12 +391,12 @@ class SccExtendedCharactersTest(unittest.TestCase):
     self.assertEqual('\u005C', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x132C)
-    self.assertEqual(SccExtendedCharacter.LATIN_SMALL_LETTER_TURNED_V, extended_char)
-    self.assertEqual('\u028C', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.CIRCUMFLEX_ACCENT, extended_char)
+    self.assertEqual('\u005E', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1B2C)
-    self.assertEqual(SccExtendedCharacter.LATIN_SMALL_LETTER_TURNED_V, extended_char)
-    self.assertEqual('\u028C', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.CIRCUMFLEX_ACCENT, extended_char)
+    self.assertEqual('\u005E', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x132D)
     self.assertEqual(SccExtendedCharacter.LOW_LINE, extended_char)
@@ -480,12 +480,12 @@ class SccExtendedCharactersTest(unittest.TestCase):
     self.assertEqual('\u00A4', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1337)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_VERTICAL, extended_char)
-    self.assertEqual('\u2503', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_VERTICAL, extended_char)
+    self.assertEqual('\u2502', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1B37)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_VERTICAL, extended_char)
-    self.assertEqual('\u2503', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_VERTICAL, extended_char)
+    self.assertEqual('\u2502', extended_char.get_unicode_value())
 
   def test_scc_danish_extended_characters_unicode_values(self):
     extended_char = SccExtendedCharacter.find(0x1338)
@@ -521,36 +521,36 @@ class SccExtendedCharactersTest(unittest.TestCase):
     self.assertEqual('\u00F8', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x133C)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_DOWN_AND_RIGHT, extended_char)
-    self.assertEqual('\u250F', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_DOWN_AND_RIGHT, extended_char)
+    self.assertEqual('\u250C', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1B3C)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_DOWN_AND_RIGHT, extended_char)
-    self.assertEqual('\u250F', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_DOWN_AND_RIGHT, extended_char)
+    self.assertEqual('\u250C', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x133D)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_DOWN_AND_LEFT, extended_char)
-    self.assertEqual('\u2513', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_DOWN_AND_LEFT, extended_char)
+    self.assertEqual('\u2510', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1B3D)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_DOWN_AND_LEFT, extended_char)
-    self.assertEqual('\u2513', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_DOWN_AND_LEFT, extended_char)
+    self.assertEqual('\u2510', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x133E)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_UP_AND_RIGHT, extended_char)
-    self.assertEqual('\u2517', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_UP_AND_RIGHT, extended_char)
+    self.assertEqual('\u2514', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1B3E)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_UP_AND_RIGHT, extended_char)
-    self.assertEqual('\u2517', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_UP_AND_RIGHT, extended_char)
+    self.assertEqual('\u2514', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x133F)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_UP_AND_LEFT, extended_char)
-    self.assertEqual('\u251B', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_UP_AND_LEFT, extended_char)
+    self.assertEqual('\u2518', extended_char.get_unicode_value())
 
     extended_char = SccExtendedCharacter.find(0x1B3F)
-    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_HEAVY_UP_AND_LEFT, extended_char)
-    self.assertEqual('\u251B', extended_char.get_unicode_value())
+    self.assertEqual(SccExtendedCharacter.BOX_DRAWINGS_LIGHT_UP_AND_LEFT, extended_char)
+    self.assertEqual('\u2518', extended_char.get_unicode_value())
 
 
 if __name__ == '__main__':

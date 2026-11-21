@@ -48,6 +48,12 @@ class VttCue:
     center = "center"
     right = "right"
 
+  class WritingDirection(Enum):
+    """WebVTT writing direction cue setting"""
+    horizontal = "horizontal"
+    vertical_growing_left = "rl"
+    vertical_growing_right = "lr"
+
   _EOL_SEQ_RE = re.compile(r"\n{2,}")
 
   def __init__(self, identifier: Optional[int] = None):
@@ -58,6 +64,7 @@ class VttCue:
     self._line: int = None
     self._linealign: VttCue.LineAlignment = None
     self._textalign: VttCue.TextAlignment = None
+    self._writing_direction: VttCue.WritingDirection = VttCue.WritingDirection.horizontal
 
   def set_begin(self, offset: Fraction):
     """Sets the paragraph begin time code"""
@@ -100,6 +107,14 @@ class VttCue:
     """Sets the WebVTT text alignment cue setting"""
     self._textalign = textalign
 
+  def set_writing_direction(self, writing_direction: WritingDirection):
+    """Sets the WebVTT writing direction cue setting"""
+    self._writing_direction = writing_direction
+
+  def get_writing_direction(self) -> WritingDirection:
+    """Return the WebVTT writing direction cue setting"""
+    return self._writing_direction
+
   def is_only_whitespace_or_empty(self):
     """Returns whether the paragraph text contains only whitespace or is empty"""
     return len(self._text) == 0 or self._text.isspace()
@@ -133,6 +148,10 @@ class VttCue:
     
     # cue timing
     t += f"{self._begin} --> {self._end}"
+
+    # cue writing direction
+    if self._writing_direction is not VttCue.WritingDirection.horizontal:
+      t += f" vertical:{self._writing_direction.value}"
 
     # cue text position
     if self._textalign is not None:

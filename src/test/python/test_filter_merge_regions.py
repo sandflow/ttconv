@@ -32,6 +32,7 @@ import unittest
 from ttconv.filters.isd.merge_regions import RegionsMergingISDFilter
 from ttconv.isd import ISD
 from ttconv.model import P, Body, Div, Span, Text, ContentElement
+from ttconv.style_properties import DisplayAlignType, StyleProperties, WritingModeType
 
 
 class RegionsMergingFilterTest(unittest.TestCase):
@@ -97,6 +98,39 @@ class RegionsMergingFilterTest(unittest.TestCase):
 
     text = self._get_text_from_children(divs[1])
     self.assertEqual("Is there anyone here?", text)
+
+  def _merge_styled_regions(self, regions_merging_filter: RegionsMergingISDFilter):
+    isd = ISD(None)
+
+    r1 = ISD.Region("r1", isd)
+    r1.push_child(self._get_filled_body(isd, "Hello world"))
+    r1.set_style(StyleProperties.WritingMode, WritingModeType.tbrl)
+    r1.set_style(StyleProperties.DisplayAlign, DisplayAlignType.after)
+
+    r2 = ISD.Region("r2", isd)
+    r2.push_child(self._get_filled_body(isd, "Is there anyone here?"))
+    r2.set_style(StyleProperties.WritingMode, WritingModeType.tblr)
+
+    isd.put_region(r1)
+    isd.put_region(r2)
+
+    regions_merging_filter.process(isd)
+
+    merged_region = isd.get_region("r1_r2")
+    self.assertIsNotNone(merged_region)
+    self.assertEqual("r1_r2", merged_region.get_id())
+
+    return merged_region
+
+  def test_merging_regions_no_style_copy(self):
+    merged_region = self._merge_styled_regions(RegionsMergingISDFilter())
+    self.assertIsNone(merged_region.get_style(StyleProperties.WritingMode))
+    self.assertIsNone(merged_region.get_style(StyleProperties.DisplayAlign))
+
+  def test_merging_regions_style_copy(self):
+    merged_region = self._merge_styled_regions(RegionsMergingISDFilter(is_style_copy=True))
+    self.assertEqual(WritingModeType.tbrl, merged_region.get_style(StyleProperties.WritingMode))
+    self.assertEqual(DisplayAlignType.after, merged_region.get_style(StyleProperties.DisplayAlign))
 
 if __name__ == '__main__':
   unittest.main()

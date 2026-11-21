@@ -37,6 +37,10 @@ LOGGER = logging.getLogger(__name__)
 class RegionsMergingISDFilter(ISDFilter):
   """Filter for merging ISD document regions into a single region"""
 
+  def __init__(self, is_style_copy: bool = False):
+    """If `is_style_copy` is true, the merged region inherits the properties of the first region"""
+    self.is_style_copy = is_style_copy
+
   def process(self, isd: ISD):
     """Merges the ISD document regions"""
     LOGGER.debug("Apply regions merging filter to ISD.")
@@ -70,6 +74,11 @@ class RegionsMergingISDFilter(ISDFilter):
       isd.remove_region(region_id)
 
     target_region = ISD.Region("_".join(region_ids), isd)
+
+    if self.is_style_copy:
+      original_regions[0].copy_to(target_region)
+      target_region.set_id("_".join(region_ids))
+
     target_region.push_child(target_body)
 
     isd.put_region(target_region)
