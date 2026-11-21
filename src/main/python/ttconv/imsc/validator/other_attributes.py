@@ -42,7 +42,6 @@ from ttconv.imsc.validator.uri_helper import is_uri
 from ttconv.imsc.validator.lang_helper import is_valid_language_tag
 from ttconv.imsc.validator.xml_helper import is_valid_xml_name, xml_qname_parts
 
-_LWSP_RE = re.compile(r"[ \t\r\n]+")
 
 class TimeBase(Enum):
   clock = "clock"
@@ -175,7 +174,7 @@ class ContentProfilesAttribute:
       raise ValueError("ttp:contentProfiles is the empty string")
 
     # TODO: validation/valid/ttml2-valid-content-profiles-quantified-all-single.xml does not use LWSP
-    c = _LWSP_RE.split(value)
+    c = imsc_utils.LWSP_RE.split(value)
     if len(c) > 2 and c[0] == "all(" and c[-1] == ")":
       c = c[1:-1]
     for d in c:
@@ -205,7 +204,7 @@ class CellResolutionAttribute:
 
   qname = QName(ns.TTP, "cellResolution")
 
-  _CELL_RESOLUTION_RE = re.compile(r"^(\d+) (\d+)$")
+  _CELL_RESOLUTION_RE = re.compile(rf"^(\d+){imsc_utils.LWSP}(\d+)$")
 
   @staticmethod
   def validate(value: str, _ctx: ValidationContext):
@@ -224,7 +223,7 @@ class ExtentAttribute:
 
   @staticmethod
   def validate(value: str, _ctx: ValidationContext):
-    s = value.split(" ")
+    s = imsc_utils.LWSP_RE.split(value)
     if len(s) != 2:
       raise ValueError("Bad tts:extent value (%s)" % value)
     try:
@@ -246,7 +245,7 @@ class ActiveAreaAttribute:
 
   @staticmethod
   def validate(value: str, _ctx: ValidationContext):
-    s = value.split(" ")
+    s = imsc_utils.LWSP_RE.split(value)
     if len(s) != 4:
       raise ValueError("Bad ittp:activeArea value (%s)" % value)
     try:
@@ -280,7 +279,7 @@ class AspectRatioAttribute:
 
   qname = QName(ns.ITTP, "aspectRatio")
 
-  _re = re.compile(r"^(\d+) (\d+)$")
+  _re = re.compile(rf"^(\d+){imsc_utils.LWSP}(\d+)$")
 
   @staticmethod
   def validate(value: str, _ctx: ValidationContext):
@@ -309,7 +308,7 @@ class DisplayAspectRatioAttribute:
 
   qname = QName(ns.TTP, "displayAspectRatio")
 
-  _re = re.compile(r"^(\d+) (\d+)$")
+  _re = re.compile(rf"^(\d+){imsc_utils.LWSP}(\d+)$")
 
   @staticmethod
   def extract(value: str) -> Fraction:
@@ -357,7 +356,7 @@ class FrameRateMultiplierAttribute:
 
   qname = QName(ns.TTP, "frameRateMultiplier")
 
-  _FRAME_RATE_MULT_RE = re.compile(r"^(\d+) (\d+)$")
+  _FRAME_RATE_MULT_RE = re.compile(rf"^(\d+){imsc_utils.LWSP}(\d+)$")
 
   @staticmethod
   def extract(value: str) -> Fraction:
@@ -548,7 +547,7 @@ class StyleAttribute:
 
   @staticmethod
   def parse(value: str):
-    return _LWSP_RE.split(value)
+    return imsc_utils.LWSP_RE.split(value)
 
   @staticmethod
   def validate(value: str, ctx: ValidationContext):
@@ -654,7 +653,7 @@ class MetadataAgentAttribute:
   qname = QName(ns.TTM, "agent")
   @staticmethod
   def validate(value, ctx):
-    for agent_id in _LWSP_RE.split(value):
+    for agent_id in imsc_utils.LWSP_RE.split(value):
       if not is_valid_xml_name(agent_id):
         raise ValueError("Bad ttm:agent attribute value: `%s`" % agent_id)
       ctx.target_sig_agent_ids.add(agent_id)
@@ -674,7 +673,7 @@ class MetadataRoleAttribute:
 
   @staticmethod
   def validate(value, _):
-    for token in _LWSP_RE.split(value):
+    for token in imsc_utils.LWSP_RE.split(value):
       if token in MetadataRoleAttribute._ROLE_TOKENS or token.startswith("x-"):
         continue
       raise ValueError("Bad ttm:role value (%s)" % token)

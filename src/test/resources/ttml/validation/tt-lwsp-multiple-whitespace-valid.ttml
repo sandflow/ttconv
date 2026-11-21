@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- components of attribute values may be separated by more than one whitespace character (<lwsp>) -->
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling"
+    ttp:cellResolution="32  15">
+  <head>
+    <layout>
+      <region xml:id="r1" tts:origin="10%  10%" tts:extent="80%
+        30%" tts:padding="1%  2%"/>
+    </layout>
+  </head>
+  <body region="r1">
+    <div>
+      <p tts:textOutline="black  5%">Hello</p>
+    </div>
+  </body>
+</tt>

@@ -158,7 +158,7 @@ class CellResolutionAttribute:
 
   qn = f"{{{ns.TTP}}}cellResolution"
 
-  _CELL_RESOLUTION_RE = re.compile(r"(\d+) (\d+)")
+  _CELL_RESOLUTION_RE = re.compile(rf"(\d+){utils.LWSP}(\d+)")
 
   @staticmethod
   def extract(ttml_element) -> model.CellResolutionType:
@@ -200,7 +200,7 @@ class ExtentAttribute:
 
     if extent is not None:
 
-      s = extent.split(" ")
+      s = utils.LWSP_RE.split(extent)
 
       (w, w_units) = utils.parse_length(s[0])
 
@@ -234,7 +234,7 @@ class ActiveAreaAttribute:
 
     if aa is not None:
 
-      s = aa.split(" ")
+      s = utils.LWSP_RE.split(aa)
 
       if len(s) != 4:
         LOGGER.error("Syntax error in ittp:activeArea on <tt>")
@@ -304,7 +304,7 @@ class AspectRatioAttribute:
 
   qn = f"{{{ns.ITTP}}}aspectRatio"
 
-  _re = re.compile(r"(\d+) (\d+)")
+  _re = re.compile(rf"(\d+){utils.LWSP}(\d+)")
 
   @staticmethod
   def extract(ttml_element) -> typing.Optional[Fraction]:
@@ -336,7 +336,7 @@ class DisplayAspectRatioAttribute:
 
   qn = f"{{{ns.TTP}}}displayAspectRatio"
 
-  _re = re.compile(r"(\d+) (\d+)")
+  _re = re.compile(rf"(\d+){utils.LWSP}(\d+)")
 
   @staticmethod
   def extract(ttml_element) -> typing.Optional[Fraction]:
@@ -379,7 +379,7 @@ class FrameRateAttribute:
 
   _FRAME_RATE_RE = re.compile(r"(\d+)")
 
-  _FRAME_RATE_MULT_RE = re.compile(r"(\d+) (\d+)")
+  _FRAME_RATE_MULT_RE = re.compile(rf"(\d+){utils.LWSP}(\d+)")
 
   @staticmethod
   def extract(ttml_element) -> Fraction:
@@ -682,7 +682,7 @@ class StyleAttribute:
 
     raw_value = xml_element.attrib.get(StyleAttribute.qn)
 
-    return raw_value.split(" ") if raw_value is not None else []
+    return utils.LWSP_RE.split(raw_value) if raw_value is not None else []
 
 class TimeBaseAttribute:
   '''ttp:timeBase attribute

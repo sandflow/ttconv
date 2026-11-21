@@ -129,7 +129,7 @@ class Extent:
   def validate(value: str, _ctx: ValidationContext):
     if value == "auto":
       return
-    components = value.split(" ")
+    components = imsc_utils.LWSP_RE.split(value)
     if len(components) != 2:
       raise ValueError("Bad tts:extent value (%s)" % value)
     for length in components:
@@ -314,7 +314,7 @@ class Origin:
   def validate(value: str, _ctx: ValidationContext):
     if value == "auto":
       return
-    components = value.split(" ")
+    components = imsc_utils.LWSP_RE.split(value)
     if len(components) != 2:
       raise ValueError("Bad tts:origin value (%s)" % value)
     for length in components:
@@ -344,7 +344,7 @@ class Padding:
 
   @staticmethod
   def validate(value: str, _ctx: ValidationContext):
-    components = value.split(" ")
+    components = imsc_utils.LWSP_RE.split(value)
     if len(components) < 1 or len(components) > 4:
       raise ValueError("Bad tts:padding value (%s)" % value)
     for length in components:
@@ -421,7 +421,7 @@ class RubyReserve:
   def validate(value: str, _ctx: ValidationContext):
     if value == "none":
       return
-    components = value.split(" ")
+    components = imsc_utils.LWSP_RE.split(value)
     if len(components) == 0 or len(components) > 2:
       raise ValueError("Bad tts:rubyReserve value (%s)" % value)
     if components[0] not in ("both", "before", "after", "outside"):
@@ -498,7 +498,7 @@ class TextDecoration:
     if value == "none":
       return
     valid_tokens = ("underline", "noUnderline", "lineThrough", "noLineThrough", "overline", "noOverline")
-    for token in value.split(" "):
+    for token in imsc_utils.LWSP_RE.split(value):
       if token not in valid_tokens:
         raise ValueError("Bad tts:textDecoration value (%s)" % value)
 
@@ -513,7 +513,7 @@ class TextEmphasis:
   def validate(value: str, _ctx: ValidationContext):
     if value == "none":
       return
-    for token in value.split(" "):
+    for token in imsc_utils.LWSP_RE.split(value):
       if token in ("auto", "filled", "open", "circle", "dot", "sesame", "outside", "before", "after"):
         continue
       if token == "current":
@@ -538,7 +538,7 @@ class TextOutline:
   def validate(value: str, _ctx: ValidationContext):
     if value == "none":
       return
-    components = value.split(" ")
+    components = imsc_utils.LWSP_RE.split(value)
     if len(components) == 0 or len(components) > 2:
       raise ValueError("Bad tts:textOutline value (%s)" % value)
     try:
