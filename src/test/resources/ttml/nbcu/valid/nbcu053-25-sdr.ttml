@@ -32,10 +32,10 @@
             <p begin="01:02:30.642" end="01:02:32.009" style="default" region="Region_Bottom">Čo je, Emily?</p>
             <p begin="01:02:32.865" end="01:02:36.702" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Rada ťa počujem, Brendan.</span></p>
             <p begin="01:02:38.266" end="01:02:40.012" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Dlho sme sa nevideli.</span></p>
-            <p begin="01:02:41.918" end="01:02:42.210" style="default" region="Region_Bottom">Dva mesiace.</p>
+            <p begin="01:02:41.918" end="01:02:42.752" style="default" region="Region_Bottom">Dva mesiace.</p>
             <p begin="01:02:43.906" end="01:02:47.222" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Áno, zabudla som číslo</span><br/><span tts:fontStyle="italic">tvojej skrinky. Povedal mi ho Chytrák.</span></p>
             <p begin="01:02:48.898" end="01:02:50.521" style="default" region="Region_Bottom">Čo sa niekde stretnúť?</p>
-            <p begin="01:02:52.650" end="01:02:53.232" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Nemôžem.</span></p>
+            <p begin="01:02:52.650" end="01:02:53.484" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Nemôžem.</span></p>
             <p begin="01:02:54.789" end="01:02:58.963" style="default" region="Region_Bottom">-Prečo nie?<br/><span tts:fontStyle="italic">-Ja som to pobabrala.</span></p>
             <p begin="01:02:59.504" end="01:03:01.234" style="default" region="Region_Bottom"><span tts:fontStyle="italic">Poriadne.</span></p>
         </div>

@@ -343,7 +343,6 @@ def _validate_styles(element: model.ContentElement, hdr: bool, event_handler: Ev
       f"{elem_name}: tts:shear SHALL NOT be used and tts:fontStyle=\"italic\" used instead."
     )
 
-
 def _validate_doc_styles(
   doc: model.ContentDocument,
   expected_vert_pos: typing.Optional[typing.Tuple[styles.CoordinateType, styles.ExtentType]],
@@ -417,6 +416,9 @@ def _validate_doc_styles(
           f"found '{_format_extent(extent)}'"
         )
 
+# minimum duration of a subtitle on screen, in seconds
+_MIN_SUBTITLE_DURATION = Fraction(5, 6)
+
 def validate(
   f: typing.BinaryIO,
   config: typing.Optional[ModuleConfiguration] = None,
@@ -477,12 +479,23 @@ def validate(
     _validate_doc_styles(doc, expected_vert_pos, hdr, counting_handler)
 
     isd_event_handler = ContextEventHandler(counting_handler)
-    for isd_time, isd in isd_sequence:
+    for i, (isd_time, isd) in enumerate(isd_sequence):
       isd_event_handler.set_context(make_temporal_context(isd_time))
+      has_content = False
       for isd_region in isd.iter_regions():
+        has_content = has_content or len(list(isd_region)) > 0
         _validate_styles(isd_region, hdr, isd_event_handler)
         for element in isd_region.dfs_iterator():
           _validate_styles(element, hdr, isd_event_handler)
+
+      # subtitles remain on screen for at least the minimum duration, i.e., until the next ISD
+      if has_content and i + 1 < len(isd_sequence):
+        cur_sub_dur = isd_sequence[i + 1][0] - isd_time
+        if cur_sub_dur < _MIN_SUBTITLE_DURATION:
+          isd_event_handler.error(
+            f"Subtitles SHALL remain on screen for at least {float(_MIN_SUBTITLE_DURATION):.3f}s, "
+            f"found {float(cur_sub_dur):.3f}s"
+          )
 
   except ValueError as ve:
     counting_handler.error("%s", ve)
