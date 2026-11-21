@@ -370,14 +370,22 @@ class RosettaStyleTests(unittest.TestCase):
       with self.subTest(container_style):
         self.assert_invalid(_doc_with_div(_div(_p(ruby % container_style)), *styles_used), "only be used on <span> elements that contain ruby")
 
-  def test_ruby_requires_p_rb_res_outside_on_every_p(self):
+  def test_ruby_recommends_p_rb_res_outside_on_every_p(self):
     ruby = '<span style="s_rb_algn_center"><span style="s_rb_b">a</span><span style="s_rb_t">b</span></span>'
-    expected = "style on <p> shall contain p_rb_res_outside"
-    # the p that contains the ruby
-    self.assert_invalid(_doc_with_div(_div(_p(ruby)), *self.RUBY_STYLES), expected)
-    # another p, which does not contain ruby
-    self.assert_invalid(_doc_with_div(_div(_p(ruby, style=self.RUBY_P_STYLE), _p(_span("a"))), *self.RUBY_STYLES), expected)
-    self.assert_valid(_doc_with_div(_div(_p(ruby, style=self.RUBY_P_STYLE), _p(_span("a"), style=self.RUBY_P_STYLE)), *self.RUBY_STYLES))
+    expected = "style on <p> should contain p_rb_res_outside"
+    for name, doc in (
+        # the p that contains the ruby
+        ("ruby p", _doc_with_div(_div(_p(ruby)), *self.RUBY_STYLES)),
+        # another p, which does not contain ruby
+        ("other p", _doc_with_div(_div(_p(ruby, style=self.RUBY_P_STYLE), _p(_span("a"))), *self.RUBY_STYLES))):
+      with self.subTest(name):
+        result, errors, warnings = _validate_with_warnings(doc)
+        self.assertTrue(result, errors)
+        self.assertTrue(any(expected in w for w in warnings), warnings)
+    result, errors, warnings = _validate_with_warnings(
+      _doc_with_div(_div(_p(ruby, style=self.RUBY_P_STYLE), _p(_span("a"), style=self.RUBY_P_STYLE)), *self.RUBY_STYLES))
+    self.assertTrue(result, errors)
+    self.assertFalse(any(expected in w for w in warnings), warnings)
 
 EXAMPLES_DIR = "src/test/resources/ttml/rosetta"
 INVALID_EXAMPLES_DIR = os.path.join(EXAMPLES_DIR, "invalid")

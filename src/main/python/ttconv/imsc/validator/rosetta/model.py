@@ -619,13 +619,13 @@ class TT(RosettaElement, imsc11.TT):
   def validate_contents(self, element: IS.Element, ctx: IMSCValidationContext):
     super().validate_contents(element, ctx)
 
-    # so that subtitles do not move depending on whether ruby is present, every <p> of a document that uses ruby references
-    # p_rb_res_outside
+    # so that subtitles do not move depending on whether ruby is present, every
+    # <p> of a document that uses ruby should reference p_rb_res_outside
     elements = list(element.dfs_iterator())
     if any(e.name.qname == imsc11.Span.qname and len(_style_ids(RUBY_ALIGN_STYLES).intersection(_get_referenced_style_ids(e))) == 1 for e in elements):
       for p in (e for e in elements if e.name.qname == P.qname):
         if styles.PRbResOutside.style_id not in _get_referenced_style_ids(p):
-          ctx.event_handler.error("style on <p> shall contain p_rb_res_outside since the document contains ruby (line %s)", p.get_line_number())
+          ctx.event_handler.warn("style on <p> should contain p_rb_res_outside since the document contains ruby (line %s)", p.get_line_number())
 
 def validate(
   f: typing.BinaryIO,
