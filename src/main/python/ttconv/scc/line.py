@@ -123,6 +123,8 @@ class SccLine:
         self.time_code.add_frames()
       first = False
 
+      offset = self.time_code.to_temporal_offset()
+
       # A control code is redundant only if it repeats the control code received in the immediately
       # preceding frame (CTA-608-E D.2), which is not the case across lines that are not contiguous
       cur_frame = self.time_code.to_frames()
@@ -151,6 +153,7 @@ class SccLine:
 
         if scc_code is not None and scc_code == cur_preceding_cc:
           # Redundant transmission of the immediately preceding control code
+          context.previous_word_offset = offset
           continue
 
         if isinstance(scc_code, SccPreambleAddressCode):
@@ -196,6 +199,8 @@ class SccLine:
         text = scc_word.to_text()
         debug += text
         context.process_text(text, self.time_code)
+
+      context.previous_word_offset = offset
 
     LOGGER.debug(debug)
 

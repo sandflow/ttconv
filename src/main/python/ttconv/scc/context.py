@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from fractions import Fraction
 from typing import Optional, Tuple
 
 from ttconv.model import Div
@@ -41,7 +42,7 @@ from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
 from ttconv.style_properties import StyleProperties
-from ttconv.time_code import SmpteTimeCode
+from ttconv.time_code import SmpteTimeCode, FPS_29_97
 
 ROLL_UP_BASE_ROW = 15
 
@@ -67,6 +68,9 @@ class SccContext:
     # Frame number at which the preceding control code was received
     self.preceding_cc_frame: Optional[int] = None
 
+    # Time of the previous word that was processed, to tell whether a word is sent in the frame that follows it
+    self.previous_word_offset: Optional[Fraction] = None
+
     # Caption style (Pop-on, Roll-up, Paint-on) currently processed
     self.current_style = SccCaptionStyle.default()
     # Buffered caption being built
@@ -79,6 +83,9 @@ class SccContext:
 
     # Roll-up caption number of lines
     self.roll_up_depth: int = 0
+
+    # Roll-up caption base row
+    self.roll_up_base_row: int = ROLL_UP_BASE_ROW
 
     # Cursor position in the active area
     self.active_cursor: Tuple[int, int] = (0, 0)
@@ -97,6 +104,7 @@ class SccContext:
   def new_active_caption(self, begin_time_code: SmpteTimeCode, caption_style: SccCaptionStyle = SccCaptionStyle.Unknown):
     """Initializes a new caption being displayed"""
     self.active_caption = SccCaptionParagraph(self.safe_area_x_offset, self.safe_area_y_offset, caption_style)
+    self.active_caption.set_base_row(self.roll_up_base_row)
     self.active_caption.set_begin(begin_time_code)
 
   def new_buffered_caption(self):
@@ -173,7 +181,12 @@ class SccContext:
       caption.set_cursor_at(row, SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 2)
       return
 
-    caption.get_current_text().backspace()
+    erased_text = caption.get_current_text()
+    if erased_text.is_empty():
+      # the character to erase is at the end of an earlier text of the line
+      erased_text = next((text for text in reversed(caption.get_current_line().get_texts()) if not text.is_empty()),
+                         erased_text)
+    erased_text.backspace()
     caption.set_cursor_at(row, max(indent - 1, 0))
 
   def paint_on_active_caption(self, time_code: SmpteTimeCode):
@@ -201,6 +214,27 @@ class SccContext:
 
     self.active_caption.set_cursor_at(cursor[0], cursor[1])
 
+  def move_roll_up_base_row(self, base_row: int, time_code: SmpteTimeCode):
+    """Moves the roll-up caption that is displayed to a new base row"""
+    shift = base_row - self.roll_up_base_row
+    self.roll_up_base_row = base_row
+
+    if not self.has_active_caption():
+      return
+
+    if self.active_caption.is_empty():
+      self.active_caption.set_base_row(base_row)
+      return
+
+    # The caption is displayed on the rows it had up to now
+    moved_lines = self.active_caption.copy_lines()
+    self.push_active_caption_to_model(time_code)
+
+    self.new_active_caption(time_code, SccCaptionStyle.RollUp)
+    self.active_caption.set_lines({row + shift: line for row, line in moved_lines.items()})
+    for row, line in self.active_caption.get_lines().items():
+      line.set_row(row)
+
   def process_preamble_address_code(self, pac: SccPreambleAddressCode, time_code: SmpteTimeCode):
     """Processes SCC Preamble Address Code it to the map to model"""
 
@@ -211,9 +245,11 @@ class SccContext:
 
       self.paint_on_active_caption(time_code)
 
-      # Clear target row on Paint-On style
+      # A row that is written again from its first cell is replaced. (A PAC does not erase anything in CTA-608-E: the
+      # text that follows overwrites the characters, which this reader does not map, and the end of the row is deleted
+      # by a DER. A PAC for the middle of a row only moves the cursor.)
       target_row = self.active_caption.get_lines().get(pac_row)
-      if target_row is not None:
+      if target_row is not None and (pac_indent or 0) <= target_row.get_indent():
         target_row.clear()
 
       self.active_caption.set_cursor_at(pac_row, pac_indent)
@@ -227,14 +263,14 @@ class SccContext:
       if self.active_caption.get_begin() is None:
         self.active_caption.set_begin(time_code)
 
-      # Ignore PACs for rows 5-11, but get indent from PACs for rows 1-4 and 12-15. (Roll-Up)
-      if pac_row in range(5, 12):
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
-        self.active_caption.new_caption_text()
-        return
+      # The PAC row is the base row of the roll-up caption, but the rows of the caption have to fit above it
+      # (CTA-608-E C.4, C.7)
+      base_row = max(pac_row, self.roll_up_depth)
 
-      # Force roll-up paragraph to belong to the same region
-      self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW, pac_indent)
+      if base_row != self.roll_up_base_row:
+        self.move_roll_up_base_row(base_row, time_code)
+
+      self.active_caption.set_cursor_at(base_row, pac_indent)
 
       self.active_caption.new_caption_text()
 
@@ -347,12 +383,18 @@ class SccContext:
       elif control_code is SccControlCode.RU4:
         self.roll_up_depth = 4
 
+      if not self.has_active_caption() or self.active_caption.is_empty():
+        # The base row is row 15 when no roll-up caption is displayed (CTA-608-E C.15)
+        self.roll_up_base_row = ROLL_UP_BASE_ROW
+
+      self.roll_up_base_row = max(self.roll_up_base_row, self.roll_up_depth)
+
       if not self.has_active_caption():
         # If there is currently no active caption, initialize an empty new paragraph
         self.new_active_caption(time_code, SccCaptionStyle.RollUp)
 
         self.active_caption.set_caption_style(SccCaptionStyle.RollUp)
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW, 0)
+        self.active_caption.set_cursor_at(self.roll_up_base_row, 0)
         self.active_caption.new_caption_line()
         self.active_caption.new_caption_text()
 
@@ -422,20 +464,29 @@ class SccContext:
         self.new_active_caption(time_code, SccCaptionStyle.RollUp)
         self.active_caption.set_lines(previous_lines)
 
-        self.active_caption.set_cursor_at(ROLL_UP_BASE_ROW)
+        self.active_caption.set_cursor_at(self.roll_up_base_row)
 
     elif control_code is SccControlCode.DER:
-      # Delete to End of Row (Paint-On)
-      # The DER may be issued from any point on a row to delete all displayable characters, transparent
-      # spaces, and mid-row codes from (and including) the current cell to the end of the row.
-      # Not used in this implementation since this SCC reader does not map the text overlapping into
-      # the model (i.e. a row is erased when a PAC is received, so before a new caption is written onto it).
-      pass
+      # Delete to End of Row: the characters from (and including) the current cell to the end of the row are deleted
+      # (CTA-608-E B.3). A row of a Paint-On caption is erased by it, not by a PAC.
+      if self.current_style is SccCaptionStyle.PaintOn and self.has_active_caption() \
+          and not self.active_caption.is_empty():
+        # What is displayed until the code is received
+        self.paint_on_active_caption(time_code)
+
+      caption = self.get_caption_to_process(time_code)
+      if caption is not None:
+        caption.delete_to_end_of_row()
 
     elif control_code is SccControlCode.BS:
       # Backspace
       # When a Backspace is received, the cursor moves to the left one column position erasing
       # the character or Mid-Row Code occupying that location, unless the cursor is in Column 1
+      if self.current_style is SccCaptionStyle.PaintOn and self.has_active_caption() \
+          and not self.active_caption.is_empty():
+        # The character is on screen until the code erases it: end the paragraph that shows it here
+        self.paint_on_active_caption(time_code)
+
       self.backspace(time_code)
 
   def process_text(self, word: str, time_code: SmpteTimeCode):
@@ -469,6 +520,13 @@ class SccContext:
       else:
         if not self.has_active_caption():
           self.paint_on_active_caption(time_code)
+
+        elif self.previous_word_offset is not None \
+            and time_code.to_temporal_offset() - self.previous_word_offset > 1 / FPS_29_97:
+          # Not sent in the frame after the previous word: the text before it was on screen alone for a while
+          if not self.active_caption.get_current_text().is_empty():
+            self.active_caption.new_caption_text()
+          self.active_caption.get_current_text().set_begin(time_code)
 
         self.active_caption.append_text(word)
 

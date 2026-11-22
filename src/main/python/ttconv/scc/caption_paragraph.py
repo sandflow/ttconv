@@ -44,6 +44,7 @@ LOGGER = logging.getLogger(__name__)
 
 SCC_SAFE_AREA_CELL_RESOLUTION_ROWS = 15
 SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS = 32
+SCC_MAX_ROWS = 4
 
 SCC_ROOT_CELL_RESOLUTION_ROWS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_ROWS / 0.80)
 SCC_ROOT_CELL_RESOLUTION_COLUMNS = ceil(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS / 0.80)
@@ -68,6 +69,9 @@ class SccCaptionParagraph:
     # Paragraph offsets (= origin) in the root area
     self._column_offset: int = safe_area_x_offset
     self._row_offset: int = safe_area_y_offset
+
+    # Base row of a roll-up caption
+    self._base_row: int = SCC_SAFE_AREA_CELL_RESOLUTION_ROWS
 
     # Position of the cursor in the active area
     self._cursor: (int, int) = (0, 0)
@@ -136,6 +140,9 @@ class SccCaptionParagraph:
     if len(text) == 0:
       return
 
+    if self._caption_style in (SccCaptionStyle.PopOn, SccCaptionStyle.PaintOn) and self._current_line.is_empty():
+      self._start_row()
+
     cols_left = SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - self._cursor[1]
 
     if len(text) > cols_left:
@@ -156,9 +163,26 @@ class SccCaptionParagraph:
     self.get_current_line().add_text(text)
     self.indent_cursor(len(text))
 
+  def _start_row(self):
+    """A row gets its first character: a fifth row replaces the oldest of the four rows allowed (CTA-608-E C.5)"""
+    row = self._current_line.get_row()
+    others = [r for r, line in self._caption_lines.items() if r != row and not line.is_empty()]
+
+    if len(others) >= SCC_MAX_ROWS:
+      del self._caption_lines[others[0]]
+
+    # the rows are kept in the order of their first character
+    if self._caption_lines.get(row) is self._current_line:
+      del self._caption_lines[row]
+    self._caption_lines[row] = self._current_line
+
   def tab_cursor(self, nb_columns: int):
     """Moves the cursor to the right with a tab offset, but not past the last column (CTA-608-E C.13)"""
     self.indent_cursor(min(nb_columns, max(SCC_SAFE_AREA_CELL_RESOLUTION_COLUMNS - 1 - self._cursor[1], 0)))
+
+  def delete_to_end_of_row(self):
+    """Deletes the characters of the current row from the cursor to the end of the row"""
+    self._current_line.truncate(self._cursor[1] - self._current_line.get_indent())
 
   def set_lines(self, lines: Union[List[SccCaptionLine], Dict[int, SccCaptionLine]]):
     """Sets paragraph lines"""
@@ -227,6 +251,15 @@ class SccCaptionParagraph:
     if new_cursor_position < 0:
       self._current_line.indent(new_cursor_position)
 
+    gap = new_cursor_position - self._current_line.get_length()
+    if gap > 0 and not self._current_line.is_empty():
+      # The cursor moved right past the end of the text of the row: the cells in between show nothing
+      gap_text = SccCaptionText(" " * gap)
+      gap_text.add_style_property(StyleProperties.BackgroundColor, NamedColors.transparent.value)
+      self._current_line.add_text(gap_text)
+      # What is written next is not part of the gap
+      self._current_line.add_text(SccCaptionText())
+
     self._current_line.set_cursor(new_cursor_position)
 
   def get_lines(self) -> Dict[int, SccCaptionLine]:
@@ -290,6 +323,22 @@ class SccCaptionParagraph:
 
     return get_position_from_offsets(self._safe_area_x_offset, self._safe_area_y_offset)
 
+  def _get_line_padding(self, line: SccCaptionLine) -> int:
+    """Returns the number of cells between the left of the paragraph and the first cell of a line, when the lines are
+    start-aligned (the other alignments place the lines by themselves)"""
+    if self.get_style_property(StyleProperties.TextAlign) not in (None, TextAlignType.start):
+      return 0
+
+    return max(line.get_indent() - min(other.get_indent() for other in self._caption_lines.values()), 0)
+
+  def set_base_row(self, base_row: int):
+    """Sets the base row of a roll-up caption"""
+    self._base_row = base_row
+
+  def get_base_row(self) -> int:
+    """Returns the base row of a roll-up caption"""
+    return self._base_row
+
   def get_extent(self) -> ExtentType:
     """Computes and returns the current paragraph extent, based on its content"""
     if self.is_empty():
@@ -297,7 +346,7 @@ class SccCaptionParagraph:
 
     paragraph_rows = self._caption_lines.keys()
     nb_lines = max(paragraph_rows) - min(paragraph_rows) + 1
-    max_text_lengths = max([line.get_length() for line in self._caption_lines.values()])
+    max_text_lengths = max([self._get_line_padding(line) + line.get_length() for line in self._caption_lines.values()])
 
     return get_extent_from_dimensions(max_text_lengths, nb_lines)
 
@@ -373,6 +422,14 @@ class SccCaptionParagraph:
 
       last_row = row
 
+      padding = self._get_line_padding(caption_line)
+      if padding > 0 and not caption_line.is_empty():
+        # Move the line to its column, the cells before it show nothing
+        padding_span = Span(doc)
+        padding_span.set_style(StyleProperties.BackgroundColor, NamedColors.transparent.value)
+        padding_span.push_child(Text(doc, " " * padding))
+        p.push_child(padding_span)
+
       for caption_text in caption_line.get_texts():
 
         # Skip empty texts
@@ -385,11 +442,11 @@ class SccCaptionParagraph:
 
           begin = caption_text.get_begin().to_temporal_offset()
 
-          if self.get_caption_style() is SccCaptionStyle.PaintOn:
-            # Compute paragraph-relative begin time
-            begin -= self._begin.to_temporal_offset()
+          # Compute paragraph-relative begin time (text can be painted on a caption of another style)
+          begin -= self._begin.to_temporal_offset()
 
-          span.set_begin(begin)
+          if begin > 0:
+            span.set_begin(begin)
 
         if caption_text.get_end() is not None:
 
@@ -455,12 +512,19 @@ class _SccParagraphRegion:
     # Convert paragraph origin units into percentages
     paragraph_origin = convert_cells_to_percentages(self._paragraph.get_origin(), self._doc.get_cell_resolution())
 
-    if self._paragraph.get_caption_style() in (SccCaptionStyle.RollUp, SccCaptionStyle.PaintOn):
+    if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
+      # The region ends on the base row
+      base_row_extent = convert_cells_to_percentages(get_extent_from_dimensions(0, self._paragraph.get_base_row()),
+                                                     self._doc.get_cell_resolution())
+      region_extent = region.get_style(StyleProperties.Extent)
+
       return region_origin \
              and region_origin.x.units is paragraph_origin.x.units \
              and region_origin.y.units is paragraph_origin.y.units \
              and math.isclose(region_origin.x.value, paragraph_origin.x.value, abs_tol=0.001) \
-             and region_origin.y.value <= paragraph_origin.y.value
+             and region_origin.y.value <= paragraph_origin.y.value \
+             and region_extent is not None \
+             and math.isclose(region_extent.height.value, base_row_extent.height.value, abs_tol=0.001)
 
     return region_origin \
            and region_origin.x.units is paragraph_origin.x.units \
@@ -539,8 +603,8 @@ class _SccParagraphRegion:
     region_width = min(paragraph_extent.width.value, available_width)
 
     if self._paragraph.get_caption_style() is SccCaptionStyle.RollUp:
-      # The region height extends from the top row to the bottom row of the safe area
-      region_height = self._bottom - (self._top + 1)
+      # The region height extends from the top row of the safe area to the base row
+      region_height = self._paragraph.get_base_row()
       region.set_style(StyleProperties.DisplayAlign, DisplayAlignType.after)
     else:
       # The region height extends from its origin to the bottom of the safe area

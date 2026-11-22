@@ -346,7 +346,7 @@ Scenarist_SCC V1.0
 
 00:00:00:22	9425 9425 94ad 94ad 9470 9470 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80
 
-00:00:02:23	9425 9425 94ad 94ad 9673 9673 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+00:00:02:23	9425 9425 94ad 94ad 9470 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
 00:00:04:17	9425 9425 94ad 94ad 9473 9473 d0e5 ecec e56e f4e5 73f1 75e5 20e9 6ef4 e5f2 6475 6d20 ec61 e375 73ae
 
@@ -356,7 +356,7 @@ Scenarist_SCC V1.0
 
     scc_disassembly = """\
 00:00:00:22	{RU2}{RU2}{CR}{CR}{1500}{1500}Lorem ipsum dolor sit amet,
-00:00:02:23	{RU2}{RU2}{CR}{CR}{0804}{0804}consectetur adipiscing elit.
+00:00:02:23	{RU2}{RU2}{CR}{CR}{1500}{1500}consectetur adipiscing elit.
 00:00:04:17	{RU2}{RU2}{CR}{CR}{1504}{1504}Pellentesque interdum lacus.
 00:00:06:04	{RU2}{RU2}{CR}{CR}{1500}{1500}Integer luctus et ligula.
 """
@@ -369,7 +369,8 @@ Scenarist_SCC V1.0
     region_1 = doc.get_region("rollup1")
     self.assertIsNotNone(region_1)
     self.check_region_origin(region_1, 4, 2, doc.get_cell_resolution())
-    self.check_region_extent(region_1, 28, 15, doc.get_cell_resolution())
+    # the row at the 5th column needs 4 more cells than the others
+    self.check_region_extent(region_1, 32, 15, doc.get_cell_resolution())
     self.check_element_style(region_1, StyleProperties.DisplayAlign, DisplayAlignType.after)
     self.check_element_style(region_1, StyleProperties.ShowBackground, ShowBackgroundType.whenActive)
 
@@ -392,20 +393,22 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[1], "caption2", "00:00:02:25", "00:00:04:19", expected_text[0], Br, expected_text[1])
     self.assertEqual(region_1, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "00:00:04:19", "00:00:06:06", expected_text[1], Br, expected_text[2])
+    self.check_caption(p_list[2], "caption3", "00:00:04:19", "00:00:06:06", expected_text[1], Br, "    ",
+                       expected_text[2])
     self.assertEqual(region_1, p_list[2].get_region())
 
-    self.check_element_style(list(p_list[2])[2], StyleProperties.TextDecoration,
+    self.check_element_style(list(p_list[2])[3], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
-    self.check_caption(p_list[3], "caption4", "00:00:06:06", None, expected_text[2], Br, expected_text[3])
+    self.check_caption(p_list[3], "caption4", "00:00:06:06", None, "    ", expected_text[2], Br,
+                       expected_text[3])
     self.assertEqual(region_1, p_list[3].get_region())
 
-    self.check_element_style(list(p_list[3])[0], StyleProperties.TextDecoration,
+    self.check_element_style(list(p_list[3])[1], StyleProperties.TextDecoration,
                              TextDecorationType(underline=True))
 
     for p in p_list:
-      for span in [elem for elem in list(p) if isinstance(elem, Span)]:
+      for span in [elem for elem in list(p) if isinstance(elem, Span) and list(elem)[0].get_text().strip()]:
         self.check_element_style(span, StyleProperties.BackgroundColor, NamedColors.black.value)
 
   def test_3_rows_roll_up_content(self):
@@ -930,9 +933,9 @@ Scenarist_SCC V1.0
 
 00:00:00:00	9420 9150 4c6f 7265 6d20 6970 7375 6d20 646f 6c6f 7220 7369 7420 616d 6574 2c80 942c 8080 8080 942f
 
-00:00:01:14	9426 942c 94ad 9050 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
+00:00:01:14	9426 942c 94ad 9470 636f 6e73 6563 7465 7475 7220 6164 6970 6973 6369 6e67 2065 6c69 742e
 
-00:00:02:00	9426 94ad 942c 9350 d0e5 ecec e56e f4e5 73f1 75e5 20e9 6ef4 e5f2 6475 6d20 ec61 e375 73ae
+00:00:02:00	9426 94ad 942c 9470 d0e5 ecec e56e f4e5 73f1 75e5 20e9 6ef4 e5f2 6475 6d20 ec61 e375 73ae
 
 00:00:03:00	9429 942c 9370 496e 7465 6765 7220 6c75 6374 7573 2065 7420 942c 7361 6769 7474 6973 2e80
 
@@ -940,8 +943,8 @@ Scenarist_SCC V1.0
 
     scc_disassembly = """\
 00:00:00:00	{RCL}{0100}Lorem ipsum dolor sit amet,{EDM}{}{}{EOC}
-00:00:01:14	{RU3}{EDM}{CR}{1100}consectetur adipiscing elit.
-00:00:02:00	{RU3}{CR}{EDM}{1200}Pellentesque interdum lacus.
+00:00:01:14	{RU3}{EDM}{CR}{1500}consectetur adipiscing elit.
+00:00:02:00	{RU3}{CR}{EDM}{1500}Pellentesque interdum lacus.
 00:00:03:00	{RDC}{EDM}{1300}Integer luctus et {EDM}sagittis.
 """
 
@@ -1311,10 +1314,10 @@ Scenarist_SCC V1.0
 
   def test_scc_content_roll_up_empty_caption(self):
     scc_content = """Scenarist_SCC V1.0
-10:03:20:16	94ad 94ad 9426 9426 92d0 92d0 a880 9138 9138 2064 942c 942c e575 f820 76ef e9f8 2c20 e56e 2061 6e67 ec61 e973 29ba
+10:03:20:16	94ad 94ad 9426 9426 9470 9470 a880 9138 9138 2064 942c 942c e575 f820 76ef e9f8 2c20 e56e 2061 6e67 ec61 e973 29ba
 """
     expected_scc_disassembly = """\
-10:03:20:16	{CR}{CR}{RU3}{RU3}{0300}{0300}(àà d{EDM}{EDM}eux voix, en anglais):
+10:03:20:16	{CR}{CR}{RU3}{RU3}{1500}{1500}(àà d{EDM}{EDM}eux voix, en anglais):
 """
 
     scc_disassembly = to_disassembly(scc_content)
@@ -1439,8 +1442,9 @@ Scenarist_SCC V1.0
     self.check_caption(p_list[1], "caption2", "09:59:59:24", "10:00:01:04", " ")
     self.assertEqual(region_2, p_list[1].get_region())
 
-    self.check_caption(p_list[2], "caption3", "10:00:01:05", "11:00:09:07", "(camera shutter)", Br, Br, Br, Br,
-                       " <chaotic cacophony", Br, " exists throughout program>")
+    # the lines that start to the right of the others are moved there by cells that show nothing
+    self.check_caption(p_list[2], "caption3", "10:00:01:05", "11:00:09:07", "     ", "(camera shutter)", Br, Br, Br, Br,
+                       "    ", " <chaotic cacophony", Br, " exists throughout program>")
     self.assertEqual(region_3, p_list[2].get_region())
 
   def test_scc_content_trying_to_roll_up_pop_on_paragraph(self):
@@ -1570,6 +1574,69 @@ Scenarist_SCC V1.0
     self.assertEqual(" cd", list(spans[1])[0].get_text())
     self.assertEqual(NamedColors.red.value, spans[1].get_style(StyleProperties.Color))
     self.assertEqual(NamedColors.white.value, spans[1].get_style(StyleProperties.BackgroundColor))
+
+  def test_scc_rows_keep_their_columns(self):
+    # CTA-608-E 6.1: every row has its own column (PAC indent, tab offsets); the paragraph can't be aligned by
+    # itself here, so the row that starts to the right is moved to its column by cells that show nothing
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 9140 9140 6162 9252 9252 e364 e5e6 6768 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    content = ["/" if isinstance(child, Br) else list(child)[0].get_text() for child in p_list[0]]
+    self.assertEqual(["ab", "/", "/", "    ", "cdefgh"], content)
+    padding = list(p_list[0])[3]
+    self.assertEqual(NamedColors.transparent.value, padding.get_style(StyleProperties.BackgroundColor))
+    region = p_list[0].get_region()
+    self.assertEqual(10, region.get_style(StyleProperties.Extent).width.value // 2.5)    # 4 + 6 cells
+
+
+  def test_scc_roll_up_pac_sets_the_base_row(self):
+    # CTA-608-E C.7, F.1.1.5: the row of a PAC is the base row of a roll-up caption, the caption is displayed
+    # above it, and a PAC for another base row moves the displayed caption
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9426 9426 94ad 94ad 9470 9470 c180
+
+00:00:02:00	9426 9426 94ad 94ad 9470 9470 c280
+
+00:00:04:00	16e0 16e0
+
+00:00:06:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = [["/" if isinstance(c, Br) else list(c)[0].get_text() for c in p] for p in p_list]
+    self.assertEqual([["A"], ["A", "/", "B"], ["A", "/", "B"]], texts)
+
+    heights = [p.get_region().get_style(StyleProperties.Extent).height.value for p in p_list]
+    self.assertEqual([79, 79, 42], heights)                    # 15 and 8 of 19 rows
+    self.assertEqual(p_list[0].get_end(), p_list[1].get_begin())
+    self.assertEqual(p_list[1].get_end(), p_list[2].get_begin())
+
+  def test_scc_roll_up_base_row_is_at_least_the_depth(self):
+    # CTA-608-E C.4: three rows can't be displayed above row 2, the depth wins
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9426 9426 94ad 94ad 9240 9240 c180
+
+00:00:02:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(16, p_list[0].get_region().get_style(StyleProperties.Extent).height.value)     # 3 of 19 rows
+
 
   def test_scc_roll_up_blank_row_rolls_up_the_rows_above(self):
     # CTA-608-E D.2: of three consecutive CR, the second is redundant, so two rows roll up and one
@@ -1720,7 +1787,8 @@ Scenarist_SCC V1.0
     self.assertEqual(1, len([log for log in logs.output if "overflows" in log]))
 
     last = list(list(doc.get_body())[0])[-1]
-    rows = [list(child)[0].get_text() for child in last if isinstance(child, Span)]
+    rows = [list(child)[0].get_text() for child in last if isinstance(child, Span)
+            and child.get_style(StyleProperties.BackgroundColor) != NamedColors.transparent.value]
 
     # 32 columns: the characters after the 32nd replace the 32nd one, here ...0123 4 5 X Y become ...01234 Y
     # on the first row, and the BS of the third row erases the column 31 before the x is written there
@@ -1742,6 +1810,179 @@ Scenarist_SCC V1.0
     self.assertEqual(1, len(p_list))
     text = "".join(list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span))
     self.assertEqual("Ab  Cd", text)
+
+  def test_scc_paint_on_backspace_shows_the_erased_character_until_the_code(self):
+    # CTA-608-E B.12: BS erases the character to the left; the character is on screen until then
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c162 a180
+
+00:00:02:00	94a1 94a1
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
+    self.assertEqual(["Ab!", "Ab"], texts)
+    self.assertEqual(p_list[0].get_end(), p_list[1].get_begin())
+
+
+  def test_scc_paint_on_extended_character_does_not_end_the_paragraph(self):
+    # an extended character replaces the character before it, it is not a BS that ends the paragraph
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c180 9220 c280
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    self.assertEqual("\u00c1B", "".join(list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span)))
+
+  def test_scc_fifth_row_replaces_the_oldest_row(self):
+    # CTA-608-E C.5: a caption memory has four rows at most, a fifth row replaces the oldest one
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 9140 9140 c180 9240 9240 c280 1540 1540 4380 1640 1640 c480 9740 9740 4580 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    texts = [list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span)]
+    self.assertEqual(["B", "C", "D", "E"], texts)
+
+  def test_scc_paint_on_paragraph_starts_in_its_own_region(self):
+    # a paint-on paragraph that starts on a lower row than an earlier one must not be placed in the (taller)
+    # region of that one, whose content starts at the top of it: the rows would move up
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 9240 9240 c180 1540 1540 c280
+
+00:00:02:00	9240 9240 1640 1640 4380
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    last = p_list[-1]
+    self.assertEqual(["B", "C"], [list(span)[0].get_text() for span in last if isinstance(span, Span)])
+    first_origin = p_list[0].get_region().get_style(StyleProperties.Origin)
+    last_origin = last.get_region().get_style(StyleProperties.Origin)
+    self.assertGreater(last_origin.y.value, first_origin.y.value)
+
+  def test_scc_paint_on_text_typed_after_a_pause_starts_a_new_span(self):
+    # text that is not sent in the frame after the previous word appears when it is sent, the text before it
+    # was on screen alone until then; span times are relative to the paragraph
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c162
+
+00:00:02:00	6380
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual(["Ab", "c"], [list(span)[0].get_text() for span in spans])
+    self.assertIsNone(spans[0].get_begin())
+    self.assertAlmostEqual(2.0, float(spans[1].get_begin()), delta=0.1)
+
+  def test_scc_paint_on_over_roll_up_span_times_are_relative_to_the_paragraph(self):
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9425 9425 94ad 94ad 9470 9470 c880
+
+00:00:02:00	9429 9429 9240 9240 c162
+
+00:00:03:00	6380
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    painted = [p for p in p_list if [list(span)[0].get_text() for span in p if isinstance(span, Span)][:2] == ["Ab", "c"]]
+    self.assertEqual(1, len(painted))
+    span = [child for child in painted[0] if isinstance(child, Span)][1]
+    self.assertAlmostEqual(1.0, float(span.get_begin()), delta=0.1)
+
+  def test_scc_backspace_erases_across_texts(self):
+    # CTA-608-E B.12: BS erases the character to the left, also when it is the last one of an earlier text of
+    # the row: "Ab", "x" sent later (a text of its own), BS, a null (the second BS is not redundant), BS, then y
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c162
+
+00:00:02:00	7880 94a1 94a1 8080 94a1 7980
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
+    self.assertEqual("Ay", texts[-1], texts)
+
+  def test_scc_gap_between_two_texts_of_a_row(self):
+    # a PAC for the same row, to the right of the end of the text, leaves the cells in between empty
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9420 9420 94ae 94ae 1540 1540 c180 1554 1554 c280 942f 942f
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    spans = [child for child in p_list[0] if isinstance(child, Span)]
+    self.assertEqual("A" + " " * 7 + "B", "".join(list(span)[0].get_text() for span in spans))
+    self.assertEqual(NamedColors.transparent.value, spans[1].get_style(StyleProperties.BackgroundColor))
+    self.assertEqual("B", list(spans[-1])[0].get_text())
+    self.assertEqual(NamedColors.black.value, spans[-1].get_style(StyleProperties.BackgroundColor))
+
+  def test_scc_delete_to_end_of_row_keeps_the_start_of_the_row(self):
+    # CTA-608-E B.3: DER deletes the characters from the cursor to the end of the row; a PAC for the middle
+    # of the row only moves the cursor to it
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 9470 9470 cbe5 e570 f879
+
+00:00:02:00	94f2 94f2 94a4 94a4
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
+    # the PAC and the DER are sent in two frames, the caption is split at each of them
+    self.assertEqual(["Keepxy", "Keepxy", "Keep"], texts)
+    self.assertEqual(p_list[1].get_end(), p_list[2].get_begin())
 
 if __name__ == '__main__':
   unittest.main()

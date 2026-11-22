@@ -97,6 +97,11 @@ class SccCaptionText:
     """Returns the cursor position"""
     return self._cursor
 
+  def truncate(self, length: int):
+    """Keep the first characters of the text"""
+    self._text = self._text[:max(length, 0)]
+    self._cursor = min(self._cursor, len(self._text))
+
   def backspace(self):
     """Remove last character"""
     self._text = self._text[:-1]
