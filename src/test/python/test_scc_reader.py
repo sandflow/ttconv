@@ -1743,5 +1743,41 @@ Scenarist_SCC V1.0
     text = "".join(list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span))
     self.assertEqual("Ab  Cd", text)
 
+  def test_scc_paint_on_backspace_shows_the_erased_character_until_the_code(self):
+    # CTA-608-E B.12: BS erases the character to the left; the character is on screen until then
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c162 a180
+
+00:00:02:00	94a1 94a1
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    texts = ["".join(list(span)[0].get_text() for span in p if isinstance(span, Span)) for p in p_list]
+    self.assertEqual(["Ab!", "Ab"], texts)
+    self.assertEqual(p_list[0].get_end(), p_list[1].get_begin())
+
+
+  def test_scc_paint_on_extended_character_does_not_end_the_paragraph(self):
+    # an extended character replaces the character before it, it is not a BS that ends the paragraph
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 1540 1540 c180 9220 c280
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    self.assertEqual(1, len(p_list))
+    self.assertEqual("\u00c1B", "".join(list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span)))
+
 if __name__ == '__main__':
   unittest.main()
