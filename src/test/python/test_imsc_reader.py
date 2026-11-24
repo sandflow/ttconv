@@ -283,6 +283,29 @@ class IMSCReaderTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       imsc_styles.StyleProperties.LineHeight.extract(None, "-150%")
 
+  def test_text_shadow(self):
+    px = lambda v: styles.LengthType(v, styles.LengthType.Units.px)
+    red = styles.NamedColors.red.value
+    shadow = styles.TextShadowType.Shadow
+
+    self.assertIs(imsc_styles.StyleProperties.TextShadow.extract(None, "none"), styles.SpecialValues.none)
+
+    for value, expected in (
+      ("1px 1px", (shadow(px(1), px(1)),)),
+      ("1px 1px red", (shadow(px(1), px(1), color=red),)),
+      ("1px 1px 2px", (shadow(px(1), px(1), px(2)),)),
+      ("1px 1px 2px rgb(255, 0, 0)", (shadow(px(1), px(1), px(2), red),)),
+      ("1px 1px,2px 2px", (shadow(px(1), px(1)), shadow(px(2), px(2)))),
+      ("1px 1px, 2px 2px 3px red", (shadow(px(1), px(1)), shadow(px(2), px(2), px(3), red))),
+    ):
+      with self.subTest(value):
+        self.assertEqual(imsc_styles.StyleProperties.TextShadow.extract(None, value), styles.TextShadowType(expected))
+
+    for value in ("", "1px", "1px 1px,", "1px 1px,,2px 2px", "1px 1px 2px 3px red", "1px 1px rgb(255,0,0"):
+      with self.subTest(value):
+        with self.assertRaises(ValueError):
+          imsc_styles.StyleProperties.TextShadow.extract(None, value)
+
   def test_cell_resolution(self):
     xml_str = """<?xml version="1.0" encoding="UTF-8"?>
     <tt xml:lang="en"
@@ -293,6 +316,29 @@ class IMSCReaderTest(unittest.TestCase):
     doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
     self.assertEqual(doc.get_cell_resolution().columns, 32)
     self.assertEqual(doc.get_cell_resolution().rows, 15)
+
+  def test_lwsp(self):
+    # components of attribute values may be separated by more than one whitespace character (<lwsp>)
+    xml_str = """<?xml version="1.0" encoding="UTF-8"?>
+    <tt xml:lang="en"
+        xmlns="http://www.w3.org/ns/ttml"
+        xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+        xmlns:tts="http://www.w3.org/ns/ttml#styling"
+        ttp:cellResolution="32  15">
+      <head>
+        <layout>
+          <region xml:id="r1" tts:origin="10%  20%" tts:extent="80%   30%"/>
+        </layout>
+      </head>
+    </tt>"""
+    doc = imsc_reader.to_model(et.ElementTree(et.fromstring(xml_str)))
+    self.assertEqual(doc.get_cell_resolution().columns, 32)
+    self.assertEqual(doc.get_cell_resolution().rows, 15)
+    region = doc.get_region("r1")
+    self.assertEqual(region.get_style(styles.StyleProperties.Origin),
+      styles.CoordinateType(x=styles.LengthType(10, styles.LengthType.Units.pct), y=styles.LengthType(20, styles.LengthType.Units.pct)))
+    self.assertEqual(region.get_style(styles.StyleProperties.Extent),
+      styles.ExtentType(width=styles.LengthType(80, styles.LengthType.Units.pct), height=styles.LengthType(30, styles.LengthType.Units.pct)))
 
   def test_content_profiles(self):
     xml_str = """<?xml version="1.0" encoding="UTF-8"?>

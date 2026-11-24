@@ -36,6 +36,9 @@ from ttconv.style_properties import ColorType, FontStyleType, TextDecorationType
 MEMORY_ROWS = 15
 MEMORY_COLUMNS = 32
 
+# maximum number of rows that have content at any given time (CTA-608-E C.5)
+MEMORY_MAX_ROWS = 4
+
 
 @dataclass(frozen=True)
 class SccPen:
@@ -128,6 +131,15 @@ class SccDisplayMemory:
   def get_rows(self) -> List[int]:
     """Returns the numbers of the rows that have content, in ascending order"""
     return sorted(self._rows.keys())
+
+  def has_row(self, row: int) -> bool:
+    """Returns whether a row has content"""
+    return row in self._rows
+
+  def get_oldest_row(self) -> Optional[int]:
+    """Returns the row that has content and got its first character before the
+    other rows, None if the memory is empty"""
+    return next(iter(self._rows), None)
 
   def get_first_column(self, row: int) -> int:
     """Returns the column of the first character of a row that has content"""

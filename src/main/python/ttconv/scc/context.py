@@ -41,7 +41,7 @@ from ttconv.scc.codes.control_codes import SccControlCode
 from ttconv.scc.codes.mid_row_codes import SccMidRowCode
 from ttconv.scc.codes.preambles_address_codes import SccPreambleAddressCode
 from ttconv.scc.config import SccReaderConfiguration, TextAlignment
-from ttconv.scc.display_memory import MEMORY_COLUMNS, SccCellEvent, SccDisplayMemory, SccPen
+from ttconv.scc.display_memory import MEMORY_COLUMNS, MEMORY_MAX_ROWS, SccCellEvent, SccDisplayMemory, SccPen
 from ttconv.time_code import SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
@@ -83,7 +83,12 @@ class SccContext:
 
     # Cursor, in the memory being written: rows from 1 to 15, columns from 0 to 31
     self.row: int = self._DEFAULT_BASE_ROW
-    self.column: int = 0
+    self._column: int = 0
+
+    # Whether a character was written at the last column since the cursor moved, so that the next character
+    # overflows the row, and whether the overflow was reported
+    self._is_last_column_written: bool = False
+    self._is_overflow_reported: bool = False
 
     # Attributes of the characters being written
     self.pen: SccPen = SccPen.DEFAULT
@@ -95,6 +100,19 @@ class SccContext:
     # Begin time and style of the caption being displayed, if any
     self.caption_begin: Optional[Fraction] = None
     self.caption_style: Optional[SccCaptionStyle] = None
+
+  @property
+  def column(self) -> int:
+    """Column of the cursor"""
+    return self._column
+
+  @column.setter
+  def column(self, column: int):
+    if column != self._column:
+      # moving the cursor ends any overflow of the row
+      self._is_last_column_written = False
+      self._is_overflow_reported = False
+    self._column = column
 
   #
   # captions
@@ -143,6 +161,18 @@ class SccContext:
       self.column -= 1
 
     memory = self._get_current_memory()
+
+    if not memory.has_row(self.row) and len(memory.get_rows()) >= MEMORY_MAX_ROWS:
+      # at most 4 rows have content at any given time: the first character of a
+      # fifth row erases the row that got its first character first (CTA-608-E C.5)
+      oldest_row = memory.get_oldest_row()
+      self._erase_at_positions(memory, memory.get_row_positions(oldest_row), time)
+
+    if self._is_last_column_written and not self._is_overflow_reported:
+      self._is_overflow_reported = True
+      LOGGER.warning("The text overflows the last column of row %s (at %s): the characters after it replace the "
+                     "one in the last column", self.row, f"{float(time):.3f}s")
+
     previous_cell = memory.get_cell(self.row, self.column)
 
     if replace_previous and previous_cell is not None:
@@ -163,7 +193,9 @@ class SccContext:
         self._start_caption(time, self.current_style)
 
     # characters received at the last column replace the character in that column
+    is_last_column = self.column == MEMORY_COLUMNS - 1
     self.column = min(self.column + 1, MEMORY_COLUMNS - 1)
+    self._is_last_column_written = is_last_column
 
   def _erase_at_positions(self, memory: SccDisplayMemory, positions: Iterable[Tuple[int, int]], time: Fraction):
     """Empties the specified positions of a memory"""
@@ -301,6 +333,10 @@ class SccContext:
       if self.column > 0:
         self.column -= 1
         self._erase_at_positions(self._get_current_memory(), [(self.row, self.column)], time)
+
+    elif control_code is SccControlCode.FON:
+      # Flash On occupies a cell, and is displayed as a space (see 47 CFR Ch. I, § 15.119(i))
+      self._write_at_cursor(" ", time)
 
     else:
       LOGGER.debug("Ignored SCC control code: %s", control_code.get_name())
