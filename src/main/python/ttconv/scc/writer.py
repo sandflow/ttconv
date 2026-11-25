@@ -44,6 +44,14 @@ from ttconv.time_code import FPS_29_97, FPS_30, SmpteTimeCode
 
 LOGGER = logging.getLogger(__name__)
 
+# Tolerance above which two successive captions will not be
+# considered for roll-up detection
+ROLLUP_GAP_TOLERANCE = Fraction(1, 30)
+
+# Percentage of captions that fit the roll-up template in order for
+# the file to be considered for roll-up processing
+ROLLUP_DETECTION_PCT = 50
+
 class _Caption:
   """Collection of lines of text with a begin and end time and an alignment"""
 
