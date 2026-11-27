@@ -1794,5 +1794,27 @@ Scenarist_SCC V1.0
     texts = [list(span)[0].get_text() for span in p_list[0] if isinstance(span, Span)]
     self.assertEqual(["B", "C", "D", "E"], texts)
 
+  def test_scc_paint_on_paragraph_starts_in_its_own_region(self):
+    # a paint-on paragraph that starts on a lower row than an earlier one must not be placed in the (taller)
+    # region of that one, whose content starts at the top of it: the rows would move up
+    scc_content = """\
+Scenarist_SCC V1.0
+
+00:00:00:00	9429 9429 9240 9240 c180 1540 1540 c280
+
+00:00:02:00	9240 9240 1640 1640 4380
+
+00:00:04:00	942c 942c
+"""
+
+    doc = to_model(scc_content)
+
+    p_list = list(list(doc.get_body())[0])
+    last = p_list[-1]
+    self.assertEqual(["B", "C"], [list(span)[0].get_text() for span in last if isinstance(span, Span)])
+    first_origin = p_list[0].get_region().get_style(StyleProperties.Origin)
+    last_origin = last.get_region().get_style(StyleProperties.Origin)
+    self.assertGreater(last_origin.y.value, first_origin.y.value)
+
 if __name__ == '__main__':
   unittest.main()
