@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #audio-description -->
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttp="http://www.w3.org/ns/ttml#parameter" ttp:profile="ttml2-transformation"
+    xmlns:tta="http://www.w3.org/ns/ttml#audio"
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations">
+  <head>
+    <resources>
+      <audio xml:id="audio1" src="../resources/test.mp3" type="audio/mpeg" tta:gain="0" tta:pan="0"/>
+    </resources>
+  </head>
+  <body/>
+</tt>

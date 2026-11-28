@@ -1,0 +1,12 @@
+<tt xml:lang="en" xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+  <body>
+    <div>
+      <p>
+        <span tts:ruby="container">
+          <span tts:ruby="base">B<span tts:ruby="text">nested</span></span>
+          <span tts:ruby="text">T</span>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>

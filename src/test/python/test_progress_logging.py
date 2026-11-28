@@ -171,7 +171,33 @@ class ProgressBarTest(unittest.TestCase):
     finally:
       logger.removeHandler(handler)
 
+  def test_validate_displays_progress_bar_on_a_terminal(self):
+    root_logger = logging.getLogger()
+    handlers = list(root_logger.handlers)
+    level = root_logger.level
+    try:
+      with redirect_stderr(_Terminal()) as console:
+        self.assertEqual(tt.main(["validate", "src/test/resources/ttml/validation/tt-body-div-p-two-spans-valid.ttml"]), 0)
+      bar = "Validating: |" + "█" * 50 + "| 100%"
+      self.assertIn(bar, console.getvalue())
+      # the progress bar is erased on completion
+      self.assertTrue(console.getvalue().endswith("\r" + " " * len(bar) + "\r"))
+    finally:
+      root_logger.handlers = handlers
+      root_logger.setLevel(level)
 
+  def test_validate_progress_bar_can_be_disabled(self):
+    root_logger = logging.getLogger()
+    handlers = list(root_logger.handlers)
+    level = root_logger.level
+    try:
+      with redirect_stderr(_Terminal()) as console:
+        self.assertEqual(tt.main(["validate", "--config", '{"general": {"progress_bar": false}}',
+          "src/test/resources/ttml/validation/tt-body-div-p-two-spans-valid.ttml"]), 0)
+      self.assertEqual(console.getvalue(), "")
+    finally:
+      root_logger.handlers = handlers
+      root_logger.setLevel(level)
 
 if __name__ == '__main__':
   unittest.main()

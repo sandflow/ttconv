@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- IMSC 1.1 Text Profile does not permit #base-general -->
+<tt xml:lang="en" xml:base="." xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ttm="http://www.w3.org/ns/ttml#metadata" 
+    xmlns:ttva="http://skynav.com/ns/ttv/annotations" ttva:warnOn="all" ttva:expectedErrors="0" ttva:expectedWarnings="0" ttva:model="ttml2">
+  <head xml:base=".">
+    <metadata xml:base=".">
+      <ttm:actor agent="a" xml:base="."/>
+      <ttm:agent xml:id="a" type="other" xml:base=".">
+        <ttm:name type="other" xml:base="."/>
+      </ttm:agent>
+      <ttm:copyright xml:base="."/>
+      <ttm:desc xml:base="."/>
+      <ttm:item name="altText" xml:base="."/>
+      <ttm:title xml:base="."/>
+    </metadata>
+    <profile xmlns="http://www.w3.org/ns/ttml#parameter" xml:base="."/>
+    <resources xml:base=".">
+      <data xml:base=".">
+        <source xml:base="." src="http://www.w3.org/ns/ttml/resource/#empty" type="application/octet-stream"/>
+      </data>
+      <audio xml:base="." src="../resources/test.mp3" type="audio/mpeg"/>
+      <font xml:base="." src="../resources/test.otf" type="font/otf"/>
+      <image xml:base="." src="../resources/test.png" type="image/png"/>
+    </resources>
+    <styling xml:base=".">
+      <initial xml:base="."/>
+      <style xml:base="."/>
+    </styling>
+    <layout xml:base=".">
+      <region xml:id="r1" xml:base="."/>
+    </layout>
+    <animation xml:base=".">
+      <animate xml:base="."/>
+      <set xml:base="."/>
+    </animation>
+  </head>
+  <body xml:base=".">
+    <div xml:base=".">
+      <p xml:base=".">
+        <span xml:base=".">
+          <br xml:base="."/>
+        </span>
+      </p>
+    </div>
+  </body>
+</tt>

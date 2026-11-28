@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tt xmlns="http://www.w3.org/ns/ttml" xmlns:ttp="http://www.w3.org/ns/ttml#parameter"
+    xmlns:tts="http://www.w3.org/ns/ttml#styling" xmlns:ttm="http://www.w3.org/ns/ttml#metadata"
+    xmlns:ebutts="urn:ebu:tt:style" xmlns:ebuttm="urn:ebu:tt:metadata" xml:lang="sk"
+    ttp:contentProfiles="http://www.w3.org/ns/ttml/profile/imsc1.1/text" ttp:timeBase="media"
+    ttp:frameRate="25">
+    <head>
+        <styling>
+            <style xml:id="default" tts:color="#EBEBEB" tts:backgroundColor="transparent"
+                tts:fontFamily="proportionalSansSerif" tts:fontSize="80%" tts:fontWeight="normal"
+                tts:fontStyle="normal" tts:textOutline="#101010 3%"/>
+        </styling>
+        <layout>
+            <region xml:id="Region_Top" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="2.5% 15%" tts:extent="95% 70%"
+                tts:textAlign="center" tts:displayAlign="before" tts:luminanceGain="2.0"/>
+            <region xml:id="Region_Bottom" tts:backgroundColor="transparent"
+                tts:showBackground="whenActive" tts:origin="2.5% 15%" tts:extent="95% 70%"
+                tts:textAlign="center" tts:displayAlign="after"/>
+        </layout>
+    </head>
+    <body>
+        <div>
+            <p begin="01:01:16.202" end="01:01:19.615" style="default" region="Region_Top">PRED DVOMA DŇAMI</p>
+        </div>
+    </body>
+</tt>

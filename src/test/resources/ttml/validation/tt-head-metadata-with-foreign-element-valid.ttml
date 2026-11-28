@@ -1,0 +1,9 @@
+<tt xml:lang="en"
+    xmlns="http://www.w3.org/ns/ttml"
+    xmlns:ex="http://www.example.com/ttml">
+  <head>
+    <metadata>
+      <ex:note>This is a foreign element.</ex:note>
+    </metadata>
+  </head>
+</tt>
