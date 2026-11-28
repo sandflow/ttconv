@@ -145,7 +145,7 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
   
   _NDF_TC_RE = re.compile(_NDF_TC_PATTERN)
 
-  _DF_TC_PATTERN = '(:|;|.|,)'.join(['(?P<df_h>[0-9]{2})',
+  _DF_TC_PATTERN = '[:;.,]'.join(['(?P<df_h>[0-9]{2})',
                                                  '(?P<df_m>[0-9]{2})',
                                                  '(?P<df_s>[0-9]{2})',
                                                  '(?P<df_f>[0-9]{2})'])
@@ -222,7 +222,7 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
   def parse(time_code: str, frame_rate: Fraction) -> SmpteTimeCode:
     """Reads the time code string and converts to a SmpteTimeCode instance"""
     
-    match = SmpteTimeCode._NDF_TC_RE.match(time_code)
+    match = SmpteTimeCode._NDF_TC_RE.fullmatch(time_code)
 
     if match is not None:
       # NDF timecode
@@ -236,7 +236,7 @@ class SmpteTimeCode(_HHMMSSTimeExpression):
     if frame_rate.denominator != 1001:
       frame_rate = frame_rate * Fraction(1000, 1001)
 
-    match = SmpteTimeCode.DF_TC_RE.match(time_code)
+    match = SmpteTimeCode.DF_TC_RE.fullmatch(time_code)
 
     if match is not None:
       return SmpteTimeCode(int(match.group('df_h')),
